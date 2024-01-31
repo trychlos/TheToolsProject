@@ -1,0 +1,63 @@
+{
+	"DBMS": {
+		"databases": [
+			"Canal33"
+		]
+	},
+	"status": {
+		"commands": [
+			"http.pl get -nocolored -url http://canal33.blingua.net -accept [1-3].. -mqtt -http -- -metric ttp_url_status -label service=<SERVICE> -label environment=X",
+			"http.pl get -nocolored -url http://canal33.backup.blingua.net -accept [1-3].. -mqtt -http -- -metric ttp_url_status -label service=<SERVICE> -label environment=X",
+			"http.pl get -nocolored -url https://c33.blingua.net -accept [1-3].. -mqtt -http -- -metric ttp_url_status -label service=<SERVICE> -label environment=X",
+			"http.pl get -nocolored -url https://c33.backup.blingua.net -accept [1-3].. -mqtt -http -- -metric ttp_url_status -label service=<SERVICE> -label environment=X"
+		]
+	},
+	"switch": {
+		"to_backup": {
+			"commands": [
+				"ssh inlingua-adm@<HOST> sc stop Canal33Ftp",
+				"ssh inlingua-adm@<HOST> sc config start= disabled Canal33Ftp",
+				"ssh inlingua-adm@<HOST> sc stop Canal33Svc",
+				"ssh inlingua-adm@<HOST> sc config start= disabled Canal33Svc"
+			]
+		},
+		"to_live": {
+			"commands": [
+				"ssh inlingua-user@<HOST> daemon.pl stop -nocolored -bname canal33-backup-monitor-daemon.json -ignore -wait",
+				"ssh inlingua-adm@<HOST> [eval:File::Spec->catfile( TTP::var([ 'site', 'commandsDir' ]), 'scheduled_set_status.cmd' )] \\Inlingua\\canal33.backup /Disable",
+				"ssh inlingua-adm@<HOST> sc config start= auto Canal33Ftp",
+				"ssh inlingua-adm@<HOST> sc start Canal33Ftp",
+				"ssh inlingua-adm@<HOST> sc config start= auto Canal33Svc",
+				"ssh inlingua-adm@<HOST> sc start Canal33Svc",
+				"ovh.pl ipswitch -ip ip-87.98.189.58 -to ns3153065.ip-51-91-25.eu -wait -url http://canal33.blingua.net"
+			]
+		}
+	},
+	"workloads": {
+		"canal33.live.morning": [
+			{
+				"label": "(Production Live) Sauvegarde quotidienne de la base Canall33",
+				"commands": [
+					"dbms.pl backup -nocolored -service Canal33 -full -compress",
+					"ttp.pl copydirs -nocolored -sourcecmd \"dbms.pl vars -nocolored -backupsDir\" -targetcmd \"dbms.pl vars -nocolored -archivesDir\" -dirs",
+					"dbms.pl telemetry -nocolored -service Canal33 -dbsize",
+					"dbms.pl telemetry -nocolored -service Canal33 -tabcount",
+					"ttp.pl sizedir -nocolored -dirpath C:\\Users\\Public\\CANAL33_LOGS -mqtt -http"
+				]
+			}
+		],
+		"canal33.live.every.5h": [
+			{
+				"label": "(Production Live) Sauvegarde différentielle en journée",
+				"commands": [
+					"dbms.pl backup -nocolored -service Canal33 -diff -compress",
+					"ttp.pl copydirs -nocolored -sourcecmd \"dbms.pl vars -nocolored -backupsDir\" -targetcmd \"dbms.pl vars -nocolored -archivesDir\" -dirs"
+				]
+			}
+		],
+		"canal33.live.evening": [
+		],
+		"canal33.backup": [
+		]
+	}
+}

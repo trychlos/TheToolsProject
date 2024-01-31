@@ -1,0 +1,19 @@
+{
+	"comments": [
+		"The JSON configuration of the daemon needed to synchronize the production from the live host to the backup host.",
+		"Its main role is to automatically restore the periodic database backups from the live production to the backup host, so that this later has (almost) always the last version of the datas.",
+		"",
+		"                                                        +-----------------------------------------------------------------------------+",
+		"                                                        |          THIS DAEMON MUST NOT RUN ON THE LIVE PRODUCTION HOST.              |",
+		"                                                        +-----------------------------------------------------------------------------+",
+		"",
+		"This daemon is designed to run (on the backup production host) with network read permissions on the live production host."
+	],
+	"execPath": "[eval:File::Spec->catfile( TTP::var([ 'site', 'commandsDir' ]), 'backup-monitor-daemon.pl' )]",
+	"listeningPort": 14393,
+
+	"monitoredService": "Tom21",
+	"localDir": "[eval:File::Spec->catdir( TTP::var([ 'DBMS', 'backupsRoot' ]), localtime->strftime( '%y%m%d' ), '<REMOTEHOST>' )]",
+
+	"textingInterval": -1
+}

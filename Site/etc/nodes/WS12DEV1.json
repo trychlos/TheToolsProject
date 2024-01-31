@@ -1,0 +1,121 @@
+{
+	"daemons_comments": [
+		"On top of this host configuration, the daemons which will dictate the host behavior, and mainly whether is it a backup production host or not.",
+		"- ...",
+		""
+	],
+	"daemons": [
+	],
+
+	"DBMS_comments": [
+	],
+	"DBMS": {
+		"archivesDir": "[eval:File::Spec->catdir( TTP::var([ 'DBMS', 'archivesRoot' ]), localtime->strftime( '%y%m%d' ))]",
+		"archivesRoot": "\\[eval:File::Spec->catdir( '\\ftpback-rbx7-618.ovh.net', 'ns3153065.ip-51-91-25.eu', '<HOST>', 'SQLBackups' )]",
+		"byInstance": {
+			"DEV": {
+				"dataPath": "C:\\Program Files\\Microsoft SQL Server\\MSSQL11.DEV\\MSSQL\\DATA",
+				"package": "TTP::SqlServer"
+			}
+		},
+		"instance": "DEV"
+	},
+
+	"ServicesComments": [
+		"These are the services defined on this host as objects where the top key if the name of the service. At least this top key should be specified, even if with an empty properties object.",
+		"Values may be:",
+		"- dbms: a hash of the involved DBMS objects, where the top key is the instance name and values may be:",
+		"  > databases: an array of the involved databases names in this instance",
+		"- ...",
+		"- A service can define a 'workloads' hash of parameters to be given to the specified workload.",
+		"  E.g. we have a 'daily.morning' workload, executed at the very beginning of each day. This workload is responsible to purge logs, have a database full backup, check for available space, and so on.",
+		"  And we also have a 'daily.periodic.2h' workload for differential backups of live production databases.",
+		"  We could so define any workload in any service...",
+		"  'workloads' is a hash whose keys are the name of each workload this service subscribes to, values being an (ordered) array of the work tasks associated to this workload for this service.",
+		"  Each work task is a hash whose content depends mainly of the particular involved workload, but may have:",
+		"  > a 'label'",
+		"  > an array of 'commands'",
+		"  > the order as an optional integer",
+		"    A word of caution: due to the way Perl::JSON interprets the zero integer or the '0' string, do not use these values!",
+		"    For consistency reasons, you should rather use only strings.",
+		"    Due to the above Perl 'not-a-bug-but-a-feature', do not use single zero, either as a string nor an integer.",
+		"- ...",
+		""
+	],
+	"Services": {
+		"Canal33": {
+			"DBMS": {
+				"databases": [
+					"Canal33"
+				]
+			},
+			"failover": {
+				"ovh": {
+					"ip": "ip-87.98.189.58"
+				}
+			},
+			"monitor": {
+				"url": "http://canal33.sysnrg.com"
+			},
+			"switch0": {
+				"scheduled": "\\Inlingua\\tom17.backup.startup"
+			}
+		},
+		"Dom.2008": {
+			"status": {
+				"live_comments": [
+					"A command which let us determine where is the live production. This is a single command as we manage a single live production",
+					"Only useful when about to switch a machine status to or from live or backup"
+				],
+				"get_live": "http.pl get -nocolored -url http://ip.test.blingua.net -header X-Sent-By -accept ...",
+				"after": {
+					"commands": [
+						"ssh inlingua-user@<HOST> dbms.pl status -nocolored -service <SERVICE> -state -mqtt -http",
+						"ssh inlingua-user@<HOST> daemon.pl status -bname tom17-backup-monitor-daemon.json -http -- -metric ttp_service_daemon -label service=<SERVICE> -label role=backup -label environment=X"
+					]
+				}
+			}
+		},
+		"Technical.Services": {
+			"hidden": true,
+			"workloads": {
+				"daily.morning": [
+					{
+						"label": "Purge directories",
+						"order": "00",
+						"commands": [
+							"ttp.pl purgedirs -nocolored -dircmd \"dbms.pl vars -nocolored -backupsRoot\" -keep 7",
+							"ttp.pl purgedirs -nocolored -dircmd \"dbms.pl vars -nocolored -archivesRoot\" -keep 7",
+							"ttp.pl purgedirs -nocolored -dircmd \"ttp.pl vars -nocolored -logsRoot\" -keep 7"
+						]
+					}
+				],
+				"startup": [
+					{
+						"label": "Advertize at startup",
+						"commands": [
+							"call [eval:File::Spec->catfile( TTP::var([ 'site', 'commandsDir' ]), 'startup.cmd' )]"
+						]
+					}
+				],
+				"Test1": [
+					{
+						"label": "test workload",
+						"commands": [
+							"dbms.pl backup -nocolored -instance DEV -database Dom1 -diff",
+							"ttp.pl list -nocolored -services"
+						],
+						"commands0": [
+							"daemon.pl start -nocolored -json [eval:File::Spec->catfile( TTP::var([ 'site', 'daemonsDir' ]), 'tom59-backup-monitor-daemon.json' )] -- -remote NS3232346"
+						]
+					}
+				]
+			}
+		}
+	},
+	"Environment": {
+		"type_comments": [],
+		"type": "D"
+	},
+	"remoteShare": "\\\\10.122.1.14\\C"
+}

@@ -1,0 +1,82 @@
+{
+	"comments": [
+		"A service JSON configuration file.",
+		"  This is an optional configuration file which let us define some common configuration keys, available to all hosts which define this service.",
+		"Note that unless otherwise specified, overriden keys are *replaced* by the found value.",
+		"In this file, following macros are interpreted:",
+		" - <SERVICE> evaluates to the service name (the basename of this file without the extension),",
+		" - <HOST> evaluates to the current (at runtime) hostname.",
+		""
+	],
+	"DBMS_comments": [
+		"Define common keys which overrides the same keys from 'toops.json' site configuration file, and can be overriden by same keys on a per-host basis.",
+		"- instance': the default name of the MS SQLServer instance which hosts our database (one instance);",
+		"   it overrides the 'instance' value which may be defined at site-level 'toops.json', and may be overriden on a per-host-basis.",
+		"- databases: the list of the databases this service uses and/or manages; the list of saved databases when only a service is specified.",
+		""
+	],
+	"DBMS": {
+		"instance": "MSSQLSERVER",
+		"databases": [
+			"Base1",
+			"Base2"
+		]
+	},
+	"status_comments": [
+		"Describe here the commands used to periodically check the service status.",
+		"Because these commands are also expected to test URLs, they have to be run from a machine outside of our physical architecture which both hold the FailOver IPs",
+		"Hence a crontab in an external Linux machine. Hence the below ssh.."
+		"Commands default to be specified at the service level: see the below 'commands' array. They will be executed once for each status round run by the monitoring machine,",
+		"whatever be the count of machines which define this service.",
+		"Commands can also be specified on a per-host basis: see 'before', 'replace' or 'after' keys in the host configuration."
+	],
+	"status": {
+		"commands_comments": [
+		],
+		"commands": [
+			"http.pl get -nocolored -url https://tom17.blingua.fr -accept [1-3].. -mqtt -http -- -metric ttp_url_status -label service=<SERVICE> -label environment=X",
+			"http.pl get -nocolored -url https://inlingua17.blingua.fr -accept [1-3].. -mqtt -http -- -metric ttp_url_status -label service=<SERVICE> -label environment=X",
+			"http.pl get -nocolored -url https://tom17.backup.blingua.fr -accept [1-3].. -mqtt -http -- -metric ttp_url_status -label service=<SERVICE> -label environment=X"
+		]
+	},
+	"switch_comments": [
+		"These commands have to be run when we want switch the service from a live machine to another.",
+		"They have to be run via 'SiteResources\\Commands\\extern_service_switch.pl' script."
+	]
+	"switch": {
+		"to_backup": {
+			"commands": [
+				"ssh inlingua-adm@<HOST> sc stop Canal33Ftp",
+				"ssh inlingua-adm@<HOST> sc config start= disabled Canal33Ftp",
+				"ssh inlingua-adm@<HOST> sc stop Canal33Svc",
+				"ssh inlingua-adm@<HOST> sc config start= disabled Canal33Svc"
+			]
+		},
+		"to_live": {
+			"commands": [
+				"ssh inlingua-user@<HOST> daemon.pl stop -nocolored -bname canal33-backup-monitor-daemon.json -ignore -wait",
+				"ssh inlingua-adm@<HOST> [eval:File::Spec->catfile( TTP::var([ 'site', 'commandsDir' ]), 'scheduled_set_status.cmd' )] \\Inlingua\\tom17.backup.startup /Disable",
+				"ssh inlingua-adm@<HOST> sc config start= auto Canal33Ftp",
+				"ssh inlingua-adm@<HOST> sc start Canal33Ftp",
+				"ssh inlingua-adm@<HOST> sc config start= auto Canal33Svc",
+				"ssh inlingua-adm@<HOST> sc start Canal33Svc",
+				"ovh.pl ipswitch -ip ip-87.98.189.58 -to ns3153065.ip-51-91-25.eu -wait http://ip.test.blingua.net"
+			]
+		}
+	},
+	"workloads_comments": [
+		"Workloads are scheduled tasks.",
+		"The workloads perimeter is defined at taskScheduler-level: each scheduled task executes a 'workload.cmd' with the name of a workload as the only parameter.",
+		"Then the 'workload.cmd' script examines all services, and for each service its 'workloads' object, to see which service is candidate to this particular workload."
+	],
+	"workloads": {
+		"daily.morning": [
+			{
+				"label": "Databases backup",
+				"commands": [
+					"dbms.pl backup -nocolored -service <SERVICE> -full"
+				]
+			}
+		]
+	}
+}

@@ -1,0 +1,308 @@
+{
+	"comments": [
+		"site.sample.json",
+		"The 'site.json' site configuration file is the first file loaded by each command. It defines global TTP behavior.",
+		"It is searched for among (hardcoded) 'etc/ttp/site.json', 'etc/site.json', 'etc/ttp/toops.json' or 'etc/toops.json' in each path of TTP_ROOTS environment variable.",
+		"The first found wins.",
+		"",
+		"This is the global TTP configuration for your site",
+		"In Windows environment, take care of doubling your backslashes",
+		"May make use - in values only - of parameters between square brackets as [eval:...]",
+		"At the moment, there is only one type of parameters:",
+		"- those specified by '[eval:...]' indicate some code to be evaluated at run time.",
+		"  'eval' may be prefixed with an underscore in order to delay the eval (e.g. if it refers to another dynamic variable which needs to be resolved first).",
+		"",
+		"Note 1: unless otherwise specified, variables here may be overriden on a per-host basis."
+		"Note 2: Site integrator may use this same configuration file (and is encouraged to) to set his own site-level variables.",
+		"These variables are free to the site integrator and NOT considered by TheToolsProject, though they can be used in below TTP JSON dynamic evaluations."
+	],
+
+	"site_comments": [
+		"We can define here some variables at the site level.",
+	],
+	"site": {
+		"commandsDir": "[eval:File::Spec->catdir( TTP::nodeRoot(), 'SiteResources', 'Commands' )]",
+		"workloadSummary_comments": [
+			"manage macros: SUBJECT, OPTIONS"
+		],
+		"workloadSummary": {
+			"command": "smtp.pl send -subject \"<SUBJECT>\" -to inlingua-adm@trychlos.org <OPTIONS>"
+		}
+	},
+
+	"TTP": {
+
+		"alerts_comments": [
+			"Configure here the alerts which can be sent via 'ttp.pl alert' to various external media."
+			"enabled=true|false here only specifies defaults, as each medium can be individually selected in ttp.pl alert verb",
+			"when sending an email, whether use a text content or file, or a html content or file, or both is up to the verb, so just replace OPTIONS macro"
+		],
+		"alerts": {
+			"withFile_comments": [
+				"manage macros: DATA"
+			],
+			"withFile": {
+				"enabled": true,
+				"dropDir": "[eval:File::Spec->catdir( TTP::logsRoot(), localtime->strftime( '%y%m%d' ), 'Alerts' )]",
+				"command": "ttp.pl writejson -file [eval:File::Spec->catfile( TTP::alertsDir({ makeDirExist => false }), Time::Moment->now->strftime( '%Y%m%d%H%M%S%6N' ).'.json' )] -data \"<DATA>\""
+			},
+			"withMqtt_comments": [
+				"manage macros: SUBJECT, DATA, OPTIONS"
+			],
+			"withMqtt": {
+				"enabled": true,
+				"command": "mqtt.pl publish -topic <SUBJECT> -payload \"<DATA>\" <OPTIONS>"
+			},
+			"withSmtp_comments": [
+				"manage macros: SUBJECT, OPTIONS"
+			],
+			"withSmtp" : {
+				"enabled": true,
+				"command": "smtp.pl send -to alerts@trychlos.org,inlingua-adm@trychlos.org -subject <SUBJECT> <OPTIONS>"
+			},
+			"withSms_comments": [
+				"manage macros: OPTIONS"
+			],
+			"withSms" : {
+				"enabled": true,
+				"command": "smtp.pl send -to forwarder@trychlos.org -subject \"SMSTO: +33607797792\" <OPTIONS>"
+			}
+		},
+		"copyDir_comments": [
+			"manage macros: SOURCE, TARGET"
+		],
+		"copyDir": {
+			"byOS": {
+				"MSWin32": {
+					"command": "robocopy <SOURCE> <TARGET> /E /TS /FP /NP /BYTES"
+				}
+			}
+		},
+		"copyFile_comments": [
+			"manage macros: SOURCE, TARGET, FILE"
+		],
+		"copyFile": {
+			"byOS": {
+				"MSWin32": {
+					"command": "robocopy <SOURCE> <TARGET> <FILE> /TS /FP /NP /BYTES"
+				}
+			}
+		},
+
+		"credentialsDirs_comments": [
+			"The directories to be searched for credentials, passwords and other secrets",
+			"Defaults to (successively searched for) subdirectories of TTP_ROOTS:",
+			" - 'etc/credentials'",
+			" - 'credentials'",
+			" - 'etc/private'",
+			" - 'private'",
+			""
+		],
+		"credentialsDirs": "etc/private",
+
+		"daemonsDirs_comments": [
+			"The directories where are written the daemons JSON configuration files.",
+			"We can here define several subdirectories of TTP_ROOTS tree, which let us have distinct daemons in distinct directories (even if we ourselves advise against this type of architecture).",
+			"Below the hardcoded default values"
+		],
+		"daemonsDirs": [
+			"etc/daemons",
+			"daemons"
+		],
+
+		"DBMS": {
+			"backupsDir": "[eval:File::Spec->catdir( TTP::var([ 'DBMS', 'backupsRoot' ]), localtime->strftime( '%y%m%d' ), TTP::host() )]",
+			"backupsRoot": "[eval:File::Spec->catdir( TTP::nodeRoot(), 'dailySQLBackups' )]",
+			"instance": "MSSQLSERVER",
+			"byInstance": {
+				"MSSQLSERVER": {
+					"package": "TTP::SqlServer"
+				}
+			}
+		},
+		"deployments": {
+			"sourceDirs": [
+				"[eval:File::Spec->catdir( TTP::nodeRoot(), 'SiteResources' )]",
+				"[eval:File::Spec->catdir( TTP::nodeRoot(), 'TheToolsProject' )]"
+			],
+			"excludes": [
+			],
+			"before": {
+				"removeTree": true
+			},
+			"after": [
+			],
+			"pullReference": "WS12DEV1",
+			"byOS": {
+				"MSWin32": {
+					"command": "robocopy <SOURCE> <TARGET> /MIR"
+				}
+			}
+		},
+		"executionReports": {
+			"withFile_comments": [
+				"manage macros: DATA"
+			],
+			"withFile": {
+				"enabled": true,
+				"dropDir": "[eval:File::Spec->catdir( TTP::logsRoot(), localtime->strftime( '%y%m%d' ), 'execReports' )]",
+				"command": "ttp.pl writejson -file [eval:File::Spec->catfile( TTP::var([ 'executionReports', 'withFile', 'dropDir' ]), Time::Moment->now->strftime( '%Y%m%d%H%M%S%6N' ).'-'.TTP::random().'.json' )] -data \"<DATA>\""
+			},
+			"withMqtt_comments": [
+				"manage macros: SUBJECT, DATA, OPTIONS"
+			],
+			"withMqtt": {
+				"enabled": true,
+				"command": "mqtt.pl publish -topic <SUBJECT> -payload \"<DATA>\" <OPTIONS>"
+			}
+		},
+
+		"logsRoot_comments": [
+			"The (per-node overridable) root directory of the logs tree",
+			"Hardcoded default is C:\\Temp or /tmp depending of the running OS",
+			"The 'logsRoot' directory can be got by the user via the 'ttp.pl vars --logsRoot' command"
+		],
+		"logsRoot": "[eval:File::Spec->catdir( TTP::nodeRoot(), 'dailyLogs' )]",
+
+		"logsDaily_comments": [
+			"The (per-node overridable) daily root of the logs tree",
+			"Rationale: having a per-day or per-week or per-month logs tree is the easiest way in order to periodically purge the logs.",
+			"This is not mandatory at all, and the default is to stick to the 'logsRoot' value",
+			"The 'logsDaily' directory can be got by the user via the 'ttp.pl vars --logsDaily' command"
+		],
+		"logsDaily": "[eval:File::Spec->catdir( TTP::logsRoot(), localtime->strftime( '%y%m%d' ))]",
+
+		"logsCommands_comments": [
+			"The daily directory where TTP writes commands and verbs logs",
+			"Defaults to the 'logsDaily' value",
+			"The 'logsCommands' directory can be got by the user via the 'ttp.pl vars --logsCommands' command"
+		]
+		"logsCommands": "[eval:File::Spec->catdir( TTP::logsDaily(), 'TTP' )]",
+
+		"logsMain_comments": [
+			"The full pathname of the file where TTP writes commands and verbs logs",
+			"The 'logsCommands' directory can be got by the user via the 'ttp.pl vars --logsMain' command"
+		]
+		"logsMain": "[eval:File::Spec->catfile( TTP::logsCommands(), 'main.log' )]",
+
+		"Message_comments": [
+			"Define the default behavior for msgDummy(), msgErr(), msgOut(), msgVerbose() and msgWarn() functions",
+			"These are all per-node overridable values"
+		],
+		"Message": {
+			"msgDummy": {
+				"withColor": true,
+				"withLog": true,
+				"color": "cyan",
+				"marker": "(DUM) "
+			},
+			"msgErr": {
+				"withColor": true,
+				"withLog": true
+				"color": "bold red",
+				"marker": "(ERR) "
+			},
+			"msgOut": {
+				"withColor": false,
+				"withLog": true
+			},
+			"msgVerbose": {
+				"withColor": true,
+				"withLog": true,
+				"color": "bright_blue",
+				"marker": "(VER) "
+			},
+			"msgWarn": {
+				"withColor": true,
+				"withLog": true,
+				"color": "bright_yellow",
+				"marker": "(WAR) "
+			}
+		},
+
+		"moveDir_comments": [
+			"manage macros: SOURCE, TARGET"
+		],
+		"moveDir": {
+			"byOS": {
+				"MSWin32": {
+					"command": "robocopy <SOURCE> <TARGET> /E /MOVE /TS /FP /NP /BYTES"
+				}
+			}
+		},
+		"MQTTGateway": {
+			"broker": "10.122.1.15"
+		},
+
+		"nodesDirs_comments": [
+			"The directories where are written the nodes JSON configuration files.",
+			"We can here define several subdirectories of TTP_ROOTS tree, which let us have distinct nodes in distinct directories (even if we ourselves advise against this type of architecture).",
+			"This is obviously not overridable on a per-node basis (due to the well-known chicken and eggs problem).",
+			"Below the hardcoded default values"
+		],
+		"nodesDirs": [
+			"etc/nodes",
+			"nodes",
+			"etc/machines",
+			"machines"
+		],
+
+		"nodeRoot_comments": [
+			"Historical reminder: in the logical machine paradigm, the root tree is located under the dynamically mounted filesystem, and this is one of its main prooperties."
+			"Because Perl cannot implement this paradigm, we have to define it explicitly.",
+			"This is a per-node overridable value, which defaults to C:\\Temp or /tmp depending of the running OS",
+			"The 'nodeRoot' directory can be got by the user via the 'ttp.pl vars --nodeRoot' command"
+		],
+		"nodeRoot": "C:\\Temp|/tmp",
+
+		"privateDirs": [
+			"etc/private",
+			"private",
+			"etc/credentials",
+			"credentials"
+		],
+
+		"SMTPGateway_comments": [
+			"This is needed to send mails in order to be able to supply to the lack of a local MTA",
+			"- host: the MTA, default to localhost",
+			"- port: the remote port, have suitable defaults depending of the used protocol",
+			"- mailfrom: the mail emitter, defaulting to 'me@localhost'",
+			"- debug: whether to have a verbose log, defaulting to false",
+			"- security, optional, may be 'ssl' or 'starttls'",
+			"- timeout, defaulting to 60 (sec.)",
+			"- helo, defaulting to current execution node",
+			"if needed, username and password are managed through the credentials usual way."
+		],
+		"SMTPGateway": {
+			"host": "mail.trychlos.org",
+			"port": 465,
+			"mailfrom": "No Reply <no-reply@blingua.fr>"
+		},
+
+		"Telemetry_comments": [
+			"Starting with its v3.0 version, TheToolsProject has chosen Prometheus ecosystem to host its telemetry, while keeping the capability",
+			"to have a messaging-based (MQTT) telemetry. Prometheus let us sent our telemetry either via the PushGateway or via the TextFileCollector.",
+			"These three medias are both available, and configured here."
+		],
+		"Telemetry": {
+			"withMqtt": {
+				"enabled": false,
+				"command": "mqtt.pl publish -topic <TOPIC> -payload \"<PAYLOAD>\""
+			},
+			"withHttp_comments": [
+				"The Prometheus PushGateway which is installed besides of the Prometheus server"
+			],
+			"withHttp": {
+				"enabled": false,
+				"url": "http://10.122.1.15:9091/metrics/job/telemetry/host/[eval:TTP::host()]"
+			},
+			"withTextfile_comments": [
+				"The Prometheus TextFileCollector"
+			],
+			"withTextfile": {
+				"enabled": false,
+				"dropDir": "[eval:TTP::tempDir()]"
+			}
+		}
+	}
+}

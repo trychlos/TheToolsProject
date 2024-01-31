@@ -1,0 +1,48 @@
+{
+	"DBMS": {
+		"databases": [
+			"inlingua21"
+		]
+	},
+	"status": {
+		"commands": [
+			"http.pl get -nocolored -url https://tom21.blingua.fr -accept [1-3].. -mqtt -http -- -metric ttp_url_status -label service=<SERVICE> -label environment=X",
+			"http.pl get -nocolored -url https://inlingua21.blingua.fr -accept [1-3].. -mqtt -http -- -metric ttp_url_status -label service=<SERVICE> -label environment=X",
+			"http.pl get -nocolored -url https://tom21.backup.blingua.fr -accept [1-3].. -mqtt -http -- -metric ttp_url_status -label service=<SERVICE> -label environment=X"
+		]
+	},
+	"switch": {
+		"to_backup": {
+		},
+		"to_live": {
+			"commands": [
+				"ssh inlingua-user@<HOST> daemon.pl stop -nocolored -bname tom21-backup-monitor-daemon.json -ignore -wait",
+				"ssh inlingua-adm@<HOST> [eval:File::Spec->catfile( TTP::var([ 'site', 'commandsDir' ]), 'scheduled_set_status.cmd' )] \\Inlingua\\tom21.backup /Disable"
+			]
+		}
+	},
+	"workloads": {
+		"tom21.live.morning": [
+			{
+				"label": "(Production Live) Sauvegarde quotidienne de la base de données Tom21",
+				"commands": [
+					"dbms.pl backup -nocolored -service <SERVICE> -full",
+					"dbms.pl telemetry -nocolored -service <SERVICE> -dbsize",
+					"dbms.pl telemetry -nocolored -service <SERVICE> -tabcount"
+				]
+			}
+		],
+		"tom21.live.every.2h": [
+			{
+				"label": "(Production Live) Sauvegarde différentielle sur la base de données Tom21",
+				"commands": [
+					"dbms.pl backup -nocolored -service <SERVICE> -diff"
+				]
+			}
+		],
+		"tom21.live.evening": [
+		],
+		"tom21.backup": [
+		]
+	}
+}

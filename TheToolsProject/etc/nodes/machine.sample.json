@@ -1,0 +1,168 @@
+{
+	"comments": [
+		"A machine JSON configuration file.",
+		"Define here the machine configuration, maybe its role(s), the run services and their configuration."
+	],
+
+	"enabled_comments": [
+		"Whether this machine configuration file should be examined when scanning all machine configuration files.",
+		"This let us have this 'machine.sample.json' in the machines/ directory",
+		"Note that disabling this node will fully prevent the machine to be visible in the list or loadable, or anything. The machine will no more be visible in TTP context.",
+		"Hardcoded default is 'true'"
+	],
+	"enabled": false,
+
+	"daemons_comments": [
+		"The daemons which will dictate the host behavior, and mainly whether is it a backup production host or not.",
+		"- ...",
+		""
+	],
+	"daemons": [
+	],
+
+	"ServicesComments": [
+		"These are the services defined on this host as objects where the top key if the name of the service. At least this top key should be specified, even if with an empty properties object.",
+		"Values may be:",
+		"- dbms: a hash of the involved DBMS objects, where the top key is the instance name and values may be:",
+		"  > databases: an array of the involved databases names in this instance",
+		"- ...",
+		"- A service can define a 'workloads' hash of parameters to be given to the specified workload.",
+		"  E.g. we have a 'daily.morning' workload, executed at the very beginning of each day. This workload is responsible to purge logs, have a database full backup, check for available space, and so on.",
+		"  And we also have a 'daily.periodic.2h' workload for differential backups of live production databases.",
+		"  We could so define any workload in any service...",
+		"  'workloads' is a hash whose keys are the name of each workload this service subscribes to, values being an (ordered) array of the work tasks associated to this workload for this service.",
+		"  Each work task is a hash whose content depends mainly of the particular involved workload, but may have:",
+		"  > a 'label'",
+		"  > an array of 'commands'",
+		"  > the order as an optional integer",
+		"    A word of caution: due to the way Perl::JSON interprets the zero integer of the '0' string, do not use these values!",
+		"    For consistency reasons, you should rather use only strings.",
+		"    Due to the above Perl 'not-a-bug-but-a-feature', do not use single zero, either as a string nor an integer.",
+		"- ...",
+		""
+	],
+	"Services": {
+		"Canal33": {
+			"DBMS": {
+				"instance": "DEV",
+				"databases": [
+					"Canal33"
+				]
+			},
+			"monitor": {
+				"ovh": {
+					"ip": "ip-87.98.189.58"
+				},
+				"url": "http://canal33.sysnrg.com",
+				"switch": {
+					"scheduled": "\\Inlingua\\tom17.backup.startup"
+				}
+			},
+			"workloads": {
+			}
+		},
+		"Dom.2008": {
+			"DBMS": {
+				"instance": "DEV"
+			},
+			"status_comments": [
+				"The commands to be executed to get a full status of the service.",
+				"These commands are typically executed every <n> minutes to provide telemetry to a status dashboard, maybe from some external machine",
+				"While the service can only define a 'commands' array, we can define at this host-level:",
+				"- 'before' and 'after' keys define commands to be executed respectively before and after the commands defined at the service level",
+				"- 'replace' defines commands to be executed as a service-level commands replacement",
+				"- when defined here, 'commands' array is just inserted before the service-level commands (same than 'before' though a bit less explicit)."
+			],
+			"status": {
+				"live_comments": [
+					"A command which let us determine where is the live production. This is a single command as we manage a single live production",
+					"Only useful when about to switch a machine status to or from live or backup"
+				],
+				"get_live": "http.pl get -nocolored -url http://ip.test.blingua.net -header X-Sent-By -accept ...",
+				"before": {
+					"commands": [
+					]
+				},
+				"commands":[
+				],
+				"replace": {
+					"commands": [
+					]
+				},
+				"after": {
+					"commands": [
+					]
+				}
+			}
+		},
+		"Technical Workloads": {
+			"hidden": true,
+			"workloads": {
+				"daily.morning": [
+					{
+						"label": "Purge directories",
+						"order": "00",
+						"commands": [
+							"ttp.pl purgedirs -nocolored -dircmd \"dbms.pl vars -nocolored -backupsRoot\" -keep 7",
+							"ttp.pl purgedirs -nocolored -dircmd \"dbms.pl vars -nocolored -archivesRoot\" -keep 7",
+							"ttp.pl purgedirs -nocolored -dircmd \"ttp.pl vars -nocolored -logsRoot\" -keep 7"
+						]
+					}
+				],
+				"startup": [
+					{
+						"label": "Advertize at startup",
+						"commands": [
+							"call [eval:File::Spec->catfile( TTP::var([ 'site', 'commandsDir' ]), 'startup.cmd' )]"
+						]
+					}
+				],
+				"test1": [
+					{
+						"label": "test workload",
+						"commands_x": [
+							"dbms.pl backup -nocolored -instance DEV -database Dom1 -diff",
+							"ttp.pl list -nocolored -services"
+						],
+						"commands": [
+							"daemon.pl start -nocolored -bname tom59-backup-monitor-daemon.json -- -remote NS3232346"
+						]
+					}
+				]
+			}
+		}
+	},
+	"DBMS_comments": [
+		"Override here, on a per-machine basis, the corresponding keys defined in site 'toops.json':",
+		"- archivesDir",
+		"- archivesRoot",
+		"- backupsDir",
+		"- backupsRoot",
+		"- instance",
+		"And a per-instance basis:",
+		"- byInstance",
+		"  <INSTANCE>",
+		"  - package",
+		"  - dataPath"
+	],
+	"DBMS": {
+		"archivesDir": "[eval:File::Spec->catdir( TTP::var([ 'DBMS', 'archivesRoot' ]), localtime->strftime( '%y%m%d' ))]",
+		"archivesRoot": "\\[eval:File::Spec->catdir( '\\ftpback-rbx7-618.ovh.net', 'ns3153065.ip-51-91-25.eu', '<HOST>', 'SQLBackups' )]",
+		"byInstance": {
+			"DEV": {
+				"dataPath": "C:\\Program Files\\Microsoft SQL Server\\MSSQL11.DEV\\MSSQL\\DATA"
+			}
+		}
+	},
+	"Environment": {
+		"type_comments": [
+			"Define here the environment to which this machine is attached. A machine is attached to at most only one environment.",
+			"If this is not what you are searching for, maybe you could take a glance at the logical machine paradigm, unless you could be more interested by roles"
+		],
+		"type": "D"
+	},
+
+	"remoteShare_comments": [
+	],
+	"remoteShare": "\\\\10.122.1.14\\C"
+}

@@ -1,0 +1,156 @@
+{
+	"site": {
+		"commandsDir": "[eval:File::Spec->catdir( TTP::nodeRoot(), 'Site', 'Commands' )]",
+		"workloadSummary_comments": [
+			"manage macros: SUBJECT, OPTIONS"
+		],
+		"workloadSummary": {
+			"command": "smtp.pl send -subject \"<SUBJECT>\" -to inlingua-adm@trychlos.org <OPTIONS>"
+		}
+	},
+
+	"toops": {
+
+		"alerts_comments": [
+			"enabled=true|false here only specifies defaults, as each medium can be individually selected in ttp.pl alert verb",
+			"when sending an email, whether use a text content or file, or a html content or file, or both is up to the verb, so just replace OPTIONS macro"
+		],
+		"alerts": {
+			"withFile_comments": [
+				"manage macros: DATA"
+			],
+			"withFile": {
+				"enabled": true,
+				"dropDir": "[eval:File::Spec->catdir( TTP::logsRoot(), localtime->strftime( '%y%m%d' ), 'Alerts' )]",
+				"command": "ttp.pl writejson -file [eval:File::Spec->catfile( TTP::var([ 'alerts', 'withFile', 'dropDir' ]), Time::Moment->now->strftime( '%Y%m%d%H%M%S%6N' ).'.json' )] -data \"<DATA>\""
+			},
+			"withMqtt_comments": [
+				"manage macros: SUBJECT, DATA, OPTIONS"
+			],
+			"withMqtt": {
+				"enabled": true,
+				"command": "mqtt.pl publish -topic <SUBJECT> -payload \"<DATA>\" <OPTIONS>"
+			},
+			"withSmtp_comments": [
+				"manage macros: SUBJECT, OPTIONS"
+			],
+			"withSmtp" : {
+				"enabled": true,
+				"command": "smtp.pl send -to alerts@trychlos.org,inlingua-adm@trychlos.org -subject <SUBJECT> <OPTIONS>"
+			},
+			"withSms_comments": [
+				"manage macros: OPTIONS"
+			],
+			"withSms" : {
+				"enabled": true,
+				"command": "smtp.pl send -to forwarder@trychlos.org -subject \"SMSTO: +33607797792\" <OPTIONS>"
+			}
+		},
+		"copyDir_comments": [
+			"manage macros: SOURCE, TARGET"
+		],
+		"copyDir": {
+			"byOS": {
+				"MSWin32": {
+					"command": "robocopy <SOURCE> <TARGET> /E /TS /FP /NP /BYTES"
+				}
+			}
+		},
+		"copyFile_comments": [
+			"manage macros: SOURCE, TARGET, FILE"
+		],
+		"copyFile": {
+			"byOS": {
+				"MSWin32": {
+					"command": "robocopy <SOURCE> <TARGET> <FILE> /TS /FP /NP /BYTES"
+				}
+			}
+		},
+
+		"DBMS": {
+			"backupsDir": "[eval:File::Spec->catdir( TTP::var([ 'DBMS', 'backupsRoot' ]), localtime->strftime( '%y%m%d' ), TTP::host() )]",
+			"backupsRoot": "[eval:File::Spec->catdir( TTP::nodeRoot(), 'dailySQLBackups' )]",
+			"instance": "MSSQLSERVER",
+			"byInstance": {
+				"MSSQLSERVER": {
+					"package": "TTP::SqlServer"
+				}
+			}
+		},
+		"deployments": {
+			"sourceDirs": [
+				"[eval:File::Spec->catdir( TTP::nodeRoot(), 'Site' )]",
+				"[eval:File::Spec->catdir( TTP::nodeRoot(), 'TheToolsProject' )]"
+			],
+			"excludes": [
+			],
+			"before": {
+				"removeTree": true
+			},
+			"after": [
+			],
+			"pullReference": "WS12DEV1",
+			"byOS": {
+				"MSWin32": {
+					"command": "robocopy <SOURCE> <TARGET> /MIR"
+				}
+			}
+		},
+		"executionReports": {
+			"withFile_comments": [
+				"manage macros: DATA"
+			],
+			"withFile": {
+				"enabled": true,
+				"dropDir": "[eval:File::Spec->catdir( TTP::logsRoot(), localtime->strftime( '%y%m%d' ), 'execReports' )]",
+				"command": "ttp.pl writejson -file [eval:File::Spec->catfile( TTP::var([ 'executionReports', 'withFile', 'dropDir' ]), Time::Moment->now->strftime( '%Y%m%d%H%M%S%5N' ).'-'.TTP::random().'.json' )] -data \"<DATA>\""
+			},
+			"withMqtt_comments": [
+				"manage macros: SUBJECT, DATA, OPTIONS"
+			],
+			"withMqtt": {
+				"enabled": true,
+				"command": "mqtt.pl publish -topic <SUBJECT> -payload \"<DATA>\" <OPTIONS>"
+			}
+		},
+
+		"logsCommands": "[eval:File::Spec->catdir( TTP::logsDaily(), 'Toops' )]",
+		"logsDaily": "[eval:File::Spec->catdir( TTP::logsRoot(), localtime->strftime( '%y%m%d' ))]",
+		"logsRoot": "[eval:File::Spec->catdir( TTP::nodeRoot(), 'dailyLogs' )]",
+
+		"moveDir_comments": [
+			"manage macros: SOURCE, TARGET"
+		],
+		"moveDir": {
+			"byOS": {
+				"MSWin32": {
+					"command": "robocopy <SOURCE> <TARGET> /E /MOVE /TS /FP /NP /BYTES"
+				}
+			}
+		},
+		"MQTTGateway": {
+			"broker": "10.122.1.15"
+		},
+
+		"nodeRoot": "C:\\INLINGUA",
+
+		"SMTPGateway": {
+			"host": "mail.trychlos.org",
+			"port": 465,
+			"mailfrom": "No Reply <no-reply@blingua.fr>"
+		},
+		"Telemetry": {
+			"withMqtt": {
+				"enabled": true,
+				"command": "mqtt.pl publish -topic <TOPIC> -payload \"<PAYLOAD>\""
+			},
+			"withHttp_comments": [
+				"Actually a Prometheus gateway which is installed besides of the Prometheus server"
+			],
+			"withHttp": {
+				"enabled": true,
+				"url": "http://10.122.1.15:9091/metrics/job/telemetry/host/[eval:TTP::host()]"
+			}
+		}
+	}
+}
