@@ -11,6 +11,7 @@ TODO
      2024- 5- 2 these are called 'named options' and are got in the function through a hash though I don't know at the moment how to dintinguish between a hash and a hash ref
 
   16 2024- 5- 2 on ws12dev1, startup doesn't send alerts
+     2024- 5- 5 same even after scheduled tasks path update
 
   18 2024- 5- 3 ws22prod1
                 Can't stat //ns3232346.ovh.net/C/INLINGUA/dailyLogs/240503/execReports: No such file or directory
@@ -27,7 +28,11 @@ TODO
 
   27 2024- 5- 3 archivesBackups should be set when purging dailyBackups so that we keep for example 5 days in daily Backups and move the 6th to the archives
 
-  29 2024- 5- 3 
+  30 2024- 5- 5 ns3232346 while tom59 has four databases, the execution reports show only one -> should have one execution report per database
+
+  31 2024- 5- 5 ws22prod1 inlingua33_archive is restored at 6h, but not inlingua31_archive nor inlingu59_archive
+
+  33 2024- 5- 5 
 
 # -------------------------------------------------------------------------------------------------
 
@@ -100,3 +105,9 @@ DONE
 
   28 2024- 5- 3 services.pl list -commands: tasks of any workload hide tasks of other workloads
      2024- 5- 3 fixed by requiring the exact wanted workload
+
+  29 2024- 5- 5 ws22prod1 has no daemon for Tom17 -> why didn't it have started this morning
+     2024- 5- 5 the scheduled tasks form yesterday was still running - thus not trigerred this morning
+
+  32 2024- 5- 5 services.pl list -> log the displayed results
+     2024- 5- 5 done

@@ -125,7 +125,7 @@ sub listEnvironment {
 	if( !$env ){
 		msgOut( "no environment registered with this machine" );
 	} else {
-		print " $env".EOL; 
+		log_print( " $env" );
 		$count += 1;
 	}
 	msgOut("$count found defined environment" );
@@ -148,7 +148,7 @@ sub listServiceMachines {
 		msgVerbose( "examining '$host'" );
 		my $node = TTP::Node->new( $ttp, { node => $host });
 		if(( !$opt_type || $node->environment() eq $opt_type ) && $node->hasService( $opt_service )){
-			print " ".( $node->environment() || '' ).": $host".EOL;
+			log_print( " ".( $node->environment() || '' ).": $host" );
 			$count += 1;
 		}
 	}
@@ -167,7 +167,7 @@ sub listServices {
 		result => $list
 	});
 	foreach my $it ( @{$list} ){
-		print " $it".EOL;
+		log_print( " $it" );
 	}
 	msgOut( scalar @{$list}." found defined service(s)" );
 }
@@ -188,7 +188,7 @@ sub listWorkloadCommands {
 	foreach my $it ( @list ){
 		if( exists( $it->{commands} )){
 			foreach my $command ( @{$it->{commands}} ){
-				print " $command".EOL;
+				log_print( " $command" );
 				$count += 1;
 			}
 		}
@@ -217,15 +217,15 @@ sub printWorkloadTask {
 	my ( $task ) = @_;
 	# if we have a name or label, make it the first line
 	if( exists( $task->{name} )){
-		print "+ $task->{name}".EOL;
+		log_print( "+ $task->{name}" );
 	} elsif( exists( $task->{label} )){
-		print "+ $task->{label}".EOL;
+		log_print( "+ $task->{label}" );
 	} else {
-		print "+ (unnamed)".EOL;
+		log_print( "+ (unnamed)" );
 	}
 	# if we have both a name and an label, print the label now
 	if( exists( $task->{name} ) && exists( $task->{label} )){
-		print "  $task->{label}".EOL;
+		log_print( "  $task->{label}" );
 	}
 	# print other keys
 	# we manage one level array/hash to be able to display at least commands (sorted to have a predictable display)
@@ -248,23 +248,23 @@ sub printWorkloadTaskData {
 	# simplest: a scalar value
 	if( !$type ){
 		if( $displayKey ){
-			print "$recData->{prefix}$key: $value".EOL;
+			log_print( "$recData->{prefix}$key: $value" );
 		} else {
-			print "$recData->{prefix}$value".EOL;
+			log_print( "$recData->{prefix}$value" );
 		}
 	# if value is an array, then display key and recurse on array items (do not re-display key)
 	} elsif( $type eq 'ARRAY' ){
-		print "$recData->{prefix}$key:".EOL;
+		log_print( "$recData->{prefix}$key:" );
 		foreach my $it ( @{$value} ){
 			printWorkloadTaskData( $key, $it, { prefix => "$recData->{prefix}  ", displayKey => false });
 		}
 	} elsif( $type eq 'HASH' ){
-		print "$recData->{prefix}$key:".EOL;
+		log_print( "$recData->{prefix}$key:" );
 		foreach my $k ( keys %{$value} ){
 			printWorkloadTaskData( $k, $value->{$k}, { prefix => "$recData->{prefix}  " });
 		}
 	} else {
-		print "  $key: <object reference>".EOL;
+		log_print( "  $key: <object reference>" );
 	}
 }
 
@@ -281,7 +281,7 @@ sub listWorkloads {
 		result => $list
 	});
 	foreach my $it ( sort keys %${list} ){
-		print " $it".EOL;
+		log_print( " $it" );
 		$count += 1;
 	}
 	msgOut( "$count found used workload(s)" );
@@ -295,6 +295,15 @@ sub _listWorkloads_cb {
 			$args->{result}{$workload} = 1;
 		}
 	}
+}
+
+# -------------------------------------------------------------------------------------------------
+# log and print (doesn't use msgOut)
+
+sub log_print {
+	my ( $str ) = @_;
+	msgLog( "(log) $str" );
+	print $str.EOL;
 }
 
 # =================================================================================================
