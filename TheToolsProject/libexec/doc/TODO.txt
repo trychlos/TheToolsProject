@@ -10,9 +10,6 @@ TODO
   15 2024- 1-29 Toops::getOptions doesn't work as we do not know how to pass arguments to GetOptions()
      2024- 5- 2 these are called 'named options' and are got in the function through a hash though I don't know at the moment how to dintinguish between a hash and a hash ref
 
-  16 2024- 5- 2 on ws12dev1, startup doesn't send alerts
-     2024- 5- 5 same even after scheduled tasks path update
-
   18 2024- 5- 3 ws22prod1
                 Can't stat //ns3232346.ovh.net/C/INLINGUA/dailyLogs/240503/execReports: No such file or directory
                  at C:\INLINGUA\Site\Commands\backup-monitor-daemon.pl line 507.
@@ -28,11 +25,14 @@ TODO
 
   27 2024- 5- 3 archivesBackups should be set when purging dailyBackups so that we keep for example 5 days in daily Backups and move the 6th to the archives
 
-  30 2024- 5- 5 ns3232346 while tom59 has four databases, the execution reports show only one -> should have one execution report per database
+  30 2024- 5- 5 ns3232346 while Tom59 has four databases, the execution reports show only one -> should have one execution report per database
 
-  31 2024- 5- 5 ws22prod1 inlingua33_archive is restored at 6h, but not inlingua31_archive nor inlingu59_archive
+  31 2024- 5- 5 ws22prod1 inlingua33_archive is restored at 6h, but not inlingua31_archive nor inlingua59_archive
 
-  33 2024- 5- 5 
+  33 2024- 5- 5 happens that $self = undef in new() classes methods do not work -> have another way to report errors
+     2024- 5- 5 that works that returned value must be tested!
+
+  34 2024- 5- 5 
 
 # -------------------------------------------------------------------------------------------------
 
@@ -77,6 +77,12 @@ DONE
 
   13 2024- 5- 2 the daemon should be able to add its own mqtt topics
      2024- 5- 2 done
+
+  16 2024- 5- 2 on ws12dev1, startup doesn't send alerts
+     2024- 5- 5 same even after scheduled tasks path update
+	            "services.pl list -workload startup -commands -hidden" returns (wrong) "C:\Temp\Site\Commands\startup.cmd"
+				while "ttp.pl vars -key site,commandsDir" returns (right) "C:\INLINGUA\Site\Commands"
+	 2024- 5- 5 fixed
 
   17 2024- 5- 3 ns332346 tasks didn't execute this morning 
 	 2024- 5- 3 fixed with #24

@@ -96,7 +96,7 @@ sub getDefinedWorktasks {
 	my @list = ();
 	foreach my $it ( @{$services} ){
 		my $service = TTP::Service->new( $ttp, { service => $it });
-		if( !$service->hidden() || $displayHiddens ){
+		if( $service && ( !$service->hidden() || $displayHiddens )){
 			my $tasks = $service->var([ 'workloads', $workload ]);
 			if( $tasks ){
 				foreach my $t ( @{$tasks} ){

@@ -173,7 +173,7 @@ sub var {
 		}
 		# search in this service definition
 		if( !defined( $value )){
-			$value = $self->TTP::IJSONable::var( \@args );
+			$value = $self->TTP::IJSONable::var( \@args ) if $self->jsonLoaded();
 		}
 		# last search for a default value at site level
 		if( !defined( $value )){
@@ -211,7 +211,7 @@ sub dirs {
 # - an arguments hash with following keys:
 #   > node, the node name or the TTP::Node instance on which the enumeration must be done, defaulting to current execution node
 #   > cb, a code reference to be called on each enumerated service with:
-#     - the TTP::Service instance
+#     - the TTP::Service instance (remind: it may have not been jsonLoaded)
 #     - this same arguments object
 #   > hidden, whether to also return hidden services, defaulting to false
 # (O):
@@ -238,12 +238,13 @@ sub enumerate {
 		}
 	}
 	my $cb = $args->{cb};
-	if( $cb ){
-		my $services = $node->jsonData()->{Services};
+	if( $cb && ref( $cb ) eq 'CODE' ){
+		# these are the services defined on this node
+		my $services = $node->var([ 'Services' ]);
 		my @list = sort keys %{$services};
 		foreach my $it ( @list ){
 			my $service = TTP::Service->new( $ttp, { service => $it });
-			if( !$service->hidden() || $withHiddens ){
+			if( $service && !$service->hidden() || $withHiddens ){
 				$cb->( $service, $args );
 				$count += 1;
 			}
@@ -274,7 +275,7 @@ sub finder {
 # - an arguments hash with following keys:
 #   > service: the service name to be initialized
 # (O):
-# - this object
+# - this object, may or may not have been jsonLoaded()
 
 sub new {
 	my ( $class, $ttp, $args ) = @_;
@@ -302,6 +303,9 @@ sub new {
 		if( $self->jsonLoad({ findable => $findable, acceptable => $acceptable })){
 			$self->evaluate();
 			$self->_substMacros();
+
+		} else {
+			msgVerbose( "service '$args->{service}' is not defined as an autonomous JSON" );
 		}
 
 	} else {

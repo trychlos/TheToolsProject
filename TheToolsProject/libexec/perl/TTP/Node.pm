@@ -207,7 +207,6 @@ sub new {
 			type => 'JSON'
 		}
 	};
-
 	# try to load the json configuration
 	if( $self->jsonLoad({ findable => $findable, acceptable => $acceptable })){
 		# keep node name if ok

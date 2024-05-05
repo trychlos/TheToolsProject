@@ -70,6 +70,8 @@ sub bootstrap {
 
 	# reevaluate the site when the node is set
 	$site->evaluate();
+	# and reevaluate the node
+	$node->evaluate();
 
 	return  $self;
 }
