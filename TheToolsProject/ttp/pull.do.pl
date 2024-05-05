@@ -50,29 +50,31 @@ my $opt_fromhost = $defaults->{fromhost};
 sub doPull {
 	my $result = false;
 	msgOut( "pulling from '$opt_fromhost'..." );
-	my $fromNode = TTP::Node->new( $ttp, { node => $opt_fromhost });
 	my $asked = 0;
 	my $done = 0;
-	# have pull share
-	my $fromData = $fromNode->jsonData();
-	my $pullShare = undef;
-	$pullShare = $fromData->{remoteShare} if exists $fromData->{remoteShare};
-	if( $pullShare ){
-		my ( $pull_vol, $pull_dirs, $pull_file ) = File::Spec->splitpath( $pullShare );
-		# if a byOS command is specified, then use it
-		my $command = $ttp->var([ 'deployments', 'byOS', $Config{osname}, 'command' ]);
-		msgVerbose( "found command='$command'" );
-		# may have exclusions
-		my $excludes = $ttp->var([ 'deployments', 'excludes' ]);
-		# may have several source dirs: will iterate on each
-		my $sourceDirs = $ttp->var([ 'deployments', 'sourceDirs' ]);
-		foreach my $pullDir ( @{$sourceDirs} ){
-			my $res = doPull_byDir( $pull_vol, $pullDir, $command, $excludes );
-			$asked += $res->{asked};
-			$done += $res->{done};
+	my $fromNode = TTP::Node->new( $ttp, { node => $opt_fromhost });
+	if( $fromNode ){
+		# have pull share
+		my $fromData = $fromNode->jsonData();
+		my $pullShare = undef;
+		$pullShare = $fromData->{remoteShare} if exists $fromData->{remoteShare};
+		if( $pullShare ){
+			my ( $pull_vol, $pull_dirs, $pull_file ) = File::Spec->splitpath( $pullShare );
+			# if a byOS command is specified, then use it
+			my $command = $ttp->var([ 'deployments', 'byOS', $Config{osname}, 'command' ]);
+			msgVerbose( "found command='$command'" );
+			# may have exclusions
+			my $excludes = $ttp->var([ 'deployments', 'excludes' ]);
+			# may have several source dirs: will iterate on each
+			my $sourceDirs = $ttp->var([ 'deployments', 'sourceDirs' ]);
+			foreach my $pullDir ( @{$sourceDirs} ){
+				my $res = doPull_byDir( $pull_vol, $pullDir, $command, $excludes );
+				$asked += $res->{asked};
+				$done += $res->{done};
+			}
+		} else {
+			msgErr( "remoteShare is not specified in '$opt_fromhost' host configuration" );
 		}
-	} else {
-		msgErr( "remoteShare is not specified in '$opt_fromhost' host configuration" );
 	}
 	my $str = "$done/$asked copied subdir(s)";
 	if( $done == $asked && !TTP::errs()){

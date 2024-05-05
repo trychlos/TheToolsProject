@@ -147,7 +147,7 @@ sub listServiceMachines {
 	foreach my $host ( @{$hosts} ){
 		msgVerbose( "examining '$host'" );
 		my $node = TTP::Node->new( $ttp, { node => $host });
-		if(( !$opt_type || $node->environment() eq $opt_type ) && $node->hasService( $opt_service )){
+		if( $node && ( !$opt_type || $node->environment() eq $opt_type ) && $node->hasService( $opt_service )){
 			log_print( " ".( $node->environment() || '' ).": $host" );
 			$count += 1;
 		}

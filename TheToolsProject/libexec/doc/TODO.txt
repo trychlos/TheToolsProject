@@ -29,9 +29,6 @@ TODO
 
   31 2024- 5- 5 ws22prod1 inlingua33_archive is restored at 6h, but not inlingua31_archive nor inlingua59_archive
 
-  33 2024- 5- 5 happens that $self = undef in new() classes methods do not work -> have another way to report errors
-     2024- 5- 5 that works that returned value must be tested!
-
   34 2024- 5- 5 
 
 # -------------------------------------------------------------------------------------------------
@@ -116,4 +113,8 @@ DONE
      2024- 5- 5 the scheduled tasks form yesterday was still running - thus not trigerred this morning
 
   32 2024- 5- 5 services.pl list -> log the displayed results
+     2024- 5- 5 done
+
+  33 2024- 5- 5 happens that $self = undef in new() classes methods do not work -> have another way to report errors
+     2024- 5- 5 that works that returned value must be tested!
      2024- 5- 5 done
