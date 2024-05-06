@@ -17,19 +17,31 @@ TODO
                  at C:\INLINGUA\Site\Commands\backup-monitor-daemon.pl line 493.
 				One line is normal as long as there is not yet any execution report to create the directory
 				Why this second line ?
+	 2024- 5- 5 seems that this doesn't reproduce - wait for two days...
+     2024- 5- 6 stdout is clean as o 2024-05-06 09:43
 
   25 2024- 5- 3 ttp->var() and others should be able to return a composite data (not only a scalar)
                 and ttp.pl vars and others should be able to display them
+	 2024- 5- 5 they actually do return composite data - just is not displayed by the verb
+	            see daemon.pl dbms.pl services.pl ttp.pl
 
   26 2024- 5- 3 upgrade Canal33 backups from every.5h to every.2h (like the Tom's)
 
   27 2024- 5- 3 archivesBackups should be set when purging dailyBackups so that we keep for example 5 days in daily Backups and move the 6th to the archives
 
-  30 2024- 5- 5 ns3232346 while Tom59 has four databases, the execution reports show only one -> should have one execution report per database
-
   31 2024- 5- 5 ws22prod1 inlingua33_archive is restored at 6h, but not inlingua31_archive nor inlingua59_archive
+     2024- 5- 6 confirmed
 
-  34 2024- 5- 5 
+  34 2024- 5- 6 (war) telemetry are not requested on tom17, tom21, tom59.live.morning
+
+  35 2024- 5- 6 (VER) checkDatabaseExists() returning true should also have the database name
+
+  36 2024- 5- 6 jsonWrite() returns $VAR1 = bless( [
+                 'C:/INLINGUA/dailyLogs/240506/execReports/2024050606000238325-bcfd49ecb39b10149c0546b87b6865c8.json',
+                 'C:\\INLINGUA\\dailyLogs\\240506\\execReports\\2024050606000238325-bcfd49ecb39b10149c0546b87b6865c8.json'
+               ], 'Path::Tiny' ); -> two filenames ?
+
+  37 2024- 5- 6 
 
 # -------------------------------------------------------------------------------------------------
 
@@ -111,6 +123,11 @@ DONE
 
   29 2024- 5- 5 ws22prod1 has no daemon for Tom17 -> why didn't it have started this morning
      2024- 5- 5 the scheduled tasks form yesterday was still running - thus not trigerred this morning
+
+  30 2024- 5- 5 ns3232346 while Tom59 has four databases, the execution reports show only one -> should have one execution report per database
+     2024- 5- 6 confirmed: all the databases are saved, but only three execution reports: tom17+tom21+tom59: the four execution reports are sent to the same file
+	            happens that TTP::random() is evaluated at bootstrap time, so once for the three files
+     2024- 5- 6 fixed by a) removing the TTP::random() evaluation from site.json b) replacing it with a temp file templating in ttp.pl writejson
 
   32 2024- 5- 5 services.pl list -> log the displayed results
      2024- 5- 5 done
