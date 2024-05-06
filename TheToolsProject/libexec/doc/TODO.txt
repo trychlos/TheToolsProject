@@ -32,8 +32,6 @@ TODO
   31 2024- 5- 5 ws22prod1 inlingua33_archive is restored at 6h, but not inlingua31_archive nor inlingua59_archive
      2024- 5- 6 confirmed
 
-  34 2024- 5- 6 (war) telemetry are not requested on tom17, tom21, tom59.live.morning
-
   37 2024- 5- 6 
 
 # -------------------------------------------------------------------------------------------------
@@ -128,6 +126,9 @@ DONE
   33 2024- 5- 5 happens that $self = undef in new() classes methods do not work -> have another way to report errors
      2024- 5- 5 that works that returned value must be tested!
      2024- 5- 5 done
+
+  34 2024- 5- 6 (war) telemetry are not requested on tom17, tom21, tom59.live.morning
+     2024- 5- 6 fixed
 
   35 2024- 5- 6 (VER) checkDatabaseExists() returning true should also have the database name
      2024- 5- 6 done

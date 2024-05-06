@@ -27,8 +27,8 @@
 				"label": "(Production Live) Sauvegarde quotidienne de la base de données Tom17",
 				"commands": [
 					"dbms.pl backup -nocolored -service <SERVICE> -full",
-					"dbms.pl telemetry -nocolored -service <SERVICE> -dbsize",
-					"dbms.pl telemetry -nocolored -service <SERVICE> -tabcount"
+					"dbms.pl telemetry -nocolored -service <SERVICE> -dbsize -mqtt -http",
+					"dbms.pl telemetry -nocolored -service <SERVICE> -tabcount -mqtt -http"
 				]
 			}
 		],
