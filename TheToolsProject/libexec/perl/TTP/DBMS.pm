@@ -130,7 +130,7 @@ sub databaseExists {
 		msgErr( __PACKAGE__."::databaseExists() database is mandatory, but is not specified" );
 	}
 
-	msgVerbose( "checkDatabaseExists() returning ".( $exists ? 'true' : 'false' ));
+	msgVerbose( "checkDatabaseExists() database='".( $database || '(undef)' )."' returning ".( $exists ? 'true' : 'false' ));
 	return $exists;
 }
 
