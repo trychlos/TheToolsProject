@@ -684,7 +684,7 @@ sub jsonRead {
 # Write a hash to a JSON file
 # (I):
 # - the hash to be written into
-# - the full path to be created
+# - the full path to be created (is overwritten if already exists)
 # (O):
 # - returns true|false
 
@@ -695,7 +695,7 @@ sub jsonWrite {
 	my $str = $json->encode( $hash );
 	my ( $vol, $dirs, $file ) = File::Spec->splitpath( $path );
 	TTP::makeDirExist( File::Spec->catdir( $vol, $dirs ));
-	# some daemons may monitor this file in order to be informed of various executions - make sure each record has an EOL
+	# some daemons may monitor this file in order to be informed of various executions - make sure we end up with an EOL
 	# '$res' is an array with the original path and an interpreted one - may also return true
 	my $res = path( $path )->spew_utf8( $str.EOL );
 	msgVerbose( "jsonWrite() returns ".Dumper( $res ));
