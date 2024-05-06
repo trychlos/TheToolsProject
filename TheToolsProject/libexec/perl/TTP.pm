@@ -831,20 +831,6 @@ sub pad {
 }
 
 # -------------------------------------------------------------------------------------------------
-# returns a random identifier
-# (I):
-# - none
-# (O):
-# - a random (UUID-based) string of 32 hexa lowercase characters
-
-sub random {
-	my $ug = new Data::UUID;
-	my $uuid = lc $ug->create_str();
-	$uuid =~ s/-//g;
-	return $uuid;
-}
-
-# -------------------------------------------------------------------------------------------------
 # print a value on stdout
 # (I):
 # - the value to be printed, maybe undef
@@ -879,6 +865,20 @@ sub print_rec {
 	} else {
 		print "$prefix: $value".EOL;
 	}
+}
+
+# -------------------------------------------------------------------------------------------------
+# returns a random identifier
+# (I):
+# - none
+# (O):
+# - a random (UUID-based) string of 32 hexa lowercase characters
+
+sub random {
+	my $ug = new Data::UUID;
+	my $uuid = lc $ug->create_str();
+	$uuid =~ s/-//g;
+	return $uuid;
 }
 
 # -------------------------------------------------------------------------------------------------
