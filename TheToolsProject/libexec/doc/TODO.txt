@@ -10,16 +10,6 @@ TODO
   15 2024- 1-29 Toops::getOptions doesn't work as we do not know how to pass arguments to GetOptions()
      2024- 5- 2 these are called 'named options' and are got in the function through a hash though I don't know at the moment how to dintinguish between a hash and a hash ref
 
-  18 2024- 5- 3 ws22prod1
-                Can't stat //ns3232346.ovh.net/C/INLINGUA/dailyLogs/240503/execReports: No such file or directory
-                 at C:\INLINGUA\Site\Commands\backup-monitor-daemon.pl line 507.
-                Can't stat //ns3232346.ovh.net/C/INLINGUA/dailyLogs/240503/execReports: No such file or directory
-                 at C:\INLINGUA\Site\Commands\backup-monitor-daemon.pl line 493.
-				One line is normal as long as there is not yet any execution report to create the directory
-				Why this second line ?
-	 2024- 5- 5 seems that this doesn't reproduce - wait for two days...
-     2024- 5- 6 stdout is clean as o 2024-05-06 09:43
-
   25 2024- 5- 3 ttp->var() and others should be able to return a composite data (not only a scalar)
                 and ttp.pl vars and others should be able to display them
 	 2024- 5- 5 they actually do return composite data - just is not displayed by the verb
@@ -30,9 +20,9 @@ TODO
   27 2024- 5- 3 archivesBackups should be set when purging dailyBackups so that we keep for example 5 days in daily Backups and move the 6th to the archives
 
   31 2024- 5- 5 ws22prod1 inlingua33_archive is restored at 6h, but not inlingua31_archive nor inlingua59_archive
-     2024- 5- 6 confirmed
+     2024- 5- 6 confirmed - this may be because there was only one execution report json file, so should be fixed with #30
 
-  37 2024- 5- 6 
+  38 2024- 5- 7 
 
 # -------------------------------------------------------------------------------------------------
 
@@ -87,6 +77,17 @@ DONE
   17 2024- 5- 3 ns332346 tasks didn't execute this morning 
 	 2024- 5- 3 fixed with #24
 
+  18 2024- 5- 3 ws22prod1
+                Can't stat //ns3232346.ovh.net/C/INLINGUA/dailyLogs/240503/execReports: No such file or directory
+                 at C:\INLINGUA\Site\Commands\backup-monitor-daemon.pl line 507.
+                Can't stat //ns3232346.ovh.net/C/INLINGUA/dailyLogs/240503/execReports: No such file or directory
+                 at C:\INLINGUA\Site\Commands\backup-monitor-daemon.pl line 493.
+				One line is normal as long as there is not yet any execution report to create the directory
+				Why this second line ?
+	 2024- 5- 5 seems that this doesn't reproduce - wait for two days...
+     2024- 5- 6 stdout is clean as of 2024-05-06 09:43
+     2024- 5- 7 stdout is clean as of 2024-05-06 09:41 -> closing
+
   19 2024- 5- 3 ws22prod1 tasks didn't execute to purge the logs directories
 	 2024- 5- 3 fixed with #24
 
@@ -138,3 +139,6 @@ DONE
                  'C:\\INLINGUA\\dailyLogs\\240506\\execReports\\2024050606000238325-bcfd49ecb39b10149c0546b87b6865c8.json'
                ], 'Path::Tiny' ); -> two filenames ?
 	 2024- 5- 6 this is just the standard return value of Path::Tiny->path() -> closed
+
+  37 2024- 5- 7 ns3232346 no execution reports
+     2024- 5- 7 fixed
