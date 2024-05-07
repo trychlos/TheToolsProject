@@ -56,15 +56,17 @@ my $opt_append = false;
 # write the data into the file
 
 sub doWriteJson {
-	msgOut( "writing JSON data into $opt_file..." );
-	my @to = split( /,/, $opt_to );
+	msgOut( "writing JSON data into ".( $opt_file ? "'$opt_file' file" : "'$opt_dir' dir" )."..." );
 	my $res = false;
 	my $json = JSON->new;
 	my $data = $json->decode( $opt_data );
 	# if no filename is provided, compute one with maybe a dir, maybe a template, maybe a suffix
 	if( !$opt_file ){
 		my %parms = ();
-		$parms{DIR} = $opt_dir if $opt_dir;
+		if( $opt_dir ){
+			$parms{DIR} = $opt_dir;
+			TTP::makeDirExist( $opt_dir );
+		}
 		$parms{TEMPLATE} = $opt_template if $opt_template;
 		$parms{SUFFIX} = $opt_suffix if $opt_suffix;
 		$parms{UNLINK} = false;
