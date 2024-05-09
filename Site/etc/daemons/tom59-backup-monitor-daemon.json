@@ -15,5 +15,6 @@
 	"monitoredService": "Tom59",
 	"localDir": "[eval:File::Spec->catdir( TTP::var([ 'DBMS', 'backupsRoot' ]), localtime->strftime( '%y%m%d' ), '<REMOTEHOST>' )]",
 
-	"textingInterval": -1
+	"textingInterval": -1,
+	"messagingTimeout": 600
 }

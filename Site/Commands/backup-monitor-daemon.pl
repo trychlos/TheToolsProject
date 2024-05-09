@@ -46,6 +46,9 @@
 # - localDir: the directory of the current node into which remote found backup files must be copied, mandatory
 # - scanInterval, the scan interval, defaulting to 10000 ms (10 sec.)
 #
+# It is also suggested to set the 'messagingTimeout' value to a timeout large enough to handle the potential timeouts when
+# publishing HTTP telemetries. Say, for example, something like 60 sec. tiemout per telemetry.
+#
 # Known macros here are:
 # - REMOTEHOST
 # - REMOTESHARE

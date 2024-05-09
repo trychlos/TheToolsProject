@@ -45,12 +45,14 @@ $ENV{MQTT_SIMPLE_ALLOW_INSECURE_LOGIN} = 1;
 #     - topic, defaulting to empty
 #     - payload, defaulting to empty
 #     - retain, defaulting to false
+# - an optional hash which will be passed to underlying IO::Socket::IP package
 # (O):
 # - an opaque connection handle to be used when publishing (and disconnecting)
 
 sub connect {
-	my ( $args ) = @_;
+	my ( $args, $sockopts ) = @_;
 	my $mqtt = undef;
+	$sockopts //= {};
 
 	my $broker = $ttp->var([ 'MQTTGateway', 'broker' ]);
 	$broker = $args->{broker} if $args->{broker};
@@ -64,7 +66,7 @@ sub connect {
 	$password = $args->{password} if $args->{password};
 	msgErr( "MQTT::connect() password is not configured nor provided as an argument" ) if !$password;
 
-	$mqtt = Net::MQTT::Simple->new( $broker ) if $broker;
+	$mqtt = Net::MQTT::Simple->new( $broker, $sockopts ) if $broker;
 	if( $mqtt ){
 		# define a last will if requested by the caller
 		if( $args->{will} ){
@@ -93,10 +95,12 @@ sub connect {
 # disconnect from the specified MQTT broker
 # (I):
 # - opaque connection handle as returned from MQTT::connect()
+
 sub disconnect {
 	my ( $handle ) = @_;
 	if( $handle ){
 		if( $handle->{ttpLastWill} ){
+			msgLog( "executing lastwill for the daemon" );
 			if( $handle->{ttpLastWill}{retain} ){
 				$handle->retain( $handle->{ttpLastWill}{topic}, $handle->{ttpLastWill}{payload} );
 			} else {
@@ -107,6 +111,23 @@ sub disconnect {
 		$handle->disconnect();
 	} else {
 		msgErr( "MQTT::disconnect() undefined connection handle" );
+		TTP::stackTrace();
+	}
+}
+
+# ------------------------------------------------------------------------------------------------
+# set the 'keepalive' interval
+# (I):
+# - opaque connection handle as returned from MQTT::connect()
+# - keepalive interval in sec.
+
+sub keepalive {
+	my ( $handle, $interval ) = @_;
+	if( $handle ){
+		$Net::MQTT::Simple::KEEPALIVE_INTERVAL = $interval;
+		msgVerbose( "setting KEEPALIVE_INTERVAL='$interval'" );
+	} else {
+		msgErr( "MQTT::keepalive() undefined connection handle" );
 		TTP::stackTrace();
 	}
 }

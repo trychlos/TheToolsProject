@@ -51,7 +51,7 @@ use Role::Tiny;
 requires qw( _newBase );
 
 # -------------------------------------------------------------------------------------------------
-# See if a function has reached its requested interval
+# See if a function has reached its requested interval (unless the stop() sub has been called)
 # (I):
 # - last run, may be undef or zero
 # - requested interval (ms)

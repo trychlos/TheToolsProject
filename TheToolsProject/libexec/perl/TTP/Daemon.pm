@@ -32,6 +32,7 @@
 #   defaulting to 60000 ms (1 mn)
 # - textingInterval: either <0 (do not advertize to text-based telemetry system), or the advertizing interval in ms,
 #   defaulting to 60000 ms (1 mn)
+# - messagingTimeout: the timeout in sec. of the MQTT connection (if applied), defaulting to 60sec.
 #
 # Also the daemon writer mmust be conscious of the dynamic character of TheToolsProject.
 # In particular and at least, many output directories (logs, temp files and so on) may be built on a daily basis.
@@ -82,7 +83,9 @@ use constant {
 	DEFAULT_HTTPING_INTERVAL => 60000,
 	MIN_TEXTING_INTERVAL => 5000,
 	DEFAULT_TEXTING_INTERVAL => 60000,
-	OFFLINE => "offline"
+	OFFLINE => "offline",
+	MIN_MQTT_TIMEOUT => 5,
+	DEFAULT_MQTT_TIMEOUT => 60
 };
 
 # auto-flush on socket
@@ -208,6 +211,7 @@ sub _daemonize {
 		$self->{_mqtt} = TTP::MQTT::connect({
 			will => $self->_lastwill()
 		});
+		TTP::MQTT::keepalive( $self->{_mqtt}, $self->_mqtt_timeout());
 	}
 
 	# Ctrl+C handling
@@ -353,10 +357,10 @@ sub _mqtt_advertize {
 					foreach my $it ( @{$array} ){
 						if( $it->{topic} && exists(  $it->{payload} )){
 							if( $it->{retain} ){
-								msgLog( "retain $topic [$payload]" );
+								msgLog( "retain $it->{topic} [$it->{payload}]" );
 								$self->{_mqtt}->retain( $it->{topic}, $it->{payload} );
 							} else {
-								msgLog( "publish $topic [$payload]" );
+								msgLog( "publish $it->{topic} [$it->{payload}]" );
 								$self->{_mqtt}->publish( $it->{topic}, $it->{payload} );
 							}
 						} else {
@@ -378,6 +382,22 @@ sub _mqtt_advertize {
 	} else {
 		msgVerbose( __PACKAGE__."::_mqtt_advertize() not publishing as MQTT is not initialized" );
 	}
+}
+
+# ------------------------------------------------------------------------------------------------
+# returns the to-be-applied mqtt timeout
+
+sub _mqtt_timeout {
+	my ( $self ) = @_;
+
+	my $timeout = $self->jsonData()->{messagingTimeout};
+	$timeout = DEFAULT_MQTT_TIMEOUT if !defined $timeout;
+	if( $timeout && $timeout < MIN_MQTT_TIMEOUT ){
+		msgVerbose( "defined messagingTimeout=$timeout less than minimum accepted ".MIN_MQTT_TIMEOUT.", ignored" );
+		$timeout = DEFAULT_MQTT_TIMEOUT;
+	}
+
+	return $timeout;
 }
 
 # ------------------------------------------------------------------------------------------------
@@ -437,12 +457,15 @@ sub commonCommands {
 sub declareSleepables {
 	my ( $self, $commands ) = @_;
 
+	# the listening function, each 'listeningInterval'
 	$self->sleepableDeclareFn( sub => sub { $self->listen( $commands ); }, interval => $self->listeningInterval() );
-
+	# the mqtt status publication, each 'mqttInterval'
 	my $mqttInterval = $self->messagingInterval();
 	$self->sleepableDeclareFn( sub => sub { $self->_mqtt_advertize(); }, interval => $mqttInterval ) if $mqttInterval > 0;
+	# the http telemetry publication, each 'httpInterval'
 	my $httpInterval = $self->httpingInterval();
 	$self->sleepableDeclareFn( sub => sub { $self->_http_advertize(); }, interval => $httpInterval ) if $httpInterval > 0;
+	# the text telemetry publication, each 'textInterval'
 	my $textInterval = $self->textingInterval();
 	$self->sleepableDeclareFn( sub => sub { $self->_text_advertize(); }, interval => $textInterval ) if $textInterval > 0;
 
@@ -670,7 +693,7 @@ sub messagingInterval {
 sub messagingSub {
 	my ( $self, $sub ) = @_;
 
-	if( ref( $sub ) eq 'CODE' ){
+	if( $sub && ref( $sub ) eq 'CODE' ){
 		$self->{_mqtt_sub} = $sub;
 	} else {
 		msgErr( __PACKAGE__."::messagingSub() expects a code ref, got '".ref( $sub )."'" );
@@ -972,7 +995,7 @@ sub new {
 	$self->{_terminating} = false;
 
 	# if a path is specified, then we try to load it
-	# JSOnable role takes care of validating the acceptability and the enable-ity
+	# IJSONable role takes care of validating the acceptability and the enable-ity
 	if( $args && $args->{path} ){
 		$args->{json} = $args->{path};
 		$self->setConfig( $args );
