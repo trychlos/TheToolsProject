@@ -103,7 +103,7 @@
 			"withFile": {
 				"enabled": true,
 				"dropDir": "[eval:File::Spec->catdir( TTP::logsRoot(), localtime->strftime( '%y%m%d' ), 'execReports' )]",
-				"command": "ttp.pl writejson -dir [eval:TTP::var([ 'executionReports', 'withFile', 'dropDir' ])] -template [eval:Time::Moment->now->strftime( '%y%m%d%H%M%S' ).'-XXXXXX'] -suffix '.json' -data \"<DATA>\""
+				"command": "ttp.pl writejson -dir [eval:TTP::var([ 'executionReports', 'withFile', 'dropDir' ])] -template [eval:Time::Moment->now->strftime( '%y%m%d%H%M%S' ).'-XXXXXX'] -suffix .json -data \"<DATA>\""
 			},
 			"withMqtt_comments": [
 				"manage macros: SUBJECT, DATA, OPTIONS"
