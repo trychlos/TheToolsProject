@@ -136,7 +136,10 @@ sub doDbSize {
 		my $set = _interpretDbResultSet( $sqlres->{result} );
 		# we got so six metrics for each database
 		# that we publish separately as mqtt-based names are slightly different from Prometheus ones
-		my @labels = ( @opt_prepends, "instance=$opt_instance", "database=$db", @opt_appends );
+		my @labels = ( @opt_prepends,
+			"environment=".$ttp->node()->environment(), "command=".$running->command(), "verb=".$running->verb(),
+			"instance=$opt_instance", "database=$db",
+			@opt_appends );
 		foreach my $key ( keys %{$set} ){
 			TTP::Metric->new( $ttp, {
 				name => $key,

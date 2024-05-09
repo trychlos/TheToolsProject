@@ -266,6 +266,9 @@ sub _metrics {
 	# running since x.xxxxx sec.
 	my $since = sprintf( "%.5f", $self->runnableStarted()->delta_microseconds( Time::Moment->now ) / 1000000 );
 	my $labels = [ "daemon=".$self->name() ];
+	puhs( @{$labels}, "command=".$self->command());
+	puhs( @{$labels}, "qualifier=".$self->runnableQualifier());
+	puhs( @{$labels}, "environment=".$ttp->node()->environment());
 	push( @{$labels}, @{$self->{_labels}} ) if exists $self->{_labels};
 	my $rc = TTP::Metric->new( $ttp, {
 		name => 'ttp_backup_daemon_since',

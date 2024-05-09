@@ -12,11 +12,11 @@
 # @(-) --[no]status            publish status-based telemetry [${status}]
 # @(-) --[no]epoch             publish epoch-based telemetry [${epoch}]
 # @(-) --[no]mqtt              publish the metrics to the (MQTT-based) messaging system [${mqtt}]
-# @(-) --mqttPrefix=<prefi>    prefix the metric name when publishing to the (MQTT-based) messaging system [${mqttPrefix}]
+# @(-) --mqttPrefix=<prefix>   prefix the metric name when publishing to the (MQTT-based) messaging system [${mqttPrefix}]
 # @(-) --[no]http              publish the metrics to the (HTTP-based) Prometheus PushGateway system [${http}]
-# @(-) --httpPrefix=<prefi>    prefix the metric name when publishing to the (HTTP-based) Prometheus PushGateway system [${httpPrefix}]
+# @(-) --httpPrefix=<prefix>   prefix the metric name when publishing to the (HTTP-based) Prometheus PushGateway system [${httpPrefix}]
 # @(-) --[no]text              publish the metrics to the (text-based) Prometheus TextFile Collector system [${text}]
-# @(-) --textPrefix=<prefi>    prefix the metric name when publishing to the (text-based) Prometheus TextFile Collector system [${textPrefix}]
+# @(-) --textPrefix=<prefix>   prefix the metric name when publishing to the (text-based) Prometheus TextFile Collector system [${textPrefix}]
 # @(-) --prepend=<name=value>  label to be appended to the telemetry metrics, may be specified several times or as a comma-separated list [${prepend}]
 # @(-) --append=<name=value>   label to be appended to the telemetry metrics, may be specified several times or as a comma-separated list [${append}]
 #
@@ -49,6 +49,8 @@ use HTTP::Request;
 use LWP::UserAgent;
 use Time::Piece;
 use URI::Escape;
+
+use TTP::Metric;
 
 my $defaults = {
 	help => 'no',
@@ -107,10 +109,11 @@ sub doGet {
 		my $response = $ua->request( $req );
 		$res = $response->is_success;
 		my $status = $response->code;
-		msgVerbose( "receiving HTTP status='$status', success='".( $res ? 'true' : 'false' )."'" );
 		if( $res ){
+			msgVerbose( "receiving HTTP status='$status', success='true'" );
 			msgLog( "content='".$response->decoded_content."'" );
 		} else {
+			msgErr( "received HTTP status='$status', success='false'" );
 			$status = $response->status_line;
 			msgLog( "additional status: '$status'" );
 			my $acceptedRegex = undef;
@@ -119,7 +122,7 @@ sub doGet {
 				last if defined $acceptedRegex;
 			}
 			if( defined $acceptedRegex ){
-				msgVerbose( "status code match '$acceptedRegex' accepted regex, forcing result to true" );
+				msgOut( "status code match '$acceptedRegex' accepted regex, forcing result to true" );
 				$res = true;
 			}
 		}
@@ -157,6 +160,9 @@ sub _telemetry {
 	if( $opt_mqtt || $opt_http || $opt_text ){
 		my ( $proto, $path ) = split( /:\/\//, $opt_url );
 		my @labels = @opt_prepends;
+		push( @labels, "environment=".$ttp->node()->environment());
+		push( @labels, "command=".$running->command());
+		push( @labels, "verb=".$running->verb());
 		push( @labels, "proto=$proto" );
 		push( @labels, "path=$path" );
 		if( $opt_header && $header && $opt_publishHeader ){

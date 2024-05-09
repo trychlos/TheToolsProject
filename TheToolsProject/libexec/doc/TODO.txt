@@ -23,8 +23,6 @@ TODO
      2024- 5- 6 confirmed - this may be because there was only one execution report json file, so should be fixed with #30
      2024- 5- 9 still there: to be fixed
 
-  40 2024- 5- 9 telemetry: should have environment and emitter(command+verb) - see the push gateway @ 10.122.1.15:9091
-
   44 2024- 5- 9 
 
 # -------------------------------------------------------------------------------------------------
@@ -154,6 +152,11 @@ DONE
   39 2024- 5- 9 daemons do not publish their status to mqtt
      2024- 5- 9 they actually do publish, but 1mn later an 'offline' is also published
 	 2024- 5- 9 fixed by increasing the KEEPALIVE_INTERVAL for backup daemons
+
+  40 2024- 5- 9 telemetry: should have environment and emitter(command+verb) - see the push gateway @ 10.122.1.15:9091
+     2024- 5- 9 labels are added to dbms.pl status and dbms.pl telemetry, http.pl get, Daemon.pm, mswin.pl service, and ttp.pl sizedir
+	            only telemetry.pl publish is left unchanged
+     2024- 5- 9 done
 
   41 2024- 5- 9 daemons mqtt: publish all status informations
      2024- 5- 9 done

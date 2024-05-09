@@ -215,19 +215,19 @@ sub publish {
 	my $mqtt = false;
 	$mqtt = $args->{mqtt} if exists $args->{mqtt};
 	my $mqttPrefix = '';
-	$mqttPrefix = $args->{mqttPrefix} if exists $args->{mqttPrefix};
+	$mqttPrefix = $args->{mqttPrefix} if defined $args->{mqttPrefix};
 	$result->{mqtt} = $self->_mqtt_publish( $mqttPrefix ) if $mqtt;
 
 	my $http = false;
 	$http = $args->{http} if exists $args->{http};
 	my $httpPrefix = '';
-	$httpPrefix = $args->{httpPrefix} if exists $args->{httpPrefix};
+	$httpPrefix = $args->{httpPrefix} if defined $args->{httpPrefix};
 	$result->{http} = $self->_http_publish( $httpPrefix ) if $http;
 
 	my $text = false;
 	$text = $args->{text} if exists $args->{text};
 	my $textPrefix = '';
-	$textPrefix = $args->{textPrefix} if exists $args->{textPrefix};
+	$textPrefix = $args->{textPrefix} if defined $args->{textPrefix};
 	$result->{text} = $self->_text_publish( $textPrefix ) if $text;
 
 	return $result;

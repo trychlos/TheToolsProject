@@ -125,7 +125,10 @@ sub doState {
 		}
 		# -> mqtt: publish a single string metric
 		#    e.g. state: online
-		my @labels = ( @opt_prepends, "instance=$opt_instance", "database=$db", @opt_appends );
+		my @labels = ( @opt_prepends,
+			"environment=".$ttp->node()->environment(), "command=".$running->command(), "verb=".$running->verb(),
+			"instance=$opt_instance", "database=$db",
+			@opt_appends );
 		TTP::Metric->new( $ttp, {
 			name => 'state',
 			value => $result->{state_desc},
@@ -138,7 +141,10 @@ sub doState {
 		# -> http/text: publish a metric per known sqlState
 		#    e.g. state=emergency 0
 		foreach my $key ( keys( %{$sqlStates} )){
-			my @labels = ( @opt_prepends, "instance=$opt_instance", "database=$db", "state=$sqlStates->{$key}", @opt_appends );
+			my @labels = ( @opt_prepends,
+				"environment=".$ttp->node()->environment(), "command=".$running->command(), "verb=".$running->verb(),
+				"instance=$opt_instance", "database=$db", "state=$sqlStates->{$key}",
+				@opt_appends );
 			TTP::Metric->new( $ttp, {
 				name => 'dbms_database_state',
 				value => "$key" eq "$result->{state}" ? 1 : 0,

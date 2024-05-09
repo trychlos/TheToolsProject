@@ -92,7 +92,9 @@ sub doComputeSize {
 		my $path = $opt_dirpath;
 		$path =~ s/\//_/g;
 		$path =~ s/\\/_/g;
-		my @labels = ( @opt_prepends, "path=$path", @opt_appends );
+		my @labels = ( @opt_prepends,
+			"environment=".$ttp->node()->environment(), "command=".$running->command(), "verb=".$running->verb(), "path=$path",
+			@opt_appends );
 		TTP::Metric->new( $ttp, {
 			name => 'dirs_count',
 			value => $dirCount,
