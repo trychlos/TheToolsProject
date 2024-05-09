@@ -21,8 +21,15 @@ TODO
 
   31 2024- 5- 5 ws22prod1 inlingua33_archive is restored at 6h, but not inlingua31_archive nor inlingua59_archive
      2024- 5- 6 confirmed - this may be because there was only one execution report json file, so should be fixed with #30
+     2024- 5- 9 still there: to be fixed
 
-  38 2024- 5- 7 
+  39 2024- 5- 9 daemons do not publish their status to mqtt
+
+  40 2024- 5- 9 telemetry: should have environment and emitter(command+verb) - see the push gateway @ 10.122.1.15:9091
+
+  41 2024- 5- 9 daemons mqtt: publish all status informations
+
+  42 2024- 5- 9 
 
 # -------------------------------------------------------------------------------------------------
 
@@ -142,3 +149,8 @@ DONE
 
   37 2024- 5- 7 ns3232346 no execution reports
      2024- 5- 7 fixed
+
+  38 2024- 5- 7 backup daemons do not run
+     2024- 5- 7 actually, they are running, but do not answer
+	 2024- 5- 9 they answer but this is very long
+	 2024- 5- 9 fixed by the freeing of rl9pilot1 work space

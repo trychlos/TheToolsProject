@@ -353,8 +353,10 @@ sub _mqtt_advertize {
 					foreach my $it ( @{$array} ){
 						if( $it->{topic} && exists(  $it->{payload} )){
 							if( $it->{retain} ){
+								msgLog( "retain $topic [$payload]" );
 								$self->{_mqtt}->retain( $it->{topic}, $it->{payload} );
 							} else {
+								msgLog( "publish $topic [$payload]" );
 								$self->{_mqtt}->publish( $it->{topic}, $it->{payload} );
 							}
 						} else {
@@ -371,8 +373,10 @@ sub _mqtt_advertize {
 		# and publish ours
 		my $topic = $self->_topic();
 		my $payload = $self->_running();
-		msgLog( "$topic [$payload]" );
+		msgLog( "retain $topic [$payload]" );
 		$self->{_mqtt}->retain( $topic, $payload );
+	} else {
+		msgVerbose( __PACKAGE__."::_mqtt_advertize() not publishing as MQTT is not initialized" );
 	}
 }
 

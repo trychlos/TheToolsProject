@@ -22,7 +22,7 @@
 			"withFile": {
 				"enabled": true,
 				"dropDir": "[eval:File::Spec->catdir( TTP::logsRoot(), localtime->strftime( '%y%m%d' ), 'Alerts' )]",
-				"command": "ttp.pl writejson -file [eval:File::Spec->catfile( TTP::var([ 'alerts', 'withFile', 'dropDir' ]), Time::Moment->now->strftime( '%Y%m%d%H%M%S%6N' ).'.json' )] -data \"<DATA>\""
+				"command": "ttp.pl writejson -file [eval:File::Spec->catfile( TTP::var([ 'alerts', 'withFile', 'dropDir' ]), Time::Moment->now->strftime( '%Y%m%d%H%M%S%5N' ).'.json' )] -data \"<DATA>\""
 			},
 			"withMqtt_comments": [
 				"manage macros: SUBJECT, DATA, OPTIONS"
