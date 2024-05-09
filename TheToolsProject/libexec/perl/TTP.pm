@@ -658,22 +658,28 @@ sub jsonAppend {
 # returns the read hash, or undef
 
 sub jsonRead {
-	my ( $conf, $opts ) = @_;
+	my ( $path, $opts ) = @_;
+	stackTrace() if !$path;
 	$opts //= {};
-	msgVerbose( "jsonRead() conf='$conf'" );
+	msgVerbose( "jsonRead() path='$path'" );
 	my $result = undef;
-	if( $conf && -r $conf ){
+	if( $path && -r $path ){
 		my $content = do {
-		   open( my $fh, "<:encoding(UTF-8)", $conf ) or msgErr( "jsonRead() $conf: $!" );
+		   open( my $fh, "<:encoding(UTF-8)", $path ) or msgErr( "jsonRead() $path: $!" );
 		   local $/;
 		   <$fh>
 		};
 		my $json = JSON->new;
-		$result = $json->decode( $content );
-	} elsif( $conf ){
+		# may croak on error, intercepted below
+		eval { $result = $json->decode( $content ) };
+		if( $@ ){
+			msgWarn( "jsonRead() $path: $@" );
+			$result = undef;
+		}
+	} elsif( $path ){
 		my $ignoreIfNotExist = false;
 		$ignoreIfNotExist = $opts->{ignoreIfNotExist} if exists $opts->{ignoreIfNotExist};
-		msgErr( "jsonRead() $conf: not found or not readable" ) if !$ignoreIfNotExist;
+		msgErr( "jsonRead() $path: not found or not readable" ) if !$ignoreIfNotExist;
 	} else {
 		msgErr( "jsonRead() expects a JSON path to be read" );
 	}

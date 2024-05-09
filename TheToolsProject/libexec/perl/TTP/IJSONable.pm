@@ -204,7 +204,7 @@ sub jsonLoad {
 	if( $args->{path} ){
 		$self->{_ijsonable}{json} = File::Spec->rel2abs( $args->{path} );
 		if( $self->{_ijsonable}{json} ){
-			$self->{_ijsonable}{raw} = $self->jsonRead( $self->{_ijsonable}{json} );
+			$self->{_ijsonable}{raw} = TTP::jsonRead( $self->{_ijsonable}{json} );
 			if( $self->{_ijsonable}{raw} ){
 				if( $self->does( 'TTP::IAcceptable' ) && $args->{acceptable} ){
 					$args->{acceptable}{object} = $self->{_ijsonable}{raw};
@@ -229,7 +229,7 @@ sub jsonLoad {
 				msgErr( __PACKAGE__."::jsonLoad() expects scalar of array from Findable::find(), received '$ref'" );
 			}
 			if( $self->{_ijsonable}{json} ){
-				$self->{_ijsonable}{raw} = $self->jsonRead( $self->{_ijsonable}{json} );
+				$self->{_ijsonable}{raw} = TTP::jsonRead( $self->{_ijsonable}{json} );
 			}
 		}
 
@@ -278,37 +278,6 @@ sub jsonPath {
 	my ( $self ) = @_;
 
 	return $self->{_ijsonable}{json};
-}
-
-# -------------------------------------------------------------------------------------------------
-# Read a JSON file into a hash
-# Do not evaluate here, just read the file raw data
-# (I):
-# - the full path to the to-be-loaded json file
-# (O):
-# returns the read hash, or undef (most probably in case of a JSON syntax error)
-
-sub jsonRead {
-	my ( $self, $path ) = @_;
-	TTP::stackTrace() if !$path;
-	msgVerbose( __PACKAGE__."::jsonRead() path='$path'" );
-	#print __PACKAGE__."::jsonRead() path='$path'".EOL;
-	my $result = undef;
-	if( $path && -r $path ){
-		my $content = do {
-		   open( my $fh, "<:encoding(UTF-8)", $path ) or msgErr( __PACKAGE__."::jsonRead() $path: $!" );
-		   local $/;
-		   <$fh>
-		};
-		my $json = JSON->new;
-		# may croak on error, intercepted below
-		eval { $result = $json->decode( $content ) };
-		if( $@ ){
-			msgWarn( __PACKAGE__."::jsonRead() $path: $@" );
-			$result = undef;
-		}
-	}
-	return $result;
 }
 
 # -------------------------------------------------------------------------------------------------

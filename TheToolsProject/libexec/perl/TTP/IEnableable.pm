@@ -64,7 +64,7 @@ sub enabled {
 		if( $opts->{type} ){
 			if( $opts->{type} eq 'JSON' ){
 				$enabled = true;
-				my $data = $self->jsonRead( $obj );
+				my $data = TTP::jsonRead( $obj );
 				$enabled = $data->{enabled} if exists $data->{enabled};
 			}
 		}

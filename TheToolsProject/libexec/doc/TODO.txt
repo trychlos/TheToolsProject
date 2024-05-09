@@ -1,11 +1,7 @@
 TODO
 ====
 
-   2 2024- 5- 1 SqlServer::execSql: why a first empty array in the result ?
-
    8 2024- 5- 2 implements and honors text-based telemetry
-
-  14 2024- 5- 2 jsonRead should be only available through IJSONable (not in TTP)
 
   15 2024- 1-29 Toops::getOptions doesn't work as we do not know how to pass arguments to GetOptions()
      2024- 5- 2 these are called 'named options' and are got in the function through a hash though I don't know at the moment how to dintinguish between a hash and a hash ref
@@ -32,6 +28,9 @@ DONE
 
    1 2024- 5- 1 get rid of tabular display in DBMS::execSQLCommand
      2024- 5- 1 done
+
+   2 2024- 5- 1 SqlServer::execSql: why a first empty array in the result ?
+     2024- 5- 9 unable to reproduce -> closed
 
    3 2024- 5- 1 DBMS::hashFromTabular() and displayTabular() should be moved to TTP
      2024- 5- 1 displayTabular() is done
@@ -68,6 +67,9 @@ DONE
 
   13 2024- 5- 2 the daemon should be able to add its own mqtt topics
      2024- 5- 2 done
+
+  14 2024- 5- 2 jsonRead should be only available through IJSONable (not in TTP)
+     2024- 5- 2 actually jsonRead is moved from IJSONable to TTP (like jsonWrite and jsonAppend) -> done
 
   16 2024- 5- 2 on ws12dev1, startup doesn't send alerts
      2024- 5- 5 same even after scheduled tasks path update
