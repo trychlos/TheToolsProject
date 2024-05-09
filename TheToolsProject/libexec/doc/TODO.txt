@@ -25,8 +25,6 @@ TODO
 
   40 2024- 5- 9 telemetry: should have environment and emitter(command+verb) - see the push gateway @ 10.122.1.15:9091
 
-  42 2024- 5- 9 daemons mqtt: let the daemon have it own lastwill + rename messagingSub to statusSub ?
-
   44 2024- 5- 9 
 
 # -------------------------------------------------------------------------------------------------
@@ -159,6 +157,9 @@ DONE
 
   41 2024- 5- 9 daemons mqtt: publish all status informations
      2024- 5- 9 done
+
+  42 2024- 5- 9 daemons mqtt: let the daemon have it own lastwill + rename messagingSub to statusSub ?
+     2024- 5- 9 actually a disconnect will as only a topic,payload hash can be attached to a MQTT connection -> done
 
   43 2024- 5- 9 daemons http: Can\'t connect to 10.122.1.15:9091 (A connection attempt failed because the connected party did not properly respond after a period of time
      2024- 5- 9 the firewalld daemon was reactivated in rl9pilot1! => fixed

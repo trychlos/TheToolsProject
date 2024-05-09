@@ -336,6 +336,32 @@ sub locallySearchLastFull_wanted {
 }
 
 # -------------------------------------------------------------------------------------------------
+# On disconnection, try to erase the published topics
+
+sub mqttDisconnect {
+	my ( $daemon ) = @_;
+	my $topic = $daemon->topic();
+	my $array = [];
+	push( @{$array}, {
+		topic => "$topic/pid",
+		payload => ''
+	},{
+		topic => "$topic/json",
+		payload => ''
+	},{
+		topic => "$topic/listeningPort",
+		payload => ''
+	},{
+		topic => "$topic/monitoredHost",
+		payload => ''
+	},{
+		topic => "$topic/monitoredExecReportsDir",
+		payload => ''
+	});
+	return $array;
+}
+
+# -------------------------------------------------------------------------------------------------
 # Let publish some topics on MQTT-based messaging system
 # The Daemon expects an array ref, so returns it even if empty
 # Daemon default is to only publish 'running since...'
@@ -629,6 +655,8 @@ if( TTP::errs()){
 }
 
 $daemon->messagingSub( \&mqttMessaging );
+$daemon->disconnectSub( \&mqttDisconnect );
+
 $daemon->declareSleepables( $commands );
 
 $daemon->sleepableDeclareFn( sub => \&works, interval => configScanInterval() );

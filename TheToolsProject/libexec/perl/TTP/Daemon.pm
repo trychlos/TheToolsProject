@@ -350,8 +350,8 @@ sub _mqtt_advertize {
 
 	if( $self->{_mqtt} ){
 		# let the daemon have its own topics
-		if( $self->{_mqtt_sub} ){
-			my $array = $self->{_mqtt_sub}->( $self );
+		if( $self->{_mqtt_status_sub} ){
+			my $array = $self->{_mqtt_status_sub}->( $self );
 			if( $array ){
 				if( ref( $array ) eq 'ARRAY' ){
 					foreach my $it ( @{$array} ){
@@ -381,6 +381,39 @@ sub _mqtt_advertize {
 		$self->{_mqtt}->retain( $topic, $payload );
 	} else {
 		msgVerbose( __PACKAGE__."::_mqtt_advertize() not publishing as MQTT is not initialized" );
+	}
+}
+
+# ------------------------------------------------------------------------------------------------
+# send the disconnection topics if the daemon has asked for that feature
+
+sub _mqtt_disconnect {
+	my ( $self ) = @_;
+
+	# have disconnection topics sent before closing the connection
+	if( $self->{_mqtt_disconnect_sub} ){
+		my $array = $self->{_mqtt_disconnect_sub}->( $self );
+		if( $array ){
+			if( ref( $array ) eq 'ARRAY' ){
+				foreach my $it ( @{$array} ){
+					if( $it->{topic} && exists(  $it->{payload} )){
+						if( $it->{retain} ){
+							msgLog( "retain $it->{topic} [$it->{payload}]" );
+							$self->{_mqtt}->retain( $it->{topic}, $it->{payload} );
+						} else {
+							msgLog( "publish $it->{topic} [$it->{payload}]" );
+							$self->{_mqtt}->publish( $it->{topic}, $it->{payload} );
+						}
+					} else {
+						msgErr( __PACKAGE__."::_mqtt_disconnect() expects a hash { topic, payload }, found $it" );
+					}
+				}
+			} else {
+				msgErr( __PACKAGE__."::_mqtt_disconnect() expects an array, got '".ref( $array )."'" );
+			}
+		} else {
+			msgLog( __PACKAGE__."::_mqtt_disconnect() got undefined value, nothing to do" );
+		}
 	}
 }
 
@@ -470,6 +503,32 @@ sub declareSleepables {
 	$self->sleepableDeclareFn( sub => sub { $self->_text_advertize(); }, interval => $textInterval ) if $textInterval > 0;
 
 	$self->sleepableDeclareStop( sub => sub { return $self->terminating(); });
+
+	return $self;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Set a sub to be called on daemon disconnection
+# The provided sub:
+# - will receive this TTP::Daemon as single argument,
+# - must return a ref to an array of hashes { topic, payload )
+#   the returned hash may have a 'retain' key, with true|false value, defaulting to false.
+# Note that this cannot be a 'last will' sub as the Net::MQTT::Simple package wants its last_will
+# just be a hash { topic, payload, retain } and not a sub (and the MQTT protocol only allows one
+# 'last_will' per connection).
+# (I):
+# - a code ref to be called at lastwill time
+# (O):
+# - this same object
+
+sub disconnectSub {
+	my ( $self, $sub ) = @_;
+
+	if( $sub && ref( $sub ) eq 'CODE' ){
+		$self->{_mqtt_disconnect_sub} = $sub;
+	} else {
+		msgErr( __PACKAGE__."::disconnectSub() expects a code ref, got '".ref( $sub )."'" );
+	}
 
 	return $self;
 }
@@ -694,7 +753,7 @@ sub messagingSub {
 	my ( $self, $sub ) = @_;
 
 	if( $sub && ref( $sub ) eq 'CODE' ){
-		$self->{_mqtt_sub} = $sub;
+		$self->{_mqtt_status_sub} = $sub;
 	} else {
 		msgErr( __PACKAGE__."::messagingSub() expects a code ref, got '".ref( $sub )."'" );
 	}
@@ -840,6 +899,9 @@ sub start {
 
 sub terminate {
 	my ( $self ) = @_;
+
+	# have disconnection topics sent before closing the connection
+	$self->_mqtt_disconnect();
 
 	# close MQTT connection
 	TTP::MQTT::disconnect( $self->{_mqtt} ) if $self->{_mqtt};
