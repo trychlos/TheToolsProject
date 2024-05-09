@@ -281,8 +281,8 @@ sub _http_publish {
 							msgVerbose( __PACKAGE__."::_http_publish() url='$url' body='$body'" );
 							$request->content( $body );
 							my $response = $ua->request( $request );
-							msgVerbose( Dumper( $response ));
 							if( !$response->is_success ){
+								msgVerbose( Dumper( $response ));
 								msgWarn( __PACKAGE__."::_http_publish() Code: ".$response->code." MSG: ".$response->decoded_content );
 								$res = HTTP_REQUEST_ERROR;
 							}
