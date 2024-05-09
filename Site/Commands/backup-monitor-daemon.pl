@@ -338,13 +338,37 @@ sub locallySearchLastFull_wanted {
 # -------------------------------------------------------------------------------------------------
 # Let publish some topics on MQTT-based messaging system
 # The Daemon expects an array ref, so returns it even if empty
+# Daemon default is to only publish 'running since...'
+# we are adding here all informations as displayed by STATUS command on stdout:
+#   C:\Users\inlingua-user>daemon.pl status -bname tom59-backup-monitor-daemon.json
+#   [daemon.pl status] requesting the daemon for its status...
+#   7868 running since 2024-05-09 05:31:13.92239
+#   7868 json: C:\INLINGUA\Site\etc\daemons\tom59-backup-monitor-daemon.json
+#   7868 listeningPort: 14394
+#   7868 monitoredHost: NS3232346
+#   7868 monitoredExecReportsDir: \\ns3232346.ovh.net\C\INLINGUA\dailyLogs\240509\execReports
+#   7868 OK
+#   [daemon.pl command] success
+#   [daemon.pl status] done
 
 sub mqttMessaging {
 	my ( $daemon ) = @_;
 	my $topic = $daemon->topic();
 	my $array = [];
 	push( @{$array}, {
-		topic => "$topic/remoteExecReportsDir",
+		topic => "$topic/pid",
+		payload => $$
+	},{
+		topic => "$topic/json",
+		payload => $daemon->jsonPath()
+	},{
+		topic => "$topic/listeningPort",
+		payload => $daemon->listeningPort()
+	},{
+		topic => "$topic/monitoredHost",
+		payload => $opt_remote
+	},{
+		topic => "$topic/monitoredExecReportsDir",
 		payload => computeMonitoredShare()
 	});
 	return $array;
