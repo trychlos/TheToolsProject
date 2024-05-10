@@ -9,6 +9,7 @@
 # @(-) --targetpath=s          the target path [${targetpath}]
 # @(-) --targetcmd=s           the command which will give the target path [${targetcmd}]
 # @(-) --[no]dirs              copy directories and their content [${dirs}]
+# @(-) --skip=<count>          skip count directories from source [${skip}]
 #
 # The Tools Project: a Tools System and Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
@@ -39,7 +40,8 @@ my $defaults = {
 	sourcecmd => '',
 	targetpath => '',
 	targetcmd => '',
-	dirs => 'no'
+	dirs => 'no',
+	skip => 0
 };
 
 my $opt_sourcepath = $defaults->{sourcepath};
@@ -47,6 +49,7 @@ my $opt_sourcecmd = $defaults->{sourcecmd};
 my $opt_targetpath = $defaults->{targetpath};
 my $opt_targetcmd = $defaults->{targetcmd};
 my $opt_dirs = false;
+my $opt_skip = $defaults->{skip};
 
 # -------------------------------------------------------------------------------------------------
 # Copy directories from source to target
@@ -82,7 +85,8 @@ if( !GetOptions(
 	"sourcecmd=s"		=> \$opt_sourcecmd,
 	"targetpath=s"		=> \$opt_targetpath,
 	"targetcmd=s"		=> \$opt_targetcmd,
-	"dirs!"				=> \$opt_dirs )){
+	"dirs!"				=> \$opt_dirs,
+	"skip=i"			=> \$opt_skip )){
 
 		msgOut( "try '".$running->command()." ".$running->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
@@ -101,6 +105,7 @@ msgVerbose( "found sourcecmd='$opt_sourcecmd'" );
 msgVerbose( "found targetpath='$opt_targetpath'" );
 msgVerbose( "found targetcmd='$opt_targetcmd'" );
 msgVerbose( "found dirs='".( $opt_dirs ? 'true':'false' )."'" );
+msgVerbose( "found skip='$opt_skip'" );
 
 # sourcecmd and sourcepath options are not compatible
 my $count = 0;
