@@ -109,10 +109,10 @@ sub doPublish {
 # =================================================================================================
 
 if( !GetOptions(
-	"help!"				=> \$ttp->{run}{help},
-	"colored!"			=> \$ttp->{run}{colored},
-	"dummy!"			=> \$ttp->{run}{dummy},
-	"verbose!"			=> \$ttp->{run}{verbose},
+	"help!"				=> \$ep->{run}{help},
+	"colored!"			=> \$ep->{run}{colored},
+	"dummy!"			=> \$ep->{run}{dummy},
+	"verbose!"			=> \$ep->{run}{verbose},
 	"metric=s"			=> \$opt_metric,
 	"value=s"			=> \$opt_value,
 	"description=s"		=> \$opt_description,

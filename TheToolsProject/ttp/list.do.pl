@@ -104,10 +104,10 @@ sub listNodes {
 # =================================================================================================
 
 if( !GetOptions(
-	"help!"				=> \$ttp->{run}{help},
-	"colored!"			=> \$ttp->{run}{colored},
-	"dummy!"			=> \$ttp->{run}{dummy},
-	"verbose!"			=> \$ttp->{run}{verbose},
+	"help!"				=> \$ep->{run}{help},
+	"colored!"			=> \$ep->{run}{colored},
+	"dummy!"			=> \$ep->{run}{dummy},
+	"verbose!"			=> \$ep->{run}{verbose},
 	"commands!"			=> \$opt_commands,
 	"nodes!"			=> \$opt_nodes )){
 

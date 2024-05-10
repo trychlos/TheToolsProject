@@ -223,10 +223,10 @@ Best regards.
 # =================================================================================================
 
 if( !GetOptions(
-	"help!"				=> \$ttp->{run}{help},
-	"colored!"			=> \$ttp->{run}{colored},
-	"dummy!"			=> \$ttp->{run}{dummy},
-	"verbose!"			=> \$ttp->{run}{verbose},
+	"help!"				=> \$ep->{run}{help},
+	"colored!"			=> \$ep->{run}{colored},
+	"dummy!"			=> \$ep->{run}{dummy},
+	"verbose!"			=> \$ep->{run}{verbose},
 	"emitter=s"			=> \$opt_emitter,
 	"level=s"			=> \$opt_level,
 	"message=s"			=> \$opt_message,

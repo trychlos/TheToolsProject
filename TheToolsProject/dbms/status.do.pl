@@ -126,7 +126,7 @@ sub doState {
 		# -> mqtt: publish a single string metric
 		#    e.g. state: online
 		my @labels = ( @opt_prepends,
-			"environment=".$ttp->node()->environment(), "command=".$running->command(), "verb=".$running->verb(),
+			"environment=".$ep->node()->environment(), "command=".$running->command(), "verb=".$running->verb(),
 			"instance=$opt_instance", "database=$db",
 			@opt_appends );
 		TTP::Metric->new( $ep, {
@@ -142,7 +142,7 @@ sub doState {
 		#    e.g. state=emergency 0
 		foreach my $key ( keys( %{$sqlStates} )){
 			my @labels = ( @opt_prepends,
-				"environment=".$ttp->node()->environment(), "command=".$running->command(), "verb=".$running->verb(),
+				"environment=".$ep->node()->environment(), "command=".$running->command(), "verb=".$running->verb(),
 				"instance=$opt_instance", "database=$db", "state=$sqlStates->{$key}",
 				@opt_appends );
 			TTP::Metric->new( $ep, {
@@ -169,10 +169,10 @@ sub doState {
 # =================================================================================================
 
 if( !GetOptions(
-	"help!"				=> \$ttp->{run}{help},
-	"colored!"			=> \$ttp->{run}{colored},
-	"dummy!"			=> \$ttp->{run}{dummy},
-	"verbose!"			=> \$ttp->{run}{verbose},
+	"help!"				=> \$ep->{run}{help},
+	"colored!"			=> \$ep->{run}{colored},
+	"dummy!"			=> \$ep->{run}{dummy},
+	"verbose!"			=> \$ep->{run}{verbose},
 	"service=s"			=> \$opt_service,
 	"instance=s"		=> sub {
 		my( $opt_name, $opt_value ) = @_;

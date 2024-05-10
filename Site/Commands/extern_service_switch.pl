@@ -241,10 +241,10 @@ sub _obsoleteCode {
 # =================================================================================================
 
 if( !GetOptions(
-	"help!"				=> \$ttp->{run}{help},
-	"colored!"			=> \$ttp->{run}{colored},
-	"dummy!"			=> \$ttp->{run}{dummy},
-	"verbose!"			=> \$ttp->{run}{verbose},
+	"help!"				=> \$ep->{run}{help},
+	"colored!"			=> \$ep->{run}{colored},
+	"dummy!"			=> \$ep->{run}{dummy},
+	"verbose!"			=> \$ep->{run}{verbose},
 	"service=s"			=> \$opt_service,
 	"to=s"				=> \$opt_to,
 	"live!"				=> \$opt_live,

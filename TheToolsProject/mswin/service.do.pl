@@ -149,7 +149,7 @@ sub doServiceState {
 	# publish the result in all cases, and notably even if there was an error
 	if( $opt_mqtt || $opt_http || $opt_text ){
 		my @labels = ( @opt_prepends,
-			"environment=".$ttp->node()->environment(), "command=".$running->command(), "verb=".$running->verb(), "role=$opt_name",
+			"environment=".$ep->node()->environment(), "command=".$running->command(), "verb=".$running->verb(), "role=$opt_name",
 			@opt_appends );
 		TTP::Metric->new( $ep, {
 			name => 'state',
@@ -161,7 +161,7 @@ sub doServiceState {
 		});
 		foreach my $key ( keys( %{$serviceStates} )){
 			my @labels = ( @opt_prepends,
-				"environment=".$ttp->node()->environment(), "command=".$running->command(), "verb=".$running->verb(), 
+				"environment=".$ep->node()->environment(), "command=".$running->command(), "verb=".$running->verb(), 
 				"role=$opt_name", "state=$serviceStates->{$key}",
 				@opt_appends );
 			TTP::Metric->new( $ep, {
@@ -190,10 +190,10 @@ sub doServiceState {
 # =================================================================================================
 
 if( !GetOptions(
-	"help!"				=> \$ttp->{run}{help},
-	"colored!"			=> \$ttp->{run}{colored},
-	"dummy!"			=> \$ttp->{run}{dummy},
-	"verbose!"			=> \$ttp->{run}{verbose},
+	"help!"				=> \$ep->{run}{help},
+	"colored!"			=> \$ep->{run}{colored},
+	"dummy!"			=> \$ep->{run}{dummy},
+	"verbose!"			=> \$ep->{run}{verbose},
 	"list!"				=> \$opt_list,
 	"name=s"			=> \$opt_name,
 	"state!"			=> \$opt_state,

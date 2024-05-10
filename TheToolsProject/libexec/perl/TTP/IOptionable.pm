@@ -127,7 +127,7 @@ after _newBase => sub {
 	$self->{_ioptionable} //= {};
 
 	# set these standard options in ttp->{run} both for historical reasons and for easier handlings
-	if( !$ttp->runner()){
+	if( !$ep->runner()){
 		$ep->{run} //= {};
 		$ep->{run}{help} = false;
 		$ep->{run}{colored} = -1;

@@ -9,7 +9,7 @@
 # @(-) --targetpath=s          the target path [${targetpath}]
 # @(-) --targetcmd=s           the command which will give the target path [${targetcmd}]
 # @(-) --[no]dirs              copy directories and their content [${dirs}]
-# @(-) --skip=<count>          skip count directories from source [${skip}]
+# @(-) --skip=<count>          skip count directories from source (ignored at the moment) [${skip}]
 #
 # The Tools Project: a Tools System and Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
@@ -77,10 +77,10 @@ sub doCopyDirs {
 # =================================================================================================
 
 if( !GetOptions(
-	"help!"				=> \$ttp->{run}{help},
-	"colored!"			=> \$ttp->{run}{colored},
-	"dummy!"			=> \$ttp->{run}{dummy},
-	"verbose!"			=> \$ttp->{run}{verbose},
+	"help!"				=> \$ep->{run}{help},
+	"colored!"			=> \$ep->{run}{colored},
+	"dummy!"			=> \$ep->{run}{dummy},
+	"verbose!"			=> \$ep->{run}{verbose},
 	"sourcepath=s"		=> \$opt_sourcepath,
 	"sourcecmd=s"		=> \$opt_sourcecmd,
 	"targetpath=s"		=> \$opt_targetpath,

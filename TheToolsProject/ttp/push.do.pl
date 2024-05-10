@@ -50,7 +50,7 @@ sub doPublish {
 	msgOut( "publishing to '$tohost'..." );
 	my $asked = 0;
 	my $done = 0;
-	foreach my $dir ( @{$ttp->var([ 'deployments', 'sourceDirs' ])} ){
+	foreach my $dir ( @{$ep->var([ 'deployments', 'sourceDirs' ])} ){
 		$asked += 1;
 		my @dirs = File::Spec->splitdir( $dir );
 		my $srcdir = File::Spec->rel2abs( File::Spec->catdir( File::Spec->curdir(), $dirs[scalar @dirs - 1] ));
@@ -104,10 +104,10 @@ sub doPublish {
 # =================================================================================================
 
 if( !GetOptions(
-	"help!"				=> \$ttp->{run}{help},
-	"colored!"			=> \$ttp->{run}{colored},
-	"dummy!"			=> \$ttp->{run}{dummy},
-	"verbose!"			=> \$ttp->{run}{verbose},
+	"help!"				=> \$ep->{run}{help},
+	"colored!"			=> \$ep->{run}{colored},
+	"dummy!"			=> \$ep->{run}{dummy},
+	"verbose!"			=> \$ep->{run}{verbose},
 	"check!"			=> \$opt_check,
 	"tag!"				=> \$opt_tag )){
 

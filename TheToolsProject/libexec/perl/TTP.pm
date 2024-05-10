@@ -773,7 +773,7 @@ sub makeDirExist {
 	$opts //= {};
 	my $allowVerbose = true;
 	$allowVerbose = $opts->{allowVerbose} if exists $opts->{allowVerbose};
-	$allowVerbose = false if !$ttp || !$ttp->runner();
+	$allowVerbose = false if !$ep || !$ep->runner();
 	my $result = false;
 	if( -d $dir ){
 		$result = true;
@@ -948,7 +948,7 @@ sub tempDir {
 
 # -------------------------------------------------------------------------------------------------
 # Returns a variable value
-# This function is callable as '$ttp->var()' and is so one the preferred way of accessing
+# This function is callable as '$ep->var()' and is so one the preferred way of accessing
 # configurations values from configuration files themselves as well as from external commands.
 # (I):
 # - a scalar, or an array of scalars which are to be successively searched, or an array of arrays

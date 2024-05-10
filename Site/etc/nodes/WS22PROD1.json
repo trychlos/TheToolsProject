@@ -90,8 +90,7 @@
 						"order": "00",
 						"commands": [
 							"ttp.pl pull -nocolored",
-							"ttp.pl copydirs -nocolored -sourcecmd \"dbms.pl vars -nocolored -backupsDir\" -targetcmd \"dbms.pl vars -nocolored -archivesDir\" -dirs",
-							"ttp.pl purgedirs -nocolored -dircmd \"dbms.pl vars -nocolored -backupsRoot\" -keep 5",
+							"ttp.pl movedirs -nocolored -sourcecmd \"dbms.pl vars -nocolored -backupsRoot\" -targetcmd \"dbms.pl vars -nocolored -archivesRoot\" -dirs -keep 5",
 							"ttp.pl purgedirs -nocolored -dircmd \"dbms.pl vars -nocolored -archivesRoot\" -keep 10",
 							"ttp.pl purgedirs -nocolored -dircmd \"ttp.pl vars -nocolored -logsRoot\" -keep 10"
 						]

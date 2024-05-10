@@ -93,7 +93,7 @@ sub doComputeSize {
 		$path =~ s/\//_/g;
 		$path =~ s/\\/_/g;
 		my @labels = ( @opt_prepends,
-			"environment=".$ttp->node()->environment(), "command=".$running->command(), "verb=".$running->verb(), "path=$path",
+			"environment=".$ep->node()->environment(), "command=".$running->command(), "verb=".$running->verb(), "path=$path",
 			@opt_appends );
 		TTP::Metric->new( $ep, {
 			name => 'dirs_count',
@@ -150,10 +150,10 @@ sub doComputeSize {
 # =================================================================================================
 
 if( !GetOptions(
-	"help!"				=> \$ttp->{run}{help},
-	"colored!"			=> \$ttp->{run}{colored},
-	"dummy!"			=> \$ttp->{run}{dummy},
-	"verbose!"			=> \$ttp->{run}{verbose},
+	"help!"				=> \$ep->{run}{help},
+	"colored!"			=> \$ep->{run}{colored},
+	"dummy!"			=> \$ep->{run}{dummy},
+	"verbose!"			=> \$ep->{run}{verbose},
 	"dirpath=s"			=> \$opt_dirpath,
 	"dircmd=s"			=> \$opt_dircmd,
 	"mqtt!"				=> \$opt_mqtt,

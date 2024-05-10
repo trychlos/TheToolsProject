@@ -212,7 +212,7 @@ after _newBase => sub {
 	$file =~ s/\.[^\.]+$//;
 	$self->{_irunnable}{namewoext} = $file;
 
-	if( !$ttp->runner()){
+	if( !$ep->runner()){
 		msgLog( "[] executing $0 ".join( ' ', @ARGV ));
 		$ep->runner( $self );
 		$SIG{INT} = sub {

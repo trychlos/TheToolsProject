@@ -119,7 +119,7 @@ sub _taskOrder {
 # display the environment for this machine (may be 0 or 1)
 
 sub listEnvironment {
-	msgOut( "displaying environment for ".$ttp->node()->name()." node..." );
+	msgOut( "displaying environment for ".$ep->node()->name()." node..." );
 	my $env = $ep->node()->environment();
 	my $count = 0;
 	if( !$env ){
@@ -159,7 +159,7 @@ sub listServiceMachines {
 # list all the services defined on this host
 
 sub listServices {
-	msgOut( "displaying services defined on ".$ttp->node()->name()."..." );
+	msgOut( "displaying services defined on ".$ep->node()->name()."..." );
 	my $list = [];
 	TTP::Service->enumerate({
 		cb => \&_listServices_cb,
@@ -182,7 +182,7 @@ sub _listServices_cb {
 # the commands are listed in the order of their service name
 
 sub listWorkloadCommands {
-	msgOut( "displaying workload commands defined in '".$ttp->node()->name()."\\$opt_workload'..." );
+	msgOut( "displaying workload commands defined in '".$ep->node()->name()."\\$opt_workload'..." );
 	my @list = getDefinedWorktasks( $opt_workload, { hidden => $opt_hidden });
 	my $count = 0;
 	foreach my $it ( @list ){
@@ -201,7 +201,7 @@ sub listWorkloadCommands {
 # They are displayed in the order of their service name
 
 sub listWorkloadDetails {
-	msgOut( "displaying detailed workload tasks defined in ".$ttp->node()->name()."\\$opt_workload..." );
+	msgOut( "displaying detailed workload tasks defined in ".$ep->node()->name()."\\$opt_workload..." );
 	my @list = getDefinedWorktasks( $opt_workload, { hidden => $opt_hidden });
 	foreach my $it ( @list ){
 		printWorkloadTask( $it );
@@ -272,7 +272,7 @@ sub printWorkloadTaskData {
 # list all the workloads used by a service on this host with names sorted in ascii order
 
 sub listWorkloads {
-	msgOut( "displaying workloads used on ".$ttp->node()->name()."..." );
+	msgOut( "displaying workloads used on ".$ep->node()->name()."..." );
 	my $list = {};
 	my $count = 0;
 	TTP::Service->enumerate({
@@ -311,10 +311,10 @@ sub log_print {
 # =================================================================================================
 
 if( !GetOptions(
-	"help!"				=> \$ttp->{run}{help},
-	"colored!"			=> \$ttp->{run}{colored},
-	"dummy!"			=> \$ttp->{run}{dummy},
-	"verbose!"			=> \$ttp->{run}{verbose},
+	"help!"				=> \$ep->{run}{help},
+	"colored!"			=> \$ep->{run}{colored},
+	"dummy!"			=> \$ep->{run}{dummy},
+	"verbose!"			=> \$ep->{run}{verbose},
 	"services!"			=> \$opt_services,
 	"hidden!"			=> \$opt_hidden,
 	"workloads!"		=> \$opt_workloads, 

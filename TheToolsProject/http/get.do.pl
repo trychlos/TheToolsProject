@@ -101,7 +101,7 @@ sub doGet {
 	if( $running->dummy()){
 		msgDummy( "considering successful with status='200' sent from this node" );
 		$res = true;
-		$header = "DUMMY_".$ttp->node()->name();
+		$header = "DUMMY_".$ep->node()->name();
 	} else {
 		my $ua = LWP::UserAgent->new();
 		$ua->timeout( 5 );
@@ -160,7 +160,7 @@ sub _telemetry {
 	if( $opt_mqtt || $opt_http || $opt_text ){
 		my ( $proto, $path ) = split( /:\/\//, $opt_url );
 		my @labels = @opt_prepends;
-		push( @labels, "environment=".$ttp->node()->environment());
+		push( @labels, "environment=".$ep->node()->environment());
 		push( @labels, "command=".$running->command());
 		push( @labels, "verb=".$running->verb());
 		push( @labels, "proto=$proto" );
@@ -210,10 +210,10 @@ sub _isIgnored {
 # =================================================================================================
 
 if( !GetOptions(
-	"help!"				=> \$ttp->{run}{help},
-	"colored!"			=> \$ttp->{run}{colored},
-	"dummy!"			=> \$ttp->{run}{dummy},
-	"verbose!"			=> \$ttp->{run}{verbose},
+	"help!"				=> \$ep->{run}{help},
+	"colored!"			=> \$ep->{run}{colored},
+	"dummy!"			=> \$ep->{run}{dummy},
+	"verbose!"			=> \$ep->{run}{verbose},
 	"url=s"				=> \$opt_url,
 	"header=s"			=> \$opt_header,
 	"publishHeader!"	=> \$opt_publishHeader,

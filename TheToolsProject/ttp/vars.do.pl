@@ -143,10 +143,10 @@ sub listSitespec {
 # =================================================================================================
 
 if( !GetOptions(
-	"help!"				=> \$ttp->{run}{help},
-	"colored!"			=> \$ttp->{run}{colored},
-	"dummy!"			=> \$ttp->{run}{dummy},
-	"verbose!"			=> \$ttp->{run}{verbose},
+	"help!"				=> \$ep->{run}{help},
+	"colored!"			=> \$ep->{run}{colored},
+	"dummy!"			=> \$ep->{run}{dummy},
+	"verbose!"			=> \$ep->{run}{verbose},
 	"siteSpec!"			=> \$opt_siteSpec,
 	"nodeRoot!"			=> \$opt_nodeRoot,
 	"nodesDirs!"		=> \$opt_nodesDirs,

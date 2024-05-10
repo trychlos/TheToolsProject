@@ -13,8 +13,6 @@ TODO
 
   26 2024- 5- 3 upgrade Canal33 backups from every.5h to every.2h (like the Tom's)
 
-  27 2024- 5- 3 archivesBackups should be set when purging dailyBackups so that we keep for example 5 days in daily Backups and move the 6th to the archives
-
   31 2024- 5- 5 ws22prod1 inlingua33_archive is restored at 6h, but not inlingua31_archive nor inlingua59_archive
      2024- 5- 6 confirmed - this may be because there was only one execution report json file, so should be fixed with #30
      2024- 5- 9 still there: to be fixed
@@ -102,7 +100,7 @@ DONE
 				ns3232346 Can't call method "verbose" on an undefined value at C:\INLINGUA\TheToolsProject\libexec\perl/TTP.pm line 918.
 	 2024- 5- 3 fixed
 
-  21 2024- 5- 3 C:\INLINGUA\TheToolsProject\smtp\send.do.pl: Global symbol "$ttp" requires explicit package name (did you forget to declare "my $ep"?) at C:\INLINGUA\TheToolsProject\libexec\perl/TTP/SMTP.pm line 48.
+  21 2024- 5- 3 C:\INLINGUA\TheToolsProject\smtp\send.do.pl: Global symbol "$ttp" requires explicit package name (did you forget to declare "my $ttp"?) at C:\INLINGUA\TheToolsProject\libexec\perl/TTP/SMTP.pm line 48.
 	 2024- 5- 3 fixed
 
   22 2024- 5- 3 Type of arg 1 to Try::Tiny::catch must be block or sub {} (not reference constructor) at C:\INLINGUA\TheToolsProject\libexec\perl/TTP/SMTP.pm line 99, near "};"
@@ -115,6 +113,9 @@ DONE
                 [services.pl list] displaying workload commands defined in 'NS3232346\daily.morning'...
                 [services.pl list] 0 found defined command(s)
 	 2024- 5- 3 fixed with #6
+
+  27 2024- 5- 3 archivesBackups should be set when purging dailyBackups so that we keep for example 5 days in daily Backups and move the 6th to the archives
+     2024- 5-10 done
 
   28 2024- 5- 3 services.pl list -commands: tasks of any workload hide tasks of other workloads
      2024- 5- 3 fixed by requiring the exact wanted workload

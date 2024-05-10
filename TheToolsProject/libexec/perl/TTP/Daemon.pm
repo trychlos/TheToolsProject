@@ -265,7 +265,7 @@ sub _metrics {
 	# running since x.xxxxx sec.
 	my $since = sprintf( "%.5f", $self->runnableStarted()->delta_microseconds( Time::Moment->now ) / 1000000 );
 	my $labels = [ "daemon=".$self->name() ];
-	push( @{$labels}, "environment=".$ttp->node()->environment());
+	push( @{$labels}, "environment=".$ep->node()->environment());
 	push( @{$labels}, "command=".$self->command());
 	push( @{$labels}, "qualifier=".$self->runnableQualifier());
 	push( @{$labels}, @{$self->{_labels}} ) if exists $self->{_labels};

@@ -84,7 +84,7 @@ sub doRestore {
 			$data->{diff} = $opt_diff;
 		} else {
 			msgVerbose( "emptying '/diff' MQTT message as restored from a full backup" );
-			my $cmd = 'mqtt.pl publish -topic '.$ttp->node()->name().'/executionReport/'.$running->command().'/'.$running->verb()."/$opt_instance/$opt_database/diff -payload \"\" -retain -nocolored";
+			my $cmd = 'mqtt.pl publish -topic '.$ep->node()->name().'/executionReport/'.$running->command().'/'.$running->verb()."/$opt_instance/$opt_database/diff -payload \"\" -retain -nocolored";
 			msgOut( "executing '$cmd'" );
 			`$cmd`;
 		}
@@ -119,10 +119,10 @@ sub doRestore {
 # =================================================================================================
 
 if( !GetOptions(
-	"help!"				=> \$ttp->{run}{help},
-	"colored!"			=> \$ttp->{run}{colored},
-	"dummy!"			=> \$ttp->{run}{dummy},
-	"verbose!"			=> \$ttp->{run}{verbose},
+	"help!"				=> \$ep->{run}{help},
+	"colored!"			=> \$ep->{run}{colored},
+	"dummy!"			=> \$ep->{run}{dummy},
+	"verbose!"			=> \$ep->{run}{verbose},
 	"instance=s"		=> sub {
 		my( $opt_name, $opt_value ) = @_;
 		$opt_instance = $opt_value;

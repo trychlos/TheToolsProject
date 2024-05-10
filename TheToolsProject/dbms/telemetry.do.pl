@@ -137,7 +137,7 @@ sub doDbSize {
 		# we got so six metrics for each database
 		# that we publish separately as mqtt-based names are slightly different from Prometheus ones
 		my @labels = ( @opt_prepends,
-			"environment=".$ttp->node()->environment(), "command=".$running->command(), "verb=".$running->verb(),
+			"environment=".$ep->node()->environment(), "command=".$running->command(), "verb=".$running->verb(),
 			"instance=$opt_instance", "database=$db",
 			@opt_appends );
 		foreach my $key ( keys %{$set} ){
@@ -209,10 +209,10 @@ sub doTablesCount {
 # =================================================================================================
 
 if( !GetOptions(
-	"help!"				=> \$ttp->{run}{help},
-	"colored!"			=> \$ttp->{run}{colored},
-	"dummy!"			=> \$ttp->{run}{dummy},
-	"verbose!"			=> \$ttp->{run}{verbose},
+	"help!"				=> \$ep->{run}{help},
+	"colored!"			=> \$ep->{run}{colored},
+	"dummy!"			=> \$ep->{run}{dummy},
+	"verbose!"			=> \$ep->{run}{verbose},
 	"service=s"			=> \$opt_service,
 	"instance=s"		=> sub {
 		my( $opt_name, $opt_value ) = @_;
