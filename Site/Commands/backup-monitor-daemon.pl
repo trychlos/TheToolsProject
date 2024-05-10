@@ -242,6 +242,61 @@ sub configScanInterval {
 }
 
 # -------------------------------------------------------------------------------------------------
+# new execution reports
+# we are tracking backup databases with dbms.pl backup -nodummy
+# warning when we have a diff without a previous full
+
+sub doWithNew {
+	my ( @newFiles ) = @_;
+	my $reporter = TTP::Reporter->new( $ttp );
+	my $monitoredInstance = computeMonitoredInstance();
+	my $monitoredDatabases = computeMonitoredDatabases();
+	#print "newFiles".EOL.Dumper( @runningScan );
+	foreach my $report ( @newFiles ){
+		$stats->{count} += 1;
+		msgVerbose( "new report '$report'" );
+		if( $reporter->jsonLoad({ path => $report })){
+			my $data = $reporter->jsonData();
+			if( exists( $data->{command} ) && $data->{command} eq "dbms.pl" && exists( $data->{verb} ) && $data->{verb} eq "backup" && ( !exists( $data->{dummy} ) || !$data->{dummy} )){
+
+				my $instance = $data->{instance};
+				if( $instance ne $monitoredInstance ){
+					msgVerbose( "instance='$instance' ignored" );
+					$stats->{ignored} += 1;
+					next;
+				}
+
+				my $database = $data->{database};
+				if( !grep ( /$database/, @{$monitoredDatabases} )){
+					msgVerbose( "database='$database' ignored" );
+					$stats->{ignored} += 1;
+					next;
+				}
+
+				# have to make sure we have locally this file to be restored, plus maybe the last full backup
+				# transfert the remote backup file to our backup host, getting the local backup file (from remote host) to be restored
+				my $result = locallySyncedBackups( $data );
+				if( $result ){
+					# restore instance if the instance defined for this service in this host
+					my $restoreInstance = computeRestoredInstance();
+					my $command = "dbms.pl restore -nocolored -instance $restoreInstance -database $database ";
+					$command .= " -full $result->{full}";
+					$command .= " -diff $result->{diff}" if $result->{diff};
+					msgVerbose( $command );
+					my $res = TTP::filter( `$command` );
+					my $rc = $?;
+					print join( '\n', @{$res} ).EOL;
+				} else {
+					msgWarn( "result is undefined, unable to restore" );
+				}
+			} else {
+				msgVerbose( "$report: not a dbms.pl backup execution report" );
+			}
+		}
+	}
+}
+
+# -------------------------------------------------------------------------------------------------
 sub _execReport {
 	my ( $report ) = @_;
 	TTP::execReportAppend( $report );
@@ -260,6 +315,7 @@ sub _execReport {
 sub locallySyncedBackups {
 	my ( $report ) = @_;
 	my $result = undef;
+	msgVerbose( "locallySyncedBackups() entering with instance='$report->{instance}' database='$report->{database}' mode='$report->{mode}' output='$report->{output}'" );
 
 	my $localTarget = syncedPath( $report->{output} );
 	return false if !$localTarget;
@@ -442,79 +498,26 @@ sub remoteSearchLastFull_wanted {
 
 sub syncedPath {
 	my ( $localSource ) = @_;
-	msgVerbose( "localSource='$localSource'" );
+	msgVerbose( "syncedPath() localSource='$localSource'" );
 	# the output file is specified as a local filename on the remote host
 	# we need to build a the remote filename (source of the copy) and the local filename (target of the copy)
 	my( $ls_vol, $ls_dirs, $ls_file ) = File::Spec->splitpath( $localSource );
 	my( $rs_vol, $rs_dirs, $rs_file ) = File::Spec->splitpath( computeMonitoredShare());
 	my $remoteSource = File::Spec->catpath( $rs_vol, $ls_dirs, $ls_file );
-	msgVerbose( "remoteSource='$remoteSource'" );
+	msgVerbose( "syncedPath() remoteSource='$remoteSource'" );
 	# local target
 	my $localTarget = configLocalDir();
 	msgVerbose( "localTarget='$localTarget'" );
 	TTP::makeDirExist( $localTarget );
 	my $res = TTP::copyFile( $remoteSource, $localTarget );
 	if( $res ){
-		msgVerbose( "successfully copied '$remoteSource' to '$localTarget'" );
+		msgVerbose( "syncedPath() successfully copied '$remoteSource' to '$localTarget'" );
 		$localTarget = File::Spec->catfile( $localTarget, $ls_file );
 	} else {
-		msgErr( "unable to copy '$remoteSource' to '$localTarget': $!" );
+		msgErr( "syncedPath() unable to copy '$remoteSource' to '$localTarget': $!" );
 		$localTarget = undef;
 	}
 	return $localTarget;
-}
-
-# -------------------------------------------------------------------------------------------------
-# new execution reports
-# we are tracking backup databases with dbms.pl backup -nodummy
-# warning when we have a diff without a previous full
-
-sub doWithNew {
-	my ( @newFiles ) = @_;
-	my $reporter = TTP::Reporter->new( $ttp );
-	my $monitoredInstance = computeMonitoredInstance();
-	my $monitoredDatabases = computeMonitoredDatabases();
-	#print "newFiles".EOL.Dumper( @runningScan );
-	foreach my $report ( @newFiles ){
-		$stats->{count} += 1;
-		msgVerbose( "new report '$report'" );
-		if( $reporter->jsonLoad({ path => $report })){
-			my $data = $reporter->jsonData();
-			if( exists( $data->{command} ) && $data->{command} eq "dbms.pl" && exists( $data->{verb} ) && $data->{verb} eq "backup" && ( !exists( $data->{dummy} ) || !$data->{dummy} )){
-
-				my $instance = $data->{instance};
-				if( $instance ne $monitoredInstance ){
-					msgVerbose( "instance='$instance' ignored" );
-					$stats->{ignored} += 1;
-					next;
-				}
-
-				my $database = $data->{database};
-				if( !grep ( /$database/, @{$monitoredDatabases} )){
-					msgVerbose( "database='$database' ignored" );
-					$stats->{ignored} += 1;
-					next;
-				}
-
-				# have to make sure we have locally this file to be restored, plus maybe the last full backup
-				# transfert the remote backup file to our backup host, getting the local backup file (from remote host) to be restored
-				my $result = locallySyncedBackups( $data );
-				if( $result ){
-					# restore instance if the instance defined for this service in this host
-					my $restoreInstance = computeRestoredInstance();
-					my $command = "dbms.pl restore -nocolored -instance $restoreInstance -database $database ";
-					$command .= " -full $result->{full}";
-					$command .= " -diff $result->{diff}" if $result->{diff};
-					msgVerbose( $command );
-					my $res = TTP::filter( `$command` );
-					my $rc = $?;
-					print join( '\n', @{$res} ).EOL;
-				} else {
-					msgWarn( "result is undefined, unable to restore" );
-				}
-			}
-		}
-	}
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -524,6 +527,7 @@ sub doWithNew {
 sub varReset {
 	msgVerbose( "varReset()" );
 	@previousScan = ();
+	$first = true;
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -563,11 +567,16 @@ sub works {
 		$first = false;
 		@previousScan = sort @runningScan;
 	} elsif( scalar @runningScan > scalar @previousScan ){
-		my @sorted = sort @runningScan;
-		my @tmp = @sorted;
-		my @newFiles = splice( @tmp, scalar @previousScan, scalar @runningScan - scalar @previousScan );
-		doWithNew( @newFiles );
-		@previousScan = @sorted;
+		my $prevHash = {};
+		foreach my $it ( @previousScan ){
+			$prevHash->{$it} = true;
+		}
+		my $newFiles = [];
+		foreach my $it ( @runningScan ){
+			push( @{$newFiles}, $it ) if !exists $prevHash->{$it};
+		}
+		doWithNew( @{$newFiles} );
+		@previousScan = @runningScan;
 	}
 }
 

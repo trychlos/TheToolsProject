@@ -18,8 +18,16 @@ TODO
   31 2024- 5- 5 ws22prod1 inlingua33_archive is restored at 6h, but not inlingua31_archive nor inlingua59_archive
      2024- 5- 6 confirmed - this may be because there was only one execution report json file, so should be fixed with #30
      2024- 5- 9 still there: to be fixed
+     2024- 5- 9 fix execReports .json filenames and release...
+     2024- 5-10 3 databases on 4 are restored, the fourth is missing
 
-  44 2024- 5- 9 
+  44 2024- 5-10 backup daemon publishes http telemetry with very few labels (actually seems that some are missing)
+
+  45 2024- 5-10 review labelled mqtt publications: maybe could only use values when labelling as name=value
+
+  46 2024- 5-10 $ttp should be renamed $ep (for EP instance)
+
+  47 2024- 5-10 
 
 # -------------------------------------------------------------------------------------------------
 
