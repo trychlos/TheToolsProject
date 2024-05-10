@@ -43,7 +43,7 @@ use TTP;
 use TTP::Constants qw( :all );
 use TTP::Extern;
 use TTP::Message qw( :all );
-use vars::global qw( $ttp );
+use vars::global qw( $ep );
 
 # TTP initialization
 my $extern = TTP::Extern->new();
@@ -128,9 +128,9 @@ sub printSummary {
 	$stdout .= "+".TTP::pad( "", $totLength-2, '=' )."+".EOL;
 	# both send the summary to the log (here to stdout) and execute the provided command
 	# must manage SUBJECT and OPTIONS macros
-	my $command = $ttp->var([ 'site', 'workloadSummary', 'command' ]);
+	my $command = $ep->var([ 'site', 'workloadSummary', 'command' ]);
 	if( $command ){
-		my $host = $ttp->node()->name();
+		my $host = $ep->node()->name();
 		my $textfname = TTP::getTempFileName();
 		my $fh = path( $textfname );
 		$fh->spew( $stdout );
@@ -169,7 +169,7 @@ if( !GetOptions(
 		TTP::exit( 1 );
 }
 
-#print Dumper( $ttp->{run} );
+#print Dumper( $ep->{run} );
 if( $extern->help()){
 	$extern->helpExtern( $defaults );
 	TTP::exit();

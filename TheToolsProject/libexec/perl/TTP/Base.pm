@@ -20,7 +20,7 @@
 #
 # The TTP EntryPoint ref is available both:
 # - as a global variable created in TTP.pm and available everywhere via 'vars::global' package
-# - and stored as a reference in this base class, so available through $object->ttp().
+# - and stored as a reference in this base class, so available through $object->ep().
 
 package TTP::Base;
 
@@ -39,14 +39,14 @@ use TTP::Constants qw( :all );
 # -------------------------------------------------------------------------------------------------
 # A placeholder so that roles can come after or before this function which is called at instanciation time
 # 'ttp' is already set, so that the roles not only get the 'ttp' in the arguments list, but can also
-# call $self->ttp() 
+# call $self->ep() 
 # (I]:
 # - the TTP EntryPoint ref
 # (O):
 # - this same object
 
 sub _newBase {
-	my ( $self, $ttp, $args ) = @_;
+	my ( $self, $ep, $args ) = @_;
 	return $self;
 }
 
@@ -59,9 +59,9 @@ sub _newBase {
 # (O):
 # - the TheToolsProject EntryPoint ref recorded at instanciation time
 
-sub ttp {
+sub ep {
 	my ( $self ) = @_;
-	return $self->{_ttp};
+	return $self->{_ep};
 }
 
 ### Class methods
@@ -74,22 +74,22 @@ sub ttp {
 # - this object
 
 sub new {
-	my ( $class, $ttp, $args ) = @_;
+	my ( $class, $ep, $args ) = @_;
 	$class = ref( $class ) || $class;
 	$args //= {};
 	my $self = {};
 	bless $self, $class;
 
 	# keep the TTP EP ref
-	if( defined( $ttp )){
-		$self->{_ttp} = $ttp;
+	if( defined( $ep )){
+		$self->{_ep} = $ep;
 	} else {
 		print "(ERR) ".__PACKAGE__."::new() 'ttp' is not defined but is mandatory".EOL;
 		TTP::stackTrace();
 	}
 
 	# let the roles insert their own code at that time
-	$self->_newBase( $ttp, $args );
+	$self->_newBase( $ep, $args );
 
 	return $self;
 }

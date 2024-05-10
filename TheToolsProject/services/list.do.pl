@@ -95,7 +95,7 @@ sub getDefinedWorktasks {
 	# build here the to-be-sorted array and a hash which will be used to build the result
 	my @list = ();
 	foreach my $it ( @{$services} ){
-		my $service = TTP::Service->new( $ttp, { service => $it });
+		my $service = TTP::Service->new( $ep, { service => $it });
 		if( $service && ( !$service->hidden() || $displayHiddens )){
 			my $tasks = $service->var([ 'workloads', $workload ]);
 			if( $tasks ){
@@ -120,7 +120,7 @@ sub _taskOrder {
 
 sub listEnvironment {
 	msgOut( "displaying environment for ".$ttp->node()->name()." node..." );
-	my $env = $ttp->node()->environment();
+	my $env = $ep->node()->environment();
 	my $count = 0;
 	if( !$env ){
 		msgOut( "no environment registered with this machine" );
@@ -146,7 +146,7 @@ sub listServiceMachines {
 	msgVerbose( "found ".scalar @{$hosts}." node(s)" );
 	foreach my $host ( @{$hosts} ){
 		msgVerbose( "examining '$host'" );
-		my $node = TTP::Node->new( $ttp, { node => $host });
+		my $node = TTP::Node->new( $ep, { node => $host });
 		if( $node && ( !$opt_type || $node->environment() eq $opt_type ) && $node->hasService( $opt_service )){
 			log_print( " ".( $node->environment() || '' ).": $host" );
 			$count += 1;

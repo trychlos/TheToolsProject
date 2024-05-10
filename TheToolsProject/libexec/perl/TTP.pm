@@ -35,7 +35,7 @@ use Scalar::Util qw( looks_like_number );
 use Test::Deep;
 use Time::Moment;
 use Time::Piece;
-use vars::global create => qw( $ttp );
+use vars::global create => qw( $ep );
 
 use TTP::Constants qw( :all );
 use TTP::EP;
@@ -70,7 +70,7 @@ my $Const = {
 # - returns the alertsdir
 
 sub alertsDir {
-	my $dir = $ttp->var([ 'alerts', 'withFile', 'dropDir' ]) || tempDir();
+	my $dir = $ep->var([ 'alerts', 'withFile', 'dropDir' ]) || tempDir();
 	return $dir;
 }
 
@@ -102,7 +102,7 @@ sub commandByOs {
 			$result->{evaluated} =~ s/<$key>/$args->{macros}{$key}/;
 		}
 		msgVerbose( "Toops::commandByOs() evaluated to '$result->{evaluated}'" );
-		if( $ttp->runner()->dummy()){
+		if( $ep->runner()->dummy()){
 			msgDummy( $result->{evaluated} );
 			$result->{result} = true;
 		} else {
@@ -143,7 +143,7 @@ sub copyDir {
 		return false;
 	}
 	my $cmdres = commandByOs({
-		command => $ttp->var([ 'copyDir', 'byOS', $Config{osname}, 'command' ]),
+		command => $ep->var([ 'copyDir', 'byOS', $Config{osname}, 'command' ]),
 		macros => {
 			SOURCE => $source,
 			TARGET => $target
@@ -152,7 +152,7 @@ sub copyDir {
 	if( defined $cmdres->{command} ){
 		$result = $cmdres->{result};
 		msgVerbose( "Toops::copyDir() commandByOs() result=$result" );
-	} elsif( $ttp->runner()->dummy()){
+	} elsif( $ep->runner()->dummy()){
 		msgDummy( "dircopy( $source, $target )" );
 	} else {
 		# https://metacpan.org/pod/File::Copy::Recursive
@@ -184,7 +184,7 @@ sub copyFile {
 	my ( $vol, $dirs, $file ) = File::Spec->splitpath( $source );
 	my $srcpath = File::Spec->catpath( $vol, $dirs );
 	my $cmdres = commandByOs({
-		command => $ttp->var([ 'copyFile', 'byOS', $Config{osname}, 'command' ]),
+		command => $ep->var([ 'copyFile', 'byOS', $Config{osname}, 'command' ]),
 		macros => {
 			SOURCE => $srcpath,
 			TARGET => $target,
@@ -194,7 +194,7 @@ sub copyFile {
 	if( defined $cmdres->{command} ){
 		$result = $cmdres->{result};
 		msgVerbose( "Toops::copyFile() commandByOs() result=$result" );
-	} elsif( $ttp->runner()->dummy()){
+	} elsif( $ep->runner()->dummy()){
 		msgDummy( "copy( $source, $target )" );
 	} else {
 		# https://metacpan.org/pod/File::Copy
@@ -303,7 +303,7 @@ sub displayTabular {
 # Returns the current count of errors
 
 sub errs {
-	my $running = $ttp->runner();
+	my $running = $ep->runner();
 	return $running->runnableErrs() if $running;
 	return 0;
 }
@@ -338,12 +338,12 @@ sub errs {
 sub executionReport {
 	my ( $args ) = @_;
 	# write JSON file if configuration enables that and relevant arguments are provided
-	my $enabled = $ttp->var([ 'executionReports', 'withFile', 'enabled' ]);
+	my $enabled = $ep->var([ 'executionReports', 'withFile', 'enabled' ]);
 	if( $enabled && $args->{file} ){
 		_executionReportToFile( $args->{file} );
 	}
 	# publish MQTT message if configuration enables that and relevant arguments are provided
-	$enabled = $ttp->var([ 'executionReports', 'withMqtt', 'enabled' ]);
+	$enabled = $ep->var([ 'executionReports', 'withMqtt', 'enabled' ]);
 	if( $enabled && $args->{mqtt} ){
 		_executionReportToMqtt( $args->{mqtt} );
 	}
@@ -353,11 +353,11 @@ sub executionReport {
 
 sub _executionReportCompleteData {
 	my ( $data ) = @_;
-	my $running = $ttp->runner();
+	my $running = $ep->runner();
 	$data->{cmdline} = "$0 ".join( ' ', @{$running->runnableArgs()} );
 	$data->{command} = $running->command();
 	$data->{verb} = $running->verb();
-	$data->{host} = $ttp->node()->name();
+	$data->{host} = $ep->node()->name();
 	$data->{code} = $running->runnableErrs();
 	$data->{started} = $running->runnableStarted()->strftime( '%Y-%m-%d %H:%M:%S.%5N' );
 	$data->{ended} = Time::Moment->now->strftime( '%Y-%m-%d %H:%M:%S.%5N' );
@@ -382,9 +382,9 @@ sub _executionReportToFile {
 	$data = $args->{data} if exists $args->{data};
 	if( defined $data ){
 		$data = _executionReportCompleteData( $data );
-		my $command = $ttp->var([ 'executionReports', 'withFile', 'command' ]);
+		my $command = $ep->var([ 'executionReports', 'withFile', 'command' ]);
 		if( $command ){
-			my $running = $ttp->runner();
+			my $running = $ep->runner();
 			my $json = JSON->new;
 			my $str = $json->encode( $data );
 			# protect the double quotes against the CMD.EXE command-line
@@ -430,10 +430,10 @@ sub _executionReportToMqtt {
 		my $excludes = [];
 		$excludes = $args->{excludes} if exists $args->{excludes} && ref $args->{excludes} eq 'ARRAY' && scalar $args->{excludes} > 0;
 		if( $topic ){
-			my $running = $ttp->runner();
+			my $running = $ep->runner();
 			my $dummy = $running->dummy() ? "-dummy" : "-nodummy";
 			my $verbose = $running->verbose() ? "-verbose" : "-noverbose";
-			my $command = $ttp->var([ 'executionReports', 'withMqtt', 'command' ]);
+			my $command = $ep->var([ 'executionReports', 'withMqtt', 'command' ]);
 			if( $command ){
 				foreach my $key ( keys %{$data} ){
 					if( !grep( /$key/, @{$excludes} )){
@@ -471,7 +471,7 @@ sub _executionReportToMqtt {
 # Return code is optional, defaulting to IRunnable count of errors
 
 sub exit {
-	my $rc = shift || $ttp->runner()->runnableErrs();
+	my $rc = shift || $ep->runner()->runnableErrs();
 	if( $rc ){
 		msgErr( "exiting with code $rc" );
 	} else {
@@ -546,8 +546,8 @@ sub fromCommand {
 # returns a new unique temp filename
 
 sub getTempFileName {
-	my $fname = $ttp->runner()->runnableBNameShort();
-	my $qualifier = $ttp->runner()->runnableQualifier();
+	my $fname = $ep->runner()->runnableBNameShort();
+	my $qualifier = $ep->runner()->runnableQualifier();
 	$fname .= "-$qualifier" if $qualifier;
 	my $random = random();
 	my $tempfname = File::Spec->catfile( logsCommands(), "$fname-$random.tmp" );
@@ -622,7 +622,7 @@ sub hashFromTabular {
 # - returns the current execution node name, which may be undef very early in the process
 
 sub host {
-	my $node = $ttp->node();
+	my $node = $ep->node();
 	return $node ? $node->name() : undef;
 }
 
@@ -716,7 +716,7 @@ sub jsonWrite {
 #   and at least not definitive while the node has not been instanciated/loaded/evaluated
 
 sub logsCommands {
-	my $result = $ttp->node() ? ( $ttp->var( 'logsCommands' ) || logsDaily()) : undef;
+	my $result = $ep->node() ? ( $ep->var( 'logsCommands' ) || logsDaily()) : undef;
 	return $result;
 }
 
@@ -728,7 +728,7 @@ sub logsCommands {
 #   and at least not definitive while the node has not been instanciated/loaded/evaluated
 
 sub logsDaily {
-	my $result = $ttp->node() ? ( $ttp->var( 'logsDaily' ) || logsRoot()) : undef;
+	my $result = $ep->node() ? ( $ep->var( 'logsDaily' ) || logsRoot()) : undef;
 	return $result;
 }
 
@@ -740,7 +740,7 @@ sub logsDaily {
 #   and at least not definitive while the node has not been instanciated/loaded/evaluated
 
 sub logsMain {
-	my $result = $ttp->node() ? ( $ttp->var( 'logsMain' ) || File::Spec->catfile( logsCommands(), 'main.log' )) : undef;
+	my $result = $ep->node() ? ( $ep->var( 'logsMain' ) || File::Spec->catfile( logsCommands(), 'main.log' )) : undef;
 	return $result;
 }
 
@@ -752,7 +752,7 @@ sub logsMain {
 #   and at least not definitive while the node has not been instanciated/loaded/evaluated
 
 sub logsRoot {
-	my $result = $ttp->node() ? ( $ttp->var( 'logsRoot' ) || tempDir()) : undef;
+	my $result = $ep->node() ? ( $ep->var( 'logsRoot' ) || tempDir()) : undef;
 	return $result;
 }
 
@@ -782,7 +782,7 @@ sub makeDirExist {
 		my $error;
 		$result = true;
 		make_path( $dir, {
-			verbose => $allowVerbose && $ttp->runner()->verbose(),
+			verbose => $allowVerbose && $ep->runner()->verbose(),
 			error => \$error
 		});
 		# https://perldoc.perl.org/File::Path#make_path%28-%24dir1%2C-%24dir2%2C-....-%29
@@ -810,7 +810,7 @@ sub makeDirExist {
 #   to the mounted filesystem as there is no logical machine in this Perl version
 
 sub nodeRoot {
-	my $result = $ttp->site() ? ( $ttp->var( 'nodeRoot' ) || $Const->{byOS}{$Config{osname}}{tempDir} ) : undef;
+	my $result = $ep->site() ? ( $ep->var( 'nodeRoot' ) || $Const->{byOS}{$Config{osname}}{tempDir} ) : undef;
 	return $result;
 }
 
@@ -822,7 +822,7 @@ sub nodeRoot {
 #   subdirectories of TTP_ROOTS where we can find nodes JSON configuration files.
 
 sub nodesDirs {
-	my $result = $ttp->site() ? TTP::Node->dirs() : undef;
+	my $result = $ep->site() ? TTP::Node->dirs() : undef;
 	return $result;
 }
 
@@ -896,7 +896,7 @@ sub removeTree {
 	msgVerbose( "Toops::removeTree() removing '$dir'" );
 	my $error;
 	remove_tree( $dir, {
-		verbose => $ttp->{run}{verbose},
+		verbose => $ep->{run}{verbose},
 		error => \$error
 	});
 	# https://perldoc.perl.org/File::Path#make_path%28-%24dir1%2C-%24dir2%2C-....-%29
@@ -921,9 +921,9 @@ sub removeTree {
 # and @ARGV the command-line arguments
 
 sub run {
-	$ttp = TTP::EP->new();
-	$ttp->bootstrap();
-	$ttp->runCommand();
+	$ep = TTP::EP->new();
+	$ep->bootstrap();
+	$ep->runCommand();
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -957,7 +957,7 @@ sub tempDir {
 # - the found value or undef
 
 sub var {
-	return $ttp->var( @_ );
+	return $ep->var( @_ );
 }
 
 1;

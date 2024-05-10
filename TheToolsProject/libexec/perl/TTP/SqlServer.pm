@@ -244,7 +244,7 @@ sub _connect {
 		Win32::SqlServer::SetDefaultForEncryption( 'Optional', true );
 		my( $account, $passwd ) = _getCredentials( $dbms );
 		if( length $account && length $passwd ){
-			my $server = $dbms->ttp()->node()->name()."\\".$instance;
+			my $server = $dbms->ep()->node()->name()."\\".$instance;
 			# SQLServer 2008R2 doesn't like have a server connection string with MSSQLSERVER default instance
 			$server = undef if $instance eq "MSSQLSERVER";
 			msgVerbose( __PACKAGE__."::_connect() calling sql_init with server='".( $server || '(undef)' )."', account='$account'..." );
@@ -340,12 +340,12 @@ sub _restoreDatabaseMove {
 	msgVerbose( __PACKAGE__."::_restoreDatabaseMove() database='$database'" );
 	my $result = _sqlExec( $dbms, "RESTORE FILELISTONLY FROM DISK='$fname'" );
 	my $move = undef;
-	if( $dbms->ttp()->runner()->dummy()){
+	if( $dbms->ep()->runner()->dummy()){
 		msgDummy( "considering nomove" );
 	} elsif( !scalar @{$result->{result}} ){
 		msgErr( __PACKAGE__."::_restoreDatabaseMove() unable to get the files list of the backup set" );
 	} else {
-		my $sqlDataPath = $dbms->ttp()->node()->var([ 'DBMS', 'byInstance', $instance, 'dataPath' ]);
+		my $sqlDataPath = $dbms->ep()->node()->var([ 'DBMS', 'byInstance', $instance, 'dataPath' ]);
 		foreach( @{$result->{result}} ){
 			my $row = $_;
 			$move .= ', ' if length $move;
@@ -430,7 +430,7 @@ sub _sqlExec {
 	}
 	if( !TTP::errs()){
 		msgVerbose( __PACKAGE__."::_sqlExec() executing '$sql'" );
-		if( $dbms->ttp()->runner()->dummy()){
+		if( $dbms->ep()->runner()->dummy()){
 			msgDummy( $sql );
 			$res->{ok} = true;
 		} else {

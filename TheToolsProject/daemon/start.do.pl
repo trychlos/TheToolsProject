@@ -50,7 +50,7 @@ my $opt_bname = $defaults->{bname};
 
 sub doStart {
 	msgOut( "starting the daemon from '$opt_json'..." );
-	my $daemon = TTP::Daemon->new( $ttp, { path => $opt_json, daemonize => false });
+	my $daemon = TTP::Daemon->new( $ep, { path => $opt_json, daemonize => false });
 	if( $daemon->loaded()){
 		if( $daemon->start()){
 			msgOut( "success" );
@@ -100,7 +100,7 @@ if( $count == 0 ){
 }
 #if a bname is specified, find the full filename
 if( $opt_bname ){
-	my $finder = TTP::Finder->new( $ttp );
+	my $finder = TTP::Finder->new( $ep );
 	$opt_json = $finder->find({ dirs => [ TTP::Daemon->dirs(), $opt_bname ], wantsAll => false });
 	msgErr( "unable to find a suitable daemon JSON configuration file for '$opt_bname'" ) if !$opt_json;
 }

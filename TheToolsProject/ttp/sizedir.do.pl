@@ -95,7 +95,7 @@ sub doComputeSize {
 		my @labels = ( @opt_prepends,
 			"environment=".$ttp->node()->environment(), "command=".$running->command(), "verb=".$running->verb(), "path=$path",
 			@opt_appends );
-		TTP::Metric->new( $ttp, {
+		TTP::Metric->new( $ep, {
 			name => 'dirs_count',
 			value => $dirCount,
 			type => 'gauge',
@@ -109,7 +109,7 @@ sub doComputeSize {
 			text => $opt_text,
 			textPrefix => 'ttp_filesystem_sizedir_'
 		});
-		TTP::Metric->new( $ttp, {
+		TTP::Metric->new( $ep, {
 			name => 'files_count',
 			value => $fileCount,
 			type => 'gauge',
@@ -123,7 +123,7 @@ sub doComputeSize {
 			text => $opt_text,
 			textPrefix => 'ttp_filesystem_sizedir_'
 		});
-		TTP::Metric->new( $ttp, {
+		TTP::Metric->new( $ep, {
 			name => 'content_size',
 			value => $totalSize,
 			type => 'gauge',

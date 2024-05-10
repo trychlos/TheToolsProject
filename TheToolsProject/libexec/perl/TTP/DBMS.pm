@@ -98,7 +98,7 @@ sub computeDefaultBackupFilename {
 	$mode = $parms->{mode} if exists $parms->{mode};
 	msgErr( __PACKAGE__."::computeDefaultBackupFilename() mode must be 'full' or 'diff', found '$mode'" ) if $mode ne 'full' and $mode ne 'diff';
 	# compute the dir and make sure it exists
-	my $node = $self->ttp()->node();
+	my $node = $self->ep()->node();
 	my $backupDir = $node->var([ 'DBMS', 'backupsDir' ]) || $node->var([ 'DBMS', 'backupsRoot' ]) || TTP::tempDir();;
 	TTP::makeDirExist( $backupDir );
 	# compute the filename
@@ -122,7 +122,7 @@ sub databaseExists {
 	if( $database ){
 		my $list = $self->getDatabases();
 		$exists = true if grep( /$database/i, @{$list} );
-		if( $self->ttp()->runner()->dummy()){
+		if( $self->ep()->runner()->dummy()){
 			msgDummy( "considering exists='true'" );
 			$exists = true;
 		}
@@ -298,15 +298,15 @@ sub toPackage {
 # - this object, or undef in case of an error
 
 sub new {
-	my ( $class, $ttp, $args ) = @_;
+	my ( $class, $ep, $args ) = @_;
 	$class = ref( $class ) || $class;
 	$args //= {};
-	my $self = $class->SUPER::new( $ttp, $args );
+	my $self = $class->SUPER::new( $ep, $args );
 	bless $self, $class;
 
 	if( $args->{instance} ){
 		$self->{_dbms}{instance} = $args->{instance};
-		my $package = $ttp->var([ 'DBMS', 'byInstance', $args->{instance}, 'package' ]);
+		my $package = $ep->var([ 'DBMS', 'byInstance', $args->{instance}, 'package' ]);
 		#print __PACKAGE__."::var() package='".( $package || '(undef)' )."'".EOL;
 		if( $package ){
 			$self->{_dbms}{package} = $package;

@@ -30,7 +30,7 @@ use Carp;
 use Config;
 use Data::Dumper;
 use Role::Tiny::With;
-use vars::global qw( $ttp );
+use vars::global qw( $ep );
 
 with 'TTP::IJSONable';
 
@@ -54,9 +54,9 @@ my $Const = {
 # - this object
 
 sub new {
-	my ( $class, $ttp ) = @_;
+	my ( $class, $ep ) = @_;
 	$class = ref( $class ) || $class;
-	my $self = $class->SUPER::new( $ttp );
+	my $self = $class->SUPER::new( $ep );
 	bless $self, $class;
 	return $self;
 }

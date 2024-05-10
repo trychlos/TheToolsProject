@@ -129,7 +129,7 @@ sub _moveDir {
 		return true;
 	}
 	my $cmdres = TTP::commandByOs({
-		command => $ttp->var([ 'moveDir', 'byOS', $Config{osname}, 'command' ]),
+		command => $ep->var([ 'moveDir', 'byOS', $Config{osname}, 'command' ]),
 		macros => {
 			SOURCE => $source,
 			TARGET => $target

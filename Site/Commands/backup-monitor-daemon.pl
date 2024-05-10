@@ -70,7 +70,7 @@ use TTP::Daemon;
 use TTP::Message qw( :all );
 use TTP::Reporter;
 use TTP::Service;
-use vars::global qw( $ttp );
+use vars::global qw( $ep );
 
 my $daemon = TTP::Daemon->init();
 
@@ -180,7 +180,7 @@ sub computeMonitoredInstance {
 # Returns the computed monitored share
 
 sub computeMonitoredShare {
-	my $dir = $ttp->var([ 'executionReports', 'withFile', 'dropDir' ], { jsonable => $daemon->{monitoredNode} });
+	my $dir = $ep->var([ 'executionReports', 'withFile', 'dropDir' ], { jsonable => $daemon->{monitoredNode} });
 	msgErr( "unable to compute executionRepots.withFile.dropDir for remote $opt_remote" ) if !defined $dir;
 	my( $local_vol, $local_dirs, $local_file ) = File::Spec->splitpath( $dir );
 	my( $remote_vol, $no_dirs, $no_file ) = File::Spec->splitpath( configRemoteShare());
@@ -248,7 +248,7 @@ sub configScanInterval {
 
 sub doWithNew {
 	my ( @newFiles ) = @_;
-	my $reporter = TTP::Reporter->new( $ttp );
+	my $reporter = TTP::Reporter->new( $ep );
 	my $monitoredInstance = computeMonitoredInstance();
 	my $monitoredDatabases = computeMonitoredDatabases();
 	#print "newFiles".EOL.Dumper( @runningScan );
@@ -466,7 +466,7 @@ sub remoteSearchLastFull {
 	my $res = undef;
 	# get the remote execution reports
 	my $dir = computeMonitoredShare();
-	my $reporter = TTP::Reporter->new( $ttp );
+	my $reporter = TTP::Reporter->new( $ep );
 	find( \&remoteSearchLastFull_wanted, $dir );
 	# sort in reverse name order (the most recent first)
 	my @sorted = reverse sort @{$_remote};
@@ -623,7 +623,7 @@ if( !TTP::errs()){
 if( !TTP::errs()){
 	$daemon->{config} = $daemon->jsonData();
 	$daemon->{config} = computeMacrosRec( $daemon->{config} );
-	$daemon->{monitoredNode} = TTP::Node->new( $ttp, { node => $opt_remote });
+	$daemon->{monitoredNode} = TTP::Node->new( $ep, { node => $opt_remote });
 	#print Dumper( $daemon );
 }
 
@@ -636,7 +636,7 @@ if( !TTP::errs()){
 		my $remoteService = $remoteConfig->{Services}{$monitoredService};
 		if( $remoteService ){
 			msgVerbose( "monitored service '$monitoredService' successfully found in remote host '$opt_remote' configuration file" );
-			$daemon->{monitoredService} = TTP::Service->new( $ttp, { service => $monitoredService });
+			$daemon->{monitoredService} = TTP::Service->new( $ep, { service => $monitoredService });
 			$daemon->metricLabelAppend( 'service', $monitoredService );
 		} else {
 			msgErr( "monitored service '$monitoredService' doesn't exist in remote host '$opt_remote' configuration file" );

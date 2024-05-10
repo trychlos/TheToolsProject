@@ -28,7 +28,7 @@ use Carp;
 use Data::Dumper;
 use File::Spec;
 use Time::Moment;
-use vars::global qw( $ttp );
+use vars::global qw( $ep );
 
 use TTP::Constants qw( :all );
 use TTP::Message qw( :all );
@@ -196,7 +196,7 @@ sub runnableSetQualifier {
 # -none
 
 after _newBase => sub {
-	my ( $self, $ttp, $args ) = @_;
+	my ( $self, $ep, $args ) = @_;
 	$args //= {};
 	#print __PACKAGE__."::new()".EOL;
 
@@ -214,7 +214,7 @@ after _newBase => sub {
 
 	if( !$ttp->runner()){
 		msgLog( "[] executing $0 ".join( ' ', @ARGV ));
-		$ttp->runner( $self );
+		$ep->runner( $self );
 		$SIG{INT} = sub {
 			msgVerbose( "quitting on Ctrl+C keyboard interrupt" );
 			TTP::exit();

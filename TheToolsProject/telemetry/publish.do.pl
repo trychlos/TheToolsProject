@@ -89,7 +89,7 @@ sub doPublish {
 	$metric->{type} = $opt_type if $opt_type;
 	my @labels = ( @opt_prepends, @opt_appends );
 	$metric->{labels} = \@labels if scalar @labels;
-	TTP::Metric->new( $ttp, $metric )->publish({
+	TTP::Metric->new( $ep, $metric )->publish({
 		mqtt => $opt_mqtt,
 		mqttPrefix => $opt_mqttPrefix,
 		http => $opt_http,

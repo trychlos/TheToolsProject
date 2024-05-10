@@ -223,7 +223,7 @@ if( $opt_service ){
 	if( $opt_ipfo ){
 		msgErr( "only one of '--service' or '--ip' must be specified, both found" );
 	} else {
-		my $service = TTP::Service->new( $ttp, { service => $opt_service });
+		my $service = TTP::Service->new( $ep, { service => $opt_service });
 		$opt_ipfo = $service->var([ 'failover', 'ovh', 'ip' ]);
 		if( $opt_ipfo ){
 			msgOut( "found failover IP service: $opt_ipfo" );

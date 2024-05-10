@@ -41,7 +41,7 @@ my $defaults = {
 	colored => 'no',
 	dummy => 'no',
 	verbose => 'no',
-	emitter => $ttp->node()->name(),
+	emitter => $ep->node()->name(),
 	level => 'INFO',
 	message => ''
 };
@@ -67,16 +67,16 @@ $defaults->{sms} = $opt_sms ? 'yes' : 'no';
 
 sub doJsonAlert {
 	msgOut( "creating a new '$opt_level' json alert..." );
-	my $command = $ttp->var([ 'alerts', 'withFile', 'command' ]);
+	my $command = $ep->var([ 'alerts', 'withFile', 'command' ]);
 	if( $command ){
-		my $dir = $ttp->var([ 'alerts', 'withFile', 'dropDir' ]);
+		my $dir = $ep->var([ 'alerts', 'withFile', 'dropDir' ]);
 		if( $dir ){
 			TTP::makeDirExist( $dir );
 			my $data = {
 				emitter => $opt_emitter,
 				level => $opt_level,
 				message => $opt_message,
-				host => $ttp->node()->name(),
+				host => $ep->node()->name(),
 				stamp => localtime->strftime( "%Y-%m-%d %H:%M:%S" )
 			};
 			my $json = JSON->new;
@@ -110,15 +110,15 @@ sub doJsonAlert {
 
 sub doMqttAlert {
 	msgOut( "publishing a '$opt_level' alert on MQTT bus..." );
-	my $command = $ttp->var([ 'alerts', 'withMqtt', 'command' ]);
+	my $command = $ep->var([ 'alerts', 'withMqtt', 'command' ]);
 	my $res = false;
 	if( $command ){
-		my $topic = $ttp->node()->name()."/alert";
+		my $topic = $ep->node()->name()."/alert";
 		my $data = {
 			emitter => $opt_emitter,
 			level => $opt_level,
 			message => $opt_message,
-			host => $ttp->node()->name(),
+			host => $ep->node()->name(),
 			stamp => localtime->strftime( "%Y-%m-%d %H:%M:%S" )
 		};
 		my $json = JSON->new;
@@ -150,7 +150,7 @@ sub doMqttAlert {
 sub doSmsAlert {
 	msgOut( "sending a '$opt_level' alert by SMS..." );
 	my $res = false;
-	my $command = $ttp->var([ 'alerts', 'withSms', 'command' ]);
+	my $command = $ep->var([ 'alerts', 'withSms', 'command' ]);
 	if( $command ){
 		my $text = "Hi,
 An alert has been raised:
@@ -188,7 +188,7 @@ Best regards.
 sub doSmtpAlert {
 	msgOut( "publishing a '$opt_level' alert by SMTP..." );
 	my $res = false;
-	my $command = $ttp->var([ 'alerts', 'withSmtp', 'command' ]);
+	my $command = $ep->var([ 'alerts', 'withSmtp', 'command' ]);
 	if( $command ){
 		my $subject = "[$opt_level] Alert";
 		my $text = "Hi,

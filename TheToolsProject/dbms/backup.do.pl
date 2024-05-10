@@ -65,7 +65,7 @@ my $opt_compress = false;
 my $opt_output = '';
 
 # may be overriden by the service if specified
-my $jsonable = $ttp->node();
+my $jsonable = $ep->node();
 my $dbms = undef;
 
 # list of databases to be backuped
@@ -99,7 +99,7 @@ sub doBackup {
 				data => $data
 			},
 			mqtt => {
-				topic => $ttp->node()->name()."/executionReport/".$running->command().'/'.$running->verb()."/$opt_instance/$db",
+				topic => $ep->node()->name()."/executionReport/".$running->command().'/'.$running->verb()."/$opt_instance/$db",
 				data => $data,
 				options => "-retain",
 				excludes => [
@@ -176,7 +176,7 @@ if( $count == 0 ){
 	msgErr( "must have one of '--service' or '--instance' option, both found" );
 } elsif( $opt_service ){
 	if( $jsonable->hasService( $opt_service )){
-		$jsonable = TTP::Service->new( $ttp, { service => $opt_service });
+		$jsonable = TTP::Service->new( $ep, { service => $opt_service });
 		$opt_instance = $jsonable->var([ 'DBMS', 'instance' ]);
 	} else {
 		msgErr( "service '$opt_service' if not defined on current execution node" ) ;
@@ -184,7 +184,7 @@ if( $count == 0 ){
 }
 
 # instanciates the DBMS class
-$dbms = TTP::DBMS->new( $ttp, { instance => $opt_instance }) if !TTP::errs();
+$dbms = TTP::DBMS->new( $ep, { instance => $opt_instance }) if !TTP::errs();
 
 # database(s) can be specified in the command-line, or can come from the service
 if( $opt_database ){

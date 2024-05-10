@@ -49,7 +49,7 @@ my $count = 0;
 sub executeCommands {
 	msgOut( "executing '$opt_service [".join( ',', @opt_keys )."]' commands..." );
 	my $cmdCount = 0;
-	my $service = TTP::Service->new( $ttp, { service => $opt_service });
+	my $service = TTP::Service->new( $ep, { service => $opt_service });
 	if( $service ){
 		# addressed value can be a scalar or an array of scalars
 		my $value = $service->var( \@opt_keys );

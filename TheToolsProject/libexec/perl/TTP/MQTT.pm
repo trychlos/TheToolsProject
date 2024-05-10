@@ -25,7 +25,7 @@ use warnings;
 
 use Data::Dumper;
 use Net::MQTT::Simple;
-use vars::global qw( $ttp );
+use vars::global qw( $ep );
 
 use TTP;
 use TTP::Constants qw( :all );
@@ -54,7 +54,7 @@ sub connect {
 	my $mqtt = undef;
 	$sockopts //= {};
 
-	my $broker = $ttp->var([ 'MQTTGateway', 'broker' ]);
+	my $broker = $ep->var([ 'MQTTGateway', 'broker' ]);
 	$broker = $args->{broker} if $args->{broker};
 	msgErr( "MQTT::connect() broker is not configured nor provided as an argument" ) if !$broker;
 

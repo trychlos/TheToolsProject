@@ -37,7 +37,7 @@ use Carp;
 use Config;
 use Data::Dumper;
 use Role::Tiny::With;
-use vars::global qw( $ttp );
+use vars::global qw( $ep );
 
 with 'TTP::IEnableable', 'TTP::IFindable', 'TTP::IJSONable';
 
@@ -87,7 +87,7 @@ sub _substMacros {
 			msgErr( __PACKAGE__."::_substMacros() unmanaged ref '$ref'" );
 		}
 	} else {
-		my $node = $self->ttp()->node()->name();
+		my $node = $self->ep()->node()->name();
 		my $service = $self->name();
 		$data =~ s/<HOST>/$node/g;
 		$data =~ s/<SERVICE>/$service/g;
@@ -155,13 +155,13 @@ sub var {
 				msgErr( __PACKAGE__."::var() expects node be provided either by name or as a 'TTP::Node', found '$ref'" );
 			}
 		} else {
-			my $nodeObj = TTP::Node->new( $ttp, { node => $node });
+			my $nodeObj = TTP::Node->new( $ep, { node => $node });
 			if( $nodeObj->loaded()){
 				$jsonable = $nodeObj;
 			}
 		}
 	} else {
-		$jsonable = $ttp->node();
+		$jsonable = $ep->node();
 	}
 	if( $jsonable ){
 		# search for the service definition in the node
@@ -177,7 +177,7 @@ sub var {
 		}
 		# last search for a default value at site level
 		if( !defined( $value )){
-			$value = $ttp->site()->var( \@args );
+			$value = $ep->site()->var( \@args );
 		}
 	}
 	return $value;
@@ -197,7 +197,7 @@ sub dirs {
 	my ( $class ) = @_;
 	$class = ref( $class ) || $class;
 
-	my $dirs = $ttp->var( 'servicesDirs' ) || $class->finder()->{dirs};
+	my $dirs = $ep->var( 'servicesDirs' ) || $class->finder()->{dirs};
 
 	return $dirs;
 }
@@ -223,7 +223,7 @@ sub enumerate {
 	my $count = 0;
 	my $withHiddens = false;
 	$withHiddens = $args->{hidden} if exists $args->{hidden};
-	my $node = $ttp->node();
+	my $node = $ep->node();
 	if( exists( $args->{node} )){
 		my $ref = ref( $args->{node} );
 		if( $ref ){
@@ -233,8 +233,8 @@ sub enumerate {
 				msgErr( __PACKAGE__."::enumerate() expects a 'TTP::Node', found '$ref'" );
 			}
 		} else {
-			$node = TTP::Node->new( $ttp, { node => $args->{node}, abortOnError => false });
-			$node = $ttp->node() if !$node;
+			$node = TTP::Node->new( $ep, { node => $args->{node}, abortOnError => false });
+			$node = $ep->node() if !$node;
 		}
 	}
 	my $cb = $args->{cb};
@@ -243,7 +243,7 @@ sub enumerate {
 		my $services = $node->var([ 'Services' ]);
 		my @list = sort keys %{$services};
 		foreach my $it ( @list ){
-			my $service = TTP::Service->new( $ttp, { service => $it });
+			my $service = TTP::Service->new( $ep, { service => $it });
 			if( $service && !$service->hidden() || $withHiddens ){
 				$cb->( $service, $args );
 				$count += 1;
@@ -278,10 +278,10 @@ sub finder {
 # - this object, may or may not have been jsonLoaded()
 
 sub new {
-	my ( $class, $ttp, $args ) = @_;
+	my ( $class, $ep, $args ) = @_;
 	$class = ref( $class ) || $class;
 	$args //= {};
-	my $self = $class->SUPER::new( $ttp, $args );
+	my $self = $class->SUPER::new( $ep, $args );
 	bless $self, $class;
 
 	if( $args->{service} ){

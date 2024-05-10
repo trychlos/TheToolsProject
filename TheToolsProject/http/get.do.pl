@@ -173,7 +173,7 @@ sub _telemetry {
 		push( @labels, @opt_appends );
 		msgVerbose( "added labels [".join( ',', @labels )."]" );
 
-		TTP::Metric->new( $ttp, {
+		TTP::Metric->new( $ep, {
 			name => "url_status$sufix",
 			value => $value,
 			type => $type,

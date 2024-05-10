@@ -88,7 +88,7 @@ sub listNodes {
 		my ( $vol, $dirs, $file ) = File::Spec->splitpath( $it );
 		my $name = $file;
 		$name =~ s/\.[^\.]+$//;
-		my $node = TTP::Node->new( $ttp, { node => $name, abortOnError => false });
+		my $node = TTP::Node->new( $ep, { node => $name, abortOnError => false });
 		$uniqs->{$name} = $it if $node && !exists( $uniqs->{$name} );
 	}
 	# and display them in ascii order

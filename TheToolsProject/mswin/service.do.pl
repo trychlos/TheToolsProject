@@ -151,7 +151,7 @@ sub doServiceState {
 		my @labels = ( @opt_prepends,
 			"environment=".$ttp->node()->environment(), "command=".$running->command(), "verb=".$running->verb(), "role=$opt_name",
 			@opt_appends );
-		TTP::Metric->new( $ttp, {
+		TTP::Metric->new( $ep, {
 			name => 'state',
 			value => $res ? $label : $error,
 			labels => \@labels
@@ -164,7 +164,7 @@ sub doServiceState {
 				"environment=".$ttp->node()->environment(), "command=".$running->command(), "verb=".$running->verb(), 
 				"role=$opt_name", "state=$serviceStates->{$key}",
 				@opt_appends );
-			TTP::Metric->new( $ttp, {
+			TTP::Metric->new( $ep, {
 				name => 'service_state',
 				value => ( defined $value && $key eq $value ) ? '1' : '0',
 				type => 'gauge',

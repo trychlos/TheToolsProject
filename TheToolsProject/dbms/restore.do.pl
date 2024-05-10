@@ -94,7 +94,7 @@ sub doRestore {
 			},
 			mqtt => {
 				data => $data,
-				topic => $ttp->node()->name().'/executionReport/'.$running->command().'/'.$running->verb()."/$opt_instance/$opt_database",
+				topic => $ep->node()->name().'/executionReport/'.$running->command().'/'.$running->verb()."/$opt_instance/$opt_database",
 				options => "-retain",
 				excludes => [
 					'instance',
@@ -158,7 +158,7 @@ msgErr( "'--full' option is mandatory, but is not specified" ) if !$opt_full;
 msgErr( "$opt_diff: file not found or not readable" ) if $opt_diff && ! -f $opt_diff;
 
 # instanciates the DBMS class
-$dbms = TTP::DBMS->new( $ttp, { instance => $opt_instance }) if !TTP::errs();
+$dbms = TTP::DBMS->new( $ep, { instance => $opt_instance }) if !TTP::errs();
 
 if( !TTP::errs()){
 	doRestore();

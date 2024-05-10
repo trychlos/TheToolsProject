@@ -62,7 +62,7 @@ use Proc::Background;
 use Proc::ProcessTable;
 use Role::Tiny::With;
 use Time::Piece;
-use vars::global qw( $ttp );
+use vars::global qw( $ep );
 use if $Config{osname} eq 'MSWin32', 'Win32::OLE';
 
 with 'TTP::IEnableable', 'TTP::IAcceptable', 'TTP::IFindable', 'TTP::IHelpable', 'TTP::IJSONable', 'TTP::IOptionable', 'TTP::ISleepable', 'TTP::IRunnable';
@@ -270,7 +270,7 @@ sub _metrics {
 	push( @{$labels}, "qualifier=".$self->runnableQualifier());
 	push( @{$labels}, "environment=".$ttp->node()->environment());
 	push( @{$labels}, @{$self->{_labels}} ) if exists $self->{_labels};
-	my $rc = TTP::Metric->new( $ttp, {
+	my $rc = TTP::Metric->new( $ep, {
 		name => 'ttp_backup_daemon_since',
 		value => $since,
 		type => 'gauge',
@@ -282,7 +282,7 @@ sub _metrics {
 	}
 
 	# used memory
-	$rc = TTP::Metric->new( $ttp, {
+	$rc = TTP::Metric->new( $ep, {
 		name => 'ttp_backup_daemon_memory_KB',
 		value => sprintf( "%.1f", $self->_metrics_memory()),
 		type => 'gauge',
@@ -293,7 +293,7 @@ sub _metrics {
 	}
 
 	# page faults
-	$rc = TTP::Metric->new( $ttp, {
+	$rc = TTP::Metric->new( $ep, {
 		name => 'ttp_backup_daemon_page_faults_count',
 		value => $self->_metrics_page_faults(),
 		type => 'gauge',
@@ -304,7 +304,7 @@ sub _metrics {
 	}
 
 	# page file usage
-	$rc = TTP::Metric->new( $ttp, {
+	$rc = TTP::Metric->new( $ep, {
 		name => 'ttp_backup_daemon_page_file_usage_KB',
 		value => sprintf( "%.1f", $self->_metrics_page_file_usage()),
 		type => 'gauge',
@@ -645,8 +645,8 @@ sub listen {
 	# -> the daemon config
 	$self->evaluate();
 	# -> toops+site and execution host configurations
-	$ttp->site()->evaluate();
-	$ttp->node()->evaluate();
+	$ep->site()->evaluate();
+	$ep->node()->evaluate();
 
 	my $client = $self->{_socket}->accept();
 	my $result = undef;
@@ -836,7 +836,7 @@ sub setConfig {
 			my $checkConfig = true;
 			$checkConfig = $args->{checkConfig} if exists $args->{checkConfig};
 			if( $checkConfig ){
-				my $msgRef = $self->ttp()->runner()->dummy() ? \&msgWarn : \&msgErr;
+				my $msgRef = $self->ep()->runner()->dummy() ? \&msgWarn : \&msgErr;
 				# must have a listening port
 				$msgRef->( "$args->{json}: daemon configuration must define a 'listeningPort' value, not found" ) if !$self->listeningPort();
 				# must have an exec path
@@ -886,7 +886,7 @@ sub start {
 	my $command = "perl $program -json ".$self->jsonPath()." -ignoreInt ".join( ' ', @ARGV );
 	my $res = undef;
 
-	if( $self->ttp()->runner()->dummy()){
+	if( $self->ep()->runner()->dummy()){
 		msgDummy( $command );
 		msgDummy( "considering startup as 'true'" );
 		$res = true;
@@ -980,7 +980,7 @@ sub textingInterval {
 sub topic {
 	my ( $self ) = @_;
 
-	my $topic = $ttp->node()->name();
+	my $topic = $ep->node()->name();
 	$topic .= "/daemon";
 	$topic .= "/".$self->name();
 
@@ -1001,7 +1001,7 @@ sub dirs {
 	my ( $class ) = @_;
 	$class = ref( $class ) || $class;
 
-	my $dirs = $ttp->var( 'daemonsDirs' ) || $class->finder()->{dirs};
+	my $dirs = $ep->var( 'daemonsDirs' ) || $class->finder()->{dirs};
 
 	return $dirs;
 }
@@ -1028,10 +1028,10 @@ sub init {
 	$class = ref( $class ) || $class;
 	#print __PACKAGE__."::init()".EOL;
 
-	$ttp = TTP::EP->new();
-	$ttp->bootstrap();
+	$ep = TTP::EP->new();
+	$ep->bootstrap();
 
-	my $daemon = $class->new( $ttp );
+	my $daemon = $class->new( $ep );
 	$daemon->{_initialized} = true;
 	$daemon->run();
 
@@ -1050,10 +1050,10 @@ sub init {
 # - this object
 
 sub new {
-	my ( $class, $ttp, $args ) = @_;
+	my ( $class, $ep, $args ) = @_;
 	$class = ref( $class ) || $class;
 	$args //= {};
-	my $self = $class->SUPER::new( $ttp, $args );
+	my $self = $class->SUPER::new( $ep, $args );
 	bless $self, $class;
 
 	$self->{_initialized} = false;

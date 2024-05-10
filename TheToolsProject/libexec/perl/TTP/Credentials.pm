@@ -25,7 +25,7 @@ use warnings;
 
 use Data::Dumper;
 use File::Spec;
-use vars::global qw( $ttp );
+use vars::global qw( $ep );
 
 use TTP;
 use TTP::Constants qw( :all );
@@ -59,7 +59,7 @@ my $Const = {
 
 sub find {
 	my ( $file ) = @_;
-	my $finder = TTP::Finder->new( $ttp );
+	my $finder = TTP::Finder->new( $ep );
 	my $res = $finder->find({ dirs => [ $Const->{finder}{dirs}, $file ]});
 	return $res && ref( $res ) eq 'ARRAY' ? $res->[0] : undef;
 }
@@ -92,10 +92,10 @@ sub getWithFiles {
 	if( ref( $keys ) ne 'ARRAY' ){
 		msgErr( __PACKAGE__."::get() expects an array, found '".ref( $keys )."'" );
 	} else {
-		my $finder = TTP::Finder->new( $ttp );
+		my $finder = TTP::Finder->new( $ep );
 
 		# first look in the Toops/host configurations
-		$res = $ttp->var( $keys );
+		$res = $ep->var( $keys );
 
 		# if not found, looks at credentialsDirs/credentialsFiles
 		if( !defined( $res )){
@@ -104,18 +104,18 @@ sub getWithFiles {
 				wantsAll => false
 			}})){
 				$finder->evaluate();
-				$res = $ttp->var( $keys, { jsonable => $finder });
+				$res = $ep->var( $keys, { jsonable => $finder });
 			}
 		}
 		# if not found, looks at credentials/<host>.json
 		if( !defined( $res )){
-			my $node = $ttp->node()->name();
+			my $node = $ep->node()->name();
 			if( $finder->jsonLoad({ findable => {
 				dirs => [ $Const->{finder}{dirs}, "$node.json" ],
 				wantsAll => false
 			}})){
 				$finder->evaluate();
-				$res = $ttp->var( $keys, { jsonable => $finder });
+				$res = $ep->var( $keys, { jsonable => $finder });
 			}
 		}
 	}

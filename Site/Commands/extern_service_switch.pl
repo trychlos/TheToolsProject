@@ -43,7 +43,7 @@ use Getopt::Long;
 use TTP;
 use TTP::Constants qw( :all );
 use TTP::Message qw( :all );
-use vars::global qw( $ttp );
+use vars::global qw( $ep );
 
 # TTP initialization
 my $extern = TTP::Extern->new();

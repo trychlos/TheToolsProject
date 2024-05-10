@@ -35,7 +35,7 @@ our $VERSION = '1.00';
 
 use Carp;
 use Data::Dumper;
-use vars::global qw( $ttp );
+use vars::global qw( $ep );
 
 use TTP::Constants qw( :all );
 use TTP::Message qw( :all );
@@ -56,7 +56,7 @@ requires qw( _newBase run );
 sub colored {
 	my ( $self ) = @_;
 
-	return $ttp->{run}{colored} > 0;
+	return $ep->{run}{colored} > 0;
 };
 
 # -------------------------------------------------------------------------------------------------
@@ -69,7 +69,7 @@ sub colored {
 sub coloredSet {
 	my ( $self ) = @_;
 
-	return $ttp->{run}{colored} != -1;
+	return $ep->{run}{colored} != -1;
 };
 
 # -------------------------------------------------------------------------------------------------
@@ -82,7 +82,7 @@ sub coloredSet {
 sub dummy {
 	my ( $self ) = @_;
 
-	return $ttp->{run}{dummy};
+	return $ep->{run}{dummy};
 };
 
 # -------------------------------------------------------------------------------------------------
@@ -95,7 +95,7 @@ sub dummy {
 sub help {
 	my ( $self ) = @_;
 
-	return $ttp->{run}{help};
+	return $ep->{run}{help};
 };
 
 # -------------------------------------------------------------------------------------------------
@@ -108,7 +108,7 @@ sub help {
 sub verbose {
 	my ( $self ) = @_;
 
-	return $ttp->{run}{verbose};
+	return $ep->{run}{verbose};
 };
 
 # -------------------------------------------------------------------------------------------------
@@ -120,7 +120,7 @@ sub verbose {
 # -none
 
 after _newBase => sub {
-	my ( $self, $ttp, $args ) = @_;
+	my ( $self, $ep, $args ) = @_;
 	$args //= {};
 	 #print __PACKAGE__."::new()".EOL;
 
@@ -128,11 +128,11 @@ after _newBase => sub {
 
 	# set these standard options in ttp->{run} both for historical reasons and for easier handlings
 	if( !$ttp->runner()){
-		$ttp->{run} //= {};
-		$ttp->{run}{help} = false;
-		$ttp->{run}{colored} = -1;
-		$ttp->{run}{dummy} = false;
-		$ttp->{run}{verbose} = false;
+		$ep->{run} //= {};
+		$ep->{run}{help} = false;
+		$ep->{run}{colored} = -1;
+		$ep->{run}{dummy} = false;
+		$ep->{run}{verbose} = false;
 	}
 };
 
@@ -146,7 +146,7 @@ after _newBase => sub {
 before run => sub {
 	my ( $self ) = @_;
 
-	$ttp->{run}{help} = true if scalar @ARGV <= 1;
+	$ep->{run}{help} = true if scalar @ARGV <= 1;
 };
 
 ### Global functions

@@ -46,7 +46,7 @@ my $opt_tag = true;
 
 sub doPublish {
 	my $result = false;
-	my $tohost = $ttp->var([ 'deployments', 'pullReference' ]);
+	my $tohost = $ep->var([ 'deployments', 'pullReference' ]);
 	msgOut( "publishing to '$tohost'..." );
 	my $asked = 0;
 	my $done = 0;
@@ -59,7 +59,7 @@ sub doPublish {
 		if( $running->dummy()){
 			msgDummy( "File::Copy::Recursive->dircopy( $srcdir, $dir )" );
 		} else {
-			my $removeTree = $ttp->var([ 'deployments', 'before', 'removeTree' ]);
+			my $removeTree = $ep->var([ 'deployments', 'before', 'removeTree' ]);
 			$removeTree = true if !defined $removeTree;
 			if( $removeTree ){
 				my $rc = pathrmdir( $dir );

@@ -361,7 +361,7 @@ sub jsonVar_rec {
 # -none
 
 after _newBase => sub {
-	my ( $self, $ttp ) = @_;
+	my ( $self, $ep ) = @_;
 
 	$self->{_ijsonable} //= {};
 	$self->{_ijsonable}{loadable} = false;

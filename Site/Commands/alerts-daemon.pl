@@ -50,7 +50,7 @@ use TTP;
 use TTP::Constants qw( :all );
 use TTP::Daemon;
 use TTP::Message qw( :all );
-use vars::global qw( $ttp );
+use vars::global qw( $ep );
 
 my $daemon = TTP::Daemon->init();
 

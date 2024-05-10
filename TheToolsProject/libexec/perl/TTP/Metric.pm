@@ -240,11 +240,11 @@ sub _http_publish {
 	my ( $self, $prefix ) = @_;
 	my $res = 0;
 
-	my $ttp = $self->ttp();
-	my $var = $ttp->var([ 'Telemetry', 'withHttp', 'enabled' ]);
+	my $ep = $self->ep();
+	my $var = $ep->var([ 'Telemetry', 'withHttp', 'enabled' ]);
 	my $enabled = defined( $var ) ? $var : false;
 	if( $enabled ){
-		$var = $ttp->var([ 'Telemetry', 'withHttp', 'url' ]);
+		$var = $ep->var([ 'Telemetry', 'withHttp', 'url' ]);
 		my $url = defined( $var ) ? $var : undef;
 		if( $url ){
 			my $name = $self->name();
@@ -253,7 +253,7 @@ sub _http_publish {
 				if( defined( $value )){
 					if( looks_like_number( $value )){
 						# do we run in dummy mode ?
-						my $dummy = $ttp->runner()->dummy();
+						my $dummy = $ep->runner()->dummy();
 						# make sure the name has the correct prefix
 						$name = "$prefix$name";
 						$name = "$Const->{prefix}$name" if $Const->{prefix} && $name !~ m/^$Const->{prefix}/;
@@ -314,18 +314,18 @@ sub _mqtt_publish {
 	my ( $self, $prefix ) = @_;
 	my $res = 0;
 
-	my $ttp = $self->ttp();
-	my $var = $ttp->var([ 'Telemetry', 'withMqtt', 'enabled' ]);
+	my $ep = $self->ep();
+	my $var = $ep->var([ 'Telemetry', 'withMqtt', 'enabled' ]);
 	my $enabled = defined( $var ) ? $var : false;
 	if( $enabled ){
-		$var = $ttp->var([ 'Telemetry', 'withMqtt', 'command' ]);
+		$var = $ep->var([ 'Telemetry', 'withMqtt', 'command' ]);
 		my $command = defined( $var ) ? $var : undef;
 		if( $command ){
 			my $name = $self->name();
 			if( $name ){
 				$name = "$prefix$name";
 				# built the topic, starting with the host name
-				my $topic = $ttp->node()->name();
+				my $topic = $ep->node()->name();
 				$topic .= '/telemetry';
 				my $labels = $self->labels();
 				foreach my $it ( @{$labels} ){
@@ -340,7 +340,7 @@ sub _mqtt_publish {
 				$command =~ s/<TOPIC>/$topic/;
 				$command =~ s/<PAYLOAD>/$value/;
 				# and run the command
-				my $running = $ttp->runner();
+				my $running = $ep->runner();
 				my $dummy = $running->dummy() ? "-dummy" : "-nodummy";
 				my $verbose = $running->verbose() ? "-verbose" : "-noverbose";
 				my $cmd = "$command -nocolored $dummy $verbose";
@@ -375,11 +375,11 @@ sub _text_publish {
 	my ( $self, $prefix ) = @_;
 	my $res = 0;
 
-	my $ttp = $self->ttp();
-	my $var = $ttp->var([ 'Telemetry', 'withText', 'enabled' ]);
+	my $ep = $self->ep();
+	my $var = $ep->var([ 'Telemetry', 'withText', 'enabled' ]);
 	my $enabled = defined( $var ) ? $var : false;
 	if( $enabled ){
-		$var = $ttp->var([ 'Telemetry', 'withText', 'dropDir' ]);
+		$var = $ep->var([ 'Telemetry', 'withText', 'dropDir' ]);
 		my $dropdir = defined( $var ) ? $var : undef;
 		if( $dropdir ){
 			my $name = $self->name();
@@ -389,7 +389,7 @@ sub _text_publish {
 				if( defined( $value )){
 					if( looks_like_number( $value )){
 						# do we run in dummy mode ?
-						my $dummy = $self->ttp()->runner()->dummy();
+						my $dummy = $self->ep()->runner()->dummy();
 						# make sure the name has the correct prefix
 						$name = "$Const->{prefix}$name" if $Const->{prefix} && $name !~ m/^$Const->{prefix}/;
 						# pwi 2024- 5- 1 do not remember the reason why ?
@@ -480,9 +480,9 @@ sub value {
 # - this object
 
 sub new {
-	my ( $class, $ttp, $args ) = @_;
+	my ( $class, $ep, $args ) = @_;
 	$class = ref( $class ) || $class;
-	my $self = $class->SUPER::new( $ttp, $args );
+	my $self = $class->SUPER::new( $ep, $args );
 	bless $self, $class;
 
 	$self->{_metric} = {};

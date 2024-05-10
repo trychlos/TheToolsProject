@@ -36,7 +36,7 @@ use Data::Dumper;
 use Getopt::Long;
 use Role::Tiny::With;
 use Try::Tiny;
-use vars::global qw( $ttp );
+use vars::global qw( $ep );
 
 with 'TTP::IFindable', 'TTP::IHelpable', 'TTP::IOptionable', 'TTP::IRunnable';
 
@@ -186,7 +186,7 @@ sub run {
 				# as verbs are written as Perl scripts, they are dynamically ran from here in the context of 'self'
 				# + have direct access to 'ttp' entry point
 				local @ARGV = @command_args;
-				our $running = $ttp->runner();
+				our $running = $ep->runner();
 
 				unless( defined do $self->{_verb}{path} ){
 					msgErr( "do $self->{_verb}{path}: ".( $! || $@ ));
@@ -289,9 +289,9 @@ sub finder {
 # - this object
 
 sub new {
-	my ( $class, $ttp ) = @_;
+	my ( $class, $ep ) = @_;
 	$class = ref( $class ) || $class;
-	my $self = $class->SUPER::new( $ttp );
+	my $self = $class->SUPER::new( $ep );
 	bless $self, $class;
 
 	# command initialization

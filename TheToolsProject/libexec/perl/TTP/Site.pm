@@ -144,10 +144,10 @@ sub finder {
 # - this object
 
 sub new {
-	my ( $class, $ttp, $args ) = @_;
+	my ( $class, $ep, $args ) = @_;
 	$class = ref( $class ) || $class;
 	$args //= {};
-	my $self = $class->SUPER::new( $ttp );
+	my $self = $class->SUPER::new( $ep );
 	bless $self, $class;
 
 	# try to load and evaluate the JSON configuration file with the list of allowed ending paths

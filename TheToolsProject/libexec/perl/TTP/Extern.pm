@@ -32,7 +32,7 @@ use Data::Dumper;
 use Getopt::Long;
 use Role::Tiny::With;
 use Try::Tiny;
-use vars::global qw( $ttp );
+use vars::global qw( $ep );
 
 with 'TTP::IHelpable', 'TTP::IOptionable', 'TTP::IRunnable';
 
@@ -57,7 +57,7 @@ sub _init {
 	my ( $self ) = @_;
 
 	# bootstrap TTP
-	$ttp->bootstrap();
+	$ep->bootstrap();
 
 	return $self;
 }
@@ -77,8 +77,8 @@ sub _init {
 sub new {
 	my ( $class ) = @_;
 	$class = ref( $class ) || $class;
-	$ttp = TTP::EP->new();
-	my $self = $class->SUPER::new( $ttp );
+	$ep = TTP::EP->new();
+	my $self = $class->SUPER::new( $ep );
 	bless $self, $class;
 
 	# command initialization

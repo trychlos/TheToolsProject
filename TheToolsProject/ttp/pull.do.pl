@@ -39,7 +39,7 @@ my $defaults = {
 	colored => 'no',
 	dummy => 'no',
 	verbose => 'no',
-	fromhost => $ttp->var([ 'deployments', 'pullReference' ]) || ''
+	fromhost => $ep->var([ 'deployments', 'pullReference' ]) || ''
 };
 
 my $opt_fromhost = $defaults->{fromhost};
@@ -52,7 +52,7 @@ sub doPull {
 	msgOut( "pulling from '$opt_fromhost'..." );
 	my $asked = 0;
 	my $done = 0;
-	my $fromNode = TTP::Node->new( $ttp, { node => $opt_fromhost });
+	my $fromNode = TTP::Node->new( $ep, { node => $opt_fromhost });
 	if( $fromNode ){
 		# have pull share
 		my $fromData = $fromNode->jsonData();
@@ -61,12 +61,12 @@ sub doPull {
 		if( $pullShare ){
 			my ( $pull_vol, $pull_dirs, $pull_file ) = File::Spec->splitpath( $pullShare );
 			# if a byOS command is specified, then use it
-			my $command = $ttp->var([ 'deployments', 'byOS', $Config{osname}, 'command' ]);
+			my $command = $ep->var([ 'deployments', 'byOS', $Config{osname}, 'command' ]);
 			msgVerbose( "found command='$command'" );
 			# may have exclusions
-			my $excludes = $ttp->var([ 'deployments', 'excludes' ]);
+			my $excludes = $ep->var([ 'deployments', 'excludes' ]);
 			# may have several source dirs: will iterate on each
-			my $sourceDirs = $ttp->var([ 'deployments', 'sourceDirs' ]);
+			my $sourceDirs = $ep->var([ 'deployments', 'sourceDirs' ]);
 			foreach my $pullDir ( @{$sourceDirs} ){
 				my $res = doPull_byDir( $pull_vol, $pullDir, $command, $excludes );
 				$asked += $res->{asked};

@@ -54,12 +54,12 @@ sub doListJSON {
 		dirs => [ TTP::Daemon->dirs() ],
 		glob => '*'.TTP::Daemon->finder()->{sufix}
 	};
-	my $finder = TTP::Finder->new( $ttp );
+	my $finder = TTP::Finder->new( $ep );
 	my $jsons = $finder->find( $findable );
 	# only keep first enabled found for each basename
 	my $kepts = {};
 	foreach my $it ( @{$jsons} ){
-		my $daemon = TTP::Daemon->new( $ttp, { path => $it, checkConfig => $opt_check, daemonize => false });
+		my $daemon = TTP::Daemon->new( $ep, { path => $it, checkConfig => $opt_check, daemonize => false });
 		$kepts->{$daemon->name()} = $it if !exists( $kepts->{$file} ) && $daemon->loaded();
 	}
 	# and list in ascii order

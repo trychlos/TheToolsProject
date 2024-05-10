@@ -41,7 +41,7 @@ use Data::Dumper;
 use Path::Tiny qw( path );
 use Sub::Exporter;
 use Term::ANSIColor;
-use vars::global qw( $ttp );
+use vars::global qw( $ep );
 use if $Config{osname} eq "MSWin32", "Win32::Console::ANSI";
 
 use TTP;
@@ -143,7 +143,7 @@ sub isKnownLevel {
 # - the message to be printed (usually the command to be run in dummy mode)
 
 sub msgDummy {
-	my $running = $ttp->runner();
+	my $running = $ep->runner();
 	if( $running && $running->dummy()){
 		_printMsg({
 			msg => shift,
@@ -162,7 +162,7 @@ sub msgDummy {
 # - increments the exit code
 
 sub msgErr {
-	if( defined( $ttp )){
+	if( defined( $ep )){
 		# let have a stack trace
 		#TTP::stackTrace();
 		# and send the message
@@ -171,7 +171,7 @@ sub msgErr {
 			level => ERR,
 			handle => \*STDERR
 		});
-		my $running = $ttp->runner();
+		my $running = $ep->runner();
 		$running->runnableErrInc() if $running;
 	}
 }
@@ -243,7 +243,7 @@ sub msgOut {
 
 sub _msgPrefix {
 	my $prefix = '';
-	my $running = $ttp->runner();
+	my $running = $ep->runner();
 	if( $running ){
 		my $command = $running->runnableBNameFull();
 		if( $command ){
@@ -265,7 +265,7 @@ sub msgVerbose {
 	my $msg = shift;
 	# be verbose to console ?
 	my $verbose = false;
-	my $running = $ttp->runner();
+	my $running = $ep->runner();
 	$verbose = $running->verbose() if $running;
 	_printMsg({
 		msg => $msg,
@@ -298,11 +298,11 @@ sub msgWarn {
 
 sub _printMsg {
 	my ( $args ) = @_;
-	if( defined(  $ttp )){
+	if( defined(  $ep )){
 		$args //= {};
 		my $line = '';
 		my $configured = undef;
-		my $running = $ttp->runner();
+		my $running = $ep->runner();
 		# have a prefix ?
 		my $withPrefix = true;
 		$withPrefix = $args->{withPrefix} if exists $args->{withPrefix};
@@ -313,14 +313,14 @@ sub _printMsg {
 		my $marker = '';
 		$marker = $Const->{$level}{marker} if exists $Const->{$level}{marker};
 		$configured = undef;
-		$configured = $ttp->var([ 'Message',  $Const->{$level}{key}, 'marker' ]) if exists $Const->{$level}{key};
+		$configured = $ep->var([ 'Message',  $Const->{$level}{key}, 'marker' ]) if exists $Const->{$level}{key};
 		$marker = $configured if defined $configured;
 		$line .= $marker;
 		$line .= $args->{msg} if exists $args->{msg};
 		# writes in log ?
 		my $withLog = true;
 		$configured = undef;
-		$configured = $ttp->var([ 'Message',  $Const->{$level}{key}, 'withLog' ]) if exists $Const->{$level}{key};
+		$configured = $ep->var([ 'Message',  $Const->{$level}{key}, 'withLog' ]) if exists $Const->{$level}{key};
 		$withLog = $configured if defined $configured;
 		_msgLogAppend( $line ) if $withLog;
 		# output to the console ?
@@ -331,7 +331,7 @@ sub _printMsg {
 			# global runtime option is only considered if not disabled in toops/host configuration
 			my $withColor = true;
 			$configured = undef;
-			$configured = $ttp->var([ 'Message',  $Const->{$level}{key}, 'withColor' ]) if exists $Const->{$level}{key};
+			$configured = $ep->var([ 'Message',  $Const->{$level}{key}, 'withColor' ]) if exists $Const->{$level}{key};
 			#print __PACKAGE__."::_printMsg() configured='".( defined $configured ? $configured : '(undef)' )."'".EOL if $level eq "VERBOSE";
 			$withColor = $configured if defined $configured;
 			$withColor = $running->colored() if $running && $running->coloredSet();
@@ -340,7 +340,7 @@ sub _printMsg {
 			if( $withColor ){
 				$colorstart = color( $Const->{$level}{color} ) if exists( $Const->{$level}{color} );
 				$configured = undef;
-				$configured = $ttp->var([ 'Message',  $Const->{$level}{key}, 'color' ]) if exists $Const->{$level}{key};
+				$configured = $ep->var([ 'Message',  $Const->{$level}{key}, 'color' ]) if exists $Const->{$level}{key};
 				$colorstart = color( $configured ) if defined $configured;
 				$colorend = color( 'reset' );
 			}

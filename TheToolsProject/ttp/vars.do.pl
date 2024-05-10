@@ -71,7 +71,7 @@ sub listAlertsDir {
 # Display the value accessible through the route of the provided successive keys
 
 sub listByKeys {
-	my $value = $ttp->var( \@opt_keys );
+	my $value = $ep->var( \@opt_keys );
 	print "  [".join( ',', @opt_keys )."]: $value".EOL;
 }
 

@@ -27,7 +27,7 @@ use warnings;
 
 use Carp;
 use Data::Dumper;
-use vars::global qw( $ttp );
+use vars::global qw( $ep );
 
 use TTP::Command;
 use TTP::Constants qw( :all );

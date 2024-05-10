@@ -31,7 +31,7 @@ use Config;
 use Data::Dumper;
 use Role::Tiny::With;
 use Sys::Hostname qw( hostname );
-use vars::global qw( $ttp );
+use vars::global qw( $ep );
 
 with 'TTP::IAcceptable', 'TTP::IEnableable', 'TTP::IFindable', 'TTP::IJSONable';
 
@@ -140,7 +140,7 @@ sub var {
 	print __PACKAGE__."::var() keys=".( ref( $keys ) ? '['.join( ',', @{$keys} ).']' : "'$keys'" ).EOL if $varDebug;
 	my $value = $self->TTP::IJSONable::var( $keys );
 	print __PACKAGE__."::var() value='".( $value || '(undef)' )."'".EOL if $varDebug;
-	$value = $ttp->site()->var( $keys ) if !defined( $value );
+	$value = $ep->site()->var( $keys ) if !defined( $value );
 	return $value;
 }
 
@@ -158,7 +158,7 @@ sub dirs {
 	my ( $class ) = @_;
 	$class = ref( $class ) || $class;
 
-	my $dirs = $ttp->var( 'nodesDirs' ) || $class->finder()->{dirs};
+	my $dirs = $ep->var( 'nodesDirs' ) || $class->finder()->{dirs};
 
 	return $dirs;
 }
@@ -186,10 +186,10 @@ sub finder {
 # - this object, or undef in case of an error
 
 sub new {
-	my ( $class, $ttp, $args ) = @_;
+	my ( $class, $ep, $args ) = @_;
 	$class = ref( $class ) || $class;
 	$args //= {};
-	my $self = $class->SUPER::new( $ttp, $args );
+	my $self = $class->SUPER::new( $ep, $args );
 	bless $self, $class;
 
 	# of which node are we talking about ?

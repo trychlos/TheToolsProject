@@ -52,7 +52,7 @@ my $opt_archivesDir = false;
 my $opt_service = $defaults->{service};
 
 # may be overriden by the service if specified
-my $jsonable = $ttp->node();;
+my $jsonable = $ep->node();;
 
 # -------------------------------------------------------------------------------------------------
 # list archivesDir value - e.g. '\\ftpback-rbx7-618.ovh.net\ns3153065.ip-51-91-25.eu\WS12DEV1\SQLBackups\240101'
@@ -130,7 +130,7 @@ msgVerbose( "found service='$opt_service'" );
 # if a service is specified, must be defined on the current node
 if( $opt_service ){
 	if( $jsonable->hasService( $opt_service )){
-		$jsonable = TTP::Service->new( $ttp, { service => $opt_service });
+		$jsonable = TTP::Service->new( $ep, { service => $opt_service });
 	} else {
 		msgErr( "service '$opt_service' if not defined on current execution node" ) ;
 	}

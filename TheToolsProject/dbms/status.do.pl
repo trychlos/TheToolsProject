@@ -67,7 +67,7 @@ my @opt_prepends = ();
 my @opt_appends = ();
 
 # may be overriden by the service if specified
-my $jsonable = $ttp->node();
+my $jsonable = $ep->node();
 my $dbms = undef;
 
 # list of databases to be checked
@@ -129,7 +129,7 @@ sub doState {
 			"environment=".$ttp->node()->environment(), "command=".$running->command(), "verb=".$running->verb(),
 			"instance=$opt_instance", "database=$db",
 			@opt_appends );
-		TTP::Metric->new( $ttp, {
+		TTP::Metric->new( $ep, {
 			name => 'state',
 			value => $result->{state_desc},
 			type => 'gauge',
@@ -145,7 +145,7 @@ sub doState {
 				"environment=".$ttp->node()->environment(), "command=".$running->command(), "verb=".$running->verb(),
 				"instance=$opt_instance", "database=$db", "state=$sqlStates->{$key}",
 				@opt_appends );
-			TTP::Metric->new( $ttp, {
+			TTP::Metric->new( $ep, {
 				name => 'dbms_database_state',
 				value => "$key" eq "$result->{state}" ? 1 : 0,
 				type => 'gauge',
@@ -223,7 +223,7 @@ if( $count == 0 ){
 	msgErr( "must have one of '--service' or '--instance' option, both found" );
 } elsif( $opt_service ){
 	if( $jsonable->hasService( $opt_service )){
-		$jsonable = TTP::Service->new( $ttp, { service => $opt_service });
+		$jsonable = TTP::Service->new( $ep, { service => $opt_service });
 		$opt_instance = $jsonable->var([ 'DBMS', 'instance' ]);
 	} else {
 		msgErr( "service '$opt_service' if not defined on current execution node" ) ;
@@ -231,7 +231,7 @@ if( $count == 0 ){
 }
 
 # instanciates the DBMS class
-$dbms = TTP::DBMS->new( $ttp, { instance => $opt_instance }) if !TTP::errs();
+$dbms = TTP::DBMS->new( $ep, { instance => $opt_instance }) if !TTP::errs();
 
 # database(s) can be specified in the command-line, or can come from the service
 if( $opt_database ){

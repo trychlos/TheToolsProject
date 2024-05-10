@@ -45,7 +45,7 @@ sub displayVar {
 	msgOut( "displaying '".join( ',', @opt_keys )."' variable..." );
 	#print Dumper( $opt_keys );
 	my @initialKeys = @opt_keys;
-	my $service = TTP::Service->new( $ttp, { service => $opt_service });
+	my $service = TTP::Service->new( $ep, { service => $opt_service });
 	if( !TTP::errs()){
 		TTP::print( ' '.join( ',', @opt_keys ), $service->var( \@opt_keys ));
 	}

@@ -35,7 +35,7 @@ use Data::Dumper;
 use File::Path qw( make_path );
 use File::Spec;
 use Time::Piece;
-use vars::global qw( $ttp );
+use vars::global qw( $ep );
 
 use TTP;
 use TTP::Constants qw( :all );
@@ -47,7 +47,7 @@ use TTP::Message qw( :all );
 sub credentialsDir {
 	my ( $opts ) = @_;
 	$opts //= {};
-	my $dir = $ttp->var([ 'credentialsDir' ], $opts );
+	my $dir = $ep->var([ 'credentialsDir' ], $opts );
 	if( !defined $dir || !length $dir ){
 		msgWarn( "'credentialsDir' is not defined in toops.json nor in host configuration" );
 	}
@@ -67,7 +67,7 @@ sub daemonsConfigurationsDir {
 # the current DBMS archives directory, making sure the dir exists
 # the dir can be defined in toops.json, or overriden in host configuration
 sub dbmsArchivesDir {
-	my $dir = $ttp->var([ 'DBMS', 'archivesDir' ]);
+	my $dir = $ep->var([ 'DBMS', 'archivesDir' ]);
 	if( !defined $dir || !length $dir ){
 		msgWarn( "'archivesDir' is not defined in toops.json nor in host configuration" );
 	}
@@ -79,7 +79,7 @@ sub dbmsArchivesDir {
 # the current DBMS archives root tree, making sure the dir exists
 # the dir can be defined in toops.json, or overriden in host configuration
 sub dbmsArchivesRoot {
-	my $dir = $ttp->var([ 'DBMS', 'archivesRoot' ]);
+	my $dir = $ep->var([ 'DBMS', 'archivesRoot' ]);
 	if( !defined $dir || !length $dir ){
 		msgWarn( "'archivesRoot' is not defined in toops.json nor in host configuration" );
 	}
@@ -96,7 +96,7 @@ sub dbmsArchivesRoot {
 sub dbmsBackupsDir {
 	my ( $opts ) = @_;
 	$opts //= {};
-	my $dir = $ttp->var( [ 'DBMS', 'backupsDir' ], $opts );
+	my $dir = $ep->var( [ 'DBMS', 'backupsDir' ], $opts );
 	if( defined $dir && length $dir ){
 		makeDirExist( $dir );
 	} else {
@@ -110,7 +110,7 @@ sub dbmsBackupsDir {
 # the root the the DBMS backups directories, making sure the dir exists
 # the root can be defined in toops.json, or overriden in host configuration
 sub dbmsBackupsRoot {
-	my $dir = $ttp->var([ 'DBMS', 'backupsRoot' ]);
+	my $dir = $ep->var([ 'DBMS', 'backupsRoot' ]);
 	if( defined $dir && length $dir ){
 		makeDirExist( $dir );
 	} else {
@@ -129,7 +129,7 @@ sub dbmsBackupsRoot {
 sub execReportsDir {
 	my ( $opts ) = @_;
 	$opts //= {};
-	my $dir = $ttp->var([ 'executionReports', 'withFile', 'dropDir' ], $opts );
+	my $dir = $ep->var([ 'executionReports', 'withFile', 'dropDir' ], $opts );
 	if( defined $dir && length $dir ){
 		my $makeDirExist = true;
 		$makeDirExist = $opts->{makeDirExist} if exists $opts->{makeDirExist};
@@ -225,7 +225,7 @@ sub makeDirExist {
 		my $error;
 		$result = true;
 		make_path( $dir, {
-			verbose => $ttp->runner()->verbose(),
+			verbose => $ep->runner()->verbose(),
 			error => \$error
 		});
 		# https://perldoc.perl.org/File::Path#make_path%28-%24dir1%2C-%24dir2%2C-....-%29
@@ -291,7 +291,7 @@ sub siteConfigurationsDir {
 
 # ------------------------------------------------------------------------------------------------
 sub siteRoot {
-	return $ttp->var([ 'siteRoot' ]);
+	return $ep->var([ 'siteRoot' ]);
 }
 
 # ------------------------------------------------------------------------------------------------
