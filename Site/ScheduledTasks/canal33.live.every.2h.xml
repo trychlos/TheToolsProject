@@ -9,6 +9,13 @@
       </ScheduleByDay>
     </CalendarTrigger>
     <CalendarTrigger>
+      <StartBoundary>2024-01-01T10:00:00</StartBoundary>
+      <Enabled>true</Enabled>
+      <ScheduleByDay>
+        <DaysInterval>1</DaysInterval>
+      </ScheduleByDay>
+    </CalendarTrigger>
+    <CalendarTrigger>
       <StartBoundary>2024-01-01T12:00:00</StartBoundary>
       <Enabled>true</Enabled>
       <ScheduleByDay>
@@ -16,7 +23,28 @@
       </ScheduleByDay>
     </CalendarTrigger>
     <CalendarTrigger>
-      <StartBoundary>2024-01-01T17:00:00</StartBoundary>
+      <StartBoundary>2024-01-01T14:00:00</StartBoundary>
+      <Enabled>true</Enabled>
+      <ScheduleByDay>
+        <DaysInterval>1</DaysInterval>
+      </ScheduleByDay>
+    </CalendarTrigger>
+    <CalendarTrigger>
+      <StartBoundary>2024-01-01T16:00:00</StartBoundary>
+      <Enabled>true</Enabled>
+      <ScheduleByDay>
+        <DaysInterval>1</DaysInterval>
+      </ScheduleByDay>
+    </CalendarTrigger>
+    <CalendarTrigger>
+      <StartBoundary>2024-01-01T18:00:00</StartBoundary>
+      <Enabled>true</Enabled>
+      <ScheduleByDay>
+        <DaysInterval>1</DaysInterval>
+      </ScheduleByDay>
+    </CalendarTrigger>
+    <CalendarTrigger>
+      <StartBoundary>2024-01-01T20:00:00</StartBoundary>
       <Enabled>true</Enabled>
       <ScheduleByDay>
         <DaysInterval>1</DaysInterval>
@@ -33,7 +61,7 @@
   <Actions Context="Author">
     <Exec>
       <Command>C:\INLINGUA\SiteResources\Commands\workload.cmd</Command>
-      <Arguments>canal33.live.every.5h</Arguments>
+      <Arguments>canal33.live.every.2h</Arguments>
     </Exec>
   </Actions>
 </Task>

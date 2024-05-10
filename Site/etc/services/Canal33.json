@@ -46,7 +46,7 @@
 				]
 			}
 		],
-		"canal33.live.every.5h": [
+		"canal33.live.every.2h": [
 			{
 				"label": "(Production Live) Sauvegarde différentielle en journée",
 				"commands": [

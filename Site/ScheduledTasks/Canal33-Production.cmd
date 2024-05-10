@@ -25,7 +25,7 @@ schtasks /Delete /TN Inlingua\%JOB% /F 1>NUL 2>NUL
 schtasks /Create /TN Inlingua\%JOB% /TR "%WORKLOAD% %JOB%" /SC DAILY /ST 06:00 /F %RUNNER%
 schtasks /Change /TN Inlingua\%JOB% /Disable
 
-set JOB=canal33.live.every.5h
+set JOB=canal33.live.every.2h
 echo %JOB%
 schtasks /Delete /TN Inlingua\%JOB% /F 1>NUL 2>NUL
 schtasks /Create /TN Inlingua\%JOB% /XML "%~dp0\%JOB%.xml" /F %RUNNER%
