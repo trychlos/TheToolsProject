@@ -235,11 +235,10 @@ sub _daemonize {
 # the daemon advertize of its status every 'httpingInterval' seconds (defaults to 60)
 # the metric advertizes the last time we have seen the daemon alive
 # (I):
-# - set to true at the daemon termination, undefined else
+# - none
 
 sub _http_advertize {
-	my ( $self, $value ) = @_;
-	msgVerbose( __PACKAGE__."::_http_advertize() value='".( defined $value ? $value : '(undef)' )."'" );
+	my ( $self ) = @_;
 	$self->_metrics({ http => true });
 }
 
@@ -266,9 +265,9 @@ sub _metrics {
 	# running since x.xxxxx sec.
 	my $since = sprintf( "%.5f", $self->runnableStarted()->delta_microseconds( Time::Moment->now ) / 1000000 );
 	my $labels = [ "daemon=".$self->name() ];
+	push( @{$labels}, "environment=".$ttp->node()->environment());
 	push( @{$labels}, "command=".$self->command());
 	push( @{$labels}, "qualifier=".$self->runnableQualifier());
-	push( @{$labels}, "environment=".$ttp->node()->environment());
 	push( @{$labels}, @{$self->{_labels}} ) if exists $self->{_labels};
 	my $rc = TTP::Metric->new( $ep, {
 		name => 'ttp_backup_daemon_since',
@@ -287,6 +286,7 @@ sub _metrics {
 		value => sprintf( "%.1f", $self->_metrics_memory()),
 		type => 'gauge',
 		help => 'Backup daemon used memory',
+		labels => $labels
 	})->publish( $publish );
 	foreach my $it ( sort keys %{$rc} ){
 		msgVerbose( __PACKAGE__."::_metrics() got rc->{$it}='$rc->{$it}'" );
@@ -298,6 +298,7 @@ sub _metrics {
 		value => $self->_metrics_page_faults(),
 		type => 'gauge',
 		help => 'Backup daemon page faults count',
+		labels => $labels
 	})->publish( $publish );
 	foreach my $it ( sort keys %{$rc} ){
 		msgVerbose( __PACKAGE__."::_metrics() got rc->{$it}='$rc->{$it}'" );
@@ -309,6 +310,7 @@ sub _metrics {
 		value => sprintf( "%.1f", $self->_metrics_page_file_usage()),
 		type => 'gauge',
 		help => 'Backup daemon page file usage',
+		labels => $labels
 	})->publish( $publish );
 	foreach my $it ( sort keys %{$rc} ){
 		msgVerbose( __PACKAGE__."::_metrics() got rc->{$it}='$rc->{$it}'" );
@@ -447,12 +449,10 @@ sub _running {
 # ------------------------------------------------------------------------------------------------
 # the daemon advertize of its status every 'textingInterval' seconds (defaults to 60)
 # (I):
-# - set to true at the daemon termination, undefined else
+# - none
 
 sub _text_advertize {
-	my ( $self, $value ) = @_;
-	msgVerbose( __PACKAGE__."::_text_advertize() value='".( defined $value ? $value : '(undef)' )."'" );
-
+	my ( $self ) = @_;
 	msgVerbose( "text-based telemetry not honored at the moment" );
 }
 
@@ -910,8 +910,8 @@ sub terminate {
 	TTP::MQTT::disconnect( $self->{_mqtt} ) if $self->{_mqtt};
 
 	# advertize http and text-based telemetry
-	$self->_http_advertize( true ) if $self->httpingInterval() > 0;
-	$self->_text_advertize( true ) if $self->textingInterval() > 0;
+	$self->_http_advertize() if $self->httpingInterval() > 0;
+	$self->_text_advertize() if $self->textingInterval() > 0;
 
 	# close TCP connection
 	$self->{_socket}->close();
