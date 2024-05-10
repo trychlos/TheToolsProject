@@ -309,6 +309,7 @@ sub _http_publish {
 
 # to MQTT
 # prepend the topic with the hostname
+# only used ordered values from labels (just do not use the label's names)
 
 sub _mqtt_publish {
 	my ( $self, $prefix ) = @_;
@@ -330,7 +331,7 @@ sub _mqtt_publish {
 				my $labels = $self->labels();
 				foreach my $it ( @{$labels} ){
 					my @words = split( /=/, $it );
-					$topic .= "/$words[0]/$words[1]";
+					$topic .= "/$words[1]";
 				}
 				$topic .= "/$name";
 				# have a payload

@@ -24,8 +24,6 @@ TODO
 
   44 2024- 5-10 backup daemon publishes http telemetry with very few labels (actually seems that some are missing)
 
-  45 2024- 5-10 review labelled mqtt publications: maybe could only use values when labelling as name=value
-
   47 2024- 5-10 
 
 # -------------------------------------------------------------------------------------------------
@@ -175,6 +173,9 @@ DONE
 
   43 2024- 5- 9 daemons http: Can\'t connect to 10.122.1.15:9091 (A connection attempt failed because the connected party did not properly respond after a period of time
      2024- 5- 9 the firewalld daemon was reactivated in rl9pilot1! => fixed
+
+  45 2024- 5-10 review labelled mqtt publications: maybe could only use values when labelling as name=value
+     2024- 5-10 done
 
   46 2024- 5-10 $ttp should be renamed $ep (for EP instance)
      2024- 5-10 done
