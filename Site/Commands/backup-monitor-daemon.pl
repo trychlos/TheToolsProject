@@ -14,7 +14,8 @@
 # @(@) - the production "live" machine does its backup periodically, and doesn't care of anything else (it is not cooperative)
 # @(@) - it is to the production "backup" machine to monitor the backups, transfert the files througgh the network, and restore them on its dataserver;
 # @(@)   as it is expected to be just in waiting state, and so without anything else to do, it has this job.
-# @(@) Automatic restores, a full in the morning, and diff's every 2h during the day, let us be relatively sure that it will be easiy ready in case the live stops.
+# @(@) Automatic restores, a full in the morning, and diff's every 2h during the day, let us be relatively sure that it will be easily made ready in case
+# @(@) the live stops.
 # @(@)
 # @(@) This script is expected to be run as a daemon, started via a 'daemon.pl start -json <filename.json>' command.
 #
@@ -124,6 +125,7 @@ sub answerStats {
 		my $last = @{$stats->{restored}}[$executed-1];
 		$answer .= "last was from $last->{reportSourceFileName} to $last->{localSynced} at $stats->{now}".EOL;
 	}
+	$answer .= "last scan contained [".join( ',', @previousScan )."]".EOL;
 	return $answer;
 }
 
