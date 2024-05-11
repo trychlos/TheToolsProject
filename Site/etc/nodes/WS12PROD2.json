@@ -34,7 +34,7 @@
 						"label": "(PRODUCTION BACKUP) Surveillance, transfert et restauration des sauvegardes de la production",
 						"commands": [
 							"daemon.pl stop -nocolored -bname canal33-backup-monitor-daemon.json -ignore -wait",
-							"daemon.pl start -nocolored -bname canal33-backup-monitor-daemon.json -- -remote NS230134"
+							"daemon.pl start -nocolored -bname canal33-backup-monitor-daemon.json -- -remote WS12PROD1"
 						]
 					}
 				]
