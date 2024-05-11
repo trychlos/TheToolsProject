@@ -60,7 +60,7 @@
   </Triggers>
   <Actions Context="Author">
     <Exec>
-      <Command>C:\INLINGUA\SiteResources\Commands\workload.cmd</Command>
+      <Command>C:\INLINGUA\Site\Commands\workload.cmd</Command>
       <Arguments>canal33.live.every.2h</Arguments>
     </Exec>
   </Actions>
