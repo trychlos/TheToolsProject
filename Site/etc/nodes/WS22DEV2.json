@@ -1,0 +1,54 @@
+{
+	"Services": {
+		"Technical.Services": {
+			"hidden": true,
+			"workloads": {
+				"daily.morning": [
+					{
+						"label": "Purge daily directories",
+						"order": "00",
+						"commands": [
+							"ttp.pl pull -nocolored",
+							"ttp.pl purgedirs -nocolored -dircmd \"dbms.pl vars -nocolored -backupsRoot\" -keep 5",
+							"ttp.pl purgedirs -nocolored -dircmd \"dbms.pl vars -nocolored -archivesRoot\" -keep 5",
+							"ttp.pl purgedirs -nocolored -dircmd \"ttp.pl vars -nocolored -logsRoot\" -keep 10"
+						]
+					}
+				],
+				"daily.evening": [
+					{
+						"label": "Update our scrips and resources",
+						"commands": [
+						]
+					}
+				],
+				"startup": [
+					{
+						"label": "Advertize at startup",
+						"commands": [
+							"call [eval:File::Spec->catfile( TTP::var([ 'site', 'commandsDir' ]), 'startup.cmd' )]"
+						]
+					}
+				]
+			}
+		}
+	},
+	"Environment": {
+		"type_comments": [
+			"X is production; this same indicator must be used both for production live and for production backup",
+			"D is for development"
+		],
+		"type": "D"
+	},
+	"DBMS": {
+		"archivesDir": "[eval:File::Spec->catdir( TTP::var([ 'DBMS', 'archivesRoot' ]), localtime->strftime( '%y%m%d' ))]",
+		"archivesRoot": "\\[eval:File::Spec->catdir( '\\ftpback-rbx7-618.ovh.net', 'ns3153065.ip-51-91-25.eu', '<HOST>', 'SQLBackups' )]",
+		"byInstance": {
+			"DEV": {
+				"dataPath": "C:\\Program Files\\Microsoft SQL Server\\MSSQL16.DEV\\MSSQL\\DATA",
+				"package": "TTP::SqlServer"
+			}
+		}
+	},
+	"remoteShare": "\\\\10.122.1.76\\C"
+}

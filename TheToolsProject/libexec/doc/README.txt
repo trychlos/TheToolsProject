@@ -7,9 +7,9 @@ Toops for Windows:
 	> Win32::SqlServer https://www.sommarskog.se/MSSQL/index.html
 - install and configure Toops for your site:
 	> set the PERL5LIB global environment variable to address the Toops directory
-	> set a TTP_ROOTS global environment variable to address the directory which contains your site configuration
+	> set a TTP_ROOTS global environment variable to address the directories which contains your site configuration and the TTP tools
 	> update the PATH to address all your Toops/bin directories
-	> install CPAN packages
+	> install additional CPAN packages
 	  Data::UUID
 	  Devel::StackTrace
 	  Net::MQTT::Simple

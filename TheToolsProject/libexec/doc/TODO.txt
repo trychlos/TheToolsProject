@@ -11,7 +11,11 @@ TODO
 	 2024- 5- 5 they actually do return composite data - just is not displayed by the verb
 	            see daemon.pl dbms.pl services.pl ttp.pl
 
-  48 2024- 5-11 
+  48 2024- 5-11 remove ns230134_c network shortcut
+
+  49 2024- 5-11 all functions should check the type of their arguments and call TTP::stackTrace() on coding error
+
+  50 2024- 5-11 
 
 # -------------------------------------------------------------------------------------------------
 

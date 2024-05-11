@@ -1,0 +1,125 @@
+{
+	"DBMS_comments": [
+	],
+	"DBMS": {
+		"archivesDir": "[eval:File::Spec->catdir( TTP::var([ 'DBMS', 'archivesRoot' ]), localtime->strftime( '%y%m%d' ))]",
+		"archivesRoot": "\\[eval:File::Spec->catdir( '\\ftpback-rbx7-618.ovh.net', 'ns3153065.ip-51-91-25.eu', '<HOST>', 'SQLBackups' )]",
+		"byInstance": {
+			"PROD": {
+				"dataPath": "C:\\Program Files\\Microsoft SQL Server\\MSSQL16.PROD\\MSSQL\\DATA",
+				"package": "TTP::SqlServer"
+			}
+		},
+		"instance": "PROD"
+	},
+	"ServicesComments": [
+	],
+	"Services": {
+		"Tom17": {
+			"status": {
+				"x_get_live": "http.pl get -nocolored -url https://tom17.blingua.fr -header X-Sent-By -accept ...",
+				"after": {
+					"commands": [
+						"ssh inlingua-user@<HOST> dbms.pl status -nocolored -service <SERVICE> -state -mqtt -http",
+						"ssh inlingua-user@<HOST> daemon.pl status -bname tom17-backup-monitor-daemon.json -http -- -metric ttp_service_daemon -label service=<SERVICE> -label role=backup -label environment=X"
+					]
+				}
+			},
+			"workloads": {
+				"tom17.backup": [
+					{
+						"label": "(PROD BACKUP) Surveillance, transfert et restauration des sauvegardes de la production",
+						"commands": [
+							"daemon.pl stop -nocolored -bname tom17-backup-monitor-daemon.json -ignore -wait",
+							"daemon.pl start -nocolored -bname tom17-backup-monitor-daemon.json -- -remote NS3232346"
+						]
+					}
+				]
+			}
+		},
+		"Tom21": {
+			"status": {
+				"x_get_live": "http.pl get -nocolored -url https://tom21.blingua.fr -header X-Sent-By -accept ...",
+				"after": {
+					"commands": [
+						"ssh inlingua-user@<HOST> dbms.pl status -nocolored -service <SERVICE> -state -mqtt -http",
+						"ssh inlingua-user@<HOST> daemon.pl status -bname tom21-backup-monitor-daemon.json -http -- -metric ttp_service_daemon -label service=<SERVICE> -label role=backup -label environment=X"
+					]
+				}
+			},
+			"workloads": {
+				"tom21.backup": [
+					{
+						"label": "(PROD BACKUP) Surveillance, transfert et restauration des sauvegardes de la production",
+						"commands": [
+							"daemon.pl stop -nocolored -bname tom21-backup-monitor-daemon.json -ignore -wait",
+							"daemon.pl start -nocolored -bname tom21-backup-monitor-daemon.json -- -remote NS3232346"
+						]
+					}
+				]
+			}
+		},
+		"Tom59": {
+			"status": {
+				"x_get_live": "http.pl get -nocolored -url https://tom59.blingua.fr -header X-Sent-By -accept ...",
+				"after": {
+					"commands": [
+						"ssh inlingua-user@<HOST> dbms.pl status -nocolored -service <SERVICE> -state -mqtt -http",
+						"ssh inlingua-user@<HOST> daemon.pl status -bname tom59-backup-monitor-daemon.json -http -- -metric ttp_service_daemon -label service=<SERVICE> -label role=backup -label environment=X"
+					]
+				}
+			},
+			"workloads": {
+				"tom59.backup": [
+					{
+						"label": "(PRODUCTION BACKUP) Surveillance, transfert et restauration des sauvegardes de la production",
+						"commands": [
+							"daemon.pl stop -nocolored -bname tom59-backup-monitor-daemon.json -ignore -wait",
+							"daemon.pl start -nocolored -bname tom59-backup-monitor-daemon.json -- -remote NS3232346"
+						]
+					}
+				]
+			}
+		},
+		"Technical.Services": {
+			"hidden": true,
+			"workloads": {
+				"daily.morning": [
+					{
+						"label": "Purge daily directories",
+						"order": "00",
+						"commands": [
+							"ttp.pl pull -nocolored",
+							"ttp.pl movedirs -nocolored -sourcecmd \"dbms.pl vars -nocolored -backupsRoot\" -targetcmd \"dbms.pl vars -nocolored -archivesRoot\" -dirs -keep 5",
+							"ttp.pl purgedirs -nocolored -dircmd \"dbms.pl vars -nocolored -archivesRoot\" -keep 10",
+							"ttp.pl purgedirs -nocolored -dircmd \"ttp.pl vars -nocolored -logsRoot\" -keep 10"
+						]
+					}
+				],
+				"daily.evening": [
+					{
+						"label": "Update our scrips and resources",
+						"commands": [
+						]
+					}
+				],
+				"startup": [
+					{
+						"label": "Advertize at startup",
+						"commands": [
+							"call [eval:File::Spec->catfile( TTP::var([ 'site', 'commandsDir' ]), 'startup.cmd' )]"
+						]
+					}
+				]
+			}
+		}
+	},
+	"Environment": {
+		"type": "X",
+		"physical": {
+			"ovh": "ns3153065.ovh.net",
+			"inlingua": "inlingua-rl9-1"
+		}
+	},
+	"remoteShare": "\\\\10.122.1.75\\C"
+}
