@@ -11,7 +11,7 @@ TODO
 	 2024- 5- 5 they actually do return composite data - just is not displayed by the verb
 	            see daemon.pl dbms.pl services.pl ttp.pl
 
-  47 2024- 5-10 
+  48 2024- 5-11 
 
 # -------------------------------------------------------------------------------------------------
 
@@ -183,3 +183,6 @@ DONE
 
   46 2024- 5-10 $ttp should be renamed $ep (for EP instance)
      2024- 5-10 done
+
+  47 2024- 5-11 dbms mqtt telemetry for tables misses new environment,command,verb labels
+     2024- 5-11 fixed

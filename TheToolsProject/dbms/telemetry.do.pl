@@ -181,7 +181,10 @@ sub doTablesCount {
 			msgOut( " table '$tab'" );
 			my $sqlres = $dbms->execSqlCommand( "use $db; select count(*) as rows_count from $tab;", { tabular => false });
 			if( $sqlres->{ok} ){
-				my @labels = ( @opt_prepends, "instance=$opt_instance", "database=$db", "table=$tab", @opt_appends );
+				my @labels = ( @opt_prepends,
+					"environment=".$ep->node()->environment(), "command=".$running->command(), "verb=".$running->verb(),
+					"instance=$opt_instance", "database=$db", "table=$tab",
+					@opt_appends );
 				TTP::Metric->new( $ep, {
 					name => 'rows_count',
 					value => $sqlres->{result}->[0]->{rows_count} || 0,
