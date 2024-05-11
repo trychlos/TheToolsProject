@@ -11,13 +11,6 @@ TODO
 	 2024- 5- 5 they actually do return composite data - just is not displayed by the verb
 	            see daemon.pl dbms.pl services.pl ttp.pl
 
-  31 2024- 5- 5 ws22prod1 inlingua33_archive is restored at 6h, but not inlingua31_archive nor inlingua59_archive
-     2024- 5- 6 confirmed - this may be because there was only one execution report json file, so should be fixed with #30
-     2024- 5- 9 still there: to be fixed
-     2024- 5- 9 fix execReports .json filenames and release...
-     2024- 5-10 3 databases on 4 are restored, the fourth is missing
-     2024- 5-10 no more relies on sort order to detect new files
-
   47 2024- 5-10 
 
 # -------------------------------------------------------------------------------------------------
@@ -128,6 +121,14 @@ DONE
      2024- 5- 6 confirmed: all the databases are saved, but only three execution reports: tom17+tom21+tom59: the four execution reports are sent to the same file
 	            happens that TTP::random() is evaluated at bootstrap time, so once for the three files
      2024- 5- 6 fixed by a) removing the TTP::random() evaluation from site.json b) replacing it with a temp file templating in ttp.pl writejson
+
+  31 2024- 5- 5 ws22prod1 inlingua33_archive is restored at 6h, but not inlingua31_archive nor inlingua59_archive
+     2024- 5- 6 confirmed - this may be because there was only one execution report json file, so should be fixed with #30
+     2024- 5- 9 still there: to be fixed
+     2024- 5- 9 fix execReports .json filenames and release...
+     2024- 5-10 three databases on 4 are restored, the fourth is missing
+     2024- 5-10 no more relies on sort order to detect new files
+     2024- 5-11 that fixes the issue -> closing
 
   32 2024- 5- 5 services.pl list -> log the displayed results
      2024- 5- 5 done
