@@ -32,7 +32,7 @@
 
 use JSON;
 use Path::Tiny;
-use Time::Moment;
+use Time::Piece;
 
 use TTP::SMTP;
 
