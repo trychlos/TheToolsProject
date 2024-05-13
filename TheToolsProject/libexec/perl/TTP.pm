@@ -936,6 +936,43 @@ sub stackTrace {
 }
 
 # ------------------------------------------------------------------------------------------------
+# substitute the macros in a hash
+# At the moment:
+# - <NODE> the current execution node
+# - <SERVICE> this service name
+# (I):
+# - the hash to be substituted
+# - a hash ref where keys are the macro the be substituted and values are the substituted value
+# (O):
+# - substituted hash
+
+sub substituteMacros {
+	my ( $data, $macros ) = @_;
+
+	my $ref = ref( $data );
+	if( $ref ){
+		if( $ref eq 'ARRAY' ){
+			for( my $i=0 ; $i<scalar @{$data} ; ++$i ){
+				$data->[$i] = substituteMacros( $data->[$i], $macros );
+			}
+		} elsif( $ref eq 'HASH' ){
+			foreach my $it ( sort keys %{$data} ){
+				$data->{$it} = substituteMacros( $data->{$it}, $macros );
+			}
+		} elsif( $ref ne 'JSON::PP::Boolean' ){
+			msgErr( __PACKAGE__."::substituteMacros() unmanaged ref '$ref'" );
+			stackTrace();
+		}
+	} else {
+		foreach my $it ( keys %{$macros} ){
+			$data =~ s/$it/$macros->{$it}/;
+		}
+	}
+
+	return $data;
+}
+
+# ------------------------------------------------------------------------------------------------
 # (I):
 # - none
 # (O):

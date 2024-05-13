@@ -59,44 +59,27 @@ my $Const = {
 
 ### Private methods
 
-# ------------------------------------------------------------------------------------------------
-# Manage the macros in the evaluated JSON data
-# At the moment:
-# - <NODE> the current execution node
-# - <SERVICE> this service name
-# (I):
-# - none
-# (O):
-# - substituted data
-
-sub _substMacros {
-	my ( $self, $data ) = @_;
-
-	$data = $self->jsonData() if !defined $data;
-	my $ref = ref( $data );
-	if( $ref ){
-		if( $ref eq 'ARRAY' ){
-			for( my $i=0 ; $i<scalar @{$data} ; ++$i ){
-				$data->[$i] = $self->_substMacros( $data->[$i] );
-			}
-		} elsif( $ref eq 'HASH' ){
-			foreach my $it ( sort keys %{$data} ){
-				$data->{$it} = $self->_substMacros( $data->{$it} );
-			}
-		} else {
-			msgErr( __PACKAGE__."::_substMacros() unmanaged ref '$ref'" );
-		}
-	} else {
-		my $node = $self->ep()->node()->name();
-		my $service = $self->name();
-		$data =~ s/<NODE>/$node/g;
-		$data =~ s/<SERVICE>/$service/g;
-	}
-
-	return $data;
-}
-
 ### Public methods
+
+# ------------------------------------------------------------------------------------------------
+# Override the 'IJSONable::evaluate()' method to manage the macros substitutions
+# (I):
+# -none
+# (O):
+# - this same object
+
+sub evaluate {
+	my ( $self ) = @_;
+
+	$self->TTP::IJSONable::evaluate();
+
+	TTP::substituteMacros( $self->jsonData(), {
+		'<NODE>' => $self->ep()->node()->name(),
+		'SERVICE>' => $self->name()
+	});
+
+	return $self;
+}
 
 # ------------------------------------------------------------------------------------------------
 # Getter
@@ -302,7 +285,6 @@ sub new {
 		};
 		if( $self->jsonLoad({ findable => $findable, acceptable => $acceptable })){
 			$self->evaluate();
-			$self->_substMacros();
 
 		} else {
 			msgVerbose( "service '$args->{service}' is not defined as an autonomous JSON" );

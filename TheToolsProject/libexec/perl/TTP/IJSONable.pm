@@ -149,12 +149,15 @@ sub _evaluatePrint {
 # (I]:
 # - none
 # (O):
-# - nothing
+# - this same object
 
 sub evaluate {
-	my ( $self, $args ) = @_;
+	my ( $self ) = @_;
+
 	$self->{_ijsonable}{evaluated} = $self->{_ijsonable}{raw};
 	$self->{_ijsonable}{evaluated} = $self->_evaluate( $self->{_ijsonable}{raw} );
+
+	return $self;
 }
 
 # -------------------------------------------------------------------------------------------------

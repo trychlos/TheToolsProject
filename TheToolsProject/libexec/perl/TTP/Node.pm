@@ -88,6 +88,32 @@ sub environment {
 	return $env;
 }
 
+# ------------------------------------------------------------------------------------------------
+# Override the 'IJSONable::evaluate()' method to manage the macros substitutions
+# (I):
+# -none
+# (O):
+# - this same object
+
+sub evaluate {
+	my ( $self ) = @_;
+
+	$self->TTP::IJSONable::evaluate();
+
+	TTP::substituteMacros( $self->jsonData(), {
+		'<NODE>' => $self->name()
+	});
+
+	my $services = $self->var([ 'Services' ]);
+	foreach my $it ( keys %{$services} ){
+		TTP::substituteMacros( $self->var([ 'Services', $it ]), {
+			'<SERVICE>' => $it
+		});
+	}
+
+	return $self;
+}
+
 # -------------------------------------------------------------------------------------------------
 # Check if the provided service is defined and not disabled in this node
 # (I):

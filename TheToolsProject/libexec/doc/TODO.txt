@@ -13,8 +13,6 @@ TODO
 
   49 2024- 5-11 all functions should check the type of their arguments and call TTP::stackTrace() on coding error
 
-  50 2024- 5-13 dbms.pl vars doesn't replace the <HOST> macro
-
   52 2024- 5-13 
 
 # -------------------------------------------------------------------------------------------------
@@ -193,6 +191,9 @@ DONE
 
   48 2024- 5-11 remove ns230134_c network shortcut
      2024- 5-12 done
+
+  50 2024- 5-13 dbms.pl vars doesn't replace the <HOST> macro
+     2024- 5-13 fixed
 
   51 2024- 5-13 replace <HOST> macros by <NODE>
      2024- 5-13 done
