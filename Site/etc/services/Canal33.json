@@ -15,20 +15,20 @@
 	"switch": {
 		"to_backup": {
 			"commands": [
-				"ssh inlingua-adm@<HOST> sc stop Canal33Ftp",
-				"ssh inlingua-adm@<HOST> sc config start= disabled Canal33Ftp",
-				"ssh inlingua-adm@<HOST> sc stop Canal33Svc",
-				"ssh inlingua-adm@<HOST> sc config start= disabled Canal33Svc"
+				"ssh inlingua-adm@<NODE> sc stop Canal33Ftp",
+				"ssh inlingua-adm@<NODE> sc config start= disabled Canal33Ftp",
+				"ssh inlingua-adm@<NODE> sc stop Canal33Svc",
+				"ssh inlingua-adm@<NODE> sc config start= disabled Canal33Svc"
 			]
 		},
 		"to_live": {
 			"commands": [
-				"ssh inlingua-user@<HOST> daemon.pl stop -nocolored -bname canal33-backup-monitor-daemon.json -ignore -wait",
-				"ssh inlingua-adm@<HOST> [eval:File::Spec->catfile( TTP::var([ 'site', 'commandsDir' ]), 'scheduled_set_status.cmd' )] \\Inlingua\\canal33.backup /Disable",
-				"ssh inlingua-adm@<HOST> sc config start= auto Canal33Ftp",
-				"ssh inlingua-adm@<HOST> sc start Canal33Ftp",
-				"ssh inlingua-adm@<HOST> sc config start= auto Canal33Svc",
-				"ssh inlingua-adm@<HOST> sc start Canal33Svc",
+				"ssh inlingua-user@<NODE> daemon.pl stop -nocolored -bname canal33-backup-monitor-daemon.json -ignore -wait",
+				"ssh inlingua-adm@<NODE> [eval:File::Spec->catfile( TTP::var([ 'site', 'commandsDir' ]), 'scheduled_set_status.cmd' )] \\Inlingua\\canal33.backup /Disable",
+				"ssh inlingua-adm@<NODE> sc config start= auto Canal33Ftp",
+				"ssh inlingua-adm@<NODE> sc start Canal33Ftp",
+				"ssh inlingua-adm@<NODE> sc config start= auto Canal33Svc",
+				"ssh inlingua-adm@<NODE> sc start Canal33Svc",
 				"ovh.pl ipswitch -ip ip-87.98.189.58 -to ns3153065.ip-51-91-25.eu -wait -url http://canal33.blingua.net"
 			]
 		}

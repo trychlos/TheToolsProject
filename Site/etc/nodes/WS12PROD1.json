@@ -3,7 +3,7 @@
 	],
 	"DBMS": {
 		"archivesDir": "[eval:File::Spec->catdir( TTP::var([ 'DBMS', 'archivesRoot' ]), localtime->strftime( '%y%m%d' ))]",
-		"archivesRoot": "\\[eval:File::Spec->catdir( '\\ftpback-rbx7-618.ovh.net', 'ns3153065.ip-51-91-25.eu', '<HOST>', 'SQLBackups' )]",
+		"archivesRoot": "\\[eval:File::Spec->catdir( '\\ftpback-rbx7-618.ovh.net', 'ns3153065.ip-51-91-25.eu', '<NODE>', 'SQLBackups' )]",
 		"byInstance": {
 			"PROD": {
 				"dataPath": "C:\\Program Files\\Microsoft SQL Server\\MSSQL11.PROD\\MSSQL\\DATA",
@@ -19,11 +19,11 @@
 			"status": {
 				"after": {
 					"commands": [
-						"ssh inlingua-user@<HOST> dbms.pl status -nocolored -service <SERVICE> -state -mqtt -http",
+						"ssh inlingua-user@<NODE> dbms.pl status -nocolored -service <SERVICE> -state -mqtt -http",
 						"services.pl live -nocolored -service <SERVICE> -environment X -next -mqtt -http",
-						"ssh inlingua-user@<HOST> daemon.pl status -bname canal33-backup-monitor-daemon.json -http -- -metric ttp_service_daemon -label service=<SERVICE> -label role=backup -label environment=X",
-						"ssh inlingua-adm@<HOST> mswin.pl service -name Canal33Ftp -state -mqtt -http -- -label service=<SERVICE>",
-						"ssh inlingua-adm@<HOST> mswin.pl service -name Canal33Svc -state -mqtt -http -- -label service=<SERVICE>"
+						"ssh inlingua-user@<NODE> daemon.pl status -bname canal33-backup-monitor-daemon.json -http -- -metric ttp_service_daemon -label service=<SERVICE> -label role=backup -label environment=X",
+						"ssh inlingua-adm@<NODE> mswin.pl service -name Canal33Ftp -state -mqtt -http -- -label service=<SERVICE>",
+						"ssh inlingua-adm@<NODE> mswin.pl service -name Canal33Svc -state -mqtt -http -- -label service=<SERVICE>"
 					]
 				},
 				"x_get_live": "http.pl get -nocolored -url http://canal33.blingua.net -header X-Sent-By -accept ..."

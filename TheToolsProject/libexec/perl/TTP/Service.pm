@@ -62,7 +62,7 @@ my $Const = {
 # ------------------------------------------------------------------------------------------------
 # Manage the macros in the evaluated JSON data
 # At the moment:
-# - <HOST> the current execution node
+# - <NODE> the current execution node
 # - <SERVICE> this service name
 # (I):
 # - none
@@ -89,7 +89,7 @@ sub _substMacros {
 	} else {
 		my $node = $self->ep()->node()->name();
 		my $service = $self->name();
-		$data =~ s/<HOST>/$node/g;
+		$data =~ s/<NODE>/$node/g;
 		$data =~ s/<SERVICE>/$service/g;
 	}
 

@@ -88,7 +88,7 @@ sub doSwitch {
 		$line =~ s/^\s*//;
 		my @words = split( /\s+/, $line, 2 );
 		$command = $words[1];
-		$command =~ s/<HOST>/$opt_to/g;
+		$command =~ s/<NODE>/$opt_to/g;
 		$command =~ s/<SERVICE>/$opt_service/g;
 		# also have to re-double the backlashes to survive to ssh shell
 		$command =~ s/\\/\\\\/g;
