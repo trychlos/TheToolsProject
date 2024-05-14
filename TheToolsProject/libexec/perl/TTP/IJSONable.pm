@@ -58,37 +58,40 @@ requires qw( _newBase );
 #  and restart until all references have been replaced
 # (I):
 # - a hash object to be evaluated
+# - an optional options hash with following keys:
+#   > warnOnUninitialized, defaulting to true
 # (O):
 # - the evaluated hash object
 
 sub _evaluate {
-	my ( $self, $value ) = @_;
+	my ( $self, $value, $opts ) = @_;
+	$opts //= {};
 	my %prev = ();
-	my $result = $self->_evaluateRec( $value );
+	my $result = $self->_evaluateRec( $value, $opts );
 	if( $result ){
 		while( !eq_deeply( $result, \%prev )){
 			%prev = %{$result};
-			$result = $self->_evaluateRec( $result );
+			$result = $self->_evaluateRec( $result, $opts );
 		}
 	}
 	return $result;
 }
 
 sub _evaluateRec {
-	my ( $self, $value ) = @_;
+	my ( $self, $value, $opts ) = @_;
 	my $result = '';
 	my $ref = ref( $value );
 	if( !$ref ){
-		$result = $self->_evaluateScalar( $value );
+		$result = $self->_evaluateScalar( $value, $opts );
 	} elsif( $ref eq 'ARRAY' ){
 		$result = [];
 		foreach my $it ( @{$value} ){
-			push( @{$result}, $self->_evaluateRec( $it ));
+			push( @{$result}, $self->_evaluateRec( $it, $opts ));
 		}
 	} elsif( $ref eq 'HASH' ){
 		$result = {};
 		foreach my $key ( keys %{$value} ){
-			$result->{$key} = $self->_evaluateRec( $value->{$key} );
+			$result->{$key} = $self->_evaluateRec( $value->{$key}, $opts );
 		}
 	} else {
 		$result = $value;
@@ -97,7 +100,8 @@ sub _evaluateRec {
 }
 
 sub _evaluateScalar {
-	my ( $self, $value ) = @_;
+	my ( $self, $value, $opts ) = @_;
+	$opts //= {};
 	my $ref = ref( $value );
 	my $evaluate = true;
 	if( $ref ){
@@ -120,7 +124,7 @@ sub _evaluateScalar {
 		}
 
 		# this weird code to let us manage some level of pseudo recursivity
-		$result =~ s/\[eval:($re)\]/$self->_evaluatePrint( $1 )/eg;
+		$result =~ s/\[eval:($re)\]/$self->_evaluatePrint( $1, $opts )/eg;
 		$result =~ s/\[_eval:/[eval:/g;
 		$result =~ s/\[__eval:/[_eval:/g;
 		$result =~ s/\[___eval:/[__eval:/g;
@@ -131,7 +135,13 @@ sub _evaluateScalar {
 }
 
 sub _evaluatePrint {
-	my ( $self, $value ) = @_;
+	my ( $self, $value, $opts ) = @_;
+	$opts //= {};
+	my $warnOnUninitialized = true;
+	$warnOnUninitialized = $opts->{warnOnUninitialized} if exists $opts->{warnOnUninitialized};
+	if( !$warnOnUninitialized ){
+		no warnings 'uninitialized';
+	}
 	my $result = eval $value;
 	# we cannot really emit a warning here as it is possible that we are in the way of resolving
 	# a still-undefined value. so have to wait until the end to resolve all values, but too late
@@ -139,6 +149,9 @@ sub _evaluatePrint {
 	#msgWarn( "something is wrong with '$value' as evaluation result is undefined" ) if !defined $result;
 	$result = $result || '(undef)';
 	#print __PACKAGE__."::_evaluatePrint() value='$value' result='$result'".EOL;
+	if( !$warnOnUninitialized ){
+		use warnings 'uninitialized';
+	}
 	return $result;
 }
 
@@ -147,15 +160,17 @@ sub _evaluatePrint {
 # -------------------------------------------------------------------------------------------------
 # Evaluates the raw data in this Perl context
 # (I]:
-# - none
+# - an optional options hash with following keys:
+#   > warnOnUninitialized, defaulting to true
 # (O):
 # - this same object
 
 sub evaluate {
-	my ( $self ) = @_;
+	my ( $self, $opts ) = @_;
+	$opts //= {};
 
 	$self->{_ijsonable}{evaluated} = $self->{_ijsonable}{raw};
-	$self->{_ijsonable}{evaluated} = $self->_evaluate( $self->{_ijsonable}{raw} );
+	$self->{_ijsonable}{evaluated} = $self->_evaluate( $self->{_ijsonable}{raw}, $opts );
 
 	return $self;
 }
