@@ -1,0 +1,55 @@
+{
+	"daemons_comments": [
+		"On top of this host configuration, the daemons which will dictate the host behavior, and mainly whether is it a backup production host or not.",
+		"- ...",
+		""
+	],
+	"daemons": [
+	],
+	"ServicesComments": [
+		"These are the services defined on this host as objects where the top key if the name of the service. At least this top key should be specified, even if with an empty properties object.",
+		"Values may be:",
+		"- dbms: a hash of the involved DBMS objects, where the top key is the instance name and values may be:",
+		"  > databases: an array of the involved databases names in this instance",
+		"- ...",
+		"- A service can define a 'workloads' hash of parameters to be given to the specified workload.",
+		"  E.g. we have a 'daily.morning' workload, executed at the very beginning of each day. This workload is responsible to purge logs, have a database full backup, check for available space, and so on.",
+		"  And we also have a 'daily.periodic.2h' workload for differential backups of live production databases.",
+		"  We could so define any workload in any service...",
+		"  'workloads' is a hash whose keys are the name of each workload this service subscribes to, values being an (ordered) array of the work tasks associated to this workload for this service.",
+		"  Each work task is a hash whose content depends mainly of the particular involved workload, but may have:",
+		"  > a 'label'",
+		"  > an array of 'commands'",
+		"  > the order as an optional integer",
+		"    A word of caution: due to the way Perl::JSON interprets the zero integer of the '0' string, do not use these values!",
+		"    For consistency reasons, you should rather use only strings.",
+		"    Due to the above Perl 'not-a-bug-but-a-feature', do not use single zero, either as a string nor an integer.",
+		"- ...",
+		""
+	],
+	"Services": {
+		"Technical Workloads": {
+			"hidden": true,
+			"workloads": {
+				"daily.morning": [
+				],
+				"startup": [
+					{
+						"label": "Advertize at startup",
+						"commands": [
+						]
+					}
+				]
+			}
+		}
+	},
+	"Environment": {
+		"type_comments": [],
+		"type": "X",
+		"physical": {
+			"ovh": "ns3197235.ip-141-95-3.eu",
+			"inlingua": "inlingua-rl9-2"
+		}
+	},
+	"logsRoot": "[eval:File::Spec->catdir( '/tmp', 'Inlingua' )]"
+}
