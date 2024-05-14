@@ -39,7 +39,6 @@
 				"label": "(Production Live) Sauvegarde quotidienne de la base Canall33",
 				"commands": [
 					"dbms.pl backup -nocolored -service Canal33 -full -compress",
-					"ttp.pl copydirs -nocolored -sourcecmd \"dbms.pl vars -nocolored -backupsDir\" -targetcmd \"dbms.pl vars -nocolored -archivesDir\" -dirs",
 					"dbms.pl telemetry -nocolored -service Canal33 -dbsize -mqtt -http",
 					"dbms.pl telemetry -nocolored -service Canal33 -tabcount -mqtt -http",
 					"ttp.pl sizedir -nocolored -dirpath C:\\Users\\Public\\CANAL33_LOGS -mqtt -http"
@@ -50,8 +49,7 @@
 			{
 				"label": "(Production Live) Sauvegarde différentielle en journée",
 				"commands": [
-					"dbms.pl backup -nocolored -service Canal33 -diff -compress",
-					"ttp.pl copydirs -nocolored -sourcecmd \"dbms.pl vars -nocolored -backupsDir\" -targetcmd \"dbms.pl vars -nocolored -archivesDir\" -dirs"
+					"dbms.pl backup -nocolored -service Canal33 -diff -compress"
 				]
 			}
 		],
