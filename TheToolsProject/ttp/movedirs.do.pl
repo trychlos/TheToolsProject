@@ -96,16 +96,18 @@ sub doMoveDirs {
 				}
 			}
 			# and move the rest, making sure the initial path at least exists
-			TTP::makeDirExist( $opt_targetpath );
-			foreach my $it ( @list ){
-				my $source = _sourcePath( $it );
-				my $target = _targetPath( $it );
-				msgOut( " moving '$source' to '$target'" );
-				my $res = _moveDir( $source, $target );
-				if( $res ){
-					$count += 1;
-				} else {
-					msgErr( "error detected" );
+			if( scalar @list ){
+				TTP::makeDirExist( $opt_targetpath );
+				foreach my $it ( @list ){
+					my $source = _sourcePath( $it );
+					my $target = _targetPath( $it );
+					msgOut( " moving '$source' to '$target'" );
+					my $res = _moveDir( $source, $target );
+					if( $res ){
+						$count += 1;
+					} else {
+						msgErr( "error detected" );
+					}
 				}
 			}
 		}
