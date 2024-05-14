@@ -44,11 +44,6 @@
 	],
 	"Services": {
 		"Canal33": {
-			"DBMS": {
-				"databases": [
-					"Canal33"
-				]
-			},
 			"failover": {
 				"ovh": {
 					"ip": "ip-87.98.189.58"
