@@ -60,7 +60,7 @@ sub bootstrap {
 	my $site = TTP::Site->new( $self );
 	print __PACKAGE__."::bootstrap() site instanciated".EOL if $bootstrapDebugInstanciation;
 	$self->{_site} = $site;
-	$site->evaluate({ warnOnUnitialized => false });
+	$site->evaluate({ warnOnUninitialized => false });
 	print __PACKAGE__."::bootstrap() site set and evaluated".EOL if $bootstrapDebugEvaluation;
 
 	# identify current host (remind that there is no logical node in this Perl version) and load its configuration
