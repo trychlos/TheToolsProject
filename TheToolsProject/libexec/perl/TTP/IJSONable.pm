@@ -137,21 +137,26 @@ sub _evaluateScalar {
 sub _evaluatePrint {
 	my ( $self, $value, $opts ) = @_;
 	$opts //= {};
+	my $result = undef;
+	
+	# warnings pragma acts on its own block so have to eval in the two cases
+	# https://perldoc.perl.org/warnings
 	my $warnOnUninitialized = true;
 	$warnOnUninitialized = $opts->{warnOnUninitialized} if exists $opts->{warnOnUninitialized};
-	if( !$warnOnUninitialized ){
+	if( $warnOnUninitialized ){
+		$result = eval $value;
+	} else {
 		no warnings 'uninitialized';
+		$result = eval $value;
+		use warnings 'uninitialized';
 	}
-	my $result = eval $value;
+
 	# we cannot really emit a warning here as it is possible that we are in the way of resolving
 	# a still-undefined value. so have to wait until the end to resolve all values, but too late
 	# to emit a warning ?
 	#msgWarn( "something is wrong with '$value' as evaluation result is undefined" ) if !defined $result;
 	$result = $result || '(undef)';
 	#print __PACKAGE__."::_evaluatePrint() value='$value' result='$result'".EOL;
-	if( !$warnOnUninitialized ){
-		use warnings 'uninitialized';
-	}
 	return $result;
 }
 
