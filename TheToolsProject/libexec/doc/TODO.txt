@@ -13,7 +13,7 @@ TODO
 
   49 2024- 5-11 all functions should check the type of their arguments and call TTP::stackTrace() on coding error
 
-  52 2024- 5-13 
+  52 2024- 5-15 
 
 # -------------------------------------------------------------------------------------------------
 
