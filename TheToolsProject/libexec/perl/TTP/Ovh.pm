@@ -130,7 +130,7 @@ sub getServices {
 # (I):
 # - the api opaque handle as returned from connect()
 # - a path to request
-# - the post parameters as a hash
+# - the POST parameters as a hash
 # (O):
 # - the request answer as a OvhAnswer instance
 
@@ -142,6 +142,25 @@ sub postByPath {
 	print Dumper( $answer ) if $answer->isFailure();
 
 	msgVerbose( "Ovh::postByPath() status=".$answer->status()." isSuccess='".( $answer->isSuccess() ? 'true' : 'false' )."'");
+	return $answer;
+}
+
+# ------------------------------------------------------------------------------------------------
+# (I):
+# - the api opaque handle as returned from connect()
+# - a path to request
+# - the PUT parameters as a hash
+# (O):
+# - the request answer as a OvhAnswer instance
+
+sub putByPath {
+	my ( $api, $path, $params ) = @_;
+	msgVerbose( "Ovh::putByPath() path='$path'" );
+
+	my $answer = $api->put( path => $path, body => $params );
+	print Dumper( $answer ) if $answer->isFailure();
+
+	msgVerbose( "Ovh::putByPath() status=".$answer->status()." isSuccess='".( $answer->isSuccess() ? 'true' : 'false' )."'");
 	return $answer;
 }
 
