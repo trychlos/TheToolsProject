@@ -13,7 +13,9 @@ TODO
 
   49 2024- 5-11 all functions should check the type of their arguments and call TTP::stackTrace() on coding error
 
-  52 2024- 5-15 
+  52 2024- 5-17 replace IP addresses by dns aliases to make easier the switch between live and banckup productions (e.g. http gateway)
+
+  53 2024- 5-17 
 
 # -------------------------------------------------------------------------------------------------
 
