@@ -1,5 +1,6 @@
 {
 	"DBMS": {
+		"archivesRoot": "\\[eval:File::Spec->catdir( '\\ftpback-rbx2-207.ovh.net', 'ns3197235.ip-141-95-3.eu', '<NODE>', 'SQLBackups' )]",
 		"databases": [
 			"inlingua31_archive",
 			"inlingua33_archive",
