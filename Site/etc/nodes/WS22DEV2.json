@@ -1,4 +1,14 @@
 {
+	"DBMS": {
+		"archivesDir": "[eval:File::Spec->catdir( TTP::var([ 'DBMS', 'archivesRoot' ]), localtime->strftime( '%y%m%d' ))]",
+		"archivesRoot": "\\[eval:File::Spec->catdir( '\\ftpback-rbx2-207.ovh.net', 'ns3197235.ip-141-95-3.eu', '<NODE>', 'SQLBackups' )]",
+		"byInstance": {
+			"DEV": {
+				"dataPath": "C:\\Program Files\\Microsoft SQL Server\\MSSQL16.DEV\\MSSQL\\DATA",
+				"package": "TTP::SqlServer"
+			}
+		}
+	},
 	"Services": {
 		"Technical.Services": {
 			"hidden": true,
@@ -39,16 +49,6 @@
 			"D is for development"
 		],
 		"type": "D"
-	},
-	"DBMS": {
-		"archivesDir": "[eval:File::Spec->catdir( TTP::var([ 'DBMS', 'archivesRoot' ]), localtime->strftime( '%y%m%d' ))]",
-		"archivesRoot": "\\[eval:File::Spec->catdir( '\\ftpback-rbx7-618.ovh.net', 'ns3153065.ip-51-91-25.eu', '<NODE>', 'SQLBackups' )]",
-		"byInstance": {
-			"DEV": {
-				"dataPath": "C:\\Program Files\\Microsoft SQL Server\\MSSQL16.DEV\\MSSQL\\DATA",
-				"package": "TTP::SqlServer"
-			}
-		}
 	},
 	"remoteShare": "\\\\WS22DEV2\\C"
 }
