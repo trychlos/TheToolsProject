@@ -760,6 +760,10 @@ sub logsRoot {
 # make sure a directory exist
 # note that this does NOT honor the '-dummy' option as creating a directory is easy and a work may
 # be blocked without that
+# NB: pwi 2024- 6- 4
+#     creating a path like '\\ftpback-rbx2-207.ovh.net\ns3197235.ip-141-95-3.eu\WS12DEV2\SQLBackups' is OK and has been thoroughly tested
+#     even  if this operation is subject to the 'Insufficient system resources exist to complete the requested service' error
+#     (like all storage/network operations)
 # (I):
 # - the directory to be created if not exists
 # - an optional options hash with following keys:
@@ -889,6 +893,10 @@ sub random {
 
 # -------------------------------------------------------------------------------------------------
 # delete a directory and all its content
+# (I):
+# - the dir to be deleted
+# (O):
+# - true|false
 
 sub removeTree {
 	my ( $dir ) = @_;

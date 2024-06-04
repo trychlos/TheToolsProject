@@ -10,6 +10,12 @@
 # @(-) --targetcmd=s           the command which will give the target path [${targetcmd}]
 # @(-) --[no]dirs              move directories and their content [${dirs}]
 # @(-) --keep=s                count of to-be-kept directories in the source [${keep}]
+# @(-) --[no]makeDirExist      whether to first create the destination top directory [${makeDirExist}]
+#
+# @(@) The default behavior of this verb is to first create the target directory in order to be able to move the files into.
+# @(@) When the move operation is handled by an external command (say robocopy for example), this later may or not be able to create itself its destination tree.
+# @(@) In this situation, it can be convenient to just skip the first step of the creation of the target directory in order to prevent some weird error messages
+# @(@) like, for example, the well-known "Insufficient system resources exist to complete the requested service" Win32 message...
 #
 # The Tools Project: a Tools System and Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
@@ -42,7 +48,8 @@ my $defaults = {
 	targetpath => '',
 	targetcmd => '',
 	dirs => 'no',
-	keep => '0'
+	keep => '0',
+	makeDirExist => 'yes'
 };
 
 my $opt_sourcepath = $defaults->{sourcepath};
@@ -51,6 +58,7 @@ my $opt_targetpath = $defaults->{targetpath};
 my $opt_targetcmd = $defaults->{targetcmd};
 my $opt_dirs = false;
 my $opt_keep = $defaults->{keep};
+my $opt_makeDirExist = true;
 
 # -------------------------------------------------------------------------------------------------
 # Move directories from source to target, only keeping some in source
@@ -97,16 +105,20 @@ sub doMoveDirs {
 			}
 			# and move the rest, making sure the initial path at least exists
 			if( scalar @list ){
-				TTP::makeDirExist( $opt_targetpath );
-				foreach my $it ( @list ){
-					my $source = _sourcePath( $it );
-					my $target = _targetPath( $it );
-					msgOut( " moving '$source' to '$target'" );
-					my $res = _moveDir( $source, $target );
-					if( $res ){
-						$count += 1;
-					} else {
-						msgErr( "error detected" );
+				TTP::makeDirExist( $opt_targetpath ) if $opt_makeDirExist;
+				if( TTP::errs()){
+					msgOut( "operation is cancelled due to previous errors" );
+				} else {
+					foreach my $it ( @list ){
+						my $source = _sourcePath( $it );
+						my $target = _targetPath( $it );
+						msgOut( " moving '$source' to '$target'" );
+						my $res = _moveDir( $source, $target );
+						if( $res ){
+							$count += 1;
+						} else {
+							msgErr( "error detected" );
+						}
 					}
 				}
 			}
@@ -140,7 +152,8 @@ sub _moveDir {
 	if( defined $cmdres->{command} ){
 		$result = $cmdres->{result};
 	} else {
-		$result = TTP::copyDir( $source, $target ) && removeTree( $source );
+		# result is true or false
+		$result = TTP::copyDir( $source, $target ) && TTP::removeTree( $source );
 	}
 	msgVerbose( "_moveDir() result=$result" );
 	return $result;
@@ -170,7 +183,8 @@ if( !GetOptions(
 	"targetpath=s"		=> \$opt_targetpath,
 	"targetcmd=s"		=> \$opt_targetcmd,
 	"dirs!"				=> \$opt_dirs,
-	"keep=s"			=> \$opt_keep )){
+	"keep=s"			=> \$opt_keep,
+	"makeDirExist!"		=> \$opt_makeDirExist )){
 
 		msgOut( "try '".$running->command()." ".$running->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
@@ -190,6 +204,7 @@ msgVerbose( "found targetpath='$opt_targetpath'" );
 msgVerbose( "found targetcmd='$opt_targetcmd'" );
 msgVerbose( "found dirs='".( $opt_dirs ? 'true':'false' )."'" );
 msgVerbose( "found keep='$opt_keep'" );
+msgVerbose( "found makeDirExist='".( $opt_makeDirExist ? 'true':'false' )."'" );
 
 # sourcecmd and sourcepath options are not compatible
 my $count = 0;
