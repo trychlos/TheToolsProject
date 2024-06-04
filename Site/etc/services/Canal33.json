@@ -42,7 +42,7 @@
 					"dbms.pl telemetry -nocolored -service <SERVICE> -dbsize -mqtt -http",
 					"dbms.pl telemetry -nocolored -service <SERVICE> -tabcount -mqtt -http",
 					"ttp.pl sizedir -nocolored -dirpath C:\\Users\\Public\\CANAL33_LOGS -mqtt -http",
-					"ttp.pl movedirs -nocolored -sourcecmd \"dbms.pl vars -nocolored -backupsRoot\" -targetcmd \"dbms.pl vars -nocolored -archivesRoot\" -dirs -keep 5",
+					"ttp.pl movedirs -nocolored -sourcecmd \"dbms.pl vars -nocolored -backupsRoot\" -targetcmd \"dbms.pl vars -nocolored -archivesRoot\" -dirs -keep 5 -nomakeDir",
 					"ttp.pl purgedirs -nocolored -dircmd \"dbms.pl vars -nocolored -archivesRoot\" -keep 10"
 				]
 			}
