@@ -84,9 +84,27 @@ sub doPurgeDirs {
 				# and remove the rest
 				foreach my $it ( @list ){
 					my $dir = File::Spec->catdir( $opt_dirpath, $it );
+					my $error;
 					msgOut( " removing '$dir'" );
-					remove_tree( $dir );
-					$count += 1;
+					my $deleted = remove_tree( $dir, {
+						verbose => true,
+						error => \$error
+					});
+					# see https://metacpan.org/pod/File::Path#ERROR-HANDLING
+					if( $error && @$error ){
+						for my $diag ( @$error ){
+							my ( $file, $message ) = %$diag;
+							if( $file eq '' ){
+								msgErr( $message );
+							} else {
+								msgErr( "$file: $message" );
+							}
+						}
+						$result = false;
+					} else {
+						msgVerbose( " deleted='$deleted'" );
+						$count += 1;
+					}
 				}
 			}
 		}
