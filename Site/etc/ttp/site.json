@@ -52,7 +52,7 @@
 		"copyDir": {
 			"byOS": {
 				"MSWin32": {
-					"command": "robocopy <SOURCE> <TARGET> /E /TS /FP /NP /BYTES"
+					"command": "robocopy <SOURCE> <TARGET> /E /TS /FP /NP /BYTES /R:1440"
 				}
 			}
 		},
@@ -62,7 +62,7 @@
 		"copyFile": {
 			"byOS": {
 				"MSWin32": {
-					"command": "robocopy <SOURCE> <TARGET> <FILE> /TS /FP /NP /BYTES"
+					"command": "robocopy <SOURCE> <TARGET> <FILE> /TS /FP /NP /BYTES /R:1440"
 				}
 			}
 		},
@@ -124,7 +124,7 @@
 		"moveDir": {
 			"byOS": {
 				"MSWin32": {
-					"command": "robocopy <SOURCE> <TARGET> /E /MOVE /TS /FP /NP /BYTES"
+					"command": "robocopy <SOURCE> <TARGET> /E /MOVE /TS /FP /NP /BYTES /R:1440"
 				}
 			}
 		},
