@@ -31,7 +31,7 @@
 						"label": "(PROD BACKUP) Surveillance, transfert et restauration des sauvegardes de la production",
 						"commands": [
 							"daemon.pl stop -nocolored -bname tom17-backup-monitor-daemon.json -ignore -wait",
-							"daemon.pl start -nocolored -bname tom17-backup-monitor-daemon.json -- -remote NS3232346"
+							"daemon.pl start -nocolored -bname tom17-backup-monitor-daemon.json -- -remote WS22PROD2"
 						]
 					}
 				]
@@ -53,7 +53,7 @@
 						"label": "(PROD BACKUP) Surveillance, transfert et restauration des sauvegardes de la production",
 						"commands": [
 							"daemon.pl stop -nocolored -bname tom21-backup-monitor-daemon.json -ignore -wait",
-							"daemon.pl start -nocolored -bname tom21-backup-monitor-daemon.json -- -remote NS3232346"
+							"daemon.pl start -nocolored -bname tom21-backup-monitor-daemon.json -- -remote WS22PROD2"
 						]
 					}
 				]
@@ -76,7 +76,7 @@
 						"commands": [
 							"ttp.pl purgedirs -nocolored -dircmd \"dbms.pl vars -nocolored -backupsRoot\" -keep 4",
 							"daemon.pl stop -nocolored -bname tom59-backup-monitor-daemon.json -ignore -wait",
-							"daemon.pl start -nocolored -bname tom59-backup-monitor-daemon.json -- -remote NS3232346"
+							"daemon.pl start -nocolored -bname tom59-backup-monitor-daemon.json -- -remote WS22PROD2"
 						]
 					}
 				]
