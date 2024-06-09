@@ -31,7 +31,7 @@
 			{
 				"label": "(Production Live) Sauvegarde quotidienne de la base de données Tom59",
 				"commands": [
-					"dbms.pl backup -nocolored -service <SERVICE> -full",
+					"dbms.pl backup -nocolored -service <SERVICE> -full -compress",
 					"dbms.pl telemetry -nocolored -service <SERVICE> -dbsize -mqtt -http",
 					"dbms.pl telemetry -nocolored -service <SERVICE> -tabcount -mqtt -http",
 					"ttp.pl movedirs -nocolored -sourcecmd \"dbms.pl vars -nocolored -backupsRoot\" -targetcmd \"dbms.pl vars -nocolored -archivesRoot\" -dirs -keep 5 -nomakeDir",
