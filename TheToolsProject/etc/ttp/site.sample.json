@@ -65,7 +65,7 @@
 			],
 			"withSms" : {
 				"enabled": true,
-				"command": "smtp.pl send -to forwarder@trychlos.org -subject \"SMSTO: +33607797792\" <OPTIONS>"
+				"command": "smtp.pl send -to mail2sms@trychlos.org -subject \"SMSTO: +33234567890\" <OPTIONS>"
 			}
 		},
 		"copyDir_comments": [
