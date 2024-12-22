@@ -39,6 +39,14 @@
 				]
 			}
 		],
+		"tom59.live.monday": [
+			{
+				"label": "(Production Live) Génération hebdomadaire du suivi pédagogique",
+				"commands": [
+					"[eval:File::Spec->catfile( TTP::var([ 'site', 'commandsDir' ]), 'tom59_suivi_pedago.pl' )] -service <SERVICE> -sql-intras [eval:File::Spec->catdir( TTP::nodeRoot(), 'Site', 'Sql', 'SuiviPedagoIntras_v1.sql' )]"
+				]
+			}
+		],
 		"tom59.live.every.2h": [
 			{
 				"label": "(Production Live) Sauvegarde différentielle sur la base de données Tom59",
