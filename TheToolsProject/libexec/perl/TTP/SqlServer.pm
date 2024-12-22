@@ -98,6 +98,7 @@ sub apiBackupDatabase {
 #   > command: the sql command
 #   > opts: an optional options hash which following keys:
 #     - multiple: whether several result sets are expected, defaulting to false
+#     - columns: the output filename for the columns array(s)
 # (O):
 # returns a hash with following keys:
 # - ok: true|false
@@ -112,8 +113,11 @@ sub apiExecSqlCommand {
 		msgVerbose( __PACKAGE__."::apiExecSqlCommand() entering with instance='".$dbms->instance()."' sql='$parms->{command}'" );
 		my $resultStyle = Win32::SqlServer::SINGLESET;
 		$resultStyle = Win32::SqlServer::MULTISET if $parms->{opts} && $parms->{opts}{multiple};
+		my $colinfoStyle = Win32::SqlServer::COLINFO_NONE;
+		$colinfoStyle = Win32::SqlServer::COLINFO_POS if $parms->{opts} && $parms->{opts}{columns};
 		my $opts = {
-			resultStyle => $resultStyle
+			resultStyle => $resultStyle,
+			colinfoStyle => $colinfoStyle
 		};
 		$result = _sqlExec( $dbms, $parms->{command}, $opts );
 	}
@@ -436,9 +440,9 @@ sub _sqlExec {
 		} else {
 			my $printStdout = true;
 			$printStdout = $opts->{printStdout} if exists $opts->{printStdout};
-			my $resultStyle = Win32::SqlServer::SINGLESET;
-			$resultStyle = $opts->{resultStyle} if exists $opts->{resultStyle};
-			my $merged = capture_merged { $res->{result} = $sqlsrv->sql( $sql, $resultStyle )};
+			my $resultStyle = $opts->{resultStyle} || Win32::SqlServer::SINGLESET;
+			my $colinfoStyle = $opts->{colinfoStyle} || Win32::SqlServer::COLINFO_NONE;
+			my $merged = capture_merged { $res->{result} = $sqlsrv->sql( $sql, $resultStyle, $colinfoStyle )};
 			my @merged = split( /[\r\n]/, $merged );
 			foreach my $line ( @merged ){
 				chomp( $line );

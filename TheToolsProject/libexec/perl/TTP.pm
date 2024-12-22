@@ -649,6 +649,43 @@ sub jsonAppend {
 }
 
 # -------------------------------------------------------------------------------------------------
+# Output an array of hashes as a json file
+# (I):
+# - an array of hashes, or an array of array of hashes if multiple result sets are provided
+# - the output file path
+# (O):
+# - json file written
+
+sub jsonOutput {
+	my ( $result, $json ) = @_;
+	my $ref = ref( $result );
+	# expects an array, else just give up
+	if( $ref ne 'ARRAY' ){
+		msgVerbose( __PACKAGE__."::jsonOutput() expected an array, but found '$ref', so just give up" );
+		return;
+	}
+	if( !scalar @{$result} ){
+		msgVerbose( __PACKAGE__."::jsonOutput() got an empty array, so just give up" );
+		return;
+	}
+	# expects an array of hashes
+	# if we got an array of arrays, then this is a multiple result sets and recurse
+	$ref = ref( $result->[0] );
+	if( $ref eq 'ARRAY' ){
+		foreach my $set ( @{$result} ){
+			jsonOutput( $set, $json );
+		}
+		return;
+	}
+	if( $ref ne 'HASH' ){
+		msgVerbose( __PACKAGE__."::jsonOutput() expected an array of hashes, but found an array of '$ref', so just give up" );
+		return;
+	}
+	# output as json
+	jsonAppend( $result, $json );
+}
+
+# -------------------------------------------------------------------------------------------------
 # Read a JSON file into a hash
 # Do not evaluate here, just read the file data
 # (I):

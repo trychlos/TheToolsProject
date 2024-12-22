@@ -31,6 +31,7 @@ use Data::Dumper;
 use File::Path;
 use File::Spec;
 use Module::Load;
+use Path::Tiny qw( path );
 use Time::Piece;
 
 use TTP;
@@ -74,6 +75,47 @@ sub backupDatabase {
 		msgVerbose( __PACKAGE__."::backupDatabase() returning status='true' output='$result->{output}'" );
 	}
 	return $result;
+}
+
+# -------------------------------------------------------------------------------------------------
+# Write an array of columns names for each provided result set
+# (I):
+# - an array of hashes, or an array of array of hashes if multiple result sets are provided
+# - the name of the file which will get the array(s) of columns names
+# (O):
+# - file written
+
+sub columnsOutput {
+	my ( $result, $fname ) = @_;
+	my $ref = ref( $result );
+	# expects an array, else just give up
+	if( $ref ne 'ARRAY' ){
+		msgVerbose( __PACKAGE__."::columnsOutput() expected an array, but found '$ref', so just give up" );
+		return;
+	}
+	if( !scalar @{$result} ){
+		msgVerbose( __PACKAGE__."::columnsOutput() got an empty array, so just give up" );
+		return;
+	}
+	# expects an array of hashes
+	# if we got an array of arrays, then this is a multiple result sets and recurse
+	$ref = ref( $result->[0] );
+	if( $ref eq 'ARRAY' ){
+		foreach my $set ( @{$result} ){
+			columnsOutput( $set, $fname );
+		}
+		return;
+	}
+	if( $ref ne 'HASH' ){
+		msgVerbose( __PACKAGE__."::columnsOutput() expected an array of hashes, but found an array of '$ref', so just give up" );
+		return;
+	}
+	# first get the array of columns names
+	my @fields = ();
+	foreach my $key ( keys %{@{$result}[0]} ){
+		push( @fields, $key );
+	}
+	path( $fname )->append_utf8( join( @fields, ',' ).EOL );
 }
 
 # ------------------------------------------------------------------------------------------------
@@ -140,6 +182,7 @@ sub databaseExists {
 # - the command string to be executed
 # - an optional options hash which may contain following keys:
 #   > tabular: whether to format data as tabular data, defaulting to true
+#   > json: an output file where data is to be saved
 #   > multiple: whether we expect several result sets, defaulting to false
 # (O):
 # returns a hash ref with following keys:
@@ -156,13 +199,31 @@ sub execSqlCommand {
 	my $result = $self->toPackage( 'apiExecSqlCommand', $parms );
 	#print Dumper( $parms );
 	#print Dumper( $result );
+	#print Dumper( $opts );
 	if( $result && $result->{ok} ){
+		# tabular output if asked for
 		my $tabular = true;
 		$tabular = $opts->{tabular} if exists $opts->{tabular};
 		if( $tabular ){
 			TTP::displayTabular( $result->{result} );
 		} else {
 			msgVerbose( "do not display tabular result as opts->{tabular}='false'" );
+		}
+		# json output if asked for
+		my $json = '';
+		$json = $opts->{json} if exists $opts->{json};
+		if( $json ){
+			TTP::jsonOutput( $result->{result}, $json );
+		} else {
+			msgVerbose( "do not save JSON result as opts->{json} is not set" );
+		}
+		# columns names output if asked for
+		my $columns = '';
+		$columns = $opts->{columns} if exists $opts->{columns};
+		if( $columns ){
+			columnsOutput( $result->{result}, $columns );
+		} else {
+			msgVerbose( "do not save columns names as opts->{columns} is not set" );
 		}
 	}
 	return $result;

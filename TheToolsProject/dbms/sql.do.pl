@@ -11,6 +11,8 @@
 # @(-) --command=<command>     the sql command as a string [${command}]
 # @(-) --[no]tabular           format the output as tabular data [${tabular}]
 # @(-) --[no]multiple          whether we expect several result sets [${multiple}]
+# @(-) --json=<json>           the json output file [${json}]
+# @(-) --columns=<columns>     an output file which will get the columns named [${columns}]
 #
 # @(@) The provided SQL script may or may not have a displayable result. Nonetheless, this verb will always display all the script output.
 # @(@) In a Windows command prompt, use Ctrl+Z to terminate the stdin stream (or use a HERE document).
@@ -51,7 +53,9 @@ my $defaults = {
 	script => '',
 	command => '',
 	tabular => 'no',
-	multiple => 'no'
+	multiple => 'no',
+	json => '',
+	columns => ''
 };
 
 my $opt_service = $defaults->{service};
@@ -62,6 +66,8 @@ my $opt_script = $defaults->{script};
 my $opt_command = $defaults->{command};
 my $opt_tabular = false;
 my $opt_multiple = false;
+my $opt_json = $defaults->{json};
+my $opt_columns = $defaults->{columns};
 
 # may be overriden by the service if specified
 my $jsonable = $ep->node();
@@ -76,14 +82,14 @@ my $dbms = undef;
 
 sub _result {
 	my ( $res ) = @_;
-	if( $res->{ok} && scalar @{$res->{result}} && !$opt_tabular ){
+	if( $res->{ok} && scalar @{$res->{result}} && !$opt_tabular && !$opt_json ){
 		my $isHash = false;
 		foreach my $it ( @{$res->{result}} ){
 			$isHash = true if ref( $it ) eq 'HASH';
 			print $it if !ref( $it );
 		}
 		if( $isHash ){
-			msgWarn( "result contains data, should have been displayed with '--tabular' option" );
+			msgWarn( "result contains data, should have been displayed with '--tabular' or saved with '--json' options" );
 		}
 	}
 	if( $res->{ok} ){
@@ -103,7 +109,7 @@ sub execSqlStdin {
 	}
 	chomp $command;
 	msgVerbose( "executing '$command' from stdin" );
-	_result( $dbms->execSqlCommand( $command, { tabular => $opt_tabular, multiple => $opt_multiple }));
+	_result( $dbms->execSqlCommand( $command, { tabular => $opt_tabular, json => $opt_json, columns => $opt_columns, multiple => $opt_multiple }));
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -113,7 +119,7 @@ sub execSqlScript {
 	msgVerbose( "executing from '$opt_script'" );
 	my $sql = path( $opt_script )->slurp_utf8;
 	msgVerbose( "sql='$sql'" );
-	_result( $dbms->execSqlCommand( $sql, { tabular => $opt_tabular, multiple => $opt_multiple }));
+	_result( $dbms->execSqlCommand( $sql, { tabular => $opt_tabular, json => $opt_json, columns => $opt_columns, multiple => $opt_multiple }));
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -121,7 +127,7 @@ sub execSqlScript {
 
 sub execSqlCommand {
 	msgVerbose( "executing command='$opt_command'" );
-	_result( $dbms->execSqlCommand( $opt_command, { tabular => $opt_tabular, multiple => $opt_multiple }));
+	_result( $dbms->execSqlCommand( $opt_command, { tabular => $opt_tabular, json => $opt_json, columns => $opt_columns, multiple => $opt_multiple }));
 }
 
 # =================================================================================================
@@ -143,7 +149,9 @@ if( !GetOptions(
 	"script=s"			=> \$opt_script,
 	"command=s"			=> \$opt_command,
 	"tabular!"			=> \$opt_tabular,
-	"multiple!"			=> \$opt_multiple )){
+	"multiple!"			=> \$opt_multiple,
+	"json=s"			=> \$opt_json,
+	"columns=s"			=> \$opt_columns )){
 
 		msgOut( "try '".$running->command()." ".$running->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
@@ -165,6 +173,8 @@ msgVerbose( "found script='$opt_script'" );
 msgVerbose( "found command='$opt_command'" );
 msgVerbose( "found tabular='".( $opt_tabular ? 'true':'false' )."'" );
 msgVerbose( "found multiple='".( $opt_multiple ? 'true':'false' )."'" );
+msgVerbose( "found json='$opt_json'" );
+msgVerbose( "found columns='$opt_columns'" );
 
 # must have either -service or -instance options
 # compute instance from service
