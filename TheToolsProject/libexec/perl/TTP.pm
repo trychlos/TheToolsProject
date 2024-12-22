@@ -30,6 +30,7 @@ use File::Copy::Recursive qw( dircopy );
 use File::Path qw( make_path remove_tree );
 use File::Spec;
 use JSON;
+use open qw( :std :encoding(UTF-8) );
 use Path::Tiny qw( path );
 use Scalar::Util qw( looks_like_number );
 use Test::Deep;
@@ -832,6 +833,13 @@ sub nodesDirs {
 
 # -------------------------------------------------------------------------------------------------
 # pad the provided string until the specified length with the provided char
+# (I):
+# - the to-be-padded string
+# - the target length
+# - the pad character
+# (O):
+# - returns the padded string
+
 sub pad {
 	my( $str, $length, $pad ) = @_;
 	while( length( $str ) < $length ){
