@@ -62,7 +62,7 @@ my $defaults = {
 my $opt_service = $defaults->{service};
 my $opt_script = $defaults->{script};
 
-my $mail_to = ''; #'cbonnier@inlingua-pro.com,fwanlin@inlingua-pro.com';
+my $mail_to = ""; #'cbonnier@inlingua-pro.com,fwanlin@inlingua-pro.com';
 my $mail_bcc = 'inlingua-adm@trychlos.org';
 
 my $columns = {

@@ -42,7 +42,7 @@ use TTP::Message qw( :all );
 # - returns true|false
 sub send {
 	my ( $msg ) = @_;
-	print Dumper( $msg );
+	#print Dumper( $msg );
 	my $res = false;
 	msgErr( "Mail::send() expect parms as a hashref, not found" ) if !$msg || ref( $msg ) ne 'HASH';
 	msgErr( "Mail::send() expect subject, not found" ) if $msg && ref( $msg ) eq 'HASH' && !$msg->{subject};
