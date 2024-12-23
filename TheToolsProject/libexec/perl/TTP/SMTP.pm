@@ -32,9 +32,9 @@ use TTP::Message qw( :all );
 #   > subject
 #   > text for text body, may be empty
 #   > html for HTML body, may be empty
-#   > to as a string or an array ref of target addresses
-#   > cc as a string or an array ref of CarbonCopy addresses
-#   > bcc as a string or an array ref of BlindCopy addresses
+#   > to as an array ref of target addresses
+#   > cc as an array ref of CarbonCopy addresses
+#   > bcc as an array ref of BlindCopy addresses
 #   > join as a string or an array ref of filenames to attach to the mail
 #   > from, defaulting to the smtp gateway 'mailfrom' default sender, which itself defaults to 'me@localhost'
 #   > debug: defaulting to the smtp gateway 'debug' property, which itself defaults to false
@@ -42,7 +42,7 @@ use TTP::Message qw( :all );
 # - returns true|false
 sub send {
 	my ( $msg ) = @_;
-	#print Dumper( $msg );
+	print Dumper( $msg );
 	my $res = false;
 	msgErr( "Mail::send() expect parms as a hashref, not found" ) if !$msg || ref( $msg ) ne 'HASH';
 	msgErr( "Mail::send() expect subject, not found" ) if $msg && ref( $msg ) eq 'HASH' && !$msg->{subject};
@@ -55,11 +55,17 @@ sub send {
 
 		my $email = Email::Stuffer->new({
 			from => $sender,
-			to => $msg->{to},
-			cc => $msg->{cc},
-			bcc => $msg->{bcc},
 			subject => $msg->{subject}
 		});
+		if( scalar( @{$msg->{to}} )){
+			$email->to( @{$msg->{to}} );
+		}
+		if( scalar( @{$msg->{cc}} )){
+			$email->cc( @{$msg->{cc}} );
+		}
+		if( scalar( @{$msg->{bcc}} )){
+			$email->bcc( @{$msg->{bcc}} );
+		}
 		if( scalar( @{$msg->{join}} )){
 			foreach my $join ( @{$msg->{join}} ){
 				$email->attach_file( $join );
@@ -98,7 +104,8 @@ sub send {
 		$email->transport( $transport );
 
 		try {
-			$res = $email->send();
+			# see https://github.com/rjbs/Email-Stuffer/issues/17
+			$res = $email->send({ to => [ @{$msg->{to}}, @{$msg->{bcc}} ] });
 		} catch {
 			msgWarn( "Mail::send() $!" );
 			print Dumper( $res );

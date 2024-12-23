@@ -148,7 +148,7 @@ msgVerbose( "found debug='".( defined $opt_debug ? ( $opt_debug ? 'true':'false'
 # all data are mandatory, and we must provide some content, either text or html
 msgErr( "subject is empty, but shouldn't" ) if !$opt_subject;
 msgErr( "content is empty, but shouldn't" ) if !$opt_text && !$opt_textfname && !$opt_html && !$opt_htmlfname;
-msgErr( "target is empty, but shouldn't" ) if !$opt_to;
+msgErr( "addresses target is empty, but shouldn't" ) if !$opt_to && !$opt_cc && !$opt_bcc;
 
 # text and textfname are mutually exclusive, so are html and htmlfname
 msgErr( "text body can only be provided one way, but both '--text' and '--textfname' are specified" ) if $opt_text && $opt_textfname;
