@@ -62,105 +62,379 @@ my $defaults = {
 my $opt_service = $defaults->{service};
 my $opt_script = $defaults->{script};
 
-#my $mail_to = 'cbonnier@inlingua-pro.com,fwanlin@inlingua-pro.com';
-#my $mail_bcc = 'inlingua-adm@trychlos.org';
-my $mail_to = 'inlingua-adm@trychlos.org,p.wieser@trychlos.org';
-my $mail_bcc = 'pierre@wieser.fr';
+my $mail_to = ''; #'cbonnier@inlingua-pro.com,fwanlin@inlingua-pro.com';
+my $mail_bcc = 'inlingua-adm@trychlos.org';
 
 my $columns = {
 	Intras => [
-		'Source',
-		'ModuleID',
-		'ModuleLabel',
-		'FormuleID',
-		'FormuleLabel',
-		'ModuleDateFrom',
-		'ModuleDateTo',
-		'ModuleNbStagiaires',
-		'ModuleDureeMinutes',
-		'ModuleDureeHeures',
-		'ModuleSoldeToPlann',
-		'CentreID',
-		'CentreLabel',
-		'RefPedagoID',
-		'RefPedagoLabel',
-		'LangueID',
-		'LangueLabel',
-		'ConventionLabel',
-		'CompanyID',
-		'CompanyName',
-		'ConventionDateFromMin',
-		'ConventionDateToMax',
-		'SeancesPremierCours',
-		'SeancesDernierCours',
-		'NotesPedagoDue',
-		'NotesPedagoFound',
-		'NotesPedagoManquantes',
-		'SeancesPassees',
-		'SeancesSignFormateurManquantes',
-		'EvaluationPlanifiee',
-		'EvaluationRenseignee',
-		'ModuleStagiaireID',
-		'ModuleStagiaireLabel',
-		'PersonID',
-		'PersonLabel',
-		'PersonCivility',
-		'PersonEmail',
-		'StagiaireSignManquantes',
-		'StagiaireAbsencesMinutes',
-		'StagiaireAbsencesPercentMinutes',
-		'StagiaireAbsencesCount',
-		'StagiaireAbsencesPercentCount',
-		'QuestionnaireDebut',
-		'QuestionnaireFin',
-		'ReprendreFormation'
+		{
+			name => 'Source',
+			width => 9
+		},
+		{
+			name => 'ModuleID',
+			width => 10
+		},
+		{
+			name => 'ModuleLabel',
+			width => 66
+		},
+		{
+			name => 'FormuleID',
+			width => 11
+		},
+		{
+			name => 'FormuleLabel',
+			width => 14
+		},
+		{
+			name => 'ModuleDateFrom',
+			width => 16
+		},
+		{
+			name => 'ModuleDateTo',
+			width => 16
+		},
+		{
+			name => 'ModuleNbStagiaires',
+			width => 19
+		},
+		{
+			name => 'ModuleDureeMinutes',
+			width => 19
+		},
+		{
+			name => 'ModuleDureeHeures',
+			width => 19,
+			format => {
+				align => 'right'
+			}
+		},
+		{
+			name => 'ModuleSoldeToPlann',
+			width => 19
+		},
+		{
+			name => 'CentreID',
+			width => 10
+		},
+		{
+			name => 'CentreLabel',
+			width => 25
+		},
+		{
+			name => 'RefPedagoID',
+			width => 12
+		},
+		{
+			name => 'RefPedagoLabel',
+			width => 32
+		},
+		{
+			name => 'LangueID',
+			width => 10
+		},
+		{
+			name => 'LangueLabel',
+			width => 14
+		},
+		{
+			name => 'ConventionLabel',
+			width => 80
+		},
+		{
+			name => 'CompanyID',
+			width => 12
+		},
+		{
+			name => 'CompanyName',
+			width => 66
+		},
+		{
+			name => 'ConventionDateFromMin',
+			width => 19
+		},
+		{
+			name => 'ConventionDateToMax',
+			width => 19
+		},
+		{
+			name => 'SeancesPremierCours',
+			width => 19
+		},
+		{
+			name => 'SeancesDernierCours',
+			width => 19
+		},
+		{
+			name => 'NotesPedagoDue',
+			width => 21
+		},
+		{
+			name => 'NotesPedagoFound',
+			width => 21
+		},
+		{
+			name => 'NotesPedagoManquantes',
+			width => 21
+		},
+		{
+			name => 'SeancesPassees',
+			width => 21
+		},
+		{
+			name => 'SeancesSignFormateurManquantes',
+			width => 28
+		},
+		{
+			name => 'EvaluationPlanifiee',
+			width => 19
+		},
+		{
+			name => 'EvaluationRenseignee',
+			width => 19
+		},
+		{
+			name => 'ModuleStagiaireID',
+			width => 16
+		},
+		{
+			name => 'ModuleStagiaireLabel',
+			width => 80
+		},
+		{
+			name => 'PersonID',
+			width => 11
+		},
+		{
+			name => 'PersonLabel',
+			width => 40
+		},
+		{
+			name => 'PersonCivility',
+			width => 13
+		},
+		{
+			name => 'PersonEmail',
+			width => 40
+		},
+		{
+			name => 'StagiaireSignManquantes',
+			width => 25
+		},
+		{
+			name => 'StagiaireAbsencesMinutes',
+			width => 25
+		},
+		{
+			name => 'StagiaireAbsencesPercentMinutes',
+			width => 25
+		},
+		{
+			name => 'StagiaireAbsencesCount',
+			width => 25
+		},
+		{
+			name => 'StagiaireAbsencesPercentCount',
+			width => 25
+		},
+		{
+			name => 'QuestionnaireDebut',
+			width => 17
+		},
+		{
+			name => 'QuestionnaireFin',
+			width => 17
+		},
+		{
+			name => 'ReprendreFormation',
+			width => 17
+		}
 	],
 	Inters => [
-		'Source',
-		'CoursID',
-		'CoursLabel',
-		'FormuleID',
-		'FormuleLabel',
-		'CoursDateFrom',
-		'CoursDateTo',
-		'CoursNbStagiaires',
-		'CoursDureeMinutes',
-		'CoursDureeHeures',
-		'CoursSoldeToPlann',
-		'CentreID',
-		'CentreLabel',
-		'RefPedagoID',
-		'RefPedagoLabel',
-		'LangueID',
-		'LangueLabel',		
-		'ConventionLabel',
-		'CompanyID',
-		'CompanyName',
-		'ConventionDateFromMin',
-		'ConventionDateToMax',
-		'SeancesPremierCours',
-		'SeancesDernierCours',
-		'NotesPedagoDue',
-		'NotesPedagoFound',
-		'NotesPedagoManquantes',
-		'SeancesPassees',
-		'SeanceSignFormateurManquantes',
-		'EvaluationPlanifiee',
-		'EvaluationRenseignee',
-		'CoursStagiaireID',
-		'CoursStagiaireLabel',
-		'PersonID',
-		'PersonLabel',
-		'PersonCivility',
-		'PersonEmail',
-		'StagiaireSignManquantes',
-		'StagiaireAbsencesMinutes',
-		'StagiaireAbsencesPercentMinutes',
-		'StagiaireAbsencesCount',
-		'StagiaireAbsencesPercentCount',
-		'QuestionnaireDebut',
-		'QuestionnaireFin',
-		'ReprendreFormation'
+		{
+			name => 'Source',
+			width => 9
+		},
+		{
+			name => 'CoursID',
+			width => 10
+		},
+		{
+			name => 'CoursLabel',
+			width => 66
+		},
+		{
+			name => 'FormuleID',
+			width => 11
+		},
+		{
+			name => 'FormuleLabel',
+			width => 14
+		},
+		{
+			name => 'CoursDateFrom',
+			width => 16
+		},
+		{
+			name => 'CoursDateTo',
+			width => 16
+		},
+		{
+			name => 'CoursNbStagiaires',
+			width => 19
+		},
+		{
+			name => 'CoursDureeMinutes',
+			width => 19
+		},
+		{
+			name => 'CoursDureeHeures',
+			width => 19,
+			format => {
+				align => 'right'
+			}
+		},
+		{
+			name => 'CoursSoldeToPlann',
+			width => 19
+		},
+		{
+			name => 'CentreID',
+			width => 10
+		},
+		{
+			name => 'CentreLabel',
+			width => 25
+		},
+		{
+			name => 'RefPedagoID',
+			width => 12
+		},
+		{
+			name => 'RefPedagoLabel',
+			width => 32
+		},
+		{
+			name => 'LangueID',
+			width => 10
+		},
+		{
+			name => 'LangueLabel',
+			width => 14
+		},
+		{
+			name => 'ConventionLabel',
+			width => 80
+		},
+		{
+			name => 'CompanyID',
+			width => 12
+		},
+		{
+			name => 'CompanyName',
+			width => 66
+		},
+		{
+			name => 'ConventionDateFromMin',
+			width => 19
+		},
+		{
+			name => 'ConventionDateToMax',
+			width => 19
+		},
+		{
+			name => 'SeancesPremierCours',
+			width => 19
+		},
+		{
+			name => 'SeancesDernierCours',
+			width => 19
+		},
+		{
+			name => 'NotesPedagoDue',
+			width => 21
+		},
+		{
+			name => 'NotesPedagoFound',
+			width => 21
+		},
+		{
+			name => 'NotesPedagoManquantes',
+			width => 21
+		},
+		{
+			name => 'SeancesPassees',
+			width => 21
+		},
+		{
+			name => 'SeanceSignFormateurManquantes',
+			width => 28
+		},
+		{
+			name => 'EvaluationPlanifiee',
+			width => 19
+		},
+		{
+			name => 'EvaluationRenseignee',
+			width => 19
+		},
+		{
+			name => 'CoursStagiaireID',
+			width => 16
+		},
+		{
+			name => 'CoursStagiaireLabel',
+			width => 80
+		},
+		{
+			name => 'PersonID',
+			width => 11
+		},
+		{
+			name => 'PersonLabel',
+			width => 40
+		},
+		{
+			name => 'PersonCivility',
+			width => 13
+		},
+		{
+			name => 'PersonEmail',
+			width => 40
+		},
+		{
+			name => 'StagiaireSignManquantes',
+			width => 25
+		},
+		{
+			name => 'StagiaireAbsencesMinutes',
+			width => 25
+		},
+		{
+			name => 'StagiaireAbsencesPercentMinutes',
+			width => 25
+		},
+		{
+			name => 'StagiaireAbsencesCount',
+			width => 25
+		},
+		{
+			name => 'StagiaireAbsencesPercentCount',
+			width => 25
+		},
+		{
+			name => 'QuestionnaireDebut',
+			width => 17
+		},
+		{
+			name => 'QuestionnaireFin',
+			width => 17
+		},
+		{
+			name => 'ReprendreFormation',
+			width => 17
+		}
 	]
 };
 
@@ -178,6 +452,8 @@ my $sheets = {
 		header => 'Inters'
 	}
 };
+
+my $formats = {};
 
 # -------------------------------------------------------------------------------------------------
 # Execute the provided script
@@ -203,6 +479,17 @@ sub doWork {
 		my $xlsx = File::Spec->catfile( TTP::logsCommands(), $fbase."_$stamp.xlsx" );
 		msgVerbose( "creating $xlsx workbook" );
 		my $workbook = Excel::Writer::XLSX->new( $xlsx );
+		# define the formats
+		$formats->{headers} = $workbook->add_format(
+			size => 9.5,
+			bold => true,
+			bg_color => '#2a6099',
+			color => 'white',
+			valign => 'vcenter'
+		);
+		$formats->{rows} = $workbook->add_format(
+			valign => 'vcenter'
+		);
 		# split the data into the tree output part
 		# simultaneously writing in the workbook
 		my $input = TTP::jsonRead( $json );
@@ -221,6 +508,8 @@ sub doWork {
 			msgVerbose(( $sheets->{$sheet}{name} ).": ".( $sheets->{$sheet}{count}-1 ));
 		}
 		#print Dumper( $sheets );
+		# define and apply formats
+		setupAtEnd( $workbook );
 		$workbook->close();
 		# send the workbook by email
 		my $subject = $fbase;
@@ -247,16 +536,43 @@ EOT
 
 sub writeInSheet {
 	my ( $book, $name, $row ) = @_;
+	# create the sheet and write the first line if not already done
+	# set the columns width
 	if( !$sheets->{$name}{sheet} ){
 		$sheets->{$name}{sheet} = $book->add_worksheet( $sheets->{$name}{name} );
-		$sheets->{$name}{sheet}->write_row( 0, 0, $columns->{$sheets->{$name}{header}} );
+		# set columns names and width on first row
+		for( my $i=0 ; $i<scalar( @{$columns->{$sheets->{$name}{header}}} ) ; ++$i ){
+			my $col = $columns->{$sheets->{$name}{header}}->[$i];
+			$sheets->{$name}{sheet}->write_string( 0, $i, $col->{name}, $formats->{headers} );
+			my $col_format = undef;
+			if( $col->{format} ){
+				my @list = %{$col->{format}};
+				$col_format = $book->add_format( @list );
+			}
+			$sheets->{$name}{sheet}->set_column( $i, $i, $col->{width}, $col_format );
+		}
+		$sheets->{$name}{sheet}->set_row( 0, 22 );
+		$sheets->{$name}{sheet}->freeze_panes( 1, 0 );
 		$sheets->{$name}{count} = 1;
 	}
+	# convert the row hash to an array ref in the right order
 	my $array_ref = [];
-	foreach my $col ( @{$columns->{$sheets->{$name}{header}}} ){
-		push( @{$array_ref}, $row->{$col} || '' );
+	for( my $i=0 ; $i<scalar( @{$columns->{$sheets->{$name}{header}}} ) ; ++$i ){
+		my $col = @{$columns->{$sheets->{$name}{header}}}[$i];
+		push( @{$array_ref}, $row->{$col->{name}} || '' );
 	}
-	$sheets->{$name}{sheet}->write_row( $sheets->{$name}{count}++, 0, $array_ref );
+	$sheets->{$name}{sheet}->write_row( $sheets->{$name}{count}, 0, $array_ref, $formats->{rows} );
+	$sheets->{$name}{sheet}->set_row( $sheets->{$name}{count}, 18 );
+	$sheets->{$name}{count} += 1;
+}
+
+sub setupAtEnd {
+	my ( $book ) = @_;
+	foreach my $sheet ( keys %{$sheets} ){
+		# set autofilter
+		my $rows = $sheets->{$sheet}{count};
+		$sheets->{$sheet}{sheet}->autofilter( 0, 0, $rows, scalar( @{$columns->{$sheets->{$sheet}{header}}} )-1 );
+	}
 }
 
 # =================================================================================================
