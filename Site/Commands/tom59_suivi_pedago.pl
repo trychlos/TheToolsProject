@@ -8,9 +8,7 @@
 # @(-) --[no]dummy             dummy run (ignored here) [${dummy}]
 # @(-) --[no]verbose           run verbosely [${verbose}]
 # @(-) --service=<service>     the DBMS service name [${service}]
-# @(-) --database=<database>   the name of the target database [${database}]
 # @(-) --script=<script>       the path to the SQL script to be executed [${script}]
-# @(-) --output=<output>       the directory where to store the temp files
 #
 # @(@) This script is mostly written like a TTP verb but is not.
 # @(@) This is an example of how to take advantage of TTP to write your own (rather pretty and efficient) scripts.
@@ -34,8 +32,14 @@
 # see <http://www.gnu.org/licenses/>.
 
 use Data::Dumper;
+use Excel::Writer::XLSX;
+use File::Basename;
+use File::Spec;
 use Getopt::Long;
 use Path::Tiny;
+use POSIX;
+
+use utf8;
 
 use TTP;
 use TTP::Constants qw( :all );
@@ -52,83 +56,207 @@ my $defaults = {
 	dummy => 'no',
 	verbose => 'no',
 	service => '',
-	database => '',
-	script => '',
-	output => ''
+	script => ''
 };
 
 my $opt_service = $defaults->{service};
-my $opt_database = $defaults->{database};
 my $opt_script = $defaults->{script};
-my $opt_output = $defaults->{output};
+
+#my $mail_to = 'cbonnier@inlingua-pro.com,fwanlin@inlingua-pro.com';
+#my $mail_bcc = 'inlingua-adm@trychlos.org';
+my $mail_to = 'inlingua-adm@trychlos.org,p.wieser@trychlos.org';
+my $mail_bcc = 'pierre@wieser.fr';
+
+my $columns = {
+	Intras => [
+		'Source',
+		'ModuleID',
+		'ModuleLabel',
+		'FormuleID',
+		'FormuleLabel',
+		'ModuleDateFrom',
+		'ModuleDateTo',
+		'ModuleNbStagiaires',
+		'ModuleDureeMinutes',
+		'ModuleDureeHeures',
+		'ModuleSoldeToPlann',
+		'CentreID',
+		'CentreLabel',
+		'RefPedagoID',
+		'RefPedagoLabel',
+		'LangueID',
+		'LangueLabel',
+		'ConventionLabel',
+		'CompanyID',
+		'CompanyName',
+		'ConventionDateFromMin',
+		'ConventionDateToMax',
+		'SeancesPremierCours',
+		'SeancesDernierCours',
+		'NotesPedagoDue',
+		'NotesPedagoFound',
+		'NotesPedagoManquantes',
+		'SeancesPassees',
+		'SeancesSignFormateurManquantes',
+		'EvaluationPlanifiee',
+		'EvaluationRenseignee',
+		'ModuleStagiaireID',
+		'ModuleStagiaireLabel',
+		'PersonID',
+		'PersonLabel',
+		'PersonCivility',
+		'PersonEmail',
+		'StagiaireSignManquantes',
+		'StagiaireAbsencesMinutes',
+		'StagiaireAbsencesPercentMinutes',
+		'StagiaireAbsencesCount',
+		'StagiaireAbsencesPercentCount',
+		'QuestionnaireDebut',
+		'QuestionnaireFin',
+		'ReprendreFormation'
+	],
+	Inters => [
+		'Source',
+		'CoursID',
+		'CoursLabel',
+		'FormuleID',
+		'FormuleLabel',
+		'CoursDateFrom',
+		'CoursDateTo',
+		'CoursNbStagiaires',
+		'CoursDureeMinutes',
+		'CoursDureeHeures',
+		'CoursSoldeToPlann',
+		'CentreID',
+		'CentreLabel',
+		'RefPedagoID',
+		'RefPedagoLabel',
+		'LangueID',
+		'LangueLabel',		
+		'ConventionLabel',
+		'CompanyID',
+		'CompanyName',
+		'ConventionDateFromMin',
+		'ConventionDateToMax',
+		'SeancesPremierCours',
+		'SeancesDernierCours',
+		'NotesPedagoDue',
+		'NotesPedagoFound',
+		'NotesPedagoManquantes',
+		'SeancesPassees',
+		'SeanceSignFormateurManquantes',
+		'EvaluationPlanifiee',
+		'EvaluationRenseignee',
+		'CoursStagiaireID',
+		'CoursStagiaireLabel',
+		'PersonID',
+		'PersonLabel',
+		'PersonCivility',
+		'PersonEmail',
+		'StagiaireSignManquantes',
+		'StagiaireAbsencesMinutes',
+		'StagiaireAbsencesPercentMinutes',
+		'StagiaireAbsencesCount',
+		'StagiaireAbsencesPercentCount',
+		'QuestionnaireDebut',
+		'QuestionnaireFin',
+		'ReprendreFormation'
+	]
+};
+
+my $sheets = {
+	intras_solo => {
+		name => 'Intras SOLO',
+		header => 'Intras'
+	},
+	intras_others => {
+		name => 'Intras Others',
+		header => 'Intras'
+	},
+	inters => {
+		name => 'Inters',
+		header => 'Inters'
+	}
+};
 
 # -------------------------------------------------------------------------------------------------
-# print a funny workload summary
+# Execute the provided script
+# Split the 'Intras' result set (if found)
+# Create a workbook with up to three sheets
+# and sends it
 
 sub doWork {
-	my $fout = TTP::getTempFileName();
-	my $command = "dbms.pl sql -script $opt_script -nocolored";
-	# get the CMD.EXE results from the environment
-	my @results = ();
-	my $maxLength = 0;
-	for( my $i=1 ; $i<=$opt_count ; ++$i ){
-		my $command = $ENV{$opt_commands.'['.$i.']'};
-		msgVerbose( "pushing i=$i command='$command'" );
-		push( @results, {
-			command => $command,
-			start => $ENV{$opt_start.'['.$i.']'},
-			end => $ENV{$opt_end.'['.$i.']'},
-			rc => $ENV{$opt_rc.'['.$i.']'}
-		});
-		if( length $command > $maxLength ){
-			$maxLength = length $command;
+	# execute the sql script
+	# which provides two datasets - but as they are executed as SINGLESET, we get them merged
+	my $json = TTP::getTempFileName();
+	my $columns = TTP::getTempFileName();
+	my $command = "dbms.pl sql -service $opt_service -script $opt_script -nocolored -json $json -columns $columns";
+	my $out = `$command`;
+	my $rc = $?;
+	print "$out";
+	msgVerbose( "rc=$rc" );
+	if( $rc == 0 ){
+		# compute the output filename
+		my $fbase = basename( $opt_script );
+		$fbase =~ s/\.[^.]+$//;
+		my $stamp = strftime( '%Y%m%d', localtime time );
+		my $xlsx = File::Spec->catfile( TTP::logsCommands(), $fbase."_$stamp.xlsx" );
+		msgVerbose( "creating $xlsx workbook" );
+		my $workbook = Excel::Writer::XLSX->new( $xlsx );
+		# split the data into the tree output part
+		# simultaneously writing in the workbook
+		my $input = TTP::jsonRead( $json );
+		foreach my $row ( @{$input} ){
+			if( $row->{Source} eq 'Intras' && $row->{FormuleID} == 1 ){
+				writeInSheet( $workbook, 'intras_solo', $row );
+			} elsif( $row->{Source} eq 'Intras' && $row->{FormuleID} != 1 ){
+				writeInSheet( $workbook, 'intras_others', $row );
+			} elsif( $row->{Source} eq 'Inters' ){
+				writeInSheet( $workbook, 'inters', $row );
+			} else {
+				msgWarn( "unknwon source: '$row->{Source}'" );
+			}
 		}
-	}
-	if( $opt_count == 0 ){
-		$maxLength = 65; # arbitrary value long enough to get a pretty display (and the totLength be even)
-	}
-	# display the summary
-	my $totLength = $maxLength + 63;
-	my $stdout = "";
-	$stdout .= TTP::pad( "+", $totLength-1, '=' )."+".EOL;
-	$stdout .= TTP::pad( "| WORKLOAD SUMMARY for <$opt_workload>", $totLength-1, ' ' )."|".EOL;
-	$stdout .= TTP::pad( "|", $maxLength+8, ' ' ).TTP::pad( "started at", 25, ' ' ).TTP::pad( "ended at", 25, ' ' )." RC |".EOL;
-	$stdout .= TTP::pad( "+", $maxLength+6, '-' ).TTP::pad( "+", 25, '-' ).TTP::pad( "+", 25, '-' )."+-----+".EOL;
-	# display the result or an empty output
-	if( $opt_count > 0 ){
-		my $i = 0;
-		foreach my $it ( @results ){
-			$i += 1;
-			msgVerbose( "printing i=$i execution report" );
-			$stdout .= TTP::pad( "| $it->{command}", $maxLength+6, ' ' ).TTP::pad( "| $it->{start}", 25, ' ' ).TTP::pad( "| $it->{end}", 25, ' ' ).sprintf( "| %3d |", $it->{rc} ).EOL;
+		foreach my $sheet ( keys %{$sheets} ){
+			msgVerbose(( $sheets->{$sheet}{name} ).": ".( $sheets->{$sheet}{count}-1 ));
 		}
-	} else {
-		#print TTP::pad( "|", $totLength-1, ' ' )."|".EOL;
-		$stdout .= TTP::pad( "|", $totLength/2 - 6, ' ' ).TTP::pad( "EMPTY OUTPUT", $totLength/2 + 5, ' ' )."|".EOL;
-		#print TTP::pad( "|", $totLength-1, ' ' )."|".EOL;
+		#print Dumper( $sheets );
+		$workbook->close();
+		# send the workbook by email
+		my $subject = $fbase;
+		$subject =~ s/_/ /g;
+		$stamp = strftime( '%d/%m/%Y', localtime time );
+		$subject .= ' - '.$stamp;
+		my $html = <<EOT;
+<p>Bonjour,</p>
+<p>Vous trouverez ci-joint le rapport de suivi pédagogique en date du $stamp.</p>
+<p>Je vous en souhaite bonne réception.</p>
+<p>Cordialement,</p>
+<p><a href='mailto:inlingua-adm@trychos.org'>Tom59</a></p>
+EOT
+		my $htmlfname = TTP::getTempFileName();
+		path( $htmlfname )->spew_utf8( $html );
+		$command = "smtp.pl send -subject '$subject' -htmlfname $htmlfname -to $mail_to -bcc $mail_bcc -join $xlsx";
+		msgVerbose( $command );
+		my $out = `$command`;
+		my $rc = $?;
+		print "$out";
+		msgVerbose( "rc=$rc" );
 	}
-	$stdout .= "+".TTP::pad( "", $totLength-2, '=' )."+".EOL;
-	# both send the summary to the log (here to stdout) and execute the provided command
-	# must manage SUBJECT and OPTIONS macros
-	my $command = $ep->var([ 'site', 'workloadSummary', 'command' ]);
-	if( $command ){
-		my $host = $ep->node()->name();
-		my $textfname = TTP::getTempFileName();
-		my $fh = path( $textfname );
-		$fh->spew( $stdout );
-		my $subject = sprintf( "[%s\@%s] workload summary", $opt_workload, $host );
-		msgOut( "subject='$subject'" );
-		$command =~ s/<SUBJECT>/$subject/;
-		$command =~ s/<OPTIONS>/-textfname $textfname/;
-		my $dummy = $opt_dummy ? "-dummy" : "";
-		my $verbose = $opt_verbose ? "-verbose" : "";
-		# this script is not interactive but written to be executed as part of a batch - there is so no reason to log stdout of the command because all msgXxxx() of the command are already logged
-		`$command -nocolored $dummy $verbose`;
-		msgVerbose( "printSummary() got rc=$?" );
-		$res = ( $? == 0 );
+}
+
+sub writeInSheet {
+	my ( $book, $name, $row ) = @_;
+	if( !$sheets->{$name}{sheet} ){
+		$sheets->{$name}{sheet} = $book->add_worksheet( $sheets->{$name}{name} );
+		$sheets->{$name}{sheet}->write_row( 0, 0, $columns->{$sheets->{$name}{header}} );
+		$sheets->{$name}{count} = 1;
 	}
-	# and to stdout (at last)
-	print $stdout;
+	my $array_ref = [];
+	foreach my $col ( @{$columns->{$sheets->{$name}{header}}} ){
+		push( @{$array_ref}, $row->{$col} || '' );
+	}
+	$sheets->{$name}{sheet}->write_row( $sheets->{$name}{count}++, 0, $array_ref );
 }
 
 # =================================================================================================
@@ -141,9 +269,7 @@ if( !GetOptions(
 	"dummy!"			=> \$ep->{run}{dummy},
 	"verbose!"			=> \$ep->{run}{verbose},
 	"service=s"			=> \$opt_service,
-	"database=s"		=> \$opt_database,
-	"script=s"			=> \$opt_script,
-	"output=s"			=> \$opt_output	)){
+	"script=s"			=> \$opt_script	)){
 
 		msgOut( "try '".$extern->command()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
@@ -159,9 +285,7 @@ msgVerbose( "found colored='".( $extern->colored() ? 'true':'false' )."'" );
 msgVerbose( "found dummy='".( $extern->dummy() ? 'true':'false' )."'" );
 msgVerbose( "found verbose='".( $extern->verbose() ? 'true':'false' )."'" );
 msgVerbose( "found service='$opt_service'" );
-msgVerbose( "found database='$opt_database'" );
 msgVerbose( "found script='$opt_script'" );
-msgVerbose( "found output='$opt_output'" );
 
 if( !TTP::errs()){
 	doWork();

@@ -31,6 +31,19 @@
 		, CONVENTIONS.CompanyName
 		, CONVENTIONS.ConventionDateFromMin
 		, CONVENTIONS.ConventionDateToMax
+		-- Date du premier cours + si possible si cette date a été changée depuis la dernière extraction
+		, SEANCES.PremierCours as SeancesPremierCours
+		-- ?? Date du dernier cours + si possible si cette date a été changée depuis la dernière extraction
+		-- Date du dernier cours planifié + si possible si cette date a été changée depuis la dernière extraction
+		, SEANCES.DernierCours as SeanceDernierCours
+		-- Note pédagogique manquante : non  / oui (avec date si oui ) -> SeancesIntraVars.NoShow ?
+		, NOTES_PEDAGO_DUE.NotesPedagoDue
+		, NOTES_PEDAGO_FOUND.NotesPedagoFound
+		, ( NOTES_PEDAGO_DUE.NotesPedagoDue - NOTES_PEDAGO_FOUND.NotesPedagoFound ) as NotesPedagoManquantes
+		-- les séances
+		, ISNULL( SEANCES_PASSEES.SeancesCount, 0 ) as SeancesPassees
+		-- Signature formateur manquante : non/ oui (avec date si oui)
+		, ISNULL( SIGN_FORMATEUR_MANQUANTES.SignFormateurManquantes, 0 ) as SeanceSignFormateurManquantes
 		-- stagiaires
 		, MODULES_STAGIAIRES.ID as ModuleStagiaireID
 		, MODULES_STAGIAIRES.label as ModuleStagiaireLabel
@@ -39,20 +52,8 @@
 		, PERSONS.Civility as PersonCivility
 		, PERSONS.Email as PersonEmail
 		-- TODO
-		-- Date du premier cours + si possible si cette date a été changée depuis la dernière extraction
-		, SEANCES.PremierCours as SeancesPremierCours
-		-- ?? Date du dernier cours + si possible si cette date a été changée depuis la dernière extraction
-		-- Date du dernier cours planifié + si possible si cette date a été changée depuis la dernière extraction
-		, SEANCES.DernierCours as SeanceDernierCours
-		-- ?? Note pédagogique manquante : non  / oui (avec date si oui ) -> SeancesIntraVars.NoShow ?
-		, NOTES_PEDAGO_DUE.NotesPedagoDue
-		, NOTES_PEDAGO_FOUND.NotesPedagoFound
-		, ( NOTES_PEDAGO_DUE.NotesPedagoDue - NOTES_PEDAGO_FOUND.NotesPedagoFound ) as NotesPedagoManquantes
 		-- Signature stagiaire manquante : non / oui (avec date si oui )
-		, ISNULL( SEANCES_PASSEES.SeancesCount, 0 ) as SeancesPassees
 		, ISNULL( SIGN_STAG_MANQUANTES.SignStagManquantes, 0 ) as SeanceSignStagiaireManquantes
-		-- Signature formateur manquante : non/ oui (avec date si oui)
-		, ISNULL( SIGN_FORMATEUR_MANQUANTES.SignFormateurManquantes, 0 ) as SeanceSignFormateurManquantes
 		-- Absence stagiaire : pourcentage et nombre d'heures d'absence
 		, ISNULL( ABSENCES.AbsencesMinutes, 0 ) as StagiaireAbsencesTotalMinutes
 		, ISNULL( ABSENCES.AbsencesCount, 0 ) as StagiaireAbsencesCount
@@ -158,3 +159,4 @@
 
 	--order by ModuleNbStagiaires desc
 	-- where MODULES.Label like '%sethness%'
+	--order by FormuleID asc, MODULES.ID asc, ModuleStagiaireID

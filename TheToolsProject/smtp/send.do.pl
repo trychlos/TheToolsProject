@@ -10,6 +10,9 @@
 # @(-) --html=<html>           the HTML body [${html}]
 # @(-) --htmlfname=<filename>  the filename which contains the HTML body [${htmlfname}]
 # @(-) --to=<to>               a comma-separated list of target email addresses [${to}]
+# @(-) --cc=<cc>               a comma-separated list of target email addresses to copy to [${cc}]
+# @(-) --bcc=<bcc>             a comma-separated list of target email addresses to bind copy to [${bcc}]
+# @(-) --join=<filename>       a comma-separated list of filenames to attach to email [${join}]
 # @(-) --[no]debug             debug the SMTP transport phase [${debug}]
 #
 # The Tools Project: a Tools System and Paradigm for IT Production
@@ -45,6 +48,9 @@ my $defaults = {
 	html => '',
 	htmlfname => '',
 	to => '',
+	cc => '',
+	bcc => '',
+	join => '',
 	debug => 'no'
 };
 
@@ -54,6 +60,9 @@ my $opt_textfname = $defaults->{textfname};
 my $opt_html = $defaults->{html};
 my $opt_htmlfname = $defaults->{htmlfname};
 my $opt_to = $defaults->{to};
+my $opt_cc = $defaults->{cc};
+my $opt_bcc = $defaults->{bcc};
+my $opt_join = $defaults->{join};
 my $opt_debug = undef;
 
 # -------------------------------------------------------------------------------------------------
@@ -62,6 +71,9 @@ my $opt_debug = undef;
 sub doSend {
 	msgOut( "sending an email to $opt_to..." );
 	my @to = split( /,/, $opt_to );
+	my @cc = split( /,/, $opt_cc );
+	my @bcc = split( /,/, $opt_bcc );
+	my @join = split( /,/, $opt_join );
 	my $text = undef;
 	$text = $opt_text if $opt_text;
 	if( $opt_textfname ){
@@ -71,14 +83,16 @@ sub doSend {
 	my $html = undef;
 	$html = $opt_html if $opt_html;
 	if( $opt_htmlfname ){
-		my $fh = path( $opt_htmlfname );
-		$html = $fh->slurp_utf8;
+		$html = path( $opt_htmlfname )->slurp_utf8;
 	}
 	my $res = TTP::SMTP::send({
 		subject => $opt_subject,
 		text => $text,
-		html => $shtml,
+		html => $html,
 		to => \@to,
+		cc => \@cc,
+		bcc => \@bcc,
+		join => \@join,
 		debug => $opt_debug
 	});
 	if( $res ){
@@ -103,6 +117,9 @@ if( !GetOptions(
 	"html=s"			=> \$opt_html,
 	"htmlfname=s"		=> \$opt_htmlfname,
 	"to=s"				=> \$opt_to,
+	"cc=s"				=> \$opt_cc,
+	"bcc=s"				=> \$opt_bcc,
+	"join=s"			=> \$opt_join,
 	"debug!"			=> \$opt_debug )){
 
 		msgOut( "try '".$running->command()." ".$running->verb()." --help' to get full usage syntax" );
@@ -123,6 +140,9 @@ msgVerbose( "found textfname='$opt_textfname'" );
 msgVerbose( "found html='$opt_html'" );
 msgVerbose( "found htmlfname='$opt_htmlfname'" );
 msgVerbose( "found to='$opt_to'" );
+msgVerbose( "found cc='$opt_cc'" );
+msgVerbose( "found bcc='$opt_bcc'" );
+msgVerbose( "found join='$opt_join'" );
 msgVerbose( "found debug='".( defined $opt_debug ? ( $opt_debug ? 'true':'false' ) : '(undef)' )."'" );
 
 # all data are mandatory, and we must provide some content, either text or html
@@ -131,8 +151,8 @@ msgErr( "content is empty, but shouldn't" ) if !$opt_text && !$opt_textfname && 
 msgErr( "target is empty, but shouldn't" ) if !$opt_to;
 
 # text and textfname are mutually exclusive, so are html and htmlfname
-msgErr( "text body can only provided one way, but both '--text' and '--textfname' are specified" ) if $opt_text && $opt_textfname;
-msgErr( "HTML body can only provided one way, but both '--html' and '--htmlfname' are specified" ) if $opt_html && $opt_htmlfname;
+msgErr( "text body can only be provided one way, but both '--text' and '--textfname' are specified" ) if $opt_text && $opt_textfname;
+msgErr( "HTML body can only be provided one way, but both '--html' and '--htmlfname' are specified" ) if $opt_html && $opt_htmlfname;
 
 if( !TTP::errs()){
 	doSend();

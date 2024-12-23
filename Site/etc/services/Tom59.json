@@ -43,8 +43,7 @@
 			{
 				"label": "(Production Live) Génération hebdomadaire du suivi pédagogique",
 				"commands": [
-					"[eval:File::Spec->catfile( TTP::var([ 'site', 'commandsDir' ]), 'tom59_suivi_pedago.pl' )] -servic
-					e <SERVICE> -sql-intras [eval:File::Spec->catdir( TTP::nodeRoot(), 'Site', 'Sql', 'SuiviPedagoIntras_v1.sql' )]"
+					"[eval:File::Spec->catfile( TTP::var([ 'site', 'commandsDir' ]), 'tom59_suivi_pedago.pl' )] -service <SERVICE> -sql-intras [eval:File::Spec->catdir( TTP::nodeRoot(), 'Site', 'Sql', 'SuiviPedagoIntras_v1.sql' )]"
 				]
 			}
 		],

@@ -77,47 +77,6 @@ sub backupDatabase {
 	return $result;
 }
 
-# -------------------------------------------------------------------------------------------------
-# Write an array of columns names for each provided result set
-# (I):
-# - an array of hashes, or an array of array of hashes if multiple result sets are provided
-# - the name of the file which will get the array(s) of columns names
-# (O):
-# - file written
-
-sub columnsOutput {
-	my ( $result, $fname ) = @_;
-	my $ref = ref( $result );
-	# expects an array, else just give up
-	if( $ref ne 'ARRAY' ){
-		msgVerbose( __PACKAGE__."::columnsOutput() expected an array, but found '$ref', so just give up" );
-		return;
-	}
-	if( !scalar @{$result} ){
-		msgVerbose( __PACKAGE__."::columnsOutput() got an empty array, so just give up" );
-		return;
-	}
-	# expects an array of hashes
-	# if we got an array of arrays, then this is a multiple result sets and recurse
-	$ref = ref( $result->[0] );
-	if( $ref eq 'ARRAY' ){
-		foreach my $set ( @{$result} ){
-			columnsOutput( $set, $fname );
-		}
-		return;
-	}
-	if( $ref ne 'HASH' ){
-		msgVerbose( __PACKAGE__."::columnsOutput() expected an array of hashes, but found an array of '$ref', so just give up" );
-		return;
-	}
-	# first get the array of columns names
-	my @fields = ();
-	foreach my $key ( keys %{@{$result}[0]} ){
-		push( @fields, $key );
-	}
-	path( $fname )->append_utf8( join( @fields, ',' ).EOL );
-}
-
 # ------------------------------------------------------------------------------------------------
 # compute the default backup output filename for the current machine/intance/database
 # making sure the output directory exists
@@ -218,13 +177,14 @@ sub execSqlCommand {
 			msgVerbose( "do not save JSON result as opts->{json} is not set" );
 		}
 		# columns names output if asked for
-		my $columns = '';
-		$columns = $opts->{columns} if exists $opts->{columns};
-		if( $columns ){
-			columnsOutput( $result->{result}, $columns );
-		} else {
-			msgVerbose( "do not save columns names as opts->{columns} is not set" );
-		}
+		# pwi 2024-12-23 doesn't work in Win23::SQLServer so ignored at the moment
+		#my $columns = '';
+		#$columns = $opts->{columns} if exists $opts->{columns};
+		#if( $columns ){
+		#	$self->columnsOutput( $command, $columns );
+		#} else {
+		#	msgVerbose( "do not save columns names as opts->{columns} is not set" );
+		#}
 	}
 	return $result;
 }

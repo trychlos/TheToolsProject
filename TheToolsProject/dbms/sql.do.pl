@@ -118,7 +118,7 @@ sub execSqlStdin {
 sub execSqlScript {
 	msgVerbose( "executing from '$opt_script'" );
 	my $sql = path( $opt_script )->slurp_utf8;
-	msgVerbose( "sql='$sql'" );
+	#msgVerbose( "sql='$sql'" );
 	_result( $dbms->execSqlCommand( $sql, { tabular => $opt_tabular, json => $opt_json, columns => $opt_columns, multiple => $opt_multiple }));
 }
 

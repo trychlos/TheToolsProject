@@ -114,10 +114,12 @@ sub apiExecSqlCommand {
 		my $resultStyle = Win32::SqlServer::SINGLESET;
 		$resultStyle = Win32::SqlServer::MULTISET if $parms->{opts} && $parms->{opts}{multiple};
 		my $colinfoStyle = Win32::SqlServer::COLINFO_NONE;
-		$colinfoStyle = Win32::SqlServer::COLINFO_POS if $parms->{opts} && $parms->{opts}{columns};
+		$colinfoStyle = Win32::SqlServer::COLINFO_FULL if $parms->{opts} && $parms->{opts}{columns};
+		my $rowStyle = Win32::SqlServer::HASH;
 		my $opts = {
 			resultStyle => $resultStyle,
-			colinfoStyle => $colinfoStyle
+			colinfoStyle => $colinfoStyle,
+			rowStyle => $rowStyle
 		};
 		$result = _sqlExec( $dbms, $parms->{command}, $opts );
 	}
@@ -413,11 +415,13 @@ sub _restoreDatabaseVerify {
 # - opts: an optional options hash with following keys:
 #   > printStdout, defaulting to true
 #   > resultStyle, defaulting to SINGLESET
+#   > colinfoStyle, defaulting to COLINFO_NONE
 # (O):
 # returns hash with following keys:
 # - ok: true|false
 # - result: as an array ref
 # - stdout: as an array ref
+# - columns: as an array ref (if asked for)
 
 sub _sqlExec {
 	my ( $dbms, $sql, $opts ) = @_;
@@ -433,16 +437,39 @@ sub _sqlExec {
 		$sqlsrv = _connect( $dbms );
 	}
 	if( !TTP::errs()){
-		msgVerbose( __PACKAGE__."::_sqlExec() executing '$sql'" );
+		#msgVerbose( __PACKAGE__."::_sqlExec() executing '$sql'" );
+		msgVerbose( __PACKAGE__."::_sqlExec() executing" );
 		if( $dbms->ep()->runner()->dummy()){
 			msgDummy( $sql );
 			$res->{ok} = true;
 		} else {
 			my $printStdout = true;
 			$printStdout = $opts->{printStdout} if exists $opts->{printStdout};
-			my $resultStyle = $opts->{resultStyle} || Win32::SqlServer::SINGLESET;
-			my $colinfoStyle = $opts->{colinfoStyle} || Win32::SqlServer::COLINFO_NONE;
-			my $merged = capture_merged { $res->{result} = $sqlsrv->sql( $sql, $resultStyle, $colinfoStyle )};
+			my $colinfoStyle;
+			if( $opts->{colinfoStyle} ){
+				$colinfoStyle = $opts->{colinfoStyle};
+				msgVerbose( "colinfoStyle=$opts->{colinfoStyle}" );
+			} else {
+				$colinfoStyle = Win32::SqlServer::COLINFO_NONE;
+				msgVerbose( "colinfoStyle= Win32::SqlServer::COLINFO_NONE (default)" );
+			}
+			my $rowStyle;
+			if( $opts->{rowStyle} ){
+				$rowStyle = $opts->{rowStyle};
+				msgVerbose( "rowStyle=$opts->{rowStyle}" );
+			} else {
+				$rowStyle = Win32::SqlServer::HASH;
+				msgVerbose( "rowStyle= Win32::SqlServer::HASH (default)" );
+			}
+			my $resultStyle;
+			if( $opts->{resultStyle} ){
+				$resultStyle = $opts->{resultStyle};
+				msgVerbose( "resultStyle=$opts->{resultStyle}" );
+			} else {
+				$resultStyle = Win32::SqlServer::SINGLESET;
+				msgVerbose( "resultStyle=Win32::SqlServer::SINGLESET (default)" );
+			}
+			my $merged = capture_merged { $res->{result} = $sqlsrv->sql( $sql, $colinfoStyle, $rowStyle, $resultStyle )};
 			my @merged = split( /[\r\n]/, $merged );
 			foreach my $line ( @merged ){
 				chomp( $line );
@@ -455,6 +482,17 @@ sub _sqlExec {
 			}
 			$res->{ok} = $sqlsrv->sql_has_errors() ? false : true;
 			delete $sqlsrv->{ErrInfo}{Messages};
+			# if we are ok, and the colinfo style has prepended a row, then remove from the result set
+			# pwi 2024-12-23 happens that we are unable to get the prepended row with columns infos :(
+			#if( $res->{ok} && $colinfoStyle != Win32::SqlServer::COLINFO_NONE ){
+			#if( $res->{ok} ){
+				#print Dumper( $result );
+				#$res->{columns} = @{shift( @$result )};
+				#my $row = shift( @$result );
+				#if( $resultStyle == Win32::SqlServer::SINGLESET ){
+				#} else {
+				#}
+			#}
 		}
 	}
 	#print Dumper( $sql );
