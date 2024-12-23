@@ -525,7 +525,7 @@ sub doWork {
 EOT
 		my $htmlfname = TTP::getTempFileName();
 		path( $htmlfname )->spew_utf8( $html );
-		$command = "smtp.pl send -subject '$subject' -htmlfname $htmlfname -to $mail_to -bcc $mail_bcc -join $xlsx";
+		$command = "smtp.pl send -subject '$subject' -htmlfname $htmlfname -to \"$mail_to\" -bcc \"$mail_bcc\" -join $xlsx";
 		msgVerbose( $command );
 		my $out = `$command`;
 		my $rc = $?;
@@ -544,12 +544,6 @@ sub writeInSheet {
 		for( my $i=0 ; $i<scalar( @{$columns->{$sheets->{$name}{header}}} ) ; ++$i ){
 			my $col = $columns->{$sheets->{$name}{header}}->[$i];
 			$sheets->{$name}{sheet}->write_string( 0, $i, $col->{name}, $formats->{headers} );
-			my $col_format = undef;
-			if( $col->{format} ){
-				my @list = %{$col->{format}};
-				$col_format = $book->add_format( @list );
-			}
-			$sheets->{$name}{sheet}->set_column( $i, $i, $col->{width}, $col_format );
 		}
 		$sheets->{$name}{sheet}->set_row( 0, 22 );
 		$sheets->{$name}{sheet}->freeze_panes( 1, 0 );
@@ -568,10 +562,22 @@ sub writeInSheet {
 
 sub setupAtEnd {
 	my ( $book ) = @_;
-	foreach my $sheet ( keys %{$sheets} ){
+	foreach my $it ( keys %{$sheets} ){
+		my $sheet = $sheets->{$it};
 		# set autofilter
-		my $rows = $sheets->{$sheet}{count};
-		$sheets->{$sheet}{sheet}->autofilter( 0, 0, $rows, scalar( @{$columns->{$sheets->{$sheet}{header}}} )-1 );
+		my $rows_count = $sheet->{count};
+		my $cols_count = scalar( @{$columns->{$sheet->{header}}} );
+		$sheet->{sheet}->autofilter( 0, 0, $rows_count, $cols_count-1 );
+		# set columns format and width
+		# align=right doesn't work - why ?
+		for( my $i=0 ; $i<$cols_count ; ++$i ){
+			my $col = $columns->{$sheet->{header}}->[$i];
+			my $col_format = undef;
+			if( $col->{format} ){
+				$col_format = $book->add_format( %{$col->{format}} );
+			}
+			$sheet->{sheet}->set_column( $i, $i, $col->{width}, $col_format );
+		}
 	}
 }
 
