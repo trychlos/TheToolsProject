@@ -35,7 +35,8 @@
 					"dbms.pl telemetry -nocolored -service <SERVICE> -dbsize -mqtt -http",
 					"dbms.pl telemetry -nocolored -service <SERVICE> -tabcount -mqtt -http",
 					"ttp.pl movedirs -nocolored -sourcecmd \"dbms.pl vars -nocolored -backupsRoot\" -targetcmd \"dbms.pl vars -nocolored -archivesRoot\" -dirs -keep 5 -nomakeDir",
-					"ttp.pl purgedirs -nocolored -dircmd \"dbms.pl vars -nocolored -archivesRoot\" -keep 10"
+					"ttp.pl purgedirs -nocolored -dircmd \"dbms.pl vars -nocolored -archivesRoot\" -keep 10",
+					"[eval:File::Spec->catfile( TTP::var([ 'site', 'commandsDir' ]), 'tom59_suivi_pedago.pl' )] -service <SERVICE> -script [eval:File::Spec->catdir( TTP::nodeRoot(), 'Site', 'Sql', 'SuiviPedago_v2.sql' )] -fnews [eval:File::Spec->catdir( TTP::nodeRoot(), 'Site', 'Sql', 'news_v2.html' )]"
 				]
 			}
 		],
@@ -43,7 +44,6 @@
 			{
 				"label": "(Production Live) Génération hebdomadaire du suivi pédagogique",
 				"commands": [
-					"[eval:File::Spec->catfile( TTP::var([ 'site', 'commandsDir' ]), 'tom59_suivi_pedago.pl' )] -service <SERVICE> -script [eval:File::Spec->catdir( TTP::nodeRoot(), 'Site', 'Sql', 'SuiviPedago_v2.sql' )]"
 				]
 			}
 		],

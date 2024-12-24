@@ -6,7 +6,8 @@
 	--                   use a person label instead of module stagiaire label
 	-- pwi 2024-12-23 v2 extend to cours inters
 	--                   add 'Inters'/'Intras' fixed string as column zero to distinguish between the two queries
-	--                   evaluation inter/intra is moved before stagiaires
+	--                   add 'date de validation du rapport de progrès'
+	--                   add median date and if it is past
 
 	use TOM59331;
 	-- ==============================================================================================================================
@@ -41,6 +42,24 @@
 		-- ?? Date du dernier cours + si possible si cette date a été changée depuis la dernière extraction
 		-- Date du dernier cours planifié + si possible si cette date a été changée depuis la dernière extraction
 		, SEANCES.DernierCours as SeancesDernierCours
+		-- date mediane
+		-- soit la date mediane des cours si tout a été planifié, sinon la date médiane de la convention
+		, CASE
+			WHEN MODULES.SoldeToPlann = 0 THEN DATEADD( DAY, DATEDIFF( DAY, SEANCES.PremierCours, SEANCES.DernierCours ) / 2, SEANCES.PremierCours )
+			ELSE DATEADD( DAY, DATEDIFF( DAY, CONVENTIONS.ConventionDateFromMin, CONVENTIONS.ConventionDateToMax ) / 2, CONVENTIONS.ConventionDateFromMin )
+		  END as SeancesMedianeDate
+		, CASE
+			WHEN MODULES.SoldeToPlann = 0 THEN
+				CASE
+					WHEN DATEADD( DAY, DATEDIFF( DAY, SEANCES.PremierCours, SEANCES.DernierCours ) / 2, SEANCES.PremierCours ) < GETDATE() THEN 'Passee'
+					ELSE ''
+				END
+			ELSE 
+				CASE
+					WHEN DATEADD( DAY, DATEDIFF( DAY, CONVENTIONS.ConventionDateFromMin, CONVENTIONS.ConventionDateToMax ) / 2, CONVENTIONS.ConventionDateFromMin ) < GETDATE() THEN 'Passee'
+					ELSE ''
+				END
+		  END as SeancesMedianePassee
 		-- Note pédagogique manquante : non  / oui (avec date si oui ) -> SeancesIntraVars.NoShow ?
 		, NOTES_PEDAGO_DUE.NotesPedagoDue
 		, NOTES_PEDAGO_FOUND.NotesPedagoFound
@@ -49,22 +68,6 @@
 		, ISNULL( SEANCES_PASSEES.SeancesCount, 0 ) as SeancesPassees
 		-- Signature formateur manquante : non/ oui (avec date si oui)
 		, ISNULL( SIGN_FORMATEUR_MANQUANTES.SignFormateurManquantes, 0 ) as SeancesSignFormateurManquantes
-		-- Date de planification de l'évaluation (date de la séance sur laquelle le ( E ) a été placé )
-		-- (E ) non planifié
-		, CASE
-			WHEN EVALUATION.Evaluation is null THEN ''
-			ELSE CONVERT( VARCHAR, EVALUATION.Evaluation, 120 )
-		  END as EvaluationPlanifiee
-		-- Date à laquelle l'évaluation a été remplie par le formateur
-		-- Evaluation due et non remplie
-		, CASE
-			WHEN EVALS_INTRAS.DayDate is null THEN
-				CASE
-					WHEN EVALUATION.Evaluation is not null and EVALUATION.Evaluation < GETDATE() THEN 'DUE'
-					ELSE ''
-				END
-			ELSE CONVERT( VARCHAR, EVALS_INTRAS.DayDate, 120 )
-		  END as EvaluationRenseignee
 		-- stagiaires
 		, MODULES_STAGIAIRES.ID as ModuleStagiaireID
 		, MODULES_STAGIAIRES.label as ModuleStagiaireLabel
@@ -82,8 +85,24 @@
 			WHEN SEANCES_PASSEES.SeancesCount IS NULL OR SEANCES_PASSEES.SeancesCount = 0 THEN ''
 			ELSE CAST( ISNULL( ABSENCES.AbsencesCount, 0 ) * 100 / SEANCES_PASSEES.SeancesCount AS VARCHAR )
 		  END as StagiaireAbsencesPercentCount
-		-- ?? Date rapport de progrès validé
-		-- ?? Rapport de progrès à valider
+		-- Date de planification de l'évaluation (date de la séance sur laquelle le ( E ) a été placé )
+		-- (E ) non planifié
+		, CASE
+			WHEN EVALUATION.Evaluation is null THEN ''
+			ELSE CONVERT( VARCHAR, EVALUATION.Evaluation, 120 )
+		  END as EvaluationPlanifiee
+		-- Date à laquelle l'évaluation a été remplie par le formateur
+		-- Evaluation due et non remplie
+		, CASE
+			WHEN EVALS_INTRAS.DayDate is null THEN
+				CASE
+					WHEN EVALUATION.Evaluation is not null and EVALUATION.Evaluation < GETDATE() THEN 'DUE'
+					ELSE ''
+				END
+			ELSE CONVERT( VARCHAR, EVALS_INTRAS.DayDate, 120 )
+		  END as EvaluationRenseignee
+		-- Date rapport de progrès validé / à valider
+		, RAPPORT_VALIDE.DayDate as RepportProgresValide
 		-- Questionnaire Début (QD) : date planifié
 		-- Questionnaire Début (QD) : date renseigné
 		-- Quest.ionnaire Début (QD) : non renseigné
@@ -123,8 +142,6 @@
 		-- les seances planifiées
 		left join ( select A.ModuleID, min( A.DayDate ) as PremierCours, max( A.DayDate ) as DernierCours from dbo.c_SeancesIntraVars A group by A.ModuleID ) SEANCES on SEANCES.ModuleID = MODULES.ID
 
-		left join ( select A.ModuleID, min( A.DateHourFrom ) as Evaluation from dbo.c_SeancesIntraVars A where A.Label like '% (E)' group by A.ModuleID ) EVALUATION on EVALUATION.ModuleID = MODULES.ID
-
 		-- les séances exécutées
 		left join ( select A.ModuleStagiaireID, count( A.DateHourFrom ) as SignStagManquantes
 			from dbo.c_StagiairesSeancesIntraVars A where A.DateHourFrom < GETDATE() and A.SignImage is null and A.TypePresence = 'PRS' group by A.ModuleStagiaireID ) SIGN_STAG_MANQUANTES on SIGN_STAG_MANQUANTES.ModuleStagiaireID = RES.ModuleStagiaireID
@@ -152,14 +169,25 @@
 			group by B.ModuleID ) NOTES_PEDAGO_FOUND on NOTES_PEDAGO_FOUND.ModuleID = RES.ModuleID
 
 		-- les résultats, évaluations et questionnaires de début et de fin
+		-- evaluation planifiée (rapport de progrès): une date par module pour tous les stagiaires
+		left join ( select A.ModuleID, min( A.DateHourFrom ) as Evaluation
+			from dbo.c_SeancesIntraVars A where A.Label like '% (E)' group by A.ModuleID ) EVALUATION on EVALUATION.ModuleID = RES.ModuleID
+
+		-- evaluation realisee: une date par stagiaire
 		left join ( select A.ModuleStagiaireID, min( A.DayDate ) as DayDate
 			from dbo.c_EvaluationsIntras A group by A.ModuleStagiaireID ) EVALS_INTRAS on EVALS_INTRAS.ModuleStagiaireID = RES.ModuleStagiaireID
 
+		-- evaluation validée
 		left join ( select A.ModuleStagiaireID, min( A.DayDate ) as DayDate
-			from dbo.c_StagiaireSatisfactionStartsEcs A group by A.ModuleStagiaireID ) QDEBUT on QDEBUT.ModuleStagiaireID = MODULES_STAGIAIRES.ID -- RES.ModuleStagiaireID
+			from dbo.c_EmailSents A where A.Label like 'Rapport de Progr%' group by A.ModuleStagiaireID ) RAPPORT_VALIDE on RAPPORT_VALIDE.ModuleStagiaireID = RES.ModuleStagiaireID
 
+		-- questionnaire de début: date
+		left join ( select A.ModuleStagiaireID, min( A.DayDate ) as DayDate
+			from dbo.c_StagiaireSatisfactionStartsEcs A group by A.ModuleStagiaireID ) QDEBUT on QDEBUT.ModuleStagiaireID = RES.ModuleStagiaireID
+
+		-- questionnaire de fin: date et resultat
 		left join ( select A.ModuleStagiaireID, min( A.DayDate ) as DayDate, min( A.ReprendreFormation ) as ReprendreFormation
-			from dbo.c_StagiaireSatisfactionsEcs A group by A.ModuleStagiaireID ) QFIN on QFIN.ModuleStagiaireID = MODULES_STAGIAIRES.ID -- RES.ModuleStagiaireID
+			from dbo.c_StagiaireSatisfactionsEcs A group by A.ModuleStagiaireID ) QFIN on QFIN.ModuleStagiaireID = RES.ModuleStagiaireID
 
 	--order by ModuleNbStagiaires desc
 	-- where MODULES.Label like '%sethness%'
@@ -178,7 +206,7 @@
 		, COURS.DateTo as CoursDateTo
 		, COURS.NStagiaires as CoursNbStagiaires
 		, COURS.DureeCours as CoursDureeMinutes
-		, '' as CoursDureeHeures
+		, CAST( COURS.DureeCours / 60 AS VARCHAR ) + ':' + RIGHT( '00' + CAST( COURS.DureeCours % 60 AS VARCHAR(2)), 2 ) as CoursDureeHeures
 		, COURS.SoldeToPlann as CoursSoldeToPlann
 		, COURS.CentreID
 		, CENTRES.Label as CentreLabel
@@ -197,6 +225,24 @@
 		-- ?? Date du dernier cours + si possible si cette date a été changée depuis la dernière extraction
 		-- Date du dernier cours planifié + si possible si cette date a été changée depuis la dernière extraction
 		, SEANCES.DernierCours as SeancesDernierCours
+		-- date mediane
+		-- soit la date mediane des cours si tout a été planifié, sinon la date médiane de la convention
+		, CASE
+			WHEN COURS.SoldeToPlann = 0 THEN DATEADD( DAY, DATEDIFF( DAY, SEANCES.PremierCours, SEANCES.DernierCours ) / 2, SEANCES.PremierCours )
+			ELSE DATEADD( DAY, DATEDIFF( DAY, CONVENTIONS.ConventionDateFromMin, CONVENTIONS.ConventionDateToMax ) / 2, CONVENTIONS.ConventionDateFromMin )
+		  END as SeancesMedianeDate
+		, CASE
+			WHEN COURS.SoldeToPlann = 0 THEN
+				CASE
+					WHEN DATEADD( DAY, DATEDIFF( DAY, SEANCES.PremierCours, SEANCES.DernierCours ) / 2, SEANCES.PremierCours ) < GETDATE() THEN 'Passee'
+					ELSE ''
+				END
+			ELSE 
+				CASE
+					WHEN DATEADD( DAY, DATEDIFF( DAY, CONVENTIONS.ConventionDateFromMin, CONVENTIONS.ConventionDateToMax ) / 2, CONVENTIONS.ConventionDateFromMin ) < GETDATE() THEN 'Passee'
+					ELSE ''
+				END
+		  END as SeancesMedianePassee
 		-- Note pédagogique manquante : non  / oui (avec date si oui ) -> SeancesIntraVars.NoShow ?
 		, NOTES_PEDAGO_DUE.NotesPedagoDue
 		, NOTES_PEDAGO_FOUND.NotesPedagoFound
@@ -205,22 +251,6 @@
 		, ISNULL( SEANCES_PASSEES.SeancesCount, 0 ) as SeancesPassees
 		-- Signature formateur manquante : non/ oui (avec date si oui)
 		, ISNULL( SIGN_FORMATEUR_MANQUANTES.SignFormateurManquantes, 0 ) as SeanceSignFormateurManquantes
-		-- Date de planification de l'évaluation (date de la séance sur laquelle le ( E ) a été placé )
-		-- (E ) non planifié
-		, CASE
-			WHEN EVALUATION.Evaluation is null THEN ''
-			ELSE CONVERT( VARCHAR, EVALUATION.Evaluation, 120 )
-		  END as EvaluationPlanifiee
-		-- Date à laquelle l'évaluation a été remplie par le formateur
-		-- Evaluation due et non remplie
-		, CASE
-			WHEN EVALS_INTRAS.DayDate is null THEN
-				CASE
-					WHEN EVALUATION.Evaluation is not null and EVALUATION.Evaluation < GETDATE() THEN 'DUE'
-					ELSE ''
-				END
-			ELSE CONVERT( VARCHAR, EVALS_INTRAS.DayDate, 120 )
-		  END as EvaluationRenseignee
 		-- stagiaires
 		, COURS_STAGIAIRES.ID as CoursStagiaireID
 		, COURS_STAGIAIRES.label as CoursStagiaireLabel
@@ -238,8 +268,24 @@
 			WHEN SEANCES_PASSEES.SeancesCount IS NULL OR SEANCES_PASSEES.SeancesCount = 0 THEN ''
 			ELSE CAST( ISNULL( ABSENCES.AbsencesCount, 0 ) * 100 / SEANCES_PASSEES.SeancesCount AS VARCHAR )
 		  END as StagiaireAbsencesPercentCount
-		-- ?? Date rapport de progrès validé
-		-- ?? Rapport de progrès à valider
+		-- Date de planification de l'évaluation (date de la séance sur laquelle le ( E ) a été placé )
+		-- (E ) non planifié
+		, CASE
+			WHEN EVALUATION.Evaluation is null THEN ''
+			ELSE CONVERT( VARCHAR, EVALUATION.Evaluation, 120 )
+		  END as EvaluationPlanifiee
+		-- Date à laquelle l'évaluation a été remplie par le formateur
+		-- Evaluation due et non remplie
+		, CASE
+			WHEN EVALS_INTRAS.DayDate is null THEN
+				CASE
+					WHEN EVALUATION.Evaluation is not null and EVALUATION.Evaluation < GETDATE() THEN 'DUE'
+					ELSE ''
+				END
+			ELSE CONVERT( VARCHAR, EVALS_INTRAS.DayDate, 120 )
+		  END as EvaluationRenseignee
+		-- Date rapport de progrès validé / à valider
+		, RAPPORT_VALIDE.DayDate as RepportProgresValide
 		-- Questionnaire Début (QD) : date planifié
 		-- Questionnaire Début (QD) : date renseigné
 		-- Quest.ionnaire Début (QD) : non renseigné
@@ -275,8 +321,6 @@
 		-- les seances planifiées
 		left join ( select A.CoursID, min( A.DayDate ) as PremierCours, max( A.DayDate ) as DernierCours from dbo.c_SeancesInterVars A group by A.CoursID ) SEANCES on SEANCES.CoursID = COURS.ID
 
-		left join ( select A.CoursID, min( A.DateHourFrom ) as Evaluation from dbo.c_SeancesInterVars A where A.Label like '% (E)' group by A.CoursID ) EVALUATION on EVALUATION.CoursID = COURS.ID
-
 		-- les notes pédagogiques à renseigner par le formateur pour chaque séance
 		-- la note est dûe si la logistique de la session dit qu'il y a un formateur
 		-- la note est attachée à la séance, commune à tous les stagiaires participants
@@ -308,11 +352,17 @@
 			from dbo.c_StagiairesSeancesInterVars A where A.DateHourFrom < GETDATE() and A.SignImage is null and A.TypePresence = 'PRS' group by A.CoursStagiaireID ) SIGN_STAG_MANQUANTES on SIGN_STAG_MANQUANTES.CoursStagiaireID = RES.CoursStagiaireID
 
 		-- les résultats, évaluations et questionnaires de début et de fin
+		left join ( select A.CoursID, min( A.DateHourFrom ) as Evaluation from dbo.c_SeancesInterVars A where A.Label like '% (E)' group by A.CoursID ) EVALUATION on EVALUATION.CoursID = RES.CoursID
+
 		left join ( select A.CoursStagiaireID, min( A.DayDate ) as DayDate
 			from dbo.c_EvaluationsInters A group by A.CoursStagiaireID ) EVALS_INTRAS on EVALS_INTRAS.CoursStagiaireID = RES.CoursStagiaireID
 
+		-- evaluation validée
 		left join ( select A.CoursStagiaireID, min( A.DayDate ) as DayDate
-			from dbo.c_StagiaireSatisfactionStartsEcs A group by A.CoursStagiaireID ) QDEBUT on QDEBUT.CoursStagiaireID = COURS_STAGIAIRES.ID
+			from dbo.c_EmailSents A where A.Label like 'Rapport de Progr%' group by A.CoursStagiaireID ) RAPPORT_VALIDE on RAPPORT_VALIDE.CoursStagiaireID = RES.CoursStagiaireID
+
+		left join ( select A.CoursStagiaireID, min( A.DayDate ) as DayDate
+			from dbo.c_StagiaireSatisfactionStartsEcs A group by A.CoursStagiaireID ) QDEBUT on QDEBUT.CoursStagiaireID = RES.CoursStagiaireID
 
 		left join ( select A.CoursStagiaireID, min( A.DayDate ) as DayDate, min( A.ReprendreFormation ) as ReprendreFormation
-			from dbo.c_StagiaireSatisfactionsEcs A group by A.CoursStagiaireID ) QFIN on QFIN.CoursStagiaireID = COURS_STAGIAIRES.ID
+			from dbo.c_StagiaireSatisfactionsEcs A group by A.CoursStagiaireID ) QFIN on QFIN.CoursStagiaireID = RES.CoursStagiaireID

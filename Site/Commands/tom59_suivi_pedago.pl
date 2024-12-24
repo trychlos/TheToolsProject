@@ -9,6 +9,8 @@
 # @(-) --[no]verbose           run verbosely [${verbose}]
 # @(-) --service=<service>     the DBMS service name [${service}]
 # @(-) --script=<script>       the path to the SQL script to be executed [${script}]
+# @(-) --fnews=<fnews>         an optional filename which contains HTML news [${fnews}]
+# @(-) --to=<to>               a comma-separated list of mail dests [${to}]
 #
 # @(@) This script is mostly written like a TTP verb but is not.
 # @(@) This is an example of how to take advantage of TTP to write your own (rather pretty and efficient) scripts.
@@ -56,13 +58,16 @@ my $defaults = {
 	dummy => 'no',
 	verbose => 'no',
 	service => '',
-	script => ''
+	script => '',
+	fnews => '',
+	to => ''
 };
 
 my $opt_service = $defaults->{service};
 my $opt_script = $defaults->{script};
+my $opt_fnews = $defaults->{fnews};
+my $opt_to = $defaults->{to};
 
-my $mail_to = ""; #'cbonnier@inlingua-pro.com,fwanlin@inlingua-pro.com';
 my $mail_bcc = 'inlingua-adm@trychlos.org';
 
 my $columns = {
@@ -107,7 +112,8 @@ my $columns = {
 			name => 'ModuleDureeHeures',
 			width => 19,
 			format => {
-				align => 'right'
+				align => 'right',
+				num_format => 'H:MM'
 			}
 		},
 		{
@@ -292,7 +298,8 @@ my $columns = {
 			name => 'CoursDureeHeures',
 			width => 19,
 			format => {
-				align => 'right'
+				align => 'right',
+				num_format => 'H:MM'
 			}
 		},
 		{
@@ -519,13 +526,21 @@ sub doWork {
 		my $html = <<EOT;
 <p>Bonjour,</p>
 <p>Vous trouverez ci-joint le rapport de suivi pédagogique en date du $stamp.</p>
-<p>Je vous en souhaite bonne réception.</p>
+EOT
+		if( $opt_fnews ){
+			my $news = path( $opt_fnews )->slurp_utf8;
+			if( $news ){
+				$html .= $news;
+			}
+		}
+		$html .= <<EOT;
+<p>Je vous en souhaite bonne réception, et une bonne journée.</p>
 <p>Cordialement,</p>
 <p><a href='mailto:inlingua-adm@trychos.org'>Tom59</a></p>
 EOT
 		my $htmlfname = TTP::getTempFileName();
 		path( $htmlfname )->spew_utf8( $html );
-		$command = "smtp.pl send -subject '$subject' -htmlfname $htmlfname -to \"$mail_to\" -bcc \"$mail_bcc\" -join $xlsx";
+		$command = "smtp.pl send -subject '$subject' -htmlfname $htmlfname -to \"$opt_to\" -bcc \"$mail_bcc\" -join $xlsx";
 		msgVerbose( $command );
 		my $out = `$command`;
 		my $rc = $?;
@@ -544,10 +559,17 @@ sub writeInSheet {
 		for( my $i=0 ; $i<scalar( @{$columns->{$sheets->{$name}{header}}} ) ; ++$i ){
 			my $col = $columns->{$sheets->{$name}{header}}->[$i];
 			$sheets->{$name}{sheet}->write_string( 0, $i, $col->{name}, $formats->{headers} );
+			$sheets->{$name}{sheet}->set_column( $i, $i, $col->{width} );
+			# defines a special format for this column
+			if( $col->{format} ){
+				$col->{colfmt} = $book->add_format( %{$col->{format}} );
+			}
 		}
 		$sheets->{$name}{sheet}->set_row( 0, 22 );
 		$sheets->{$name}{sheet}->freeze_panes( 1, 0 );
 		$sheets->{$name}{count} = 1;
+		# define a write handler to handle hours
+		$sheets->{$name}{sheet}->add_write_handler( qr/^\d+(:\d+){1,2}$/, \&write_my_format );
 	}
 	# convert the row hash to an array ref in the right order
 	my $array_ref = [];
@@ -560,6 +582,26 @@ sub writeInSheet {
 	$sheets->{$name}{count} += 1;
 }
 
+# push a specific format for some cells of some sheets
+sub write_my_format {
+	my $worksheet = shift;
+	my $name = $worksheet->get_name();
+	foreach my $k ( keys %{$sheets} ){
+		if( $sheets->{$k}{name} eq $name ){
+			my $col = $columns->{$sheets->{$k}{header}}[$_[1]];
+			my @args = @_;
+			if( $col->{colfmt} ){
+				$args[3] = $col->{colfmt};
+				#print "write_my_format: match".EOL;
+				return $worksheet->write_string( @args );
+			} else {
+				msgVerbose( "write_my_format: expreg is matched without specific format" );
+			}
+		}
+	}
+	return undef;
+}
+
 sub setupAtEnd {
 	my ( $book ) = @_;
 	foreach my $it ( keys %{$sheets} ){
@@ -568,16 +610,6 @@ sub setupAtEnd {
 		my $rows_count = $sheet->{count};
 		my $cols_count = scalar( @{$columns->{$sheet->{header}}} );
 		$sheet->{sheet}->autofilter( 0, 0, $rows_count, $cols_count-1 );
-		# set columns format and width
-		# align=right doesn't work - why ?
-		for( my $i=0 ; $i<$cols_count ; ++$i ){
-			my $col = $columns->{$sheet->{header}}->[$i];
-			my $col_format = undef;
-			if( $col->{format} ){
-				$col_format = $book->add_format( %{$col->{format}} );
-			}
-			$sheet->{sheet}->set_column( $i, $i, $col->{width}, $col_format );
-		}
 	}
 }
 
@@ -591,7 +623,9 @@ if( !GetOptions(
 	"dummy!"			=> \$ep->{run}{dummy},
 	"verbose!"			=> \$ep->{run}{verbose},
 	"service=s"			=> \$opt_service,
-	"script=s"			=> \$opt_script	)){
+	"script=s"			=> \$opt_script,
+	"fnews=s"			=> \$opt_fnews,
+	"to=s"				=> \$opt_to	)){
 
 		msgOut( "try '".$extern->command()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
@@ -608,6 +642,8 @@ msgVerbose( "found dummy='".( $extern->dummy() ? 'true':'false' )."'" );
 msgVerbose( "found verbose='".( $extern->verbose() ? 'true':'false' )."'" );
 msgVerbose( "found service='$opt_service'" );
 msgVerbose( "found script='$opt_script'" );
+msgVerbose( "found fnews='$opt_fnews'" );
+msgVerbose( "found to='$opt_to'" );
 
 if( !TTP::errs()){
 	doWork();
