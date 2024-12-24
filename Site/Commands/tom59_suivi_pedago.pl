@@ -173,6 +173,14 @@ my $columns = {
 			width => 19
 		},
 		{
+			name => 'SeancesMiParcoursDate',
+			width => 19
+		},
+		{
+			name => 'SeancesMiParcoursPasse',
+			width => 19
+		},
+		{
 			name => 'NotesPedagoDue',
 			width => 21
 		},
@@ -191,14 +199,6 @@ my $columns = {
 		{
 			name => 'SeancesSignFormateurManquantes',
 			width => 28
-		},
-		{
-			name => 'EvaluationPlanifiee',
-			width => 19
-		},
-		{
-			name => 'EvaluationRenseignee',
-			width => 19
 		},
 		{
 			name => 'ModuleStagiaireID',
@@ -243,6 +243,18 @@ my $columns = {
 		{
 			name => 'StagiaireAbsencesPercentCount',
 			width => 25
+		},
+		{
+			name => 'EvaluationPlanifiee',
+			width => 19
+		},
+		{
+			name => 'EvaluationRenseignee',
+			width => 19
+		},
+		{
+			name => 'RapportProgresValide',
+			width => 19
 		},
 		{
 			name => 'QuestionnaireDebut',
@@ -359,6 +371,14 @@ my $columns = {
 			width => 19
 		},
 		{
+			name => 'SeancesMiParcoursDate',
+			width => 19
+		},
+		{
+			name => 'SeancesMiParcoursPasse',
+			width => 19
+		},
+		{
 			name => 'NotesPedagoDue',
 			width => 21
 		},
@@ -377,14 +397,6 @@ my $columns = {
 		{
 			name => 'SeanceSignFormateurManquantes',
 			width => 28
-		},
-		{
-			name => 'EvaluationPlanifiee',
-			width => 19
-		},
-		{
-			name => 'EvaluationRenseignee',
-			width => 19
 		},
 		{
 			name => 'CoursStagiaireID',
@@ -429,6 +441,18 @@ my $columns = {
 		{
 			name => 'StagiaireAbsencesPercentCount',
 			width => 25
+		},
+		{
+			name => 'EvaluationPlanifiee',
+			width => 19
+		},
+		{
+			name => 'EvaluationRenseignee',
+			width => 19
+		},
+		{
+			name => 'RapportProgresValide',
+			width => 19
 		},
 		{
 			name => 'QuestionnaireDebut',
@@ -554,6 +578,7 @@ sub writeInSheet {
 	# create the sheet and write the first line if not already done
 	# set the columns width
 	if( !$sheets->{$name}{sheet} ){
+		msgVerbose( "defining '$name' sheet with ".scalar( @{$columns->{$sheets->{$name}{header}}} )." columns" );
 		$sheets->{$name}{sheet} = $book->add_worksheet( $sheets->{$name}{name} );
 		# set columns names and width on first row
 		for( my $i=0 ; $i<scalar( @{$columns->{$sheets->{$name}{header}}} ) ; ++$i ){
@@ -569,7 +594,7 @@ sub writeInSheet {
 		$sheets->{$name}{sheet}->freeze_panes( 1, 0 );
 		$sheets->{$name}{count} = 1;
 		# define a write handler to handle hours
-		$sheets->{$name}{sheet}->add_write_handler( qr/^\d+(:\d+){1,2}$/, \&write_my_format );
+		$sheets->{$name}{sheet}->add_write_handler( qr/^\d+(:\d+){1,2}$/, \&write_my_format );	# match hours as hhh:mm
 	}
 	# convert the row hash to an array ref in the right order
 	my $array_ref = [];
@@ -578,8 +603,25 @@ sub writeInSheet {
 		push( @{$array_ref}, $row->{$col->{name}} || '' );
 	}
 	$sheets->{$name}{sheet}->write_row( $sheets->{$name}{count}, 0, $array_ref, $formats->{rows} );
-	$sheets->{$name}{sheet}->set_row( $sheets->{$name}{count}, 18 );
+	$sheets->{$name}{sheet}->set_row( $sheets->{$name}{count}, 18 );	# row height
 	$sheets->{$name}{count} += 1;
+	# check (once per sheet) that all fields of the row hash have a corresponding column name
+	if( !$sheets->{$name}{checked} ){
+		foreach my $field ( keys %{$row} ){
+			my $found = false;
+			for( my $i=0 ; $i<scalar( @{$columns->{$sheets->{$name}{header}}} ) ; ++$i ){
+				my $col = $columns->{$sheets->{$name}{header}}->[$i];
+				if( $col->{name} eq $field ){
+					$found = true;
+					last;
+				}
+			}
+			if( !$found ){
+				msgWarn( "$name: $field not found in columns" );
+			}
+		}
+		$sheets->{$name}{checked} = true;
+	}
 }
 
 # push a specific format for some cells of some sheets

@@ -47,7 +47,7 @@
 		, CASE
 			WHEN MODULES.SoldeToPlann = 0 THEN DATEADD( DAY, DATEDIFF( DAY, SEANCES.PremierCours, SEANCES.DernierCours ) / 2, SEANCES.PremierCours )
 			ELSE DATEADD( DAY, DATEDIFF( DAY, CONVENTIONS.ConventionDateFromMin, CONVENTIONS.ConventionDateToMax ) / 2, CONVENTIONS.ConventionDateFromMin )
-		  END as SeancesMedianeDate
+		  END as SeancesMiParcoursDate
 		, CASE
 			WHEN MODULES.SoldeToPlann = 0 THEN
 				CASE
@@ -59,7 +59,7 @@
 					WHEN DATEADD( DAY, DATEDIFF( DAY, CONVENTIONS.ConventionDateFromMin, CONVENTIONS.ConventionDateToMax ) / 2, CONVENTIONS.ConventionDateFromMin ) < GETDATE() THEN 'Passee'
 					ELSE ''
 				END
-		  END as SeancesMedianePassee
+		  END as SeancesMiParcoursPasse
 		-- Note pédagogique manquante : non  / oui (avec date si oui ) -> SeancesIntraVars.NoShow ?
 		, NOTES_PEDAGO_DUE.NotesPedagoDue
 		, NOTES_PEDAGO_FOUND.NotesPedagoFound
@@ -102,7 +102,7 @@
 			ELSE CONVERT( VARCHAR, EVALS_INTRAS.DayDate, 120 )
 		  END as EvaluationRenseignee
 		-- Date rapport de progrès validé / à valider
-		, RAPPORT_VALIDE.DayDate as RepportProgresValide
+		, RAPPORT_VALIDE.DayDate as RapportProgresValide
 		-- Questionnaire Début (QD) : date planifié
 		-- Questionnaire Début (QD) : date renseigné
 		-- Quest.ionnaire Début (QD) : non renseigné
@@ -230,7 +230,7 @@
 		, CASE
 			WHEN COURS.SoldeToPlann = 0 THEN DATEADD( DAY, DATEDIFF( DAY, SEANCES.PremierCours, SEANCES.DernierCours ) / 2, SEANCES.PremierCours )
 			ELSE DATEADD( DAY, DATEDIFF( DAY, CONVENTIONS.ConventionDateFromMin, CONVENTIONS.ConventionDateToMax ) / 2, CONVENTIONS.ConventionDateFromMin )
-		  END as SeancesMedianeDate
+		  END as SeancesMiParcoursDate
 		, CASE
 			WHEN COURS.SoldeToPlann = 0 THEN
 				CASE
@@ -242,7 +242,7 @@
 					WHEN DATEADD( DAY, DATEDIFF( DAY, CONVENTIONS.ConventionDateFromMin, CONVENTIONS.ConventionDateToMax ) / 2, CONVENTIONS.ConventionDateFromMin ) < GETDATE() THEN 'Passee'
 					ELSE ''
 				END
-		  END as SeancesMedianePassee
+		  END as SeancesMiParcoursPasse
 		-- Note pédagogique manquante : non  / oui (avec date si oui ) -> SeancesIntraVars.NoShow ?
 		, NOTES_PEDAGO_DUE.NotesPedagoDue
 		, NOTES_PEDAGO_FOUND.NotesPedagoFound
@@ -285,7 +285,7 @@
 			ELSE CONVERT( VARCHAR, EVALS_INTRAS.DayDate, 120 )
 		  END as EvaluationRenseignee
 		-- Date rapport de progrès validé / à valider
-		, RAPPORT_VALIDE.DayDate as RepportProgresValide
+		, RAPPORT_VALIDE.DayDate as RapportProgresValide
 		-- Questionnaire Début (QD) : date planifié
 		-- Questionnaire Début (QD) : date renseigné
 		-- Quest.ionnaire Début (QD) : non renseigné
