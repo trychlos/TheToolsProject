@@ -545,8 +545,7 @@ sub doWork {
 		# send the workbook by email
 		my $subject = $fbase;
 		$subject =~ s/_/ /g;
-		$stamp = strftime( '%d/%m/%Y', localtime time );
-		$subject .= ' - '.$stamp;
+		$subject .= " - ".strftime( '%d/%m/%Y', localtime time );
 		my $html = <<EOT;
 <p>Bonjour,</p>
 <p>Vous trouverez ci-joint le rapport de suivi pédagogique en date du $stamp.</p>
