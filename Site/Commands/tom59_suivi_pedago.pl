@@ -564,7 +564,7 @@ EOT
 EOT
 		my $htmlfname = TTP::getTempFileName();
 		path( $htmlfname )->spew_utf8( $html );
-		$command = "smtp.pl send -subject '$subject' -htmlfname $htmlfname -to \"$opt_to\" -bcc \"$mail_bcc\" -join $xlsx";
+		$command = "smtp.pl send -subject \"$subject\" -htmlfname $htmlfname -to \"$opt_to\" -bcc \"$mail_bcc\" -join $xlsx";
 		msgVerbose( $command );
 		my $out = `$command`;
 		my $rc = $?;
