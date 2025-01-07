@@ -69,6 +69,7 @@ my $opt_fnews = $defaults->{fnews};
 my $opt_to = $defaults->{to};
 
 my $mail_bcc = 'inlingua-adm@trychlos.org';
+my $prevExecution = 'C:\\INLINGUA\\DBs\\SuiviPedagoLast.json';
 
 my $columns = {
 	Intras => [
@@ -169,7 +170,17 @@ my $columns = {
 			width => 19
 		},
 		{
+			name => 'SeancesPremierCoursModifie',
+			computed => computeSeancesPremierCoursModifie,
+			width => 19
+		},
+		{
 			name => 'SeancesDernierCours',
+			width => 19
+		},
+		{
+			name => 'SeancesDernierCoursModifie',
+			computed => computeSeancesDernierCoursModifie,
 			width => 19
 		},
 		{
@@ -242,6 +253,11 @@ my $columns = {
 		},
 		{
 			name => 'StagiaireAbsencesPercentCount',
+			width => 25
+		},
+		{
+			name => 'StagiaireAbsencesCountSincePrev',
+			computed => computeStagiaireAbsencesCountSincePrev,
 			width => 25
 		},
 		{
@@ -367,7 +383,17 @@ my $columns = {
 			width => 19
 		},
 		{
+			name => 'SeancesPremierCoursModifie',
+			computed => computeSeancesPremierCoursModifie,
+			width => 19
+		},
+		{
 			name => 'SeancesDernierCours',
+			width => 19
+		},
+		{
+			name => 'SeancesDernierCoursModifie',
+			computed => computeSeancesDernierCoursModifie,
 			width => 19
 		},
 		{
@@ -443,6 +469,11 @@ my $columns = {
 			width => 25
 		},
 		{
+			name => 'StagiaireAbsencesCountSincePrev',
+			computed => computeStagiaireAbsencesCountSincePrev,
+			width => 25
+		},
+		{
 			name => 'EvaluationPlanifiee',
 			width => 19
 		},
@@ -487,14 +518,34 @@ my $sheets = {
 my $formats = {};
 
 # -------------------------------------------------------------------------------------------------
-# Execute the provided script
+# the computed columns
+# each function receives the current row and the previous one
+# and must return the value to be displayed
+
+sub computeSeancesDernierCoursModifie {
+	my ( $row, $prev ) = @_;
+	return $row->{SeancesDernierCours} eq $prev->{SeancesDernierCours} ? '' : 'Modifie';
+}
+
+sub computeSeancesPremierCoursModifie {
+	my ( $row, $prev ) = @_;
+	return $row->{SeancesPremierCours} eq $prev->{SeancesPremierCours} ? '' : 'Modifie';
+}
+
+sub computeStagiaireAbsencesCountSincePrev {
+	my ( $row, $prev ) = @_;
+	return $row->{StagiaireAbsencesCount} == $prev->{StagiaireAbsencesCount} ? '' : $row->{StagiaireAbsencesCount} - $prev->{StagiaireAbsencesCount};
+}
+
+# -------------------------------------------------------------------------------------------------
+# Execute the provided SQL query script
 # Split the 'Intras' result set (if found)
 # Create a workbook with up to three sheets
 # and sends it
 
 sub doWork {
 	# execute the sql script
-	# which provides two datasets - but as they are executed as SINGLESET, we get them merged
+	# which provides two datasets - but as they are executed as SINGLESET, we get them merged in a single array
 	my $json = TTP::getTempFileName();
 	my $columns = TTP::getTempFileName();
 	my $command = "dbms.pl sql -service $opt_service -script $opt_script -nocolored -json $json -columns $columns";
@@ -521,16 +572,20 @@ sub doWork {
 		$formats->{rows} = $workbook->add_format(
 			valign => 'vcenter'
 		);
-		# split the data into the tree output part
+		# split the data into the three output parts
 		# simultaneously writing in the workbook
 		my $input = TTP::jsonRead( $json );
-		foreach my $row ( @{$input} ){
+		my @sorted = sort sortFn @{$input};
+		# read the previous result set which has been written already sorted
+		my $previous = previousResultSet();
+		foreach my $row ( @sorted ){
+			my $key = rowKey( $row );
 			if( $row->{Source} eq 'Intras' && $row->{FormuleID} == 1 ){
-				writeInSheet( $workbook, 'intras_solo', $row );
+				writeInSheet( $workbook, 'intras_solo', $row, $previous->{$key} );
 			} elsif( $row->{Source} eq 'Intras' && $row->{FormuleID} != 1 ){
-				writeInSheet( $workbook, 'intras_others', $row );
+				writeInSheet( $workbook, 'intras_others', $row, $previous->{$key} );
 			} elsif( $row->{Source} eq 'Inters' ){
-				writeInSheet( $workbook, 'inters', $row );
+				writeInSheet( $workbook, 'inters', $row, $previous->{$key} );
 			} else {
 				msgWarn( "unknwon source: '$row->{Source}'" );
 			}
@@ -538,14 +593,17 @@ sub doWork {
 		foreach my $sheet ( keys %{$sheets} ){
 			msgVerbose(( $sheets->{$sheet}{name} ).": ".( $sheets->{$sheet}{count}-1 ));
 		}
+		# write the current result sets to be used in next execution comparisons
+		prepareNext( \@sorted );
 		#print Dumper( $sheets );
 		# define and apply formats
 		setupAtEnd( $workbook );
 		$workbook->close();
 		# send the workbook by email
+		$stamp = strftime( '%d/%m/%Y', localtime time );
 		my $subject = $fbase;
 		$subject =~ s/_/ /g;
-		$subject .= " - ".strftime( '%d/%m/%Y', localtime time );
+		$subject .= " - ".$stamp;
 		my $html = <<EOT;
 <p>Bonjour,</p>
 <p>Vous trouverez ci-joint le rapport de suivi pédagogique en date du $stamp.</p>
@@ -572,8 +630,70 @@ EOT
 	}
 }
 
+# -------------------------------------------------------------------------------------------------
+# write the current result sets into prev file to prepare the next execution
+
+sub prepareNext {
+	my ( $results ) = @_;
+	truncate( $prevExecution, 0 );
+	TTP::jsonOutput( $results, $prevExecution );
+	msgVerbose( "current result sets successfully written in $prevExecution" );
+}
+
+# -------------------------------------------------------------------------------------------------
+# read the previous result set
+# returning a hash
+
+sub previousResultSet {
+	my $read = TTP::jsonRead( $prevExecution, { ignoreIfNotExist => true });
+	my $prev = {};
+	my $count = 0;
+	foreach my $it ( @{$read} ){
+		my $k = rowKey( $it );
+		$prev->{$k} = $it;
+		$count += 1;
+	}
+	msgVerbose( "$prevExecution successfully read, $count records were found" );
+	return $prev;
+}
+
+# -------------------------------------------------------------------------------------------------
+# compute a unique key for a row
+
+sub rowKey {
+	my ( $row ) = @_;
+	my $k;
+	if( $row->{Source} eq 'Intras' ){
+		$k = sprintf( '%010s%010s', $row->{ModuleID}, $row->{ModuleStagiaireID} );
+	} else {
+		$k = sprintf( '%010s%010s', $row->{CoursID}, $row->{CoursStagiaireID} );
+	}
+	return $k;
+}
+
+# -------------------------------------------------------------------------------------------------
+# sort the result set
+# Modules Intras: ModuleDateFrom / ModuleID / ModuleStagiaireID
+# Cours Inters: CoursDateFrom / CoursID / CoursStagiaireID
+
+sub sortFn {
+	if( $a->{Source} ne $b->{Source} ){
+		return $a->{Source} cmp $b->{Source};
+	}
+	if( $a->{Source} eq 'Intras' ){
+		my $key_a = sprintf( '%s%010s%010s', $a->{ModuleDateFrom} =~ s/[^0-9]//gr, $a->{ModuleID}, $a->{ModuleStagiaireID} );
+		my $key_b = sprintf(  "%s%010s%010s", $b->{ModuleDateFrom} =~ s/[^0-9]//gr, $b->{ModuleID}, $b->{ModuleStagiaireID} );
+		return $key_a cmp $key_b;
+	}
+	my $key_a = sprintf( "%s%010s%010s", $a->{CoursDateFrom} =~ s/[^0-9]//gr, $a->{CoursID}, $a->{CoursStagiaireID} );
+	my $key_b = sprintf(  "%s%010s%010s", $b->{CoursDateFrom} =~s/[^0-9]//gr, $b->{CoursID}, $b->{CoursStagiaireID} );
+	return $key_a cmp $key_b;
+}
+
+# -------------------------------------------------------------------------------------------------
+
 sub writeInSheet {
-	my ( $book, $name, $row ) = @_;
+	my ( $book, $name, $row, $prev ) = @_;
 	# create the sheet and write the first line if not already done
 	# set the columns width
 	if( !$sheets->{$name}{sheet} ){
@@ -599,13 +719,17 @@ sub writeInSheet {
 	my $array_ref = [];
 	for( my $i=0 ; $i<scalar( @{$columns->{$sheets->{$name}{header}}} ) ; ++$i ){
 		my $col = @{$columns->{$sheets->{$name}{header}}}[$i];
-		push( @{$array_ref}, $row->{$col->{name}} || '' );
+		if( $col->{computed} ){
+			push( @{$array_ref}, $col->{computed}( $row, $prev ));
+		} else {
+			push( @{$array_ref}, $row->{$col->{name}} || '' );
+		}
 	}
 	$sheets->{$name}{sheet}->write_row( $sheets->{$name}{count}, 0, $array_ref, $formats->{rows} );
 	$sheets->{$name}{sheet}->set_row( $sheets->{$name}{count}, 18 );	# row height
 	$sheets->{$name}{count} += 1;
 	# check (once per sheet) that all fields of the row hash have a corresponding column name
-	if( !$sheets->{$name}{checked} ){
+	if( !$sheets->{$name}{fields_checked} ){
 		foreach my $field ( keys %{$row} ){
 			my $found = false;
 			for( my $i=0 ; $i<scalar( @{$columns->{$sheets->{$name}{header}}} ) ; ++$i ){
@@ -616,14 +740,31 @@ sub writeInSheet {
 				}
 			}
 			if( !$found ){
-				msgWarn( "$name: $field not found in columns" );
+				msgWarn( "$name: query $field not found in displayed columns" );
 			}
 		}
-		$sheets->{$name}{checked} = true;
+		$sheets->{$name}{fields_checked} = true;
+	}
+	# check (once per sheet) that all columns (but the computed ones) have a source field
+	if( !$sheets->{$name}{columns_checked} ){
+		for( my $i=0 ; $i<scalar( @{$columns->{$sheets->{$name}{header}}} ) ; ++$i ){
+			my $col = $columns->{$sheets->{$name}{header}}->[$i];
+			if( $col->{computed} ){
+				msgVerbose( "$name: $col->{name} is computed, so not checked for query field origin" );
+			} else {
+				my $found = defined( $row->{$col->{name}} );
+				if( !$found ){
+					msgWarn( "$name: column $col->{name} is not computed, but do not have any related query field" );
+				}
+			}
+		}
+		$sheets->{$name}{columns_checked} = true;
 	}
 }
 
+# -------------------------------------------------------------------------------------------------
 # push a specific format for some cells of some sheets
+
 sub write_my_format {
 	my $worksheet = shift;
 	my $name = $worksheet->get_name();
@@ -642,6 +783,8 @@ sub write_my_format {
 	}
 	return undef;
 }
+
+# -------------------------------------------------------------------------------------------------
 
 sub setupAtEnd {
 	my ( $book ) = @_;

@@ -1,0 +1,13 @@
+<p>La v3 apporte les modifications suivantes :</p>
+<ul>
+<li>les absences depuis le rapport précédent ont été ajoutées ;</li>
+<li>les stagiaires sont dorénavant considérés absents lorsque la présence n'est pas 'PRS' ; jusqu'à la v2 incluse, les absences étaient identifiées par la date d'absence qui n'est pas (ou n'a pas été) toujours renseignée.</li>
+<li>les colonnes 'SeancesPremierCoursModifie' et 'SeancesDernierCoursModifie' sont ajoutées et contiennent l'indication de modification depuis le rapport précédent.</li>
+</ul>
+<p>Quelques règles de calcul utilisées :</p>
+<ul>
+<li><b>ConventionDateFromMin</b>, <b>ConventionDateToMax</b> : lorsque le module intra (resp. le cours inter) est attaché à plusieurs conventions, la plus petite date de début et la plus grande date de fin.</li>
+<li><b>SeancesMiParcoursDate</b> : Si tous les cours ont été planifiés, la date de mi-parcours est calculée comme la médiane entre le premier et le dernier cours ; sinon comme la date médiane de début et de fin de la ou des convention(s).</li>
+<li><b>StagiaireSignManquantes</b> : La signature du stagiaire est considérée comme manquante si et seulement si le stagiaire est marqué 'Présent' (et la signature est manquante).</li>
+<li><b>StagiaireAbsences[Minutes|Count]</b> : Un stagiaire est considéré absent lorsque sa présence n'est pas 'PRS' (peut être 'ABS' ou 'AB10' ou 'AB20' ou ... ou '-').</li>
+</ul>
