@@ -11,6 +11,7 @@
 # @(-) --script=<script>       the path to the SQL script to be executed [${script}]
 # @(-) --fnews=<fnews>         an optional filename which contains HTML news [${fnews}]
 # @(-) --to=<to>               a comma-separated list of mail dests [${to}]
+# @(-) --fprev=<fprev>         an optional filename which will record this execution result sets [${fprev}]
 #
 # @(@) This script is mostly written like a TTP verb but is not.
 # @(@) This is an example of how to take advantage of TTP to write your own (rather pretty and efficient) scripts.
@@ -60,16 +61,17 @@ my $defaults = {
 	service => '',
 	script => '',
 	fnews => '',
-	to => ''
+	to => '',
+	fprev => 'C:\\INLINGUA\\DBs\\SuiviPedagoLast.json'
 };
 
 my $opt_service = $defaults->{service};
 my $opt_script = $defaults->{script};
 my $opt_fnews = $defaults->{fnews};
 my $opt_to = $defaults->{to};
+my $opt_fprev = $defaults->{fprev};
 
 my $mail_bcc = 'inlingua-adm@trychlos.org';
-my $prevExecution = 'C:\\INLINGUA\\DBs\\SuiviPedagoLast.json';
 
 my $columns = {
 	Intras => [
@@ -635,9 +637,9 @@ EOT
 
 sub prepareNext {
 	my ( $results ) = @_;
-	truncate( $prevExecution, 0 );
-	TTP::jsonOutput( $results, $prevExecution );
-	msgVerbose( "current result sets successfully written in $prevExecution" );
+	truncate( $opt_fprev, 0 );
+	TTP::jsonOutput( $results, $opt_fprev );
+	msgVerbose( "current result sets successfully written in $opt_fprev" );
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -645,7 +647,7 @@ sub prepareNext {
 # returning a hash
 
 sub previousResultSet {
-	my $read = TTP::jsonRead( $prevExecution, { ignoreIfNotExist => true });
+	my $read = TTP::jsonRead( $opt_fprev, { ignoreIfNotExist => true });
 	my $prev = {};
 	my $count = 0;
 	foreach my $it ( @{$read} ){
@@ -653,7 +655,7 @@ sub previousResultSet {
 		$prev->{$k} = $it;
 		$count += 1;
 	}
-	msgVerbose( "$prevExecution successfully read, $count records were found" );
+	msgVerbose( "$opt_fprev successfully read, $count records were found" );
 	return $prev;
 }
 
@@ -809,7 +811,8 @@ if( !GetOptions(
 	"service=s"			=> \$opt_service,
 	"script=s"			=> \$opt_script,
 	"fnews=s"			=> \$opt_fnews,
-	"to=s"				=> \$opt_to	)){
+	"to=s"				=> \$opt_to,
+	"fprev=s"			=> \$opt_fprev )){
 
 		msgOut( "try '".$extern->command()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
@@ -828,6 +831,7 @@ msgVerbose( "found service='$opt_service'" );
 msgVerbose( "found script='$opt_script'" );
 msgVerbose( "found fnews='$opt_fnews'" );
 msgVerbose( "found to='$opt_to'" );
+msgVerbose( "found fprev='$opt_fprev'" );
 
 if( !TTP::errs()){
 	doWork();
