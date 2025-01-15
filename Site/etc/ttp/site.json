@@ -5,7 +5,7 @@
 			"manage macros: SUBJECT, OPTIONS"
 		],
 		"workloadSummary": {
-			"command": "smtp.pl send -subject \"<SUBJECT>\" -to inlingua-adm@trychlos.org <OPTIONS>"
+			"command": "smtp.pl send -subject \"<SUBJECT>\" -to it-tom@inlingua-pro.com <OPTIONS>"
 		}
 	},
 
@@ -36,14 +36,14 @@
 			],
 			"withSmtp" : {
 				"enabled": true,
-				"command": "smtp.pl send -to alerts@trychlos.org,inlingua-adm@trychlos.org -subject <SUBJECT> <OPTIONS>"
+				"command": "smtp.pl send -to alerts@trychlos.org,it-tom@inlingua-pro.com -subject <SUBJECT> <OPTIONS>"
 			},
 			"withSms_comments": [
 				"manage macros: OPTIONS"
 			],
 			"withSms" : {
 				"enabled": true,
-				"command": "smtp.pl send -to mail2sms@trychlos.org -subject \"SMSTO: +33607797792\" <OPTIONS>"
+				"command": "smtp.pl send -to forwarder@trychlos.org -subject \"SMSTO: +33607797792\" <OPTIONS>"
 			}
 		},
 		"copyDir_comments": [

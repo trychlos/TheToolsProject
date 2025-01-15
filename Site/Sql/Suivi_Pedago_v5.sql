@@ -64,7 +64,11 @@
 					WHEN DATEADD( DAY, DATEDIFF( DAY, CONVENTIONS.ConventionDateFromMin, CONVENTIONS.ConventionDateToMax ) / 2, CONVENTIONS.ConventionDateFromMin ) < GETDATE() THEN 'Passee'
 					ELSE ''
 				END
-		  END as SeancesMiParcoursPasse
+		  END as SeancesMiParcoursPassée
+		-- Date et contenu de la note la plus récente
+		, NOTES.Label as LastNoteLabel
+		, NOTES.Notes as LastNoteContent
+		, NOTES.DayDate as LastNoteDate
 		-- Note pédagogique manquante : non  / oui (avec date si oui ) -> SeancesIntraVars.NoShow ?
 		, NOTES_PEDAGO_DUE.NotesPedagoDue
 		, NOTES_PEDAGO_FOUND.NotesPedagoFound
@@ -156,6 +160,11 @@
 		-- les seances planifiées
 		left join ( select A.ModuleID, min( A.DayDate ) as PremierCours, max( A.DayDate ) as DernierCours from dbo.c_SeancesIntraVars A group by A.ModuleID ) SEANCES on SEANCES.ModuleID = MODULES.ID
 
+		-- content and date of most recent attached notes
+		left join (
+			select TOP(1) A.Label, A.Notes, A.DayDate, A.ModuleID
+				from dbo.c_Notes A order by A.DayDate desc ) NOTES on NOTES.ModuleID = RES.ModuleID
+
 		-- les séances exécutées
 		-- la presence 'PRS' est positionnée lorsque le stagiaire signe electroniquement
 		-- les signatures manquantes sont celles où le stagiaire n'est pas marqué absent ET la seance n'a pas NoShow=0 ET la logistique de la seance n'est pas ST (sous-traitance)
@@ -215,7 +224,7 @@
 	-- order by ModuleStagiaireID
 	--where SIGN_STAG_MANQUANTES.SignStagManquantes is not null
 	--order by personLabel asc
-	-- where MODULES.Label like '%24 HB CPF A LEDEZ ANG LILATE%'
+	--where MODULES.Label like '%24 MA CPF H DEGAND ANG LILATE%'!
 
 	-- ==============================================================================================================================
 	select
@@ -265,7 +274,11 @@
 					WHEN DATEADD( DAY, DATEDIFF( DAY, CONVENTIONS.ConventionDateFromMin, CONVENTIONS.ConventionDateToMax ) / 2, CONVENTIONS.ConventionDateFromMin ) < GETDATE() THEN 'Passee'
 					ELSE ''
 				END
-		  END as SeancesMiParcoursPasse
+		  END as SeancesMiParcoursPassée
+		-- Date et contenu de la note la plus récente
+		, NOTES.Label as LastNoteLabel
+		, NOTES.Notes as LastNoteContent
+		, NOTES.DayDate as LastNoteDate
 		-- Note pédagogique manquante : non  / oui (avec date si oui ) -> SeancesIntraVars.NoShow ?
 		, NOTES_PEDAGO_DUE.NotesPedagoDue
 		, NOTES_PEDAGO_FOUND.NotesPedagoFound
@@ -352,6 +365,11 @@
 
 		-- les seances planifiées
 		left join ( select A.CoursID, min( A.DayDate ) as PremierCours, max( A.DayDate ) as DernierCours from dbo.c_SeancesInterVars A group by A.CoursID ) SEANCES on SEANCES.CoursID = COURS.ID
+
+		-- content and date of most recent attached notes
+		left join (
+			select TOP(1) A.Label, A.Notes, A.DayDate, A.CoursID
+				from dbo.c_Notes A order by A.DayDate desc ) NOTES on NOTES.CoursID = RES.CoursID
 
 		-- les notes pédagogiques à renseigner par le formateur pour chaque séance
 		-- la note est dûe si la logistique de la session dit qu'il y a un formateur
