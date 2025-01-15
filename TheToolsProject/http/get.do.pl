@@ -25,7 +25,7 @@
 # @(@) originates from this same physical host.
 # @(@) In order to get accurate result, this verb must so be run from outside of the involved physical hosts.
 # @(@) '--epoch' option let the verb publish an epoch-based telemetry. This is very specific to the use of the telemetry by Grafana in order
-# à(@) to be able to both identify the last live node, and to set a status on this last live node to current or not.
+# @(@) to be able to both identify the last live node, and to set a status on this last live node to current or not.
 #
 # The Tools Project: a Tools System and Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)

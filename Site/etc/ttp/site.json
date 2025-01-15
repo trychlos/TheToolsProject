@@ -135,9 +135,9 @@
 		"nodeRoot": "C:\\INLINGUA",
 
 		"SMTPGateway": {
-			"host": "mail.trychlos.org",
-			"port": 465,
-			"mailfrom": "No Reply <no-reply@blingua.fr>"
+			"host": "smtp.office365.com",
+			"port": 587,
+			"mailfrom": "Tom <it-tom@inlingua-pro.com>"
 		},
 		"Telemetry": {
 			"withMqtt": {
