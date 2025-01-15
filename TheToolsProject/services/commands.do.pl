@@ -53,8 +53,8 @@ sub executeCommands {
 	if( $service ){
 		# addressed value can be a scalar or an array of scalars
 		my $value = $service->var( \@opt_keys );
-		if( $value ){
-			_execute( $service, $value );
+		if( $value && $value->{commands} ){
+			_execute( $service, $value->{commands} );
 		} else {
 			msgErr( "unable to find the requested information" );
 		}
