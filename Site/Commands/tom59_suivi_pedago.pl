@@ -74,7 +74,7 @@ my $opt_to = $defaults->{to};
 my $opt_finprev = $defaults->{finprev};
 my $opt_foutprev = $defaults->{foutprev};
 
-my $mail_bcc = 'it-tom@inlingua-pro.com';
+my $mail_bcc = 'inlingua-adm@trychlos.org';
 
 my $columns = {
 	Intras => [
@@ -646,7 +646,7 @@ EOT
 		$html .= <<EOT;
 <p>Je vous en souhaite bonne réception, et une bonne journée.</p>
 <p>Cordialement,</p>
-<p><a href='mailto:it-tom\@inlingua-pro.com'>Tom59</a></p>
+<p><a href='mailto:Tom &lt;it-tom\@inlingua-pro.com&gt;'>Tom</a></p>
 EOT
 		my $htmlfname = TTP::getTempFileName();
 		path( $htmlfname )->spew_utf8( $html );
