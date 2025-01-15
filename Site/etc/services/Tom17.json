@@ -6,9 +6,9 @@
 	},
 	"status": {
 		"commands": [
-			"http.pl get -nocolored -url https://tom17.blingua.fr -accept [1-3].. -mqtt -http -- -metric ttp_url_status -label service=<SERVICE> -label environment=X",
-			"http.pl get -nocolored -url https://inlingua17.blingua.fr -accept [1-3].. -mqtt -http -- -metric ttp_url_status -label service=<SERVICE> -label environment=X",
-			"http.pl get -nocolored -url https://tom17.backup.blingua.fr -accept [1-3].. -mqtt -http -- -metric ttp_url_status -label service=<SERVICE> -label environment=X"
+			"http.pl get -nocolored -url https://tom17.blingua.fr -accept [1-3].. -status -epoch -mqtt -http -- -metric ttp_url_status -label service=<SERVICE> -label environment=X",
+			"http.pl get -nocolored -url https://inlingua17.blingua.fr -accept [1-3].. -status -epoch -mqtt -http -- -metric ttp_url_status -label service=<SERVICE> -label environment=X",
+			"http.pl get -nocolored -url https://tom17.backup.blingua.fr -accept [1-3].. -status -epoch -mqtt -http -- -metric ttp_url_status -label service=<SERVICE> -label environment=X"
 		]
 	},
 	"switch": {
