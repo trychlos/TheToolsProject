@@ -29,6 +29,10 @@
 # along with The Tools Project; see the file COPYING. If not,
 # see <http://www.gnu.org/licenses/>.
 
+use utf8;
+use strict;
+use warnings;
+
 use IO::Socket::INET;
 
 # auto-flush on socket
@@ -36,6 +40,7 @@ $| = 1;
 
 use TTP::Daemon;
 use TTP::Finder;
+my $running = $ep->runner();
 
 my $defaults = {
 	help => 'no',

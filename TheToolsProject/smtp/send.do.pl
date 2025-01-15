@@ -33,9 +33,14 @@
 # along with The Tools Project; see the file COPYING. If not,
 # see <http://www.gnu.org/licenses/>.
 
+use utf8;
+use strict;
+use warnings;
+
 use Path::Tiny;
 
 use TTP::SMTP;
+my $running = $ep->runner();
 
 my $defaults = {
 	help => 'no',

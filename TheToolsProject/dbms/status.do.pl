@@ -32,12 +32,17 @@
 # along with The Tools Project; see the file COPYING. If not,
 # see <http://www.gnu.org/licenses/>.
 
+use utf8;
+use strict;
+use warnings;
+
 use Scalar::Util qw( looks_like_number );
 use URI::Escape;
 
 use TTP::DBMS;
 use TTP::Metric;
 use TTP::Service;
+my $running = $ep->runner();
 
 my $defaults = {
 	help => 'no',
