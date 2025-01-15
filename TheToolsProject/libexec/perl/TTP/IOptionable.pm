@@ -33,6 +33,10 @@
 package TTP::IOptionable;
 our $VERSION = '1.00';
 
+use utf8;
+use strict;
+use warnings;
+
 use Carp;
 use Data::Dumper;
 use vars::global qw( $ep );

@@ -11,6 +11,7 @@
 
 package TTP::SMTP;
 
+use utf8;
 use strict;
 use warnings;
 

@@ -21,6 +21,7 @@
 package TTP::IFindable;
 our $VERSION = '1.00';
 
+use utf8;
 use strict;
 use warnings;
 

@@ -7,6 +7,7 @@
 
 package TTP::OvhApi;
 
+use utf8;
 use strict;
 use warnings;
 
