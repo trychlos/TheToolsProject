@@ -4,7 +4,7 @@
 # @(-) --[no]colored           color the output depending of the message level [${colored}]
 # @(-) --[no]dummy             dummy run (ignored here) [${dummy}]
 # @(-) --[no]verbose           run verbosely [${verbose}]
-# @(-) --[no]pushgateway       list metrics published on the PushGateway [${push}]
+# @(-) --[no]push              list metrics published on the PushGateway [${push}]
 # @(-) --limit=<limit>         only list first <limit> metric [${limit}]
 #
 # The Tools Project: a Tools System and Paradigm for IT Production

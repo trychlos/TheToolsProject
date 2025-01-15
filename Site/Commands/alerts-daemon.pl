@@ -38,6 +38,7 @@
 # - monitoredDir: the directory to be monitored for alerts files, defaulting to alertsDir
 # - scanInterval, the scan interval, defaulting to 10000 ms (10 sec.)
 
+use utf8;
 use strict;
 use warnings;
 

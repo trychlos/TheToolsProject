@@ -10,7 +10,8 @@
 			"http.pl get -nocolored -url http://canal33.backup.blingua.net -accept [1-3].. -status -epoch -mqtt -http -- -metric ttp_url_status -label service=<SERVICE> -label environment=X",
 			"http.pl get -nocolored -url https://c33.blingua.net -accept [1-3].. -status -epoch -mqtt -http -- -metric ttp_url_status -label service=<SERVICE> -label environment=X",
 			"http.pl get -nocolored -url https://c33.backup.blingua.net -accept [1-3].. -status -epoch -mqtt -http -- -metric ttp_url_status -label service=<SERVICE> -label environment=X"
-		]
+		],
+		"live": "http.pl get -nocolored -url http://canal33.blingua.net -header X-Sent-By -accept ..."
 	},
 	"switch": {
 		"to_backup": {

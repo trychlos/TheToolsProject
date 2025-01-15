@@ -62,7 +62,7 @@
 					"A command which let us determine where is the live production. This is a single command as we manage a single live production",
 					"Only useful when about to switch a machine status to or from live or backup"
 				],
-				"get_live": "http.pl get -nocolored -url http://ip.test.blingua.net -header X-Sent-By -accept ...",
+				"live": "http.pl get -nocolored -url http://ip.test.blingua.net -header X-Sent-By -accept ...",
 				"after": {
 					"commands": [
 						"ssh inlingua-user@<NODE> dbms.pl status -nocolored -service <SERVICE> -state -mqtt -http",

@@ -40,6 +40,7 @@
 # - topics: a HASH whose each key is a regular expression which is matched against the topics
 #   and whose values are the behavior to have.
 
+use utf8;
 use strict;
 use warnings;
 

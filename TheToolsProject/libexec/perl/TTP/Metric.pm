@@ -44,6 +44,7 @@ package TTP::Metric;
 use base qw( TTP::Base );
 our $VERSION = '1.00';
 
+use utf8;
 use strict;
 use warnings;
 
@@ -184,6 +185,7 @@ sub props {
 	my ( $self, $args ) = @_;
 	$args //= {};
 
+	# set the provided values
 	$self->help( $args->{help} ) if exists $args->{help};
 	$self->name( $args->{name} ) if exists $args->{name};
 	$self->type( $args->{type} ) if exists $args->{type};
@@ -222,13 +224,13 @@ sub publish {
 	$http = $args->{http} if exists $args->{http};
 	my $httpPrefix = '';
 	$httpPrefix = $args->{httpPrefix} if defined $args->{httpPrefix};
-	$result->{http} = $self->_http_publish( $httpPrefix ) if $http;
+	$result->{http} = $self->_http_publish( $httpPrefix ) if $http && $self->type_check();
 
 	my $text = false;
 	$text = $args->{text} if exists $args->{text};
 	my $textPrefix = '';
 	$textPrefix = $args->{textPrefix} if defined $args->{textPrefix};
-	$result->{text} = $self->_text_publish( $textPrefix ) if $text;
+	$result->{text} = $self->_text_publish( $textPrefix ) if $text && $self->type_check();
 
 	return $result;
 }
@@ -421,6 +423,7 @@ sub _text_publish {
 # Documentation says this is an optional information, but Prometheus set the vaue as 'untyped' if
 # not specified at the very first time the value is sent, and the value type can never be modified.
 # So better to always provide it.
+# Doesn't check here if the value is known as messaging (MQTT) doesn't care
 # (I]:
 # - an optional type
 # (O):
@@ -429,15 +432,33 @@ sub _text_publish {
 sub type {
 	my ( $self, $arg ) = @_;
 
-	if( defined( $arg )){
-		if( grep( /$arg/, @{$Const->{types}} )){
-			$self->{_metric}{type} = $arg;
-		} else {
-			msgErr( __PACKAGE__."::type() '$arg' is not referenced among [".join( ',', @{$Const->{types}} )."]" );
-		}
-	}
+	#if( defined( $arg )){
+	#	if( grep( /$arg/, @{$Const->{types}} )){
+	#		$self->{_metric}{type} = $arg;
+	#	} else {
+	#		msgErr( __PACKAGE__."::type() '$arg' is not referenced among [".join( ',', @{$Const->{types}} )."]" );
+	#	}
+	#}
+	$self->{_metric}{type} = $arg if defined $arg;
 
 	return $self->{_metric}{type};
+}
+
+# -------------------------------------------------------------------------------------------------
+# (O):
+# - true|false if the type exists, whatever the publishing meda
+
+sub type_check {
+	my ( $self ) = @_;
+
+	my $type = $self->type();
+	my $res = true;
+	if( $type && !grep( /$type/, @{$Const->{types}} )){
+		msgErr( __PACKAGE__."::type() '$type' is not referenced among [".join( ',', @{$Const->{types}} )."]" );
+		$res = false;
+	}
+
+	return $res;
 }
 
 # -------------------------------------------------------------------------------------------------

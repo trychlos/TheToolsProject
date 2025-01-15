@@ -17,7 +17,6 @@
 	"Services": {
 		"Tom17": {
 			"status": {
-				"x_get_live": "http.pl get -nocolored -url https://tom17.blingua.fr -header X-Sent-By -accept ...",
 				"after": {
 					"commands": [
 						"ssh inlingua-user@<NODE> dbms.pl status -nocolored -service <SERVICE> -state -mqtt -http",
@@ -39,7 +38,6 @@
 		},
 		"Tom21": {
 			"status": {
-				"x_get_live": "http.pl get -nocolored -url https://tom21.blingua.fr -header X-Sent-By -accept ...",
 				"after": {
 					"commands": [
 						"ssh inlingua-user@<NODE> dbms.pl status -nocolored -service <SERVICE> -state -mqtt -http",
@@ -61,7 +59,6 @@
 		},
 		"Tom59": {
 			"status": {
-				"x_get_live": "http.pl get -nocolored -url https://tom59.blingua.fr -header X-Sent-By -accept ...",
 				"after": {
 					"commands": [
 						"ssh inlingua-user@<NODE> dbms.pl status -nocolored -service <SERVICE> -state -mqtt -http",

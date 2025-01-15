@@ -45,12 +45,17 @@
 # along with The Tools Project; see the file COPYING. If not,
 # see <http://www.gnu.org/licenses/>.
 
+use utf8;
+use strict;
+use warnings;
+
 use HTTP::Request;
 use LWP::UserAgent;
 use Time::Piece;
 use URI::Escape;
 
 use TTP::Metric;
+my $running = $ep->runner();
 
 my $defaults = {
 	help => 'no',
@@ -85,7 +90,7 @@ my $opt_epoch = false;
 my $opt_mqtt = false;
 my $opt_mqttPrefix = $defaults->{mqttPrefix};
 my $opt_http = false;
-my $httpPrefix = $defaults->{httpPrefix};
+my $opt_httpPrefix = $defaults->{httpPrefix};
 my $opt_text = false;
 my $opt_textPrefix = $defaults->{textPrefix};
 my @opt_prepends = ();
@@ -98,6 +103,8 @@ sub doGet {
 	msgOut( "requesting '$opt_url'..." );
 	my $res = false;
 	my $header = undef;
+	my $response = undef;
+	my $status = undef;
 	if( $running->dummy()){
 		msgDummy( "considering successful with status='200' sent from this node" );
 		$res = true;
@@ -106,9 +113,9 @@ sub doGet {
 		my $ua = LWP::UserAgent->new();
 		$ua->timeout( 5 );
 		my $req = HTTP::Request->new( GET => $opt_url );
-		my $response = $ua->request( $req );
+		$response = $ua->request( $req );
 		$res = $response->is_success;
-		my $status = $response->code;
+		$status = $response->code;
 		if( $res ){
 			msgVerbose( "receiving HTTP status='$status', success='true'" );
 			msgLog( "content='".$response->decoded_content."'" );
@@ -188,21 +195,6 @@ sub _telemetry {
 			textPrefix => $opt_textPrefix
 		});
 	}
-}
-
-# -------------------------------------------------------------------------------------------------
-# whether a status must return an error
-# (I):
-# - status
-# (O):
-# - returns true|false
-sub _isIgnored {
-	my ( $status ) = @_;
-	my $ignored = true;
-	foreach my $it ( @notIgnored ){
-		$ignored = false if $status =~ m/$it/;
-	}
-	return $ignored;
 }
 
 # =================================================================================================

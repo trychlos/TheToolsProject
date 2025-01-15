@@ -25,8 +25,7 @@
 						"ssh inlingua-adm@<NODE> mswin.pl service -name Canal33Ftp -state -mqtt -http -- -label service=<SERVICE>",
 						"ssh inlingua-adm@<NODE> mswin.pl service -name Canal33Svc -state -mqtt -http -- -label service=<SERVICE>"
 					]
-				},
-				"x_get_live": "http.pl get -nocolored -url http://canal33.blingua.net -header X-Sent-By -accept ..."
+				}
 			},
 			"workloads": {
 				"canal33.backup": [
