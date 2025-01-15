@@ -182,8 +182,8 @@
 
 		left join ( select A.ModuleID, count( A.DayDate ) as SignFormateurManquantes
 			from dbo.c_SeancesIntraVars A
-				inner join dbo.e_LogisticVarType B on B.Code = A.LogisticVarType and B.IsFormateur = 1
-				where A.NoShow = 0 and A.DayDate < GETDATE() and A.SignImage is null group by A.ModuleID ) SIGN_FORMATEUR_MANQUANTES on SIGN_FORMATEUR_MANQUANTES.ModuleID = MODULES.ID
+				inner join dbo.e_LogisticVarType B on B.Code = A.LogisticVarType
+				where A.NoShow = 0 and A.DayDate < GETDATE() and A.SignImage is null and B.IsFormateur = 1 group by A.ModuleID ) SIGN_FORMATEUR_MANQUANTES on SIGN_FORMATEUR_MANQUANTES.ModuleID = MODULES.ID
 
 		-- les notes pédagogiques à renseigner par le formateur pour chaque séance
 		-- la note est dûe si la logistique de la session dit qu'il y a un formateur
@@ -390,8 +390,8 @@
 
 		left join ( select A.CoursID, count( A.DayDate ) as SignFormateurManquantes
 			from dbo.c_SeancesInterVars A
-				inner join dbo.e_LogisticVarType B on B.Code = A.LogisticVarType and B.IsFormateur = 1
-				where A.NoShow = 0 and A.DayDate < GETDATE() and A.SignImage is null group by A.CoursID ) SIGN_FORMATEUR_MANQUANTES on SIGN_FORMATEUR_MANQUANTES.CoursID = COURS.ID
+				inner join dbo.e_LogisticVarType B on B.Code = A.LogisticVarType
+				where A.NoShow = 0 and A.DayDate < GETDATE() and A.SignImage is null and B.IsFormateur = 1 group by A.CoursID ) SIGN_FORMATEUR_MANQUANTES on SIGN_FORMATEUR_MANQUANTES.CoursID = COURS.ID
 
 		-- the stagiaire name
 		left join dbo.c_Persons PERSONS on PERSONS.ID = COURS_STAGIAIRES.PersonID

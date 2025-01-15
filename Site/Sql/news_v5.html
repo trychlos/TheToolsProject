@@ -8,8 +8,9 @@
 <li>Les modules considérés sont les modules en cours, ou terminés depuis moins d'un mois, ou qui débutent dans moins d'un mois.</li>
 <li><b>ConventionDateFromMin</b>, <b>ConventionDateToMax</b> : lorsque le module intra (resp. le cours inter) est attaché à plusieurs conventions, la plus petite date de début et la plus grande date de fin.</li>
 <li><b>SeancesMiParcoursDate</b> : Si tous les cours ont été planifiés, la date de mi-parcours est calculée comme la médiane entre le premier et le dernier cours ; sinon comme la date médiane de début et de fin de la ou des convention(s).</li>
-<li><b>SeancesSignFormateurManquantes</b> : La signature du formateur est considérée manquante lorsque la logistique de la séance implique un formateur, et que NoShow vaut zéro.</li>
+<li><b>SeancesSignFormateurManquantes</b> : La signature du formateur est considérée manquante lorsque la logistique de la séance implique un formateur, et que NoShow vaut zéro.<br />
+	Cela peut inclure néanmoins les séances dont le lieu est sous-traité.</li>
 <li><b>StagiaireAbsences[Minutes|Count]</b> : Un stagiaire est considéré absent lorsque sa présence est 'ABS' (ou 'AB10' ou 'AB20' ou ...).</li>
-<li><b>StagiaireSignManquantes</b> : La signature est considérée manquante lorsque le TypePresence n'est pas encore renseigné, et que NoShow vaut zéro, et que la logistique n'est pas sous-traitée.<br />
+<li><b>StagiaireSignManquantes</b> : La signature est considérée manquante lorsque le TypePresence n'est pas encore renseigné, et que NoShow vaut zéro, et que la logistique de la séance n'est pas sous-traitée.<br />
 	Cela peut inclure néanmoins les séances dont le lieu est sous-traité.</li>
 </ul>

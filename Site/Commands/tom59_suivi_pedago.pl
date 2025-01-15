@@ -35,6 +35,10 @@
 # along with The Tools Project; see the file COPYING. If not,
 # see <http://www.gnu.org/licenses/>.
 
+use utf8;
+use strict;
+use warnings;
+
 use Data::Dumper;
 use Excel::Writer::XLSX;
 use File::Basename;
@@ -42,8 +46,6 @@ use File::Spec;
 use Getopt::Long;
 use Path::Tiny;
 use POSIX;
-
-use utf8;
 
 use TTP;
 use TTP::Constants qw( :all );
@@ -74,7 +76,7 @@ my $opt_to = $defaults->{to};
 my $opt_finprev = $defaults->{finprev};
 my $opt_foutprev = $defaults->{foutprev};
 
-my $mail_bcc = 'inlingua-adm@trychlos.org';
+my $mail_bcc = 'it-tom@inlingua-pro.com';
 
 my $columns = {
 	Intras => [
@@ -176,7 +178,7 @@ my $columns = {
 		},
 		{
 			name => 'SeancesPremierCoursModifie',
-			computed => computeSeancesPremierCoursModifie,
+			computed => \&computeSeancesPremierCoursModifie,
 			width => 19
 		},
 		{
@@ -185,7 +187,7 @@ my $columns = {
 		},
 		{
 			name => 'SeancesDernierCoursModifie',
-			computed => computeSeancesDernierCoursModifie,
+			computed => \&computeSeancesDernierCoursModifie,
 			width => 19
 		},
 		{
@@ -202,7 +204,7 @@ my $columns = {
 		},
 		{
 			name => 'LastNoteContent',
-			width => 20
+			width => 40
 		},
 		{
 			name => 'LastNoteDate',
@@ -274,7 +276,7 @@ my $columns = {
 		},
 		{
 			name => 'StagiaireAbsencesCountSincePrev',
-			computed => computeStagiaireAbsencesCountSincePrev,
+			computed => \&computeStagiaireAbsencesCountSincePrev,
 			width => 25
 		},
 		{
@@ -401,7 +403,7 @@ my $columns = {
 		},
 		{
 			name => 'SeancesPremierCoursModifie',
-			computed => computeSeancesPremierCoursModifie,
+			computed => \&computeSeancesPremierCoursModifie,
 			width => 19
 		},
 		{
@@ -410,7 +412,7 @@ my $columns = {
 		},
 		{
 			name => 'SeancesDernierCoursModifie',
-			computed => computeSeancesDernierCoursModifie,
+			computed => \&computeSeancesDernierCoursModifie,
 			width => 19
 		},
 		{
@@ -427,7 +429,7 @@ my $columns = {
 		},
 		{
 			name => 'LastNoteContent',
-			width => 20
+			width => 40
 		},
 		{
 			name => 'LastNoteDate',
@@ -499,7 +501,7 @@ my $columns = {
 		},
 		{
 			name => 'StagiaireAbsencesCountSincePrev',
-			computed => computeStagiaireAbsencesCountSincePrev,
+			computed => \&computeStagiaireAbsencesCountSincePrev,
 			width => 25
 		},
 		{
@@ -553,17 +555,17 @@ my $formats = {};
 
 sub computeSeancesDernierCoursModifie {
 	my ( $row, $prev ) = @_;
-	return $row->{SeancesDernierCours} eq $prev->{SeancesDernierCours} ? '' : 'Modifie';
+	return $prev ? ( $row->{SeancesDernierCours} eq $prev->{SeancesDernierCours} ? '' : 'Modifie' ) : '';
 }
 
 sub computeSeancesPremierCoursModifie {
 	my ( $row, $prev ) = @_;
-	return $row->{SeancesPremierCours} eq $prev->{SeancesPremierCours} ? '' : 'Modifie';
+	return $prev ? ( $row->{SeancesPremierCours} eq $prev->{SeancesPremierCours} ? '' : 'Modifie' ) : '';
 }
 
 sub computeStagiaireAbsencesCountSincePrev {
 	my ( $row, $prev ) = @_;
-	return $row->{StagiaireAbsencesCount} == $prev->{StagiaireAbsencesCount} ? '' : $row->{StagiaireAbsencesCount} - $prev->{StagiaireAbsencesCount};
+	return $prev ? ( $row->{StagiaireAbsencesCount} == $prev->{StagiaireAbsencesCount} ? '' : $row->{StagiaireAbsencesCount} - $prev->{StagiaireAbsencesCount} ) : '';
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -781,8 +783,9 @@ sub writeInSheet {
 			if( $col->{computed} ){
 				msgVerbose( "$name: $col->{name} is computed, so not checked for query field origin" );
 			} else {
-				my $found = defined( $row->{$col->{name}} );
-				if( !$found ){
+				if( !exists $row->{$col->{name}} ){
+					print Dumper( $row );
+					print Dumper( $col );
 					msgWarn( "$name: column $col->{name} is not computed, but do not have any related query field" );
 				}
 			}
