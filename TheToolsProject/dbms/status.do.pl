@@ -151,7 +151,7 @@ sub doState {
 				"instance=$opt_instance", "database=$db", "state=$sqlStates->{$key}",
 				@opt_appends );
 			TTP::Metric->new( $ep, {
-				name => 'dbms_database_state',
+				name => 'dbms_state',
 				value => "$key" eq "$result->{state}" ? 1 : 0,
 				type => 'gauge',
 				help => 'Database status',

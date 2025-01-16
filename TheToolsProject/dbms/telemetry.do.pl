@@ -156,9 +156,9 @@ sub doDbSize {
 				mqtt => $opt_mqtt,
 				mqttPrefix => 'dbsize/',
 				http => $opt_http,
-				httpPrefix => 'dbms_database_dbsize_',
+				httpPrefix => 'dbms_dbsize_',
 				text => $opt_text,
-				textPrefix => 'dbms_database_dbsize_'
+				textPrefix => 'dbms_dbsize_'
 			});
 			$count += 1 if $opt_mqtt || $opt_http || $opt_text;
 			last if $count >= $opt_limit && $opt_limit >= 0;
@@ -218,9 +218,9 @@ sub doTablesCount {
 						labels => \@labels
 					})->publish({
 						http => $opt_http,
-						httpPrefix => 'dbms_database_table_',
+						httpPrefix => 'dbms_table_',
 						text => $opt_text,
-						textPrefix => 'dbms_database_table_'
+						textPrefix => 'dbms_table_'
 					});
 				}
 				$count += 1 if $opt_mqtt || $opt_http || $opt_text;
