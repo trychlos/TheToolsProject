@@ -69,7 +69,7 @@ my $opt_instance = '';
 my $opt_instance_set = false;
 my $opt_database = $defaults->{database};
 my $opt_dbsize = false;
-my $opt_tabcout = false;
+my $opt_tabcount = false;
 my $opt_limit = $defaults->{limit};
 my $opt_mqtt = false;
 my $opt_http = false;
@@ -142,7 +142,7 @@ sub doDbSize {
 		# we got so six metrics for each database
 		# that we publish separately as mqtt-based names are slightly different from Prometheus ones
 		my @labels = ( @opt_prepends,
-			"environment=".$ep->node()->environment(), "command=".$running->command(), "verb=".$running->verb(),
+			"environment=".$ep->node()->environment(), "service=".$opt_service, "command=".$running->command(), "verb=".$running->verb(),
 			"instance=$opt_instance", "database=$db",
 			@opt_appends );
 		foreach my $key ( keys %{$set} ){
@@ -154,17 +154,17 @@ sub doDbSize {
 				labels => \@labels
 			})->publish({
 				mqtt => $opt_mqtt,
-				mqttPrefix => 'dbsize_',
+				mqttPrefix => 'dbsize/',
 				http => $opt_http,
-				httpPrefix => 'dbms_database_size_',
+				httpPrefix => 'dbms_database_dbsize_',
 				text => $opt_text,
-				textPrefix => 'dbms_database_size_'
+				textPrefix => 'dbms_database_dbsize_'
 			});
 			$count += 1 if $opt_mqtt || $opt_http || $opt_text;
 			last if $count >= $opt_limit && $opt_limit >= 0;
 		}
 	}
-	msgOut( "$count published metric(s)" );
+	msgOut( "$count published database size metric(s)" );
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -186,30 +186,49 @@ sub doTablesCount {
 			msgOut( " table '$tab'" );
 			my $sqlres = $dbms->execSqlCommand( "use $db; select count(*) as rows_count from $tab;", { tabular => false });
 			if( $sqlres->{ok} ){
-				my @labels = ( @opt_prepends,
-					"environment=".$ep->node()->environment(), "command=".$running->command(), "verb=".$running->verb(),
-					"instance=$opt_instance", "database=$db", "table=$tab",
-					@opt_appends );
-				TTP::Metric->new( $ep, {
-					name => 'rows_count',
-					value => $sqlres->{result}->[0]->{rows_count} || 0,
-					type => 'gauge',
-					help => 'Table rows count',
-					labels => \@labels
-				})->publish({
-					mqtt => $opt_mqtt,
-					mqttPrefix => '',
-					http => $opt_http,
-					httpPrefix => 'dbms_database_table_',
-					text => $opt_text,
-					textPrefix => 'dbms_database_table_'
-				});
+				# mqtt and http/text have different names
+				# mqtt topic: <node>/telemetry/<environment>/<service>/<command>/<verb>/<instance>/<database>/rowscount/<table>
+				# mqtt value: <table_rows_count>
+				if( $opt_mqtt ){
+					my @labels = ( @opt_prepends,
+						"environment=".$ep->node()->environment(), "service=".$opt_service, "command=".$running->command(), "verb=".$running->verb(),
+						"instance=$opt_instance", "database=$db",
+						@opt_appends );
+					TTP::Metric->new( $ep, {
+						name => $tab,
+						value => $sqlres->{result}->[0]->{rows_count} || 0,
+						labels => \@labels
+					})->publish({
+						mqtt => $opt_mqtt,
+						mqttPrefix => 'rowscount/'
+					});
+				}
+				# http labels += table=<table>
+				# http value: <table_rows_count>
+				if( $opt_http || $opt_text ){
+					my @labels = ( @opt_prepends,
+						"environment=".$ep->node()->environment(), "service=".$opt_service, "command=".$running->command(), "verb=".$running->verb(),
+						"instance=$opt_instance", "database=$db", "table=$tab",
+						@opt_appends );
+					TTP::Metric->new( $ep, {
+						name => 'rowscount',
+						value => $sqlres->{result}->[0]->{rows_count} || 0,
+						type => 'gauge',
+						help => 'Table rows count',
+						labels => \@labels
+					})->publish({
+						http => $opt_http,
+						httpPrefix => 'dbms_database_table_',
+						text => $opt_text,
+						textPrefix => 'dbms_database_table_'
+					});
+				}
 				$count += 1 if $opt_mqtt || $opt_http || $opt_text;
 				last if $count >= $opt_limit && $opt_limit >= 0;
 			}
 		}
 	}
-	msgOut( "$count published metric(s)" );
+	msgOut( "$count published tables rows count metric(s)" );
 }
 
 # =================================================================================================

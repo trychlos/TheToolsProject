@@ -157,6 +157,8 @@ sub name {
 	my ( $self, $arg ) = @_;
 
 	if( defined( $arg ) && !ref( $arg ) && $arg ){
+		# pwi 2024- 5- 1 Prometheus names do not accept dots
+		$arg =~ s/\./_/g;
 		if( $arg =~ m/$Const->{nameRE}/ ){
 			$self->{_metric}{name} = $arg;
 		} else {
@@ -259,8 +261,6 @@ sub _http_publish {
 						# make sure the name has the correct prefix
 						$name = "$prefix$name";
 						$name = "$Const->{prefix}$name" if $Const->{prefix} && $name !~ m/^$Const->{prefix}/;
-						# pwi 2024- 5- 1 do not remember the reason why ?
-						#$name =~ s/\./_/g;
 						# build the url
 						my $labels = $self->labels();
 						foreach my $it ( @{$labels} ){
