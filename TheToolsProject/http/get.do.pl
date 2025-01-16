@@ -9,16 +9,17 @@
 # @(-) --[no]publishHeader     publish the found header content [${publishHeader}]
 # @(-) --accept=<code>         consider the return code as OK, regex, may be specified several times or as a comma-separated list [${accept}]
 # @(-) --[no]response          print the received response to stdout [${response}]
-# @(-) --[no]status            publish status-based telemetry [${status}]
-# @(-) --[no]epoch             publish epoch-based telemetry [${epoch}]
+# @(-) --[no]status            publish status-based (i.e. alive|not alive or 1|0) telemetry [${status}]
+# @(-) --[no]epoch             publish epoch-based (or 0 if not alive) telemetry [${epoch}]
 # @(-) --[no]mqtt              publish the metrics to the (MQTT-based) messaging system [${mqtt}]
 # @(-) --mqttPrefix=<prefix>   prefix the metric name when publishing to the (MQTT-based) messaging system [${mqttPrefix}]
 # @(-) --[no]http              publish the metrics to the (HTTP-based) Prometheus PushGateway system [${http}]
 # @(-) --httpPrefix=<prefix>   prefix the metric name when publishing to the (HTTP-based) Prometheus PushGateway system [${httpPrefix}]
 # @(-) --[no]text              publish the metrics to the (text-based) Prometheus TextFile Collector system [${text}]
 # @(-) --textPrefix=<prefix>   prefix the metric name when publishing to the (text-based) Prometheus TextFile Collector system [${textPrefix}]
-# @(-) --prepend=<name=value>  label to be appended to the telemetry metrics, may be specified several times or as a comma-separated list [${prepend}]
+# @(-) --prepend=<name=value>  label to be prepended to the telemetry metrics, may be specified several times or as a comma-separated list [${prepend}]
 # @(-) --append=<name=value>   label to be appended to the telemetry metrics, may be specified several times or as a comma-separated list [${append}]
+# @(-) --service=<service>     an optional service name to be inserted in the MQTT topic [${service}]
 #
 # @(@) Among other uses, this verb is notably used to check which machine answers to a given URL in an architecture which wants take advantage of
 # @(@) IP Failover system. But, in such a system, all physical hosts are configured with this FO IP, and so would answer to this IP is the request
@@ -76,7 +77,8 @@ my $defaults = {
 	text => 'no',
 	textPrefix => '',
 	prepend => '',
-	append => ''
+	append => '',
+	service => ''
 };
 
 my $opt_url = $defaults->{url};
@@ -95,6 +97,7 @@ my $opt_text = false;
 my $opt_textPrefix = $defaults->{textPrefix};
 my @opt_prepends = ();
 my @opt_appends = ();
+my $opt_service = $defaults->{service};
 
 # -------------------------------------------------------------------------------------------------
 # request the url
@@ -168,6 +171,7 @@ sub _telemetry {
 		my ( $proto, $path ) = split( /:\/\//, $opt_url );
 		my @labels = @opt_prepends;
 		push( @labels, "environment=".$ep->node()->environment());
+		push( @labels, "service=".$opt_service ) if $opt_service;
 		push( @labels, "command=".$running->command());
 		push( @labels, "verb=".$running->verb());
 		push( @labels, "proto=$proto" );
@@ -221,7 +225,8 @@ if( !GetOptions(
 	"text!"				=> \$opt_text,
 	"textPrefix=s"		=> \$opt_textPrefix,
 	"prepend=s@"		=> \@opt_prepends,
-	"append=s@"			=> \@opt_appends )){
+	"append=s@"			=> \@opt_appends,
+	"service=s"			=> \$opt_service )){
 
 		msgOut( "try '".$running->command()." ".$running->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
@@ -253,6 +258,7 @@ msgVerbose( "found textPrefix='$opt_textPrefix'" );
 msgVerbose( "found prepends='".join( ',', @opt_prepends )."'" );
 @opt_appends = split( /,/, join( ',', @opt_appends ));
 msgVerbose( "found appends='".join( ',', @opt_appends )."'" );
+msgVerbose( "found service='$opt_service'" );
 
 # url is mandatory
 msgErr( "url is required, but is not specified" ) if !$opt_url;
