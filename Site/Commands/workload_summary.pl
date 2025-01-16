@@ -14,8 +14,8 @@
 # @(-) --rc=<name>             the name of the environment variable which holds the return codes [${rc}]
 # @(-) --count=<count>         the count of commands to deal with [${count}]
 #
-# @(@) This script is mostly written like a TTP verb but is not.
-# @(@) This is an example of how to take advantage of TTP to write your own (rather pretty and efficient) scripts.
+# This script is mostly written like a TTP verb but is not.
+# This is an example of how to take advantage of TTP to write your own (rather pretty and efficient) scripts.
 #
 # The Tools Project: a Tools System and Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
@@ -89,6 +89,7 @@ my $opt_count = $defaults->{count};
 
 # -------------------------------------------------------------------------------------------------
 # print a funny workload summary
+
 sub printSummary {
 	# get the CMD.EXE results from the environment
 	my @results = ();
@@ -142,12 +143,11 @@ sub printSummary {
 		msgOut( "subject='$subject'" );
 		$command =~ s/<SUBJECT>/$subject/;
 		$command =~ s/<OPTIONS>/-textfname $textfname/;
-		my $dummy = $opt_dummy ? "-dummy" : "";
-		my $verbose = $opt_verbose ? "-verbose" : "";
+		my $dummy = $extern->dummy() ? "-dummy" : "";
+		my $verbose = $extern->verbose() ? "-verbose" : "";
 		# this script is not interactive but written to be executed as part of a batch - there is so no reason to log stdout of the command because all msgXxxx() of the command are already logged
 		`$command -nocolored $dummy $verbose`;
 		msgVerbose( "printSummary() got rc=$?" );
-		$res = ( $? == 0 );
 	}
 	# and to stdout (at last)
 	print $stdout;

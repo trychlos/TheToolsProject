@@ -14,8 +14,8 @@
 # @(-) --finprev=<finprev>     an optional filename from where to get the previous result sets [${finprev}]
 # @(-) --foutprev=<foutprev>   an optional filename which will record this execution result sets [${foutprev}]
 #
-# @(@) This script is mostly written like a TTP verb but is not.
-# @(@) This is an example of how to take advantage of TTP to write your own (rather pretty and efficient) scripts.
+# This script is mostly written like a TTP verb but is not.
+# This is an example of how to take advantage of TTP to write your own (rather pretty and efficient) scripts.
 #
 # The Tools Project: a Tools System and Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
