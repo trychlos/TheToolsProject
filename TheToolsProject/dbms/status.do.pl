@@ -112,7 +112,7 @@ sub doState {
 	my $result = undef;
 	foreach my $db ( @{$databases} ){
 		msgOut( "database '$db'" );
-		$sql = "select state, state_desc from sys.databases where name='$db'";
+		my $sql = "select state, state_desc from sys.databases where name='$db'";
 		if( $running->dummy()){
 			msgDummy( $sql );
 			$result = {
@@ -130,15 +130,14 @@ sub doState {
 		}
 		# -> mqtt: publish a single string metric
 		#    e.g. state: online
-		my @labels = ( @opt_prepends,
-			"environment=".$ep->node()->environment(), "command=".$running->command(), "verb=".$running->verb(),
+		my @labels = ( @opt_prepends, "environment=".$ep->node()->environment());
+		push( @labels, "service=".$opt_service ) if $opt_service;
+		@labels = ( @labels, "command=".$running->command(), "verb=".$running->verb(),
 			"instance=$opt_instance", "database=$db",
 			@opt_appends );
 		TTP::Metric->new( $ep, {
 			name => 'state',
 			value => $result->{state_desc},
-			type => 'gauge',
-			help => 'Database status',
 			labels => \@labels
 		})->publish({
 			mqtt => $opt_mqtt
@@ -146,8 +145,9 @@ sub doState {
 		# -> http/text: publish a metric per known sqlState
 		#    e.g. state=emergency 0
 		foreach my $key ( keys( %{$sqlStates} )){
-			my @labels = ( @opt_prepends,
-				"environment=".$ep->node()->environment(), "command=".$running->command(), "verb=".$running->verb(),
+			my @labels = ( @opt_prepends, "environment=".$ep->node()->environment());
+			push( @labels, "service=".$opt_service ) if $opt_service;
+			@labels = ( @labels, "command=".$running->command(), "verb=".$running->verb(),
 				"instance=$opt_instance", "database=$db", "state=$sqlStates->{$key}",
 				@opt_appends );
 			TTP::Metric->new( $ep, {
