@@ -106,7 +106,6 @@ sub doPurgeDirs {
 								msgErr( "$file: $message" );
 							}
 						}
-						$result = false;
 					} else {
 						msgVerbose( " deleted='$deleted'" );
 						$count += 1;
@@ -123,11 +122,6 @@ sub doPurgeDirs {
 sub _sourcePath {
 	my ( $it ) = @_;
 	return File::Spec->catdir( $opt_dirpath, $it );
-}
-
-sub _targetPath {
-	my ( $it ) = @_;
-	return File::Spec->catdir( $opt_targetpath, $it );
 }
 
 # =================================================================================================
