@@ -69,15 +69,23 @@ sub doPublish {
 			$removeTree = true if !defined $removeTree;
 			if( $removeTree ){
 				my $rc = pathrmdir( $dir );
-				msgVerbose( "doPublish.pathrmdir() got rc=$rc" );
+				if( defined $rc ){
+					msgVerbose( "doPublish.pathrmdir() got rc=$rc" );
+				} else {
+					msgErr( "error detected in pathrmdir(): $!" );
+				}
 			} else {
 				msgVerbose( "target dir not emptied as removeTree is false" );
 			}
+			# may happen:
+			# (ERR) error detected in dircopy(): Permission denied
+			# (ERR) error detected in dircopy(): Not a directory
 			my( $num_of_files_and_dirs, $num_of_dirs, $depth_traversed ) = dircopy( $srcdir, $dir );
-			msgVerbose( "num_of_files_and_dirs='$num_of_files_and_dirs'" );
-			msgVerbose( "num_of_dirs='$num_of_dirs'" );
-			msgVerbose( "depth_traversed='$depth_traversed'" );
-			if( !$num_of_files_and_dirs ){
+			if( defined $num_of_files_and_dirs ){
+				msgVerbose( "num_of_files_and_dirs='$num_of_files_and_dirs'" );
+				msgVerbose( "num_of_dirs='$num_of_dirs'" );
+				msgVerbose( "depth_traversed='$depth_traversed'" );
+			} else {
 				msgErr( "error detected in dircopy(): $!" );
 			}
 		}
