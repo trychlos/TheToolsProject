@@ -214,7 +214,7 @@ sub mqttMessaging {
 		payload => configRunInterval()
 	},{
 		topic => "$topic/keys",
-		payload => '['.join( ',', configKeys()).']'
+		payload => '['.join( ',', @{configKeys()}).']'
 	});
 	return $array;
 }

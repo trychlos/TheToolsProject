@@ -5,17 +5,20 @@ TODO
 
   15 2024- 1-29 Toops::getOptions doesn't work as we do not know how to pass arguments to GetOptions()
      2024- 5- 2 these are called 'named options' and are got in the function through a hash though I don't know at the moment how to dintinguish between a hash and a hash ref
+	 2025- 1-17 this is actually a list of values
 
   25 2024- 5- 3 ttp->var() and others should be able to return a composite data (not only a scalar)
                 and ttp.pl vars and others should be able to display them
-	 2024- 5- 5 they actually do return composite data - just is not displayed by the verb
+	 2024- 5- 5 they actually do return composite data - which just is not displayed by the verb
 	            see daemon.pl dbms.pl services.pl ttp.pl
 
   49 2024- 5-11 all functions should check the type of their arguments and call TTP::stackTrace() on coding error
 
   52 2024- 5-17 replace IP addresses by dns aliases to make easier the switch between live and banckup productions (e.g. http gateway)
 
-  53 2024- 5-17 
+  53 2025- 1-17 have a timeout on movedirs and purgedirs at least, maybe on all verbs which needs a network access + alert when this timeout is reached
+
+  54
 
 # -------------------------------------------------------------------------------------------------
 
