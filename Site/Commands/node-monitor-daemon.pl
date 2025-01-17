@@ -13,6 +13,8 @@
 # @(@) We do not have a cron-like in Windows, and it would be a pain to manage a command every say 10 minutes. So just have a daemon which takes care of that.
 # @(@)
 # @(@) This script is expected to be run as a daemon, started via a 'daemon.pl start -json <filename.json>' command.
+# @(@)
+# @(@) When interpreting commands found in JSON, this daemon also interprets <SERVICE> and <NODE> macros.
 #
 # The Tools Project: a Tools System and Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
@@ -153,6 +155,24 @@ sub getServices {
 }
 
 # -------------------------------------------------------------------------------------------------
+# Replace the found macros
+# (I):
+# - the input string
+# - a hash where keys are the macros to be replaced, and the values the replacement value
+# (O):
+# - the replaced string
+
+sub macroReplace {
+	my( $str, $hash ) = @_;
+	
+	foreach my $k ( keys( %{$hash} )){
+		$str =~ s/$k/$hash->{$k}/g;
+	}
+	
+	return $str;
+}
+
+# -------------------------------------------------------------------------------------------------
 # On disconnection, try to erase the published topics
 
 sub mqttDisconnect {
@@ -214,6 +234,7 @@ sub works {
 	my $commands = $node->var( $keys );
 	if( $commands && $commands->{commands} && ref( $commands->{commands} ) eq 'ARRAY' ){
 		foreach my $cmd ( @{$commands->{commands}} ){
+			$cmd = macroReplace( $cmd, { '<NODE>' => $node->name() });
 			msgVerbose( "running $cmd" );
 			`$cmd`;
 		}
@@ -229,6 +250,8 @@ sub works {
 		my $commands = $node->var( $serviceKeys );
 		if( $commands && $commands->{commands} && ref( $commands->{commands} ) eq 'ARRAY' ){
 			foreach my $cmd ( @{$commands->{commands}} ){
+				$cmd = macroReplace( $cmd, { '<NODE>' => $node->name() });
+				$cmd = macroReplace( $cmd, { '<SERVICE>' => $service });
 				msgVerbose( "running $cmd" );
 				`$cmd`;
 			}

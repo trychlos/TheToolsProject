@@ -17,10 +17,10 @@
 	"Services": {
 		"Tom17": {
 			"status": {
-				"after": {
+				"monitor": {
 					"commands": [
-						"ssh inlingua-user@<NODE> dbms.pl status -nocolored -service <SERVICE> -state -mqtt -http",
-						"ssh inlingua-user@<NODE> daemon.pl status -bname tom17-backup-monitor-daemon.json -http -- -metric ttp_service_daemon -label service=<SERVICE> -label role=backup -label environment=X"
+						"dbms.pl status -nocolored -service <SERVICE> -state -mqtt -http",
+						"daemon.pl status -bname tom17-backup-monitor-daemon.json -http -- -metric ttp_service_daemon -label service=<SERVICE> -label role=backup -label environment=X"
 					]
 				}
 			},
@@ -38,10 +38,10 @@
 		},
 		"Tom21": {
 			"status": {
-				"after": {
+				"monitor": {
 					"commands": [
-						"ssh inlingua-user@<NODE> dbms.pl status -nocolored -service <SERVICE> -state -mqtt -http",
-						"ssh inlingua-user@<NODE> daemon.pl status -bname tom21-backup-monitor-daemon.json -http -- -metric ttp_service_daemon -label service=<SERVICE> -label role=backup -label environment=X"
+						"dbms.pl status -nocolored -service <SERVICE> -state -mqtt -http",
+						"daemon.pl status -bname tom21-backup-monitor-daemon.json -http -- -metric ttp_service_daemon -label service=<SERVICE> -label role=backup -label environment=X"
 					]
 				}
 			},
@@ -59,10 +59,10 @@
 		},
 		"Tom59": {
 			"status": {
-				"after": {
+				"monitor": {
 					"commands": [
-						"ssh inlingua-user@<NODE> dbms.pl status -nocolored -service <SERVICE> -state -mqtt -http",
-						"ssh inlingua-user@<NODE> daemon.pl status -bname tom59-backup-monitor-daemon.json -http -- -metric ttp_service_daemon -label service=<SERVICE> -label role=backup -label environment=X"
+						"dbms.pl status -nocolored -service <SERVICE> -state -mqtt -http",
+						"daemon.pl status -bname tom59-backup-monitor-daemon.json -http -- -metric ttp_service_daemon -label service=<SERVICE> -label role=backup -label environment=X"
 					]
 				}
 			},
