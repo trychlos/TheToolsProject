@@ -21,7 +21,9 @@
 							"ttp.pl pull -nocolored",
 							"ttp.pl movedirs -nocolored -sourcecmd \"dbms.pl vars -nocolored -backupsRoot\" -targetcmd \"dbms.pl vars -nocolored -archivesRoot\" -dirs -keep 2 -nomakeDir",
 							"ttp.pl purgedirs -nocolored -dircmd \"dbms.pl vars -nocolored -archivesRoot\" -keep 5",
-							"ttp.pl purgedirs -nocolored -dircmd \"ttp.pl vars -nocolored -logsRoot\" -keep 10"
+							"ttp.pl purgedirs -nocolored -dircmd \"ttp.pl vars -nocolored -logsRoot\" -keep 10",
+							"daemon.pl stop -nocolored -bname node-monitor-daemon.json -ignore -wait",
+							"daemon.pl start -nocolored -bname node-monitor-daemon.json"
 						]
 					}
 				],
