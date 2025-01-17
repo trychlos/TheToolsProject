@@ -9,13 +9,17 @@
 	},
 	"status": {
 		"commands": [
-			"http.pl get -nocolored -url https://tom59.blingua.fr -accept [1-3].. -status -epoch -mqtt -http -service <SERVICE>",
-			"http.pl get -nocolored -url https://inlingua31.archive.blingua.fr -accept [1-3].. -status -epoch -mqtt -http -service <SERVICE>",
-			"http.pl get -nocolored -url https://inlingua33.archive.blingua.fr -accept [1-3].. -status -epoch -mqtt -http -service <SERVICE>",
-			"http.pl get -nocolored -url https://inlingua59.archive.blingua.fr -accept [1-3].. -status -epoch -mqtt -http -service <SERVICE>",
-			"http.pl get -nocolored -url https://tom59.backup.blingua.fr -accept [1-3].. -status -epoch -mqtt -http -service <SERVICE>",
-			"services.pl live -service <SERVICE> -next -mqtt -http"
 		],
+		"extern": {
+			"commands": [
+				"http.pl get -nocolored -url https://tom59.blingua.fr -accept [1-3].. -status -epoch -mqtt -http -service <SERVICE>",
+				"http.pl get -nocolored -url https://inlingua31.archive.blingua.fr -accept [1-3].. -status -epoch -mqtt -http -service <SERVICE>",
+				"http.pl get -nocolored -url https://inlingua33.archive.blingua.fr -accept [1-3].. -status -epoch -mqtt -http -service <SERVICE>",
+				"http.pl get -nocolored -url https://inlingua59.archive.blingua.fr -accept [1-3].. -status -epoch -mqtt -http -service <SERVICE>",
+				"http.pl get -nocolored -url https://tom59.backup.blingua.fr -accept [1-3].. -status -epoch -mqtt -http -service <SERVICE>",
+				"services.pl live -service <SERVICE> -next -mqtt -http"
+			]
+		},
 		"live": "http.pl get -nocolored -url https://tom59.blingua.fr -header X-Sent-By -accept ..."
 	},
 	"switch": {

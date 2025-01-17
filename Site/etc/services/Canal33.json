@@ -6,12 +6,16 @@
 	},
 	"status": {
 		"commands": [
-			"http.pl get -nocolored -url http://canal33.blingua.net -accept [1-3].. -status -epoch -mqtt -http -service <SERVICE>",
-			"http.pl get -nocolored -url http://canal33.backup.blingua.net -accept [1-3].. -status -epoch -mqtt -http -service <SERVICE>",
-			"http.pl get -nocolored -url https://c33.blingua.net -accept [1-3].. -status -epoch -mqtt -http -service <SERVICE>",
-			"http.pl get -nocolored -url https://c33.backup.blingua.net -accept [1-3].. -status -epoch -mqtt -http -service <SERVICE>",
-			"services.pl live -service <SERVICE> -next -mqtt -http"
 		],
+		"extern": {
+			"commands": [
+				"http.pl get -nocolored -url http://canal33.blingua.net -accept [1-3].. -status -epoch -mqtt -http -service <SERVICE>",
+				"http.pl get -nocolored -url http://canal33.backup.blingua.net -accept [1-3].. -status -epoch -mqtt -http -service <SERVICE>",
+				"http.pl get -nocolored -url https://c33.blingua.net -accept [1-3].. -status -epoch -mqtt -http -service <SERVICE>",
+				"http.pl get -nocolored -url https://c33.backup.blingua.net -accept [1-3].. -status -epoch -mqtt -http -service <SERVICE>",
+				"services.pl live -service <SERVICE> -next -mqtt -http"
+			]
+		},
 		"live": "http.pl get -nocolored -url http://canal33.blingua.net -header X-Sent-By -accept ..."
 	},
 	"switch": {

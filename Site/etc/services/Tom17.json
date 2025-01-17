@@ -6,11 +6,15 @@
 	},
 	"status": {
 		"commands": [
-			"http.pl get -nocolored -url https://tom17.blingua.fr -accept [1-3].. -status -epoch -mqtt -http -service <SERVICE>",
-			"http.pl get -nocolored -url https://inlingua17.blingua.fr -accept [1-3].. -status -epoch -mqtt -http -service <SERVICE>",
-			"http.pl get -nocolored -url https://tom17.backup.blingua.fr -accept [1-3].. -status -epoch -mqtt -http -service <SERVICE>",
-			"services.pl live -service <SERVICE> -next -mqtt -http"
 		],
+		"extern": {
+			"commands": [
+				"http.pl get -nocolored -url https://tom17.blingua.fr -accept [1-3].. -status -epoch -mqtt -http -service <SERVICE>",
+				"http.pl get -nocolored -url https://inlingua17.blingua.fr -accept [1-3].. -status -epoch -mqtt -http -service <SERVICE>",
+				"http.pl get -nocolored -url https://tom17.backup.blingua.fr -accept [1-3].. -status -epoch -mqtt -http -service <SERVICE>",
+				"services.pl live -service <SERVICE> -next -mqtt -http"
+			]
+		},
 		"live": "http.pl get -nocolored -url https://tom17.blingua.fr -header X-Sent-By -accept ..."
 	},
 	"switch": {
