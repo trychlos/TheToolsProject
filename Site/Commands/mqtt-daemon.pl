@@ -206,9 +206,7 @@ if( TTP::errs()){
 }
 
 $daemon->declareSleepables( $commands );
-
 $daemon->sleepableDeclareFn( sub => sub { $mqtt->tick( $daemon->listeningInterval()); }, interval => $daemon->listeningInterval());
-
 $daemon->sleepableStart();
 
 TTP::MQTT::disconnect( $mqtt );

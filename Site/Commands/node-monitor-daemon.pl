@@ -1,6 +1,6 @@
 #!perl
 #!/usr/bin/perl
-# @(#) Monitor the json alert files dropped in the alerts directory.
+# @(#) Monitor the node through its 'status' keys
 #
 # @(-) --[no]help              print this message, and exit [${help}]
 # @(-) --[no]colored           color the output depending of the message level [${colored}]
@@ -9,6 +9,9 @@
 # @(-) --json=<filename>       the name of the JSON configuration file of this daemon [${json}]
 # @(-) --[no]ignoreInt         ignore the (Ctrl+C) INT signal [${ignoreInt}]
 #
+# @(@) Rationale:
+# @(@) We do not have a cron-like in Windows, and it would be a pain to manage a command every say 10 minutes. So just have a daemon which takes care of that.
+# @(@)
 # @(@) This script is expected to be run as a daemon, started via a 'daemon.pl start -json <filename.json>' command.
 #
 # The Tools Project: a Tools System and Paradigm for IT Production
@@ -35,15 +38,18 @@
 #
 # JSON configuration:
 #
-# - monitoredDir: the directory to be monitored for alerts files, defaulting to alertsDir
-# - scanInterval, the scan interval, defaulting to 10000 ms (10 sec.)
+# - runInterval, the monitoring period, defaulting to 300000 ms (5 min.)
+# - keys, the keys to be executed, defaulting to ( 'status', 'monitor' )
 
 use utf8;
 use strict;
 use warnings;
 
 use Data::Dumper;
+use File::Copy;
 use File::Find;
+use File::Spec;
+use File::stat;
 use Getopt::Long;
 use Time::Piece;
 
@@ -51,13 +57,16 @@ use TTP;
 use TTP::Constants qw( :all );
 use TTP::Daemon;
 use TTP::Message qw( :all );
+use TTP::Reporter;
+use TTP::Service;
 use vars::global qw( $ep );
 
 my $daemon = TTP::Daemon->init();
 
 use constant {
-	MIN_SCAN_INTERVAL => 1000,
-	DEFAULT_SCAN_INTERVAL => 10000
+	MIN_RUN_INTERVAL => 60000,
+	DEFAULT_RUN_INTERVAL => 300000,
+	DEFAULT_KEYS => [ 'status', 'monitor' ]
 };
 
 my $defaults = {
@@ -73,51 +82,74 @@ my $opt_json = $defaults->{json};
 my $opt_ignoreInt = false;
 
 my $commands = {
-	#help => \&help,
+	stats => \&answerStats,
+	status => \&answerStatus,
 };
 
-# scanning for new elements
-my $first = true;
-my @previousScan = ();
-my @runningScan = ();
+# try to have some statistics
+my $stats = {
+	count => 0,
+	ignored => 0,
+	restored => []
+};
 
 # -------------------------------------------------------------------------------------------------
-# Returns the configured 'monitoredDir' defaulting to alertsDir
-
-sub configMonitoredDir {
-	my $config = $daemon->jsonData();
-	my $dir = $config->{monitoredDir};
-	$dir = TTP::alertsDir() if !$dir;
-	return $dir;
+sub answerStats {
+	my ( $req ) = @_;
+	my $answer = "total seen execution reports: $stats->{count}".EOL;
+	$answer .= "ignored: $stats->{ignored}".EOL;
+	my $executed = scalar @{$stats->{restored}};
+	$answer .= "restore operations: $executed".EOL;
+	if( $executed ){
+		my $last = @{$stats->{restored}}[$executed-1];
+		$answer .= "last was from $last->{reportSourceFileName} to $last->{localSynced} at $stats->{now}".EOL;
+	}
+	#$answer .= "last scan contained [".join( ',', @previousScan )."]".EOL;
+	return $answer;
 }
 
 # -------------------------------------------------------------------------------------------------
-# Returns the configured 'scanInterval' (in sec.) defaulting to DEFAULT_SCAN_INTERVAL
+# add to the standard 'status' answer our own data (remote host and dir)
+sub answerStatus {
 
-sub configScanInterval {
+	my ( $req ) = @_;
+	my $answer = TTP::Daemon->commonCommands()->{status}( $req, $commands );
+	#$answer .= "monitoredHost: ".$daemon->{monitoredNode}->name().EOL;
+	#$answer .= "monitoredExecReportsDir: ".computeMonitoredShare().EOL;
+	return $answer;
+}
+
+# -------------------------------------------------------------------------------------------------
+# Returns the configured 'keys' (in sec.) defaulting to DEFAULT_KEYS
+
+sub configKeys {
 	my $config = $daemon->jsonData();
-	my $interval = $config->{scanInterval};
-	$interval = DEFAULT_SCAN_INTERVAL if !defined $interval;
-	if( $interval < MIN_SCAN_INTERVAL ){
-		msgVerbose( "defined scanInterval=$interval less than minimum accepted ".MIN_SCAN_INTERVAL.", ignored" );
-		$interval = DEFAULT_SCAN_INTERVAL;
+	my $keys = $config->{keys};
+	$keys = DEFAULT_KEYS if !defined $keys;
+
+	return $keys;
+}
+
+# -------------------------------------------------------------------------------------------------
+# Returns the configured 'runInterval' (in sec.) defaulting to DEFAULT_RUN_INTERVAL
+
+sub configRunInterval {
+	my $config = $daemon->jsonData();
+	my $interval = $config->{runInterval};
+	$interval = DEFAULT_RUN_INTERVAL if !defined $interval;
+	if( $interval < MIN_RUN_INTERVAL ){
+		msgVerbose( "defined runInterval=$interval less than minimum accepted ".MIN_RUN_INTERVAL.", ignored" );
+		$interval = DEFAULT_RUN_INTERVAL;
 	}
 
 	return $interval;
 }
 
 # -------------------------------------------------------------------------------------------------
-# new alert
-# should never arrive as all alerts should also be sent through MQTT bus which is the preferred way
-# of dealing with these alerts
+# Returns te list (an array) of the services hosted in this node
 
-sub doWithNew {
-	my ( @newFiles ) = @_;
-	foreach my $file ( @newFiles ){
-		msgVerbose( "new alert '$file'" );
-		my $data = TTP::jsonRead( $file );
-		# and what ?
-	}
+sub getServices {
+	return $ep->node()->services();
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -128,10 +160,10 @@ sub mqttDisconnect {
 	my $topic = $daemon->topic();
 	my $array = [];
 	push( @{$array}, {
-		topic => "$topic/monitoredDir",
+		topic => "$topic/runInterval",
 		payload => ''
 	},{
-		topic => "$topic/scanInterval",
+		topic => "$topic/keys",
 		payload => ''
 	});
 	return $array;
@@ -158,54 +190,51 @@ sub mqttMessaging {
 	my $topic = $daemon->topic();
 	my $array = [];
 	push( @{$array}, {
-		topic => "$topic/monitoredDir",
-		payload => configMonitoredDir()
+		topic => "$topic/runInterval",
+		payload => configRunInterval()
 	},{
-		topic => "$topic/scanInterval",
-		payload => configScanInterval()
+		topic => "$topic/keys",
+		payload => '['.join( ',', configKeys()).']'
 	});
 	return $array;
 }
 
 # -------------------------------------------------------------------------------------------------
-# we find less files in this iteration than in the previous - maybe some files have been purged, deleted
-# moved, or we have a new directory, or another reason - just reset and restart over
-
-sub varReset {
-	msgVerbose( "varReset()" );
-	@previousScan = ();
-}
-
-# -------------------------------------------------------------------------------------------------
-# receive here all found files in the searched directories
-# According to https://perldoc.perl.org/File::Find
-#   $File::Find::dir is the current directory name,
-#   $_ is the current filename within that directory
-#   $File::Find::name is the complete pathname to the file.
-
-sub wanted {
-	return unless /\.json$/;
-	push( @runningScan, $File::Find::name );
-}
-
-# -------------------------------------------------------------------------------------------------
-# do its work, i.e. detects new files in monitoredDir
-# Note that the find() function sends errors to stderr when directory doesn't exist
+# do its work:
+# search for the specified monitoring key at the node level, and then at the service level for each
+# service on this node, and execute them
 
 sub works {
-	@runningScan = ();
-	find( \&wanted, configMonitoredDir());
-	if( scalar @runningScan < scalar @previousScan ){
-		varReset();
-	} elsif( $first ){
-		$first = false;
-		@previousScan = sort @runningScan;
-	} elsif( scalar @runningScan > scalar @previousScan ){
-		my @sorted = sort @runningScan;
-		my @tmp = @sorted;
-		my @newFiles = splice( @tmp, scalar @previousScan, scalar @runningScan - scalar @previousScan );
-		doWithNew( @newFiles );
-		@previousScan = @sorted;
+	# recompute at each loop all dynamic variables
+	$daemon->{config} = $daemon->jsonData();
+	# and run..
+	# get commands at the node level
+	my $node = $ep->node();
+	my $keys = configKeys();
+	my $commands = $node->var( $keys );
+	if( $commands && $commands->{commands} && ref( $commands->{commands} ) eq 'ARRAY' ){
+		foreach my $cmd ( @{$commands->{commands}} ){
+			msgVerbose( "running $cmd" );
+			`$cmd`;
+		}
+	} else {
+		msgVerbose( "no commands found for node" );
+	}
+	# get the list of services hosted on this node
+	my $services = getServices();
+	# and run the same for each services
+	foreach my $service ( @{$services} ){
+		msgVerbose( $service );
+		my $serviceKeys = [ 'Services', $service, @{$keys} ];
+		my $commands = $node->var( $serviceKeys );
+		if( $commands && $commands->{commands} && ref( $commands->{commands} ) eq 'ARRAY' ){
+			foreach my $cmd ( @{$commands->{commands}} ){
+				msgVerbose( "running $cmd" );
+				`$cmd`;
+			}
+		} else {
+			msgVerbose( "no commands found for '$service'" );
+		}
 	}
 }
 
@@ -241,6 +270,15 @@ msgErr( "'--json' option is mandatory, not specified" ) if !$opt_json;
 if( !TTP::errs()){
 	$daemon->setConfig({ json => $opt_json, ignoreInt => $opt_ignoreInt });
 }
+
+# deeply check arguments
+# - current host must have a json configuration file
+# stop here if we do not have any configuration for this host 
+if( !TTP::errs()){
+	$daemon->{config} = $daemon->jsonData();
+	#print Dumper( $daemon );
+}
+
 if( TTP::errs()){
 	TTP::exit();
 }
@@ -249,7 +287,7 @@ $daemon->messagingSub( \&mqttMessaging );
 $daemon->disconnectSub( \&mqttDisconnect );
 
 $daemon->declareSleepables( $commands );
-$daemon->sleepableDeclareFn( sub => \&works, interval => configScanInterval() );
+$daemon->sleepableDeclareFn( sub => \&works, interval => configRunInterval() );
 $daemon->sleepableStart();
 
 $daemon->terminate();

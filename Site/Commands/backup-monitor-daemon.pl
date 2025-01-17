@@ -402,16 +402,13 @@ sub mqttDisconnect {
 	my $topic = $daemon->topic();
 	my $array = [];
 	push( @{$array}, {
-		topic => "$topic/pid",
-		payload => ''
-	},{
-		topic => "$topic/json",
-		payload => ''
-	},{
-		topic => "$topic/listeningPort",
-		payload => ''
-	},{
 		topic => "$topic/monitoredHost",
+		payload => ''
+	},{
+		topic => "$topic/monitoredService",
+		payload => ''
+	},{
+		topic => "$topic/localDir",
 		payload => ''
 	},{
 		topic => "$topic/monitoredExecReportsDir",
@@ -441,17 +438,14 @@ sub mqttMessaging {
 	my $topic = $daemon->topic();
 	my $array = [];
 	push( @{$array}, {
-		topic => "$topic/pid",
-		payload => $$
-	},{
-		topic => "$topic/json",
-		payload => $daemon->jsonPath()
-	},{
-		topic => "$topic/listeningPort",
-		payload => $daemon->listeningPort()
-	},{
 		topic => "$topic/monitoredHost",
 		payload => $opt_remote
+	},{
+		topic => "$topic/monitoredService",
+		payload => configMonitoredService()
+	},{
+		topic => "$topic/localDir",
+		payload => configLocalDir()
 	},{
 		topic => "$topic/monitoredExecReportsDir",
 		payload => computeMonitoredShare()
@@ -670,9 +664,7 @@ $daemon->messagingSub( \&mqttMessaging );
 $daemon->disconnectSub( \&mqttDisconnect );
 
 $daemon->declareSleepables( $commands );
-
 $daemon->sleepableDeclareFn( sub => \&works, interval => configScanInterval() );
-
 $daemon->sleepableStart();
 
 $daemon->terminate();

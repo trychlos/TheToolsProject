@@ -6,6 +6,7 @@
 	"execPath0": "[eval:File::Spec->catfile( TTP::var([ 'site', 'commandsDir' ]), 'mqtt-daemon.pl' )]",
 	"execPath": "[eval:File::Spec->catfile( 'C:\\INLINGUA\\dev\\scripts\\Site\\Commands', 'mqtt-daemon.pl' )]",
 	"listeningPort": 14390,
+	"textingInterval": -1,
 
 	"topics_comments": [
 		"The MQTT daemon always suscribes to the '#' and '$SYS/#' wildcards.",

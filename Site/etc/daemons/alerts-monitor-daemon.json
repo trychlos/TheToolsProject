@@ -18,6 +18,7 @@
 		"Mandatory"
 	],
 	"listeningPort": 14391,
+	"textingInterval": -1,
 
 	"listeningInterval_comments": [
 		"The listening periodicity in ms, defaulting to 1000 (1 sec)"
@@ -30,7 +31,7 @@
 	],
 
 	"monitoredDir_comments": [
-		"The onitored directory, defauting to TTP::alertsDir()"
+		"The monitored directory, defauting to TTP::alertsDir()"
 	],
 
 	"scanInterval_comments": [

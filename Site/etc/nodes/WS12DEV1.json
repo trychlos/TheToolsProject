@@ -21,6 +21,14 @@
 		"instance": "DEV"
 	},
 
+	"status": {
+		"monitor": {
+			"commands": [
+				"rem a dummy-monitored command at the node level"
+			]
+		}
+	},
+
 	"ServicesComments": [
 		"These are the services defined on this host as objects where the top key if the name of the service. At least this top key should be specified, even if with an empty properties object.",
 		"Values may be:",
@@ -67,6 +75,11 @@
 					"commands": [
 						"ssh inlingua-user@<NODE> dbms.pl status -nocolored -service <SERVICE> -state -mqtt -http",
 						"ssh inlingua-user@<NODE> daemon.pl status -bname tom17-backup-monitor-daemon.json -http -- -metric ttp_service_daemon -label service=<SERVICE> -label role=backup -label environment=X"
+					]
+				},
+				"monitor": {
+					"commands": [
+						"dbms.pl status -nocolored -service <SERVICE> -state -mqtt -http"
 					]
 				}
 			}

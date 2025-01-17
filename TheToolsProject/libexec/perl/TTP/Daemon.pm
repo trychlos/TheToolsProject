@@ -26,15 +26,15 @@
 # - execPath: the full path to the program to be executed as the main code of the daemon, mandatory
 # - listeningPort: the listening port number, mandatory
 # - listeningInterval: the interval in ms. between two listening loops, defaulting to 1000 ms
-# - messagingInterval: either zero (do not advertize to messaging system), or the advertizing interval in ms,
-#   defaulting to 60000 ms (1 mn)
-# - httpingInterval: either <0 (do not advertize to http-based telemetry system), or the advertizing interval in ms,
-#   defaulting to 60000 ms (1 mn)
-# - textingInterval: either <0 (do not advertize to text-based telemetry system), or the advertizing interval in ms,
+# - messagingInterval: either <=0 (do not advertize to messaging system), or the advertizing interval in ms,
 #   defaulting to 60000 ms (1 mn)
 # - messagingTimeout: the timeout in sec. of the MQTT connection (if applied), defaulting to 60sec.
+# - httpingInterval: either <=0 (do not advertize to http-based telemetry system), or the advertizing interval in ms,
+#   defaulting to 60000 ms (1 mn)
+# - textingInterval: either <=0 (do not advertize to text-based telemetry system), or the advertizing interval in ms,
+#   defaulting to 60000 ms (1 mn)
 #
-# Also the daemon writer mmust be conscious of the dynamic character of TheToolsProject.
+# Also the daemon writer must be conscious of the dynamic character of TheToolsProject.
 # In particular and at least, many output directories (logs, temp files and so on) may be built on a daily basis.
 # So your configuration files must be periodically re-evaluated.
 # This 'Daemon' class takes care of reevaluating both the host and the daemon configurations
@@ -241,6 +241,9 @@ sub _daemonize {
 sub _http_advertize {
 	my ( $self ) = @_;
 	$self->_metrics({ http => true });
+	if( $self->{_telemetry_sub} ){
+		$self->{_telemetry_sub}->( $self );
+	}
 }
 
 # ------------------------------------------------------------------------------------------------
@@ -249,7 +252,7 @@ sub _http_advertize {
 sub _lastwill {
 	my ( $self ) = @_;
 	return {
-		topic => $self->_topic(),
+		topic => $self->topic().'/status',
 		payload => OFFLINE,
 		retain => true
 	};
@@ -263,18 +266,15 @@ sub _lastwill {
 sub _metrics {
 	my ( $self, $publish ) = @_;
 
+	my $labels = $self->telemetryLabels();
+
 	# running since x.xxxxx sec.
 	my $since = sprintf( "%.5f", $self->runnableStarted()->delta_microseconds( Time::Moment->now ) / 1000000 );
-	my $labels = [ "daemon=".$self->name() ];
-	push( @{$labels}, "environment=".$ep->node()->environment());
-	push( @{$labels}, "command=".$self->command());
-	push( @{$labels}, "qualifier=".$self->runnableQualifier());
-	push( @{$labels}, @{$self->{_labels}} ) if exists $self->{_labels};
 	my $rc = TTP::Metric->new( $ep, {
-		name => 'ttp_backup_daemon_since',
+		name => 'ttp_daemon_since',
 		value => $since,
 		type => 'gauge',
-		help => 'Backup daemon running since',
+		help => 'Daemon running since',
 		labels => $labels
 	})->publish( $publish );
 	foreach my $it ( sort keys %{$rc} ){
@@ -283,10 +283,10 @@ sub _metrics {
 
 	# used memory
 	$rc = TTP::Metric->new( $ep, {
-		name => 'ttp_backup_daemon_memory_KB',
+		name => 'ttp_daemon_memory_KB',
 		value => sprintf( "%.1f", $self->_metrics_memory()),
 		type => 'gauge',
-		help => 'Backup daemon used memory',
+		help => 'Daemon used memory',
 		labels => $labels
 	})->publish( $publish );
 	foreach my $it ( sort keys %{$rc} ){
@@ -295,10 +295,10 @@ sub _metrics {
 
 	# page faults
 	$rc = TTP::Metric->new( $ep, {
-		name => 'ttp_backup_daemon_page_faults_count',
+		name => 'ttp_daemon_page_faults_count',
 		value => $self->_metrics_page_faults(),
 		type => 'gauge',
-		help => 'Backup daemon page faults count',
+		help => 'Daemon page faults count',
 		labels => $labels
 	})->publish( $publish );
 	foreach my $it ( sort keys %{$rc} ){
@@ -307,10 +307,10 @@ sub _metrics {
 
 	# page file usage
 	$rc = TTP::Metric->new( $ep, {
-		name => 'ttp_backup_daemon_page_file_usage_KB',
+		name => 'ttp_daemon_page_file_usage_KB',
 		value => sprintf( "%.1f", $self->_metrics_page_file_usage()),
 		type => 'gauge',
-		help => 'Backup daemon page file usage',
+		help => 'Daemon page file usage',
 		labels => $labels
 	})->publish( $publish );
 	foreach my $it ( sort keys %{$rc} ){
@@ -347,8 +347,19 @@ sub _metrics_page_file_usage {
 
 # ------------------------------------------------------------------------------------------------
 # the daemon advertize of its status every 'messagingInterval' seconds (defaults to 60)
-# topic is 'WS22PROD1/daemon/tom17-backup-monitor-daemon/status'
-# payload is 'running since 2024-05-02 18:44:44.37612'
+# topics are:
+#	'<node>/daemon/<json_basename_wo_ext>/status'				'running since yyyy-mm-dd hh:mm:ss.nnnnn`|offline'	retained
+#	'<node>/daemon/<json_basename_wo_ext>/pid'					<pid>
+#	'<node>/daemon/<json_basename_wo_ext>/json'					<full_json_path>
+#	'<node>/daemon/<json_basename_wo_ext>/enabled'				'true|false'
+#	'<node>/daemon/<json_basename_wo_ext>/listeningPort'		<listeningPort>
+#	'<node>/daemon/<json_basename_wo_ext>/listeningInterval'	<listeningInterval>
+#	'<node>/daemon/<json_basename_wo_ext>/messagingInterval'	<messagingInterval>
+#	'<node>/daemon/<json_basename_wo_ext>/messagingTimeout'		<messagingTimeout>
+#	'<node>/daemon/<json_basename_wo_ext>/httpingInterval'		<httpingInterval>
+#	'<node>/daemon/<json_basename_wo_ext>/textingInterval'		<textingInterval>
+#	'<node>/daemon/<json_basename_wo_ext>/execPath'				<execPath>
+# Other topics may be added by the daemon itself via the messagingSub() method.
 
 sub _mqtt_advertize {
 	my ( $self ) = @_;
@@ -361,30 +372,32 @@ sub _mqtt_advertize {
 			if( $array ){
 				if( ref( $array ) eq 'ARRAY' ){
 					foreach my $it ( @{$array} ){
-						if( $it->{topic} && exists(  $it->{payload} )){
-							if( $it->{retain} ){
-								msgLog( "retain $it->{topic} [$it->{payload}]" );
-								$self->{_mqtt}->retain( $it->{topic}, $it->{payload} );
-							} else {
-								msgLog( "publish $it->{topic} [$it->{payload}]" );
-								$self->{_mqtt}->publish( $it->{topic}, $it->{payload} );
-							}
+						if( $it->{topic} && exists( $it->{payload} )){
+							$self->_mqtt_publish( $it );
 						} else {
 							msgErr( __PACKAGE__."::_mqtt_advertize() expects a hash { topic, payload }, found $it" );
 						}
 					}
 				} else {
-					msgErr( __PACKAGE__."::_mqtt_advertize() expects an array, got '".ref( $array )."'" );
+					msgErr( __PACKAGE__."::_mqtt_advertize() expects an array from messagingSub() function, got '".ref( $array )."'" );
 				}
 			} else {
-				msgLog( __PACKAGE__."::_mqtt_advertize() got undefined value, nothing to do" );
+				msgLog( __PACKAGE__."::_mqtt_advertize() got undefined value from messagingSub() function, nothing to do" );
 			}
 		}
 		# and publish ours
-		my $topic = $self->_topic();
-		my $payload = $self->_running();
-		msgLog( "retain $topic [$payload]" );
-		$self->{_mqtt}->retain( $topic, $payload );
+		my $topic = $self->topic();
+		$self->_mqtt_publish({ 'topic' => "$topic/status",            'payload' => $self->_running(), 'retain' => true });
+		$self->_mqtt_publish({ 'topic' => "$topic/pid",               'payload' => $$ });
+		$self->_mqtt_publish({ 'topic' => "$topic/json",              'payload' => $self->jsonPath() });
+		$self->_mqtt_publish({ 'topic' => "$topic/enabled",           'payload' => $self->enabled( $self->jsonData()) ? 'true' : 'false' });
+		$self->_mqtt_publish({ 'topic' => "$topic/listeningPort",     'payload' => $self->listeningPort() });
+		$self->_mqtt_publish({ 'topic' => "$topic/listeningInterval", 'payload' => $self->listeningInterval() });
+		$self->_mqtt_publish({ 'topic' => "$topic/messagingInterval", 'payload' => $self->messagingInterval() });
+		$self->_mqtt_publish({ 'topic' => "$topic/messagingTimeout",  'payload' => $self->messagingTimeout() });
+		$self->_mqtt_publish({ 'topic' => "$topic/httpingInterval",   'payload' => $self->httpingInterval() });
+		$self->_mqtt_publish({ 'topic' => "$topic/textingInterval",   'payload' => $self->textingInterval() });
+		$self->_mqtt_publish({ 'topic' => "$topic/execPath",          'payload' => $self->execPath() });
 	} else {
 		msgVerbose( __PACKAGE__."::_mqtt_advertize() not publishing as MQTT is not initialized" );
 	}
@@ -402,14 +415,8 @@ sub _mqtt_disconnect {
 		if( $array ){
 			if( ref( $array ) eq 'ARRAY' ){
 				foreach my $it ( @{$array} ){
-					if( $it->{topic} && exists(  $it->{payload} )){
-						if( $it->{retain} ){
-							msgLog( "retain $it->{topic} [$it->{payload}]" );
-							$self->{_mqtt}->retain( $it->{topic}, $it->{payload} );
-						} else {
-							msgLog( "publish $it->{topic} [$it->{payload}]" );
-							$self->{_mqtt}->publish( $it->{topic}, $it->{payload} );
-						}
+					if( $it->{topic} ){
+						$self->_mqtt_publish( $it );
 					} else {
 						msgErr( __PACKAGE__."::_mqtt_disconnect() expects a hash { topic, payload }, found $it" );
 					}
@@ -420,6 +427,46 @@ sub _mqtt_disconnect {
 		} else {
 			msgLog( __PACKAGE__."::_mqtt_disconnect() got undefined value, nothing to do" );
 		}
+	}
+	
+	# and erase or own topics
+	my $topic = $self->topic();
+	$self->_mqtt_publish({ 'topic' => "$topic/status" });
+	$self->_mqtt_publish({ 'topic' => "$topic/pid" });
+	$self->_mqtt_publish({ 'topic' => "$topic/json" });
+	$self->_mqtt_publish({ 'topic' => "$topic/enabled" });
+	$self->_mqtt_publish({ 'topic' => "$topic/listeningPort" });
+	$self->_mqtt_publish({ 'topic' => "$topic/listeningInterval" });
+	$self->_mqtt_publish({ 'topic' => "$topic/messagingInterval" });
+	$self->_mqtt_publish({ 'topic' => "$topic/messagingTimeout" });
+	$self->_mqtt_publish({ 'topic' => "$topic/httpingInterval" });
+	$self->_mqtt_publish({ 'topic' => "$topic/textingInterval" });
+	$self->_mqtt_publish({ 'topic' => "$topic/execPath" });
+}
+
+# ------------------------------------------------------------------------------------------------
+# publish a single topic+payload
+# (I):
+# - a hash with following keys:
+#     > topic mandatory
+#     > payload, defaulting to empty string, which will erase the topic
+#     > retain, defaulting to false
+
+sub _mqtt_publish {
+	my ( $self, $item ) = @_;
+	msgVerbose( __PACKAGE__."::_mqtt_publish() ".$item->{topic} );
+
+	if( $self->{_mqtt} && $item && $item->{topic} ){
+		my $payload = $item->{payload} || '';
+		if( $item->{retain} ){
+			msgLog( "retain $item->{topic} [$payload]" );
+			$self->{_mqtt}->retain( $item->{topic}, $payload );
+		} else {
+			msgLog( "publish $item->{topic} [$payload]" );
+			$self->{_mqtt}->publish( $item->{topic}, $payload );
+		}
+	} else {
+		msgLog( __PACKAGE__."::_mqtt_publish() not publishing as passed arguments are not valid" );
 	}
 }
 
@@ -455,17 +502,6 @@ sub _running {
 sub _text_advertize {
 	my ( $self ) = @_;
 	msgVerbose( "text-based telemetry not honored at the moment" );
-}
-
-# ------------------------------------------------------------------------------------------------
-
-sub _topic {
-	my ( $self ) = @_;
-
-	my $topic = $self->topic();
-	$topic .= "/status";
-
-	return $topic;
 }
 
 ### Public methods
@@ -766,6 +802,26 @@ sub messagingSub {
 }
 
 # ------------------------------------------------------------------------------------------------
+# Returns the mqtt messaging timeout in msec.
+# (I):
+# - none
+# (O):
+# - returns the messaging timeout
+
+sub messagingTimeout {
+	my ( $self ) = @_;
+
+	my $interval = $self->jsonData()->{messagingTimeout};
+	$interval = DEFAULT_MQTT_TIMEOUT if !defined $interval;
+	if( $interval && $interval < MIN_MQTT_TIMEOUT ){
+		msgVerbose( "defined messagingTimeout=$interval less than minimum accepted ".MIN_MQTT_TIMEOUT.", ignored" );
+		$interval = DEFAULT_MQTT_TIMEOUT;
+	}
+
+	return $interval;
+}
+
+# ------------------------------------------------------------------------------------------------
 # Add a 'name=value' label to the published metrics
 # (I):
 # - the name
@@ -896,6 +952,47 @@ sub start {
 	}
 
 	return $res;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns the labels to be set on a published telemetry
+# (I):
+# - 
+# (O):
+# - the array of labels
+
+sub telemetryLabels {
+	my ( $self ) = @_;
+
+	my $labels = [ "daemon=".$self->name() ];
+	push( @{$labels}, "environment=".$ep->node()->environment());
+	push( @{$labels}, "command=".$self->command());
+	push( @{$labels}, "qualifier=".$self->runnableQualifier());
+	push( @{$labels}, @{$self->{_labels}} ) if exists $self->{_labels};
+	
+	return $labels;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Set a sub to be called each time the daemon is about to telemetry-publish (either http or text)
+# The provided sub:
+# - will receive this TTP::Daemon as single argument,
+# - is responsible to publish itself all its own telemetry
+# (I):
+# - a code ref to be called at telemetry-advertising time
+# (O):
+# - this same object
+
+sub telemetrySub {
+	my ( $self, $sub ) = @_;
+
+	if( $sub && ref( $sub ) eq 'CODE' ){
+		$self->{_telemetry_sub} = $sub;
+	} else {
+		msgErr( __PACKAGE__."::telemetrySub() expects a code ref, got '".ref( $sub )."'" );
+	}
+
+	return $self;
 }
 
 # ------------------------------------------------------------------------------------------------

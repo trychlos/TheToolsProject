@@ -69,7 +69,8 @@ sub doSend {
 
 	# connect, triggering an error if the daemon is not active
 	} else {
-		my $socket = new IO::Socket::INET(
+		my $socket = undef;
+		$socket = new IO::Socket::INET(
 			PeerHost => 'localhost',
 			PeerPort => $opt_port,
 			Proto => 'tcp',
