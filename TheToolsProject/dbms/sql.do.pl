@@ -203,7 +203,7 @@ if( $count == 0 ){
 $dbms = TTP::DBMS->new( $ep, { instance => $opt_instance }) if !TTP::errs();
 
 # either -stdin or -script or -command options must be specified and only one
-my $count = 0;
+$count = 0;
 $count += 1 if $opt_stdin;
 $count += 1 if $opt_script;
 $count += 1 if $opt_command;
