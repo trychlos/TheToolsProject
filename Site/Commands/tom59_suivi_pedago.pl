@@ -14,8 +14,8 @@
 # @(-) --finprev=<finprev>     an optional filename from where to get the previous result sets [${finprev}]
 # @(-) --foutprev=<foutprev>   an optional filename which will record this execution result sets [${foutprev}]
 #
-# This script is mostly written like a TTP verb but is not.
-# This is an example of how to take advantage of TTP to write your own (rather pretty and efficient) scripts.
+# @(@) This script is mostly written like a TTP verb but is not.
+# @(@) This is an example of how to take advantage of TTP to write your own (rather pretty and efficient) scripts.
 #
 # The Tools Project: a Tools System and Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
@@ -82,11 +82,11 @@ my $columns = {
 	Intras => [
 		{
 			name => 'Source',
-			width => 9
+			hidden => true
 		},
 		{
 			name => 'ModuleID',
-			width => 10
+			hidden => true
 		},
 		{
 			name => 'ModuleLabel',
@@ -94,27 +94,29 @@ my $columns = {
 		},
 		{
 			name => 'FormuleID',
-			width => 11
+			hidden => true
 		},
 		{
 			name => 'FormuleLabel',
-			width => 14
+			hidden => true
 		},
 		{
 			name => 'ModuleDateFrom',
+			computed => \&computeModuleDateFrom,
 			width => 16
 		},
 		{
 			name => 'ModuleDateTo',
+			computed => \&computeModuleDateTo,
 			width => 16
 		},
 		{
 			name => 'ModuleNbStagiaires',
-			width => 19
+			hidden => true
 		},
 		{
 			name => 'ModuleDureeMinutes',
-			width => 19
+			hidden => true
 		},
 		{
 			name => 'ModuleDureeHeures',
@@ -126,77 +128,118 @@ my $columns = {
 		},
 		{
 			name => 'ModuleSoldeToPlann',
-			width => 19
-		},
-		{
-			name => 'CentreID',
-			width => 10
-		},
-		{
-			name => 'CentreLabel',
-			width => 25
-		},
-		{
-			name => 'RefPedagoID',
-			width => 12
-		},
-		{
-			name => 'RefPedagoLabel',
-			width => 32
+			hidden => true
 		},
 		{
 			name => 'LangueID',
-			width => 10
+			hidden => true
 		},
 		{
 			name => 'LangueLabel',
-			width => 14
-		},
-		{
-			name => 'ConventionLabel',
-			width => 80
-		},
-		{
-			name => 'CompanyID',
-			width => 12
-		},
-		{
-			name => 'CompanyName',
-			width => 66
+			hidden => true
 		},
 		{
 			name => 'ConventionDateFromMin',
-			width => 19
+			hidden => true
 		},
 		{
 			name => 'ConventionDateToMax',
-			width => 19
+			hidden => true
+		},
+		{
+			name => 'NotesPedagoDue',
+			hidden => true
+		},
+		{
+			name => 'NotesPedagoFound',
+			hidden => true
+		},
+		{
+			name => 'NotesPedagoManquantes',
+			width => 20
+		},
+		{
+			name => 'SeancesSignFormateurManquantes',
+			width => 25
+		},
+		{
+			name => 'StagiaireSignManquantes',
+			width => 25
+		},
+		{
+			name => 'StagiaireAbsencesCount',
+			width => 25
+		},
+		{
+			name => 'StagiaireAbsencesPercentCount',
+			hidden => true
+		},
+		{
+			name => 'StagiaireAbsencesCountSincePrev',
+			computed => \&computeStagiaireAbsencesCountSincePrev,
+			width => 25
 		},
 		{
 			name => 'SeancesPremierCours',
-			width => 19
+			computed => \&computeSeancesPremierCours,
+			width => 20
 		},
 		{
 			name => 'SeancesPremierCoursModifie',
 			computed => \&computeSeancesPremierCoursModifie,
-			width => 19
+			width => 20
 		},
 		{
 			name => 'SeancesDernierCours',
-			width => 19
+			computed => \&computeSeancesDernierCours,
+			width => 20
 		},
 		{
 			name => 'SeancesDernierCoursModifie',
 			computed => \&computeSeancesDernierCoursModifie,
-			width => 19
+			width => 20
 		},
 		{
 			name => 'SeancesMiParcoursDate',
-			width => 19
+			computed => \&computeSeancesMiParcoursDate,
+			width => 20
 		},
 		{
 			name => 'SeancesMiParcoursPassée',
-			width => 19
+			width => 20
+		},
+		{
+			name => 'SeancesPassees',
+			hidden => true
+		},
+		{
+			name => 'EvaluationPlanifiee',
+			computed => \&computeEvaluationPlanifiee,
+			width => 20
+		},
+		{
+			name => 'EvaluationRenseignee',
+			computed => \&computeEvaluationRenseignee,
+			width => 20
+		},
+		{
+			name => 'RapportProgresValide',
+			computed => \&computeRapportProgresValide,
+			width => 20
+		},
+		{
+			name => 'QuestionnaireDebut',
+			computed => \&computeQuestionnaireDebut,
+			width => 20
+		},
+		{
+			name => 'QuestionnaireFin',
+			computed => \&computeQuestionnaireFin,
+			width => 20
+		},
+		{
+			name => 'ReprendreFormation',
+			width => 20
 		},
 		{
 			name => 'LastNoteLabel',
@@ -211,107 +254,66 @@ my $columns = {
 			width => 20
 		},
 		{
-			name => 'NotesPedagoDue',
-			width => 21
+			name => 'CentreID',
+			hidden => true
 		},
 		{
-			name => 'NotesPedagoFound',
-			width => 21
+			name => 'CentreLabel',
+			width => 25
 		},
 		{
-			name => 'NotesPedagoManquantes',
-			width => 21
+			name => 'RefPedagoID',
+			hidden => true
 		},
 		{
-			name => 'SeancesPassees',
-			width => 21
+			name => 'RefPedagoLabel',
+			width => 30
 		},
 		{
-			name => 'SeancesSignFormateurManquantes',
-			width => 28
-		},
-		{
-			name => 'ModuleStagiaireID',
-			width => 16
-		},
-		{
-			name => 'ModuleStagiaireLabel',
+			name => 'ConventionLabel',
 			width => 80
 		},
 		{
+			name => 'CompanyID',
+			hidden => true
+		},
+		{
+			name => 'CompanyName',
+			width => 60
+		},
+		{
+			name => 'ModuleStagiaireID',
+			hidden => true
+		},
+		{
+			name => 'ModuleStagiaireLabel',
+			hidden => true
+		},
+		{
 			name => 'PersonID',
-			width => 11
+			hidden => true
 		},
 		{
 			name => 'PersonLabel',
-			width => 40
+			hidden => true
 		},
 		{
 			name => 'PersonCivility',
-			width => 13
+			hidden => true
 		},
 		{
 			name => 'PersonEmail',
-			width => 40
-		},
-		{
-			name => 'StagiaireSignManquantes',
-			width => 25
-		},
-		{
-			name => 'StagiaireAbsencesMinutes',
-			width => 25
-		},
-		{
-			name => 'StagiaireAbsencesPercentMinutes',
-			width => 25
-		},
-		{
-			name => 'StagiaireAbsencesCount',
-			width => 25
-		},
-		{
-			name => 'StagiaireAbsencesPercentCount',
-			width => 25
-		},
-		{
-			name => 'StagiaireAbsencesCountSincePrev',
-			computed => \&computeStagiaireAbsencesCountSincePrev,
-			width => 25
-		},
-		{
-			name => 'EvaluationPlanifiee',
-			width => 19
-		},
-		{
-			name => 'EvaluationRenseignee',
-			width => 19
-		},
-		{
-			name => 'RapportProgresValide',
-			width => 19
-		},
-		{
-			name => 'QuestionnaireDebut',
-			width => 17
-		},
-		{
-			name => 'QuestionnaireFin',
-			width => 17
-		},
-		{
-			name => 'ReprendreFormation',
-			width => 17
+			hidden => true
 		}
 	],
 	Inters => [
 		{
 			name => 'Source',
-			width => 9
+			hidden => true
 		},
 		{
 			name => 'CoursID',
-			width => 10
+			hidden => true
 		},
 		{
 			name => 'CoursLabel',
@@ -319,27 +321,29 @@ my $columns = {
 		},
 		{
 			name => 'FormuleID',
-			width => 11
+			hidden => true
 		},
 		{
 			name => 'FormuleLabel',
-			width => 14
+			hidden => true
 		},
 		{
 			name => 'CoursDateFrom',
+			computed => \&computeCoursDateFrom,
 			width => 16
 		},
 		{
 			name => 'CoursDateTo',
+			computed => \&computeCoursDateTo,
 			width => 16
 		},
 		{
 			name => 'CoursNbStagiaires',
-			width => 19
+			hidden => true
 		},
 		{
 			name => 'CoursDureeMinutes',
-			width => 19
+			hidden => true
 		},
 		{
 			name => 'CoursDureeHeures',
@@ -351,77 +355,114 @@ my $columns = {
 		},
 		{
 			name => 'CoursSoldeToPlann',
-			width => 19
-		},
-		{
-			name => 'CentreID',
-			width => 10
-		},
-		{
-			name => 'CentreLabel',
-			width => 25
-		},
-		{
-			name => 'RefPedagoID',
-			width => 12
-		},
-		{
-			name => 'RefPedagoLabel',
-			width => 32
+			hidden => true
 		},
 		{
 			name => 'LangueID',
-			width => 10
+			hidden => true
 		},
 		{
 			name => 'LangueLabel',
-			width => 14
-		},
-		{
-			name => 'ConventionLabel',
-			width => 80
-		},
-		{
-			name => 'CompanyID',
-			width => 12
-		},
-		{
-			name => 'CompanyName',
-			width => 66
+			hidden => true
 		},
 		{
 			name => 'ConventionDateFromMin',
-			width => 19
+			hidden => true
 		},
 		{
 			name => 'ConventionDateToMax',
-			width => 19
+			hidden => true
+		},
+		{
+			name => 'NotesPedagoDue',
+			hidden => true
+		},
+		{
+			name => 'NotesPedagoFound',
+			hidden => true
+		},
+		{
+			name => 'NotesPedagoManquantes',
+			width => 20
+		},
+		{
+			name => 'SeanceSignFormateurManquantes',
+			width => 30
+		},
+		{
+			name => 'StagiaireSignManquantes',
+			width => 25
+		},
+		{
+			name => 'StagiaireAbsencesCount',
+			width => 25
+		},
+		{
+			name => 'StagiaireAbsencesPercentCount',
+			hidden => true
+		},
+		{
+			name => 'StagiaireAbsencesCountSincePrev',
+			computed => \&computeStagiaireAbsencesCountSincePrev,
+			width => 25
 		},
 		{
 			name => 'SeancesPremierCours',
-			width => 19
+			computed => \&computeSeancesPremierCours,
+			width => 20
 		},
 		{
 			name => 'SeancesPremierCoursModifie',
 			computed => \&computeSeancesPremierCoursModifie,
-			width => 19
+			width => 20
 		},
 		{
 			name => 'SeancesDernierCours',
-			width => 19
+			computed => \&computeSeancesDernierCours,
+			width => 20
 		},
 		{
 			name => 'SeancesDernierCoursModifie',
 			computed => \&computeSeancesDernierCoursModifie,
-			width => 19
+			width => 20
 		},
 		{
 			name => 'SeancesMiParcoursDate',
-			width => 19
+			computed => \&computeSeancesMiParcoursDate,
+			width => 20
 		},
 		{
 			name => 'SeancesMiParcoursPassée',
-			width => 19
+			width => 20
+		},
+		{
+			name => 'EvaluationPlanifiee',
+			computed => \&computeEvaluationPlanifiee,
+			width => 20
+		},
+		{
+			name => 'EvaluationRenseignee',
+			computed => \&computeEvaluationRenseignee,
+			width => 20
+		},
+		{
+			name => 'RapportProgresValide',
+			computed => \&computeRapportProgresValide,
+			width => 20
+		},
+		{
+			name => 'QuestionnaireDebut',
+			computed => \&computeQuestionnaireDebut,
+			width => 20
+		},
+		{
+			name => 'QuestionnaireFin',
+			computed => \&computeQuestionnaireFin,
+			width => 20
+		},
+		{
+			name => 'ReprendreFormation',
+			width => 20
 		},
 		{
 			name => 'LastNoteLabel',
@@ -436,97 +477,60 @@ my $columns = {
 			width => 20
 		},
 		{
-			name => 'NotesPedagoDue',
-			width => 21
+			name => 'CentreID',
+			hidden => true
 		},
 		{
-			name => 'NotesPedagoFound',
-			width => 21
+			name => 'CentreLabel',
+			width => 20
 		},
 		{
-			name => 'NotesPedagoManquantes',
-			width => 21
+			name => 'RefPedagoID',
+			hidden => true
 		},
 		{
-			name => 'SeancesPassees',
-			width => 21
+			name => 'RefPedagoLabel',
+			width => 30
 		},
 		{
-			name => 'SeanceSignFormateurManquantes',
-			width => 28
-		},
-		{
-			name => 'CoursStagiaireID',
-			width => 16
-		},
-		{
-			name => 'CoursStagiaireLabel',
+			name => 'ConventionLabel',
 			width => 80
 		},
 		{
+			name => 'CompanyID',
+			hidden => true
+		},
+		{
+			name => 'CompanyName',
+			width => 66
+		},
+		{
+			name => 'SeancesPassees',
+			hidden => true
+		},
+		{
+			name => 'CoursStagiaireID',
+			hidden => true
+		},
+		{
+			name => 'CoursStagiaireLabel',
+			hidden => true
+		},
+		{
 			name => 'PersonID',
-			width => 11
+			hidden => true
 		},
 		{
 			name => 'PersonLabel',
-			width => 40
+			hidden => true
 		},
 		{
 			name => 'PersonCivility',
-			width => 13
+			hidden => true
 		},
 		{
 			name => 'PersonEmail',
-			width => 40
-		},
-		{
-			name => 'StagiaireSignManquantes',
-			width => 25
-		},
-		{
-			name => 'StagiaireAbsencesMinutes',
-			width => 25
-		},
-		{
-			name => 'StagiaireAbsencesPercentMinutes',
-			width => 25
-		},
-		{
-			name => 'StagiaireAbsencesCount',
-			width => 25
-		},
-		{
-			name => 'StagiaireAbsencesPercentCount',
-			width => 25
-		},
-		{
-			name => 'StagiaireAbsencesCountSincePrev',
-			computed => \&computeStagiaireAbsencesCountSincePrev,
-			width => 25
-		},
-		{
-			name => 'EvaluationPlanifiee',
-			width => 19
-		},
-		{
-			name => 'EvaluationRenseignee',
-			width => 19
-		},
-		{
-			name => 'RapportProgresValide',
-			width => 19
-		},
-		{
-			name => 'QuestionnaireDebut',
-			width => 17
-		},
-		{
-			name => 'QuestionnaireFin',
-			width => 17
-		},
-		{
-			name => 'ReprendreFormation',
-			width => 17
+			hidden => true
 		}
 	]
 };
@@ -553,9 +557,74 @@ my $formats = {};
 # each function receives the current row and the previous one
 # and must return the value to be displayed
 
+sub computeDateOnly {
+	my ( $str ) = @_;
+	return $str ? substr( $str, 0, 10 ) : '';
+}
+
+sub computeCoursDateFrom {
+	my ( $row, $prev ) = @_;
+	return computeDateOnly( $row->{CoursDateFrom} );
+}
+
+sub computeCoursDateTo {
+	my ( $row, $prev ) = @_;
+	return computeDateOnly( $row->{CoursDateTo} );
+}
+
+sub computeEvaluationPlanifiee {
+	my ( $row, $prev ) = @_;
+	return computeDateOnly( $row->{EvaluationPlanifiee} );
+}
+
+sub computeEvaluationRenseignee {
+	my ( $row, $prev ) = @_;
+	return computeDateOnly( $row->{EvaluationRenseignee} );
+}
+
+sub computeModuleDateFrom {
+	my ( $row, $prev ) = @_;
+	return computeDateOnly( $row->{ModuleDateFrom} );
+}
+
+sub computeModuleDateTo {
+	my ( $row, $prev ) = @_;
+	return computeDateOnly( $row->{ModuleDateTo} );
+}
+
+sub computeQuestionnaireDebut {
+	my ( $row, $prev ) = @_;
+	return computeDateOnly( $row->{QuestionnaireDebut} );
+}
+
+sub computeQuestionnaireFin {
+	my ( $row, $prev ) = @_;
+	return computeDateOnly( $row->{QuestionnaireFin} );
+}
+
+sub computeRapportProgresValide {
+	my ( $row, $prev ) = @_;
+	return computeDateOnly( $row->{RapportProgresValide} );
+}
+
+sub computeSeancesDernierCours {
+	my ( $row, $prev ) = @_;
+	return computeDateOnly( $row->{SeancesDernierCours} );
+}
+
 sub computeSeancesDernierCoursModifie {
 	my ( $row, $prev ) = @_;
 	return $prev ? ( $row->{SeancesDernierCours} eq $prev->{SeancesDernierCours} ? '' : 'Modifie' ) : '';
+}
+
+sub computeSeancesMiParcoursDate {
+	my ( $row, $prev ) = @_;
+	return computeDateOnly( $row->{SeancesMiParcoursDate} );
+}
+
+sub computeSeancesPremierCours {
+	my ( $row, $prev ) = @_;
+	return computeDateOnly( $row->{SeancesPremierCours} );
 }
 
 sub computeSeancesPremierCoursModifie {
@@ -712,12 +781,12 @@ sub sortFn {
 		return $a->{Source} cmp $b->{Source};
 	}
 	if( $a->{Source} eq 'Intras' ){
-		my $key_a = sprintf( '%s%010s%010s', $a->{ModuleDateFrom} =~ s/[^0-9]//gr, $a->{ModuleID}, $a->{ModuleStagiaireID} );
-		my $key_b = sprintf(  "%s%010s%010s", $b->{ModuleDateFrom} =~ s/[^0-9]//gr, $b->{ModuleID}, $b->{ModuleStagiaireID} );
+		my $key_a = sprintf( '%s%s', $a->{ModuleDateFrom} =~ s/[^0-9]//gr, rowKey( $a ));
+		my $key_b = sprintf( '%s%s', $b->{ModuleDateFrom} =~ s/[^0-9]//gr, rowKey( $b ));
 		return $key_a cmp $key_b;
 	}
-	my $key_a = sprintf( "%s%010s%010s", $a->{CoursDateFrom} =~ s/[^0-9]//gr, $a->{CoursID}, $a->{CoursStagiaireID} );
-	my $key_b = sprintf(  "%s%010s%010s", $b->{CoursDateFrom} =~s/[^0-9]//gr, $b->{CoursID}, $b->{CoursStagiaireID} );
+	my $key_a = sprintf( '%s%s', $a->{CoursDateFrom} =~ s/[^0-9]//gr, rowKey( $a ));
+	my $key_b = sprintf( '%s%s', $b->{CoursDateFrom} =~s/[^0-9]//gr, rowKey( $b ));
 	return $key_a cmp $key_b;
 }
 
@@ -734,7 +803,11 @@ sub writeInSheet {
 		for( my $i=0 ; $i<scalar( @{$columns->{$sheets->{$name}{header}}} ) ; ++$i ){
 			my $col = $columns->{$sheets->{$name}{header}}->[$i];
 			$sheets->{$name}{sheet}->write_string( 0, $i, $col->{name}, $formats->{headers} );
-			$sheets->{$name}{sheet}->set_column( $i, $i, $col->{width} );
+			my $hidden = false;
+			$hidden = $col->{hidden} if exists $col->{hidden};
+			my $width = undef;
+			$width = $col->{width} if exists $col->{width};
+			$sheets->{$name}{sheet}->set_column( $i, $i, $width, undef, $hidden );
 			# defines a special format for this column
 			if( $col->{format} ){
 				$col->{colfmt} = $book->add_format( %{$col->{format}} );
