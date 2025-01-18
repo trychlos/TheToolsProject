@@ -7,6 +7,9 @@
 # @(-) --json=<name>           the JSON file which characterizes this daemon [${json}]
 # @(-) --bname=<name>          the JSON file basename [${bname}]
 # @(-) --port=<port>           the port number to address [${port}]
+# @(-) --[no]http              publish the metrics to the (HTTP-based) Prometheus PushGateway system [${http}]
+# @(-) --metric=<metric>       the metric to be published [${metric}]
+# @(-) --label=<name=value>    label(s) to be added to the published metric, may be specified several times or as comma-separated strings [${label}]
 #
 # The Tools Project: a Tools System and Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
@@ -34,6 +37,7 @@ use File::Spec;
 
 use TTP::Daemon;
 use TTP::Finder;
+use TTP::Metric;
 my $running = $ep->runner();
 
 my $defaults = {
@@ -43,13 +47,22 @@ my $defaults = {
 	verbose => 'no',
 	json => '',
 	bname => '',
-	port => ''
+	port => '',
+	http => 'no',
+	metric => 'service_daemon',
+	label => ''
 };
 
 my $opt_json = $defaults->{json};
 my $opt_bname = $defaults->{bname};
 my $opt_port = -1;
 my $opt_port_set = false;
+my $opt_http = false;
+my $opt_metric = $defaults->{metric};
+my @opt_labels = ();
+
+# the addressed daemon
+my $daemon = undef;
 
 # -------------------------------------------------------------------------------------------------
 # get a daemon status
@@ -70,6 +83,19 @@ sub doStatus {
 		msgWarn( "no answer from the daemon" );
 		msgErr( "NOT OK" );
 	}
+	# publish a http telemetry if asked for
+	if( $opt_http ){
+		push( @opt_labels, "daemon=".$daemon->name());
+		TTP::Metric->new( $ep, {
+			name => $opt_metric,
+			value => $result ? 1 : 0,
+			type => 'gauge',
+			help => 'Daemon status',
+			labels => \@opt_labels
+		})->publish({
+			http => $opt_http
+		});
+	}
 }
 
 # =================================================================================================
@@ -87,7 +113,10 @@ if( !GetOptions(
 		my( $opt_name, $opt_value ) = @_;
 		$opt_port = $opt_value;
 		$opt_port_set = true;
-	} )){
+	},
+	"http!"				=> \$opt_http,
+	"metric=s"			=> \$opt_metric,
+	"label=s@"			=> \@opt_labels )){
 
 		msgOut( "try '".$running->command()." ".$running->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
@@ -105,6 +134,10 @@ msgVerbose( "found json='$opt_json'" );
 msgVerbose( "found bname='$opt_bname'" );
 msgVerbose( "found port='$opt_port'" );
 msgVerbose( "found port_set='".( $opt_port_set ? 'true':'false' )."'" );
+msgVerbose( "found http='".( $opt_http ? 'true':'false' )."'" );
+msgVerbose( "found metric='$opt_metric'" );
+@opt_labels = split( /,/, join( ',', @opt_labels ));
+msgVerbose( "found labels='".join( ',', @opt_labels )."'" );
 
 # either the json or the basename or the port must be specified (and not both)
 my $count = 0;
@@ -124,7 +157,7 @@ if( $opt_bname ){
 }
 #if a json has been specified or has been found, must have a listeningPort and get it
 if( $opt_json ){
-	my $daemon = TTP::Daemon->new( $ep, { path => $opt_json, daemonize => false });
+	$daemon = TTP::Daemon->new( $ep, { path => $opt_json, daemonize => false });
 	if( $daemon->loaded()){
 		$opt_port = $daemon->listeningPort();
 	} else {
