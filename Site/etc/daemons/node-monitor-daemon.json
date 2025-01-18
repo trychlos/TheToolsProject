@@ -4,7 +4,7 @@
 	],
 
 	"execPath": "[eval:File::Spec->catfile( TTP::var([ 'site', 'commandsDir' ]), 'node-monitor-daemon.pl' )]",
-	"execPath_dev": "[eval:File::Spec->catfile( 'C:\\INLINGUA\\dev\\scripts\\Site\\Commands', 'node-monitor-daemon.pl' )]",
+	"execPath1": "[eval:File::Spec->catfile( 'C:\\INLINGUA\\dev\\scripts\\Site\\Commands', 'node-monitor-daemon.pl' )]",
 	"listeningPort": 14397,
 	"textingInterval": -1,
 	

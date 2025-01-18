@@ -53,13 +53,16 @@ my $Const = {
 	# defaults which depend of the host OS provided by 'Config' package
 	byOS => {
 		darwin => {
-			tempDir => '/tmp'
+			tempDir => '/tmp',
+			null => '/dev/null'
 		},
 		linux => {
-			tempDir => '/tmp'
+			tempDir => '/tmp',
+			null => '/dev/null'
 		},
 		MSWin32 => {
-			tempDir => 'C:\\Temp'
+			tempDir => 'C:\\Temp',
+			null => 'NUL'
 		}
 	}
 };
@@ -867,6 +870,16 @@ sub nodeRoot {
 sub nodesDirs {
 	my $result = $ep->site() ? TTP::Node->dirs() : undef;
 	return $result;
+}
+
+# ------------------------------------------------------------------------------------------------
+# (I):
+# - none
+# (O):
+# - returns the null value to be used for this OS
+
+sub nullByOS {
+	return $Const->{byOS}{$Config{osname}}{null};
 }
 
 # -------------------------------------------------------------------------------------------------

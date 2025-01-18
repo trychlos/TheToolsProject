@@ -48,19 +48,12 @@ use strict;
 use warnings;
 
 use Data::Dumper;
-use File::Copy;
-use File::Find;
-use File::Spec;
-use File::stat;
 use Getopt::Long;
-use Time::Piece;
 
 use TTP;
 use TTP::Constants qw( :all );
 use TTP::Daemon;
 use TTP::Message qw( :all );
-use TTP::Reporter;
-use TTP::Service;
 use vars::global qw( $ep );
 
 my $daemon = TTP::Daemon->init();
@@ -116,8 +109,8 @@ sub answerStatus {
 
 	my ( $req ) = @_;
 	my $answer = TTP::Daemon->commonCommands()->{status}( $req, $commands );
-	#$answer .= "monitoredHost: ".$daemon->{monitoredNode}->name().EOL;
-	#$answer .= "monitoredExecReportsDir: ".computeMonitoredShare().EOL;
+	$answer .= "runInterval: ".configRunInterval().EOL;
+	$answer .= "keys: [".join( ',', @{configKeys()} ).']'.EOL;
 	return $answer;
 }
 
@@ -148,10 +141,28 @@ sub configRunInterval {
 }
 
 # -------------------------------------------------------------------------------------------------
-# Returns te list (an array) of the services hosted in this node
+# Returns the list (an array) of the services hosted in this node
 
 sub getServices {
 	return $ep->node()->services();
+}
+
+# -------------------------------------------------------------------------------------------------
+# Returns true if the given var has a non-empty 'commands' array
+# (I):
+# - a variable to be tested (should be a hash as returned by ->var() methods)
+
+sub hasCommands {
+	my ( $var ) = @_;
+	my $res = false;
+	if( $var and $var->{commands} ){
+		my $ref = ref( $var->{commands} );
+		if( $ref eq 'ARRAY' ){
+			my $count = scalar( @{$var->{commands}} );
+			$res = ( $count > 0 );
+		}
+	}
+	return $res;
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -229,33 +240,37 @@ sub works {
 	$daemon->{config} = $daemon->jsonData();
 	# and run..
 	# get commands at the node level
+	my $null = TTP::nullByOS();
+	msgVerbose( "null=$null" );
 	my $node = $ep->node();
 	my $keys = configKeys();
+	msgVerbose( "searching for monitoring commands at the node level" );
 	my $commands = $node->var( $keys );
-	if( $commands && $commands->{commands} && ref( $commands->{commands} ) eq 'ARRAY' ){
+	if( hasCommands( $commands )){
 		foreach my $cmd ( @{$commands->{commands}} ){
 			$cmd = macroReplace( $cmd, { '<NODE>' => $node->name() });
 			$cmd = macroReplace( $cmd, { '<ENVIRONMENT>' => $node->environment() });
 			msgVerbose( "running $cmd" );
-			`$cmd`;
+			`$cmd <$null`;
 		}
 	} else {
 		msgVerbose( "no commands found for node" );
 	}
 	# get the list of services hosted on this node
+	msgVerbose( "searching for monitoring commands at the services level" );
 	my $services = getServices();
 	# and run the same for each services
 	foreach my $service ( @{$services} ){
-		msgVerbose( $service );
+		msgVerbose( "examining service $service" );
 		my $serviceKeys = [ 'Services', $service, @{$keys} ];
 		my $commands = $node->var( $serviceKeys );
-		if( $commands && $commands->{commands} && ref( $commands->{commands} ) eq 'ARRAY' ){
+		if( hasCommands( $commands )){
 			foreach my $cmd ( @{$commands->{commands}} ){
 				$cmd = macroReplace( $cmd, { '<NODE>' => $node->name() });
-				$cmd = macroReplace( $cmd, { '<SERVICE>' => $service });
 				$cmd = macroReplace( $cmd, { '<ENVIRONMENT>' => $node->environment() });
+				$cmd = macroReplace( $cmd, { '<SERVICE>' => $service });
 				msgVerbose( "running $cmd" );
-				`$cmd`;
+				`$cmd <$null`;
 			}
 		} else {
 			msgVerbose( "no commands found for '$service'" );
