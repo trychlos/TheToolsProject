@@ -235,6 +235,7 @@ sub works {
 	if( $commands && $commands->{commands} && ref( $commands->{commands} ) eq 'ARRAY' ){
 		foreach my $cmd ( @{$commands->{commands}} ){
 			$cmd = macroReplace( $cmd, { '<NODE>' => $node->name() });
+			$cmd = macroReplace( $cmd, { '<ENVIRONMENT>' => $node->environment() });
 			msgVerbose( "running $cmd" );
 			`$cmd`;
 		}
@@ -252,6 +253,7 @@ sub works {
 			foreach my $cmd ( @{$commands->{commands}} ){
 				$cmd = macroReplace( $cmd, { '<NODE>' => $node->name() });
 				$cmd = macroReplace( $cmd, { '<SERVICE>' => $service });
+				$cmd = macroReplace( $cmd, { '<ENVIRONMENT>' => $node->environment() });
 				msgVerbose( "running $cmd" );
 				`$cmd`;
 			}

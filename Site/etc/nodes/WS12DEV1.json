@@ -70,12 +70,6 @@
 					"Only useful when about to switch a machine status to or from live or backup"
 				],
 				"live": "http.pl get -nocolored -url http://ip.test.blingua.net -header X-Sent-By -accept ...",
-				"after": {
-					"commands": [
-						"ssh inlingua-user@<NODE> dbms.pl status -nocolored -service <SERVICE> -state -mqtt -http",
-						"ssh inlingua-user@<NODE> daemon.pl status -bname tom17-backup-monitor-daemon.json -http -- -metric ttp_service_daemon -label service=<SERVICE> -label role=backup -label environment=X"
-					]
-				},
 				"monitor": {
 					"commands": [
 						"dbms.pl status -nocolored -service <SERVICE> -state -mqtt -http"

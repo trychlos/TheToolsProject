@@ -20,7 +20,7 @@
 				"monitor": {
 					"commands": [
 						"dbms.pl status -nocolored -service <SERVICE> -state -mqtt -http",
-						"daemon.pl status -bname tom17-backup-monitor-daemon.json -http -- -metric ttp_service_daemon -label service=<SERVICE> -label role=backup -label environment=X"
+						"daemon.pl status -bname tom17-backup-monitor-daemon.json -http -label service=<SERVICE> -label role=backup -label environment=<ENVIRONMENT>"
 					]
 				}
 			},
@@ -41,7 +41,7 @@
 				"monitor": {
 					"commands": [
 						"dbms.pl status -nocolored -service <SERVICE> -state -mqtt -http",
-						"daemon.pl status -bname tom21-backup-monitor-daemon.json -http -- -metric ttp_service_daemon -label service=<SERVICE> -label role=backup -label environment=X"
+						"daemon.pl status -bname tom21-backup-monitor-daemon.json -http -label service=<SERVICE> -label role=backup -label environment=<ENVIRONMENT>"
 					]
 				}
 			},
@@ -62,7 +62,7 @@
 				"monitor": {
 					"commands": [
 						"dbms.pl status -nocolored -service <SERVICE> -state -mqtt -http",
-						"daemon.pl status -bname tom59-backup-monitor-daemon.json -http -- -metric ttp_service_daemon -label service=<SERVICE> -label role=backup -label environment=X"
+						"daemon.pl status -bname tom59-backup-monitor-daemon.json -http -label service=<SERVICE> -label role=backup -label environment=<ENVIRONMENT>"
 					]
 				}
 			},
