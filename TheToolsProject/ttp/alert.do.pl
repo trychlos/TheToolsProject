@@ -93,8 +93,12 @@ sub doJsonAlert {
 			my $verbose = $running->verbose() ? "-verbose" : "-noverbose";
 			print `$command -nocolored $dummy $verbose`;
 			#$? = 256
-			$res = $? == 0;
-			msgOut( "success" );
+			my $res = $? == 0;
+			if( $res ){
+				msgOut( "success" );
+			} else {
+				msgErr( $! );
+			}
 		} else {
 			msgWarn( "unable to get a dropDir for 'withFile' alerts" );
 			msgErr( "alert by file NOT OK" );
@@ -134,8 +138,8 @@ sub doMqttAlert {
 		$command =~ s/<SUBJECT>/$topic/;
 		my $options = "";
 		$command =~ s/<OPTIONS>/$options/;
-		my $dummy = $opt_dummy ? "-dummy" : "-nodummy";
-		my $verbose = $opt_verbose ? "-verbose" : "-noverbose";
+		my $dummy = $running->dummy() ? "-dummy" : "-nodummy";
+		my $verbose = $running->verbose() ? "-verbose" : "-noverbose";
 		print `$command -nocolored $dummy $verbose`;
 		$res = ( $? == 0 );
 	} else {
@@ -169,8 +173,8 @@ Best regards.
 		my $fh = path( $textfname );
 		$fh->spew( $text );
 		$command =~ s/<OPTIONS>/-textfname $textfname/;
-		my $dummy = $opt_dummy ? "-dummy" : "-nodummy";
-		my $verbose = $opt_verbose ? "-verbose" : "-noverbose";
+		my $dummy = $running->dummy() ? "-dummy" : "-nodummy";
+		my $verbose = $running->verbose() ? "-verbose" : "-noverbose";
 		print `$command -nocolored $dummy $verbose`;
 		$res = ( $? == 0 );
 	} else {
@@ -209,8 +213,8 @@ Best regards.
 		$fh->spew( $text );
 		$command =~ s/<SUBJECT>/$subject/;
 		$command =~ s/<OPTIONS>/-textfname $textfname/;
-		my $dummy = $opt_dummy ? "-dummy" : "-nodummy";
-		my $verbose = $opt_verbose ? "-verbose" : "-noverbose";
+		my $dummy = $running->dummy() ? "-dummy" : "-nodummy";
+		my $verbose = $running->verbose() ? "-verbose" : "-noverbose";
 		print `$command -nocolored $dummy $verbose`;
 		$res = ( $? == 0 );
 	} else {
