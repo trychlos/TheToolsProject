@@ -36,6 +36,14 @@
 							"daemon.pl start -nocolored -name canal33-backup-monitor-daemon -- -remote WS12PROD2"
 						]
 					}
+				],
+				"startup": [
+					{
+						"label": "Run backup daemon if enabled",
+						"commands": [
+							"mswin.pl scheduled -task \\Inlingua\\canal33.backup -enabled && daemon.pl start -nocolored -name canal33-backup-monitor-daemon"
+						]
+					}
 				]
 			}
 		},

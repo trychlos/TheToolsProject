@@ -33,6 +33,14 @@
 							"daemon.pl start -nocolored -name tom17-backup-monitor-daemon -- -remote WS22PROD2"
 						]
 					}
+				],
+				"startup": [
+					{
+						"label": "Run backup daemon if enabled",
+						"commands": [
+							"mswin.pl scheduled -task \\Inlingua\\tom17.backup -enabled && daemon.pl start -nocolored -name tom17-backup-monitor-daemon"
+						]
+					}
 				]
 			}
 		},
@@ -52,6 +60,14 @@
 						"commands": [
 							"daemon.pl stop -nocolored -name tom21-backup-monitor-daemon -ignore -wait",
 							"daemon.pl start -nocolored -name tom21-backup-monitor-daemon -- -remote WS22PROD2"
+						]
+					}
+				],
+				"startup": [
+					{
+						"label": "Run backup daemon if enabled",
+						"commands": [
+							"mswin.pl scheduled -task \\Inlingua\\tom21.backup -enabled && daemon.pl start -nocolored -name tom21-backup-monitor-daemon"
 						]
 					}
 				]
@@ -74,6 +90,14 @@
 							"ttp.pl purgedirs -nocolored -dircmd \"dbms.pl vars -nocolored -backupsRoot\" -keep 4",
 							"daemon.pl stop -nocolored -name tom59-backup-monitor-daemon -ignore -wait",
 							"daemon.pl start -nocolored -name tom59-backup-monitor-daemon -- -remote WS22PROD2"
+						]
+					}
+				],
+				"startup": [
+					{
+						"label": "Run backup daemon if enabled",
+						"commands": [
+							"mswin.pl scheduled -task \\Inlingua\\tom59.backup -enabled && daemon.pl start -nocolored -name tom59-backup-monitor-daemon"
 						]
 					}
 				]
