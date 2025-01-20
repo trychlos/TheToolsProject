@@ -9,7 +9,7 @@
 # @(-) --port=<port>           the port number to address [${port}]
 # @(-) --[no]ignore            ignore the return code if the daemon was not active [${ignore}]
 # @(-) --[no]wait              wait for actual termination [${wait}]
-# @(-) --timeout=<timeout>     timeout in sec. when waiting for termination [${termination}]
+# @(-) --timeout=<timeout>     timeout in sec. when waiting for termination [${timeout}]
 #
 # The Tools Project: a Tools System and Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)

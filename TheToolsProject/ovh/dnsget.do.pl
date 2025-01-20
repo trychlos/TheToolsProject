@@ -87,7 +87,7 @@ sub doGetName {
 	if( $res ){
 		msgOut( "found $count record(s), success" );
 	} else {
-		msgErr( "NOT OK" );
+		msgErr( "NOT OK", { incErr => false });
 	}
 }
 

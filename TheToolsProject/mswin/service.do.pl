@@ -186,7 +186,7 @@ sub doServiceState {
 	if( $res ){
 		msgOut( "success" );
 	} else {
-		msgErr( "NOT OK" );
+		msgErr( "NOT OK", { incErr => false });
 	}
 }
 

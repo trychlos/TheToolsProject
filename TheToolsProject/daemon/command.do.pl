@@ -73,13 +73,12 @@ sub doSend {
 
 	# connect, triggering an error if the daemon is not active
 	} else {
-		my $socket = undef;
-		$socket = new IO::Socket::INET(
+		my $socket = new IO::Socket::INET(
 			PeerHost => 'localhost',
 			PeerPort => $opt_port,
 			Proto => 'tcp',
 			Type => SOCK_STREAM
-		) or msgErr( "unable to connect: $!" ) if !$socket;
+		) or msgErr( "unable to connect: $!" );
 
 		# send the command
 		if( $socket ){
@@ -104,12 +103,10 @@ sub doSend {
 				msgErr( "OK answer not received after $opt_timeout sec." );
 			}
 			$socket->close();
+			if( !$timedout ){
+				msgOut( "success" );
+			}
 		}
-	}
-	if( TTP::errs()){
-		msgErr( "NOT OK", { incErr => false });
-	} else {
-		msgOut( "success" );
 	}
 }
 

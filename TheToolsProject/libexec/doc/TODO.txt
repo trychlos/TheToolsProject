@@ -17,8 +17,11 @@ TODO
   52 2024- 5-17 replace IP addresses by dns aliases to make easier the switch between live and banckup productions (e.g. http gateway)
 
   53 2025- 1-17 have a timeout on movedirs and purgedirs at least, maybe on all verbs which needs a network access + alert when this timeout is reached
+     2025- 1-20 daemon.pl command done
 
-  54
+  54 2025- 1-19 verbs should have an internal telemetry for the memory they consume, the execution elapsed time
+
+  55
 
 # -------------------------------------------------------------------------------------------------
 

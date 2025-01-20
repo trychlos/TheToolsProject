@@ -65,7 +65,7 @@ sub executeCommands {
 		}
 	}
 	if( TTP::errs()){
-		msgErr( "NOT OK" );
+		msgErr( "NOT OK", { incErr => false });
 	} else {
 		msgOut( "$count executed command(s)" );
 	}

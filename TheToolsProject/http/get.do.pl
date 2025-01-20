@@ -157,7 +157,7 @@ sub doGet {
 		msgOut( "success" );
 	} else {
 		msgLog( Dumper( $response ));
-		msgErr( "NOT OK: $status" );
+		msgErr( "NOT OK: $status", { incErr => false });
 	}
 }
 

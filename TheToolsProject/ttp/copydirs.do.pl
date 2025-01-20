@@ -74,7 +74,7 @@ sub doCopyDirs {
 	if( $res ){
 		msgOut( "$count copied directory(ies)" );
 	} else {
-		msgErr( "NOT OK" );
+		msgErr( "NOT OK", { incErr => false });
 	}
 }
 

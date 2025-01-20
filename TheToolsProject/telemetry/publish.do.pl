@@ -103,7 +103,7 @@ sub doPublish {
 		textPrefix => $opt_textPrefix
 	});
 	if( TTP::errs()){
-		msgErr( "NOT OK" );
+		msgErr( "NOT OK", { incErr => false });
 	} else {
 		msgOut( "done" );
 	}
