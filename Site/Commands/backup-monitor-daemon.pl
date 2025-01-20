@@ -285,8 +285,10 @@ sub doWithNew {
 					my $command = "dbms.pl restore -nocolored -instance $restoreInstance -database $database ";
 					$command .= " -full $result->{full}";
 					$command .= " -diff $result->{diff}" if $result->{diff};
-					msgVerbose( $command );
-					my $res = TTP::filter( `$command` );
+					# happens that dbms.pl restore may block in WS2012R2 when run from a daemon
+					my $null = TTP::nullByOS();
+					msgVerbose( "$command < $null" );
+					my $res = TTP::filter( `$command < $null` );
 					my $rc = $?;
 					print join( '\n', @{$res} ).EOL;
 				} else {
