@@ -1,4 +1,4 @@
-# @(#) send a command to a running daemon
+# @(#) send a command to a running daemon and print the received answer until 'OK'
 #
 # @(-) --[no]help              print this message, and exit [${help}]
 # @(-) --[no]colored           color the output depending of the message level [${colored}]
@@ -8,6 +8,7 @@
 # @(-) --bname=<name>          the JSON file basename [${bname}]
 # @(-) --port=<port>           the port number to address [${port}]
 # @(-) --command=<command>     the command to be sent to the daemon [${command}]
+# @(-) --timeout=<timeout>     command timeout in sec. [${timeout}]
 #
 # @(@) A command is a simple string. The daemon is expected to (at least) acknowledge it.
 #
@@ -34,6 +35,7 @@ use strict;
 use warnings;
 
 use IO::Socket::INET;
+use Time::Piece;
 
 # auto-flush on socket
 $| = 1;
@@ -50,7 +52,8 @@ my $defaults = {
 	json => '',
 	bname => '',
 	port => '',
-	command => ''
+	command => '',
+	timeout => 10
 };
 
 my $opt_json = $defaults->{json};
@@ -58,6 +61,7 @@ my $opt_bname = $defaults->{bname};
 my $opt_port = -1;
 my $opt_port_set = false;
 my $opt_command = $defaults->{command};
+my $opt_timeout = $defaults->{timeout};
 
 # -------------------------------------------------------------------------------------------------
 # send a command to the daemon
@@ -84,12 +88,18 @@ sub doSend {
 			# notify server that request has been sent
 			$socket->shutdown( SHUT_WR );
 			# receive a response of up to 4096 characters from server
-			my $response = "";
-			while( !isOk( $response )){
-				$socket->recv( $response, 4096 );
-				chomp $response;
-				print "$response".EOL;
-				msgLog( $response );
+			# print the received (non-empty) lines until got OK
+			my $start = localtime;
+			my $timedout = false;
+			my $response = getAnswer( $socket );
+			while( !isAnswerOk( $response ) && !$timedout ){
+				sleep( 1 );
+				my $now = localtime;
+				$timedout = ( $now - $start > $opt_timeout );
+				$response = getAnswer( $socket );
+			}
+			if( $timedout ){
+				msgErr( "OK answer not received after $opt_timeout sec." );
 			}
 			$socket->close();
 		}
@@ -102,9 +112,24 @@ sub doSend {
 }
 
 # -------------------------------------------------------------------------------------------------
+# get an answer from the daemon
+
+sub getAnswer {
+	my ( $socket ) = @_;
+	my $response = '';
+	$socket->recv( $response, 4096 );
+	chomp $response;
+	if( $response ){
+		print "$response".EOL;
+		msgLog( $response );
+	}
+	return $response;
+}
+
+# -------------------------------------------------------------------------------------------------
 # whether the received answer is just 'OK'
 
-sub isOk {
+sub isAnswerOk {
 	my ( $answer ) = @_;
 	my @lines = split( /[\r\n]+/, $answer );
 	foreach my $line ( @lines ){
@@ -129,7 +154,8 @@ if( !GetOptions(
 		$opt_port = $opt_value;
 		$opt_port_set = true;
 	},
-	"command=s"			=> \$opt_command )){
+	"command=s"			=> \$opt_command,,
+	"timeout=i"			=> \$opt_timeout )){
 
 		msgOut( "try '".$running->command()." ".$running->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
@@ -148,6 +174,7 @@ msgVerbose( "found bname='$opt_bname'" );
 msgVerbose( "found port='$opt_port'" );
 msgVerbose( "found port_set='".( $opt_port_set ? 'true':'false' )."'" );
 msgVerbose( "found command='$opt_command'" );
+msgVerbose( "found timeout='$opt_timeout'" );
 
 # either the json or the basename or the port must be specified (and not both)
 my $count = 0;

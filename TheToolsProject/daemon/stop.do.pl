@@ -9,7 +9,7 @@
 # @(-) --port=<port>           the port number to address [${port}]
 # @(-) --[no]ignore            ignore the return code if the daemon was not active [${ignore}]
 # @(-) --[no]wait              wait for actual termination [${wait}]
-# @(-) --timeout=<timeout>     timeout when waiting for termination [${termination}]
+# @(-) --timeout=<timeout>     timeout in sec. when waiting for termination [${termination}]
 #
 # The Tools Project: a Tools System and Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
@@ -67,7 +67,7 @@ sub doStop {
 	msgOut( "requesting the daemon for termination..." );
 	my $dummy = $running->dummy() ? "-dummy" : "-nodummy";
 	my $verbose = $running->verbose() ? "-verbose" : "-noverbose";
-	my $command = "daemon.pl command -nocolored $dummy $verbose -command terminate -port $opt_port";
+	my $command = "daemon.pl command -nocolored $dummy $verbose -command terminate -port $opt_port -timeout $opt_timeout";
 	msgVerbose( $command );
 	my $res = TTP::filter( `$command` );
 	my $rc = $?;
