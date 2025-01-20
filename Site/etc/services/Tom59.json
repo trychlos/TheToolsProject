@@ -27,7 +27,7 @@
 		},
 		"to_live": {
 			"commands": [
-				"ssh inlingua-user@<NODE> daemon.pl stop -nocolored -bname tom59-backup-monitor-daemon.json -ignore -wait",
+				"ssh inlingua-user@<NODE> daemon.pl stop -nocolored -name tom59-backup-monitor-daemon -ignore -wait",
 				"ssh inlingua-adm@<NODE> [eval:File::Spec->catfile( TTP::var([ 'site', 'commandsDir' ]), 'scheduled_set_status.cmd' )] \\Inlingua\\tom59.backup /Disable"
 			]
 		}

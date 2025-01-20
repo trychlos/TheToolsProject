@@ -142,7 +142,7 @@ sub mqttDisconnect {
 # The Daemon expects an array ref, so returns it even if empty
 # Daemon default is to only publish 'running since...'
 # we are adding here all informations as displayed by STATUS command on stdout:
-#   C:\Users\inlingua-user>daemon.pl status -bname tom59-backup-monitor-daemon.json
+#   C:\Users\inlingua-user>daemon.pl status -name tom59-backup-monitor-daemon
 #   [daemon.pl status] requesting the daemon for its status...
 #   7868 running since 2024-05-09 05:31:13.92239
 #   7868 json: C:\INLINGUA\Site\etc\daemons\tom59-backup-monitor-daemon.json

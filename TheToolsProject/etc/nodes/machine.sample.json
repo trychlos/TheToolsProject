@@ -125,7 +125,7 @@
 							"ttp.pl list -nocolored -services"
 						],
 						"commands": [
-							"daemon.pl start -nocolored -bname tom59-backup-monitor-daemon.json -- -remote NS3232346"
+							"daemon.pl start -nocolored -name tom59-backup-monitor-daemon -- -remote NS3232346"
 						]
 					}
 				]

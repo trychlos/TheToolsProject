@@ -59,7 +59,7 @@
 		},
 		"to_live": {
 			"commands": [
-				"ssh inlingua-user@<NODE> daemon.pl stop -nocolored -bname canal33-backup-monitor-daemon.json -ignore -wait",
+				"ssh inlingua-user@<NODE> daemon.pl stop -nocolored -name canal33-backup-monitor-daemon -ignore -wait",
 				"ssh inlingua-adm@<NODE> [eval:File::Spec->catfile( TTP::var([ 'site', 'commandsDir' ]), 'scheduled_set_status.cmd' )] \\Inlingua\\tom17.backup.startup /Disable",
 				"ssh inlingua-adm@<NODE> sc config start= auto Canal33Ftp",
 				"ssh inlingua-adm@<NODE> sc start Canal33Ftp",

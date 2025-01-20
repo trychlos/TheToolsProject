@@ -5,7 +5,7 @@
 # @(-) --[no]dummy             dummy run [${dummy}]
 # @(-) --[no]verbose           run verbosely [${verbose}]
 # @(-) --json=<name>           the JSON file which characterizes this daemon [${json}]
-# @(-) --bname=<name>          the JSON file basename [${bname}]
+# @(-) --name=<name>           the daemon name [${name}]
 # @(-) --port=<port>           the port number to address [${port}]
 # @(-) --command=<command>     the command to be sent to the daemon [${command}]
 # @(-) --timeout=<timeout>     command timeout in sec. [${timeout}]
@@ -50,14 +50,14 @@ my $defaults = {
 	dummy => 'no',
 	verbose => 'no',
 	json => '',
-	bname => '',
+	name => '',
 	port => '',
 	command => '',
 	timeout => 10
 };
 
 my $opt_json = $defaults->{json};
-my $opt_bname = $defaults->{bname};
+my $opt_name = $defaults->{name};
 my $opt_port = -1;
 my $opt_port_set = false;
 my $opt_command = $defaults->{command};
@@ -91,12 +91,14 @@ sub doSend {
 			# print the received (non-empty) lines until got OK
 			my $start = localtime;
 			my $timedout = false;
-			my $response = getAnswer( $socket );
-			while( !isAnswerOk( $response ) && !$timedout ){
+			my $ok = getAnswerOk( $socket );
+			while( !$ok && !$timedout ){
 				sleep( 1 );
 				my $now = localtime;
 				$timedout = ( $now - $start > $opt_timeout );
-				$response = getAnswer( $socket );
+				if( !$timedout ){
+					$ok = getAnswerOk( $socket );
+				}
 			}
 			if( $timedout ){
 				msgErr( "OK answer not received after $opt_timeout sec." );
@@ -127,6 +129,28 @@ sub getAnswer {
 }
 
 # -------------------------------------------------------------------------------------------------
+# get an answer from the daemon
+# print the response until got 'OK'
+# returns true if found
+
+sub getAnswerOk {
+	my ( $socket ) = @_;
+	my $response = "";
+	$socket->recv( $response, 4096 );
+	my $hasOk = false;
+	my @lines = split( /[\r\n]+/, $response );
+	foreach my $line ( @lines ){
+		$hasOk = true if $line =~ m/^[0-9]+\s+OK/;
+		chomp $line;
+		if( $line ){
+			print "$line".EOL;
+			msgLog( $line );
+		}
+	}
+	return $hasOk;
+}
+
+# -------------------------------------------------------------------------------------------------
 # whether the received answer is just 'OK'
 
 sub isAnswerOk {
@@ -148,7 +172,7 @@ if( !GetOptions(
 	"dummy!"			=> \$ep->{run}{dummy},
 	"verbose!"			=> \$ep->{run}{verbose},
 	"json=s"			=> \$opt_json,
-	"bname=s"			=> \$opt_bname,
+	"name=s"			=> \$opt_name,
 	"port=i"			=> sub {
 		my( $opt_name, $opt_value ) = @_;
 		$opt_port = $opt_value;
@@ -170,7 +194,7 @@ msgVerbose( "found colored='".( $running->colored() ? 'true':'false' )."'" );
 msgVerbose( "found dummy='".( $running->dummy() ? 'true':'false' )."'" );
 msgVerbose( "found verbose='".( $running->verbose() ? 'true':'false' )."'" );
 msgVerbose( "found json='$opt_json'" );
-msgVerbose( "found bname='$opt_bname'" );
+msgVerbose( "found name='$opt_name'" );
 msgVerbose( "found port='$opt_port'" );
 msgVerbose( "found port_set='".( $opt_port_set ? 'true':'false' )."'" );
 msgVerbose( "found command='$opt_command'" );
@@ -179,18 +203,18 @@ msgVerbose( "found timeout='$opt_timeout'" );
 # either the json or the basename or the port must be specified (and not both)
 my $count = 0;
 $count += 1 if $opt_json;
-$count += 1 if $opt_bname;
+$count += 1 if $opt_name;
 $count += 1 if $opt_port != -1;
 if( $count == 0 ){
-	msgErr( "one of '--json' or '--bname' or '--port' options must be specified, none found" );
+	msgErr( "one of '--json' or '--name' or '--port' options must be specified, none found" );
 } elsif( $count > 1 ){
-	msgErr( "one of '--json' or '--bname' or '--port' options must be specified, several were found" );
+	msgErr( "one of '--json' or '--name' or '--port' options must be specified, several were found" );
 }
-#if a bname is specified, find the full filename
-if( $opt_bname ){
+# if a daemon name is specified, find the full JSON filename
+if( $opt_name ){
 	my $finder = TTP::Finder->new( $ep );
-	$opt_json = $finder->find({ dirs => [ TTP::Daemon->dirs(), $opt_bname ], wantsAll => false });
-	msgErr( "unable to find a suitable daemon JSON configuration file for '$opt_bname'" ) if !$opt_json;
+	$opt_json = $finder->find({ dirs => [ TTP::Daemon->dirs(), $opt_name ], sufix => TTP::Daemon->finder()->{sufix}, wantsAll => false });
+	msgErr( "unable to find a suitable daemon JSON configuration file for '$opt_name'" ) if !$opt_json;
 }
 #if a json has been specified or has been found, must have a listeningPort and get it
 if( $opt_json ){

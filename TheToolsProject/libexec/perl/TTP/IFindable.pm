@@ -27,6 +27,7 @@ use warnings;
 
 use Config;
 use Data::Dumper;
+use File::Spec;
 
 use TTP::Constants qw( :all );
 use TTP::Message qw( :all );
@@ -45,7 +46,8 @@ requires qw( _newBase );
 #   > dirs: the specifications to be searched for in TTP_ROOTS tree
 #     as a scalar, or as a ref to an array of items which have to be concatenated,
 #     when each item for the array may itself be an array of scalars to be sucessively tested
-#   > glob: an optional sufix to glob the files
+#   > glob: an optional pattern to glob the files
+#   > sufix: an optional suffix to add to the files
 #   > wantsAll: whether we want a full list of just the first found
 #     defaulting to true (wants the full list)
 # - an optional options hash which will be passed to Acceptable role if the object implements it
@@ -63,15 +65,15 @@ sub find {
 		if( $args->{dirs} ){
 			$ref = ref( $args->{dirs} );
 			if( $ref && $ref ne 'ARRAY' ){
-				msgErr( __PACKAGE__."::_find() expects args->dirs be a scalar or an array, found '$ref'" );
+				msgErr( __PACKAGE__."::find() expects args->dirs be a scalar or an array, found '$ref'" );
 			} else {
 				$result = $self->_find_run( $args, $opts );
 			}
 		} else {
-			msgErr( __PACKAGE__."::_find() expects args->dirs object, which has not been found" );
+			msgErr( __PACKAGE__."::find() expects args->dirs object, which has not been found" );
 		}
 	} else {
-		msgErr( __PACKAGE__."::_find() expects args be a hash, found '$ref'" );
+		msgErr( __PACKAGE__."::find() expects args be a hash, found '$ref'" );
 	}
 	return $result;
 }
@@ -98,10 +100,10 @@ sub _find_run {
 	}
 	if( $self->{_ifindable}{wantsAll} ){
 		$result = $self->{_ifindable}{accepted};
-		msgVerbose( __PACKAGE__."::_find() returning [".join( ',', @{$result} )."]" );
+		msgVerbose( __PACKAGE__."::_find_run() returning [".join( ',', @{$result} )."]" );
 	} else {
 		$result = $self->{_ifindable}{accepted}->[0] if scalar @{$self->{_ifindable}{accepted}};
-		msgVerbose( __PACKAGE__."::_find() returning '".( $result ? $result : '(undef)' )."'" );
+		msgVerbose( __PACKAGE__."::_find_run() returning '".( $result ? $result : '(undef)' )."'" );
 	}
 	return $result;
 }
@@ -150,6 +152,8 @@ sub _find_single {
 	my @results = ();
 	if( $args->{glob} ){
 		push( @results, glob( File::Spec->catfile( $fname, $args->{glob} )));
+	} elsif( $args->{sufix} ){
+		push( @results, $fname.$args->{sufix} );
 	} else {
 		push( @results, $fname );
 	}

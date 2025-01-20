@@ -88,8 +88,8 @@
 							"ttp.pl movedirs -nocolored -sourcecmd \"dbms.pl vars -nocolored -backupsRoot\" -targetcmd \"dbms.pl vars -nocolored -archivesRoot\" -dirs -keep 2 -nomakeDir",
 							"ttp.pl purgedirs -nocolored -dircmd \"dbms.pl vars -nocolored -archivesRoot\" -keep 5",
 							"ttp.pl purgedirs -nocolored -dircmd \"ttp.pl vars -nocolored -logsRoot\" -keep 10",
-							"daemon.pl stop -nocolored -bname node-monitor-daemon.json -ignore -wait",
-							"daemon.pl start -nocolored -bname node-monitor-daemon.json"
+							"daemon.pl stop -nocolored -name node-monitor-daemon -ignore -wait",
+							"daemon.pl start -nocolored -name node-monitor-daemon"
 						]
 					}
 				],
@@ -98,7 +98,7 @@
 						"label": "Advertize at startup",
 						"commands": [
 							"call [eval:File::Spec->catfile( TTP::var([ 'site', 'commandsDir' ]), 'startup.cmd' )]",
-							"daemon.pl start -nocolored -bname node-monitor-daemon.json"
+							"daemon.pl start -nocolored -name node-monitor-daemon"
 						]
 					}
 				],
@@ -110,7 +110,7 @@
 							"ttp.pl list -nocolored -services"
 						],
 						"commands0": [
-							"daemon.pl start -nocolored -json [eval:File::Spec->catfile( TTP::var([ 'site', 'daemonsDir' ]), 'tom59-backup-monitor-daemon.json' )] -- -remote NS3232346"
+							"daemon.pl start -nocolored -name tom59-backup-monitor-daemon -- -remote NS3232346"
 						]
 					}
 				]

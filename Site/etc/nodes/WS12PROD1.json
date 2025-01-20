@@ -20,7 +20,7 @@
 				"monitor": {
 					"commands": [
 						"dbms.pl status -nocolored -service <SERVICE> -state -mqtt -http",
-						"daemon.pl status -bname canal33-backup-monitor-daemon.json -http -label service=<SERVICE> -label role=backup -label environment=<ENVIRONMENT>",
+						"daemon.pl status -name canal33-backup-monitor-daemon -http -label service=<SERVICE> -label role=backup -label environment=<ENVIRONMENT>",
 						"mswin.pl service -name Canal33Ftp -state -mqtt -http -append service=<SERVICE>",
 						"mswin.pl service -name Canal33Svc -state -mqtt -http -append service=<SERVICE>"
 					]
@@ -32,8 +32,8 @@
 						"label": "(PRODUCTION BACKUP) Surveillance, transfert et restauration des sauvegardes de la production",
 						"commands": [
 							"ttp.pl purgedirs -nocolored -dircmd \"dbms.pl vars -nocolored -backupsRoot\" -keep 4",
-							"daemon.pl stop -nocolored -bname canal33-backup-monitor-daemon.json -ignore -wait",
-							"daemon.pl start -nocolored -bname canal33-backup-monitor-daemon.json -- -remote WS12PROD2"
+							"daemon.pl stop -nocolored -name canal33-backup-monitor-daemon -ignore -wait",
+							"daemon.pl start -nocolored -name canal33-backup-monitor-daemon -- -remote WS12PROD2"
 						]
 					}
 				]
@@ -54,8 +54,8 @@
 							"ttp.pl movedirs -nocolored -sourcecmd \"dbms.pl vars -nocolored -backupsRoot\" -targetcmd \"dbms.pl vars -nocolored -archivesRoot\" -dirs -keep 4 -nomakeDir",
 							"ttp.pl purgedirs -nocolored -dircmd \"dbms.pl vars -nocolored -archivesRoot\" -keep 10",
 							"ttp.pl purgedirs -nocolored -dircmd \"ttp.pl vars -nocolored -logsRoot\" -keep 10",
-							"daemon.pl stop -nocolored -bname node-monitor-daemon.json -ignore -wait",
-							"daemon.pl start -nocolored -bname node-monitor-daemon.json"
+							"daemon.pl stop -nocolored -name node-monitor-daemon -ignore -wait",
+							"daemon.pl start -nocolored -name node-monitor-daemon"
 						]
 					},
 					{
@@ -77,7 +77,7 @@
 						"label": "Advertize at startup",
 						"commands": [
 							"call [eval:File::Spec->catfile( TTP::var([ 'site', 'commandsDir' ]), 'startup.cmd' )]",
-							"daemon.pl start -nocolored -bname node-monitor-daemon.json"
+							"daemon.pl start -nocolored -name node-monitor-daemon"
 						]
 					}
 				]

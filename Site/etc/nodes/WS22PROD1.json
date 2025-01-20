@@ -20,7 +20,7 @@
 				"monitor": {
 					"commands": [
 						"dbms.pl status -nocolored -service <SERVICE> -state -mqtt -http",
-						"daemon.pl status -bname tom17-backup-monitor-daemon.json -http -label service=<SERVICE> -label role=backup -label environment=<ENVIRONMENT>"
+						"daemon.pl status -name tom17-backup-monitor-daemon -http -label service=<SERVICE> -label role=backup -label environment=<ENVIRONMENT>"
 					]
 				}
 			},
@@ -29,8 +29,8 @@
 					{
 						"label": "(PROD BACKUP) Surveillance, transfert et restauration des sauvegardes de la production",
 						"commands": [
-							"daemon.pl stop -nocolored -bname tom17-backup-monitor-daemon.json -ignore -wait",
-							"daemon.pl start -nocolored -bname tom17-backup-monitor-daemon.json -- -remote WS22PROD2"
+							"daemon.pl stop -nocolored -name tom17-backup-monitor-daemon -ignore -wait",
+							"daemon.pl start -nocolored -name tom17-backup-monitor-daemon -- -remote WS22PROD2"
 						]
 					}
 				]
@@ -41,7 +41,7 @@
 				"monitor": {
 					"commands": [
 						"dbms.pl status -nocolored -service <SERVICE> -state -mqtt -http",
-						"daemon.pl status -bname tom21-backup-monitor-daemon.json -http -label service=<SERVICE> -label role=backup -label environment=<ENVIRONMENT>"
+						"daemon.pl status -name tom21-backup-monitor-daemon -http -label service=<SERVICE> -label role=backup -label environment=<ENVIRONMENT>"
 					]
 				}
 			},
@@ -50,8 +50,8 @@
 					{
 						"label": "(PROD BACKUP) Surveillance, transfert et restauration des sauvegardes de la production",
 						"commands": [
-							"daemon.pl stop -nocolored -bname tom21-backup-monitor-daemon.json -ignore -wait",
-							"daemon.pl start -nocolored -bname tom21-backup-monitor-daemon.json -- -remote WS22PROD2"
+							"daemon.pl stop -nocolored -name tom21-backup-monitor-daemon -ignore -wait",
+							"daemon.pl start -nocolored -name tom21-backup-monitor-daemon -- -remote WS22PROD2"
 						]
 					}
 				]
@@ -62,7 +62,7 @@
 				"monitor": {
 					"commands": [
 						"dbms.pl status -nocolored -service <SERVICE> -state -mqtt -http",
-						"daemon.pl status -bname tom59-backup-monitor-daemon.json -http -label service=<SERVICE> -label role=backup -label environment=<ENVIRONMENT>"
+						"daemon.pl status -name tom59-backup-monitor-daemon -http -label service=<SERVICE> -label role=backup -label environment=<ENVIRONMENT>"
 					]
 				}
 			},
@@ -72,8 +72,8 @@
 						"label": "(PRODUCTION BACKUP) Surveillance, transfert et restauration des sauvegardes de la production",
 						"commands": [
 							"ttp.pl purgedirs -nocolored -dircmd \"dbms.pl vars -nocolored -backupsRoot\" -keep 4",
-							"daemon.pl stop -nocolored -bname tom59-backup-monitor-daemon.json -ignore -wait",
-							"daemon.pl start -nocolored -bname tom59-backup-monitor-daemon.json -- -remote WS22PROD2"
+							"daemon.pl stop -nocolored -name tom59-backup-monitor-daemon -ignore -wait",
+							"daemon.pl start -nocolored -name tom59-backup-monitor-daemon -- -remote WS22PROD2"
 						]
 					}
 				]
@@ -91,8 +91,8 @@
 							"ttp.pl movedirs -nocolored -sourcecmd \"dbms.pl vars -nocolored -backupsRoot\" -targetcmd \"dbms.pl vars -nocolored -archivesRoot\" -dirs -keep 4 -nomakeDir",
 							"ttp.pl purgedirs -nocolored -dircmd \"dbms.pl vars -nocolored -archivesRoot\" -keep 10",
 							"ttp.pl purgedirs -nocolored -dircmd \"ttp.pl vars -nocolored -logsRoot\" -keep 10",
-							"daemon.pl stop -nocolored -bname node-monitor-daemon.json -ignore -wait",
-							"daemon.pl start -nocolored -bname node-monitor-daemon.json"
+							"daemon.pl stop -nocolored -name node-monitor-daemon -ignore -wait",
+							"daemon.pl start -nocolored -name node-monitor-daemon"
 						]
 					}
 				],
@@ -108,7 +108,7 @@
 						"label": "Advertize at startup",
 						"commands": [
 							"call [eval:File::Spec->catfile( TTP::var([ 'site', 'commandsDir' ]), 'startup.cmd' )]",
-							"daemon.pl start -nocolored -bname node-monitor-daemon.json"
+							"daemon.pl start -nocolored -name node-monitor-daemon"
 						]
 					}
 				]
