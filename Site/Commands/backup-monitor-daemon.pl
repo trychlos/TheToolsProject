@@ -290,7 +290,7 @@ sub doWithNew {
 					msgVerbose( "$command < $null" );
 					my $res = TTP::filter( `$command < $null` );
 					my $rc = $?;
-					print join( '\n', @{$res} ).EOL;
+					msgVerbose( join( '\n', @{$res} ).EOL );
 				} else {
 					msgWarn( "result is undefined, unable to restore" );
 				}
