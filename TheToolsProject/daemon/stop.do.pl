@@ -189,7 +189,7 @@ if( $opt_json ){
 	}
 }
 #if a port is set, must be greater than zero
-msgErr( "when specified, addressed port must be greater than zero" ) if $opt_port <= 0;
+msgErr( "when specified, addressed port must be greater than zero" ) if $opt_port <= 0 and $opt_port_set;
 
 if( !TTP::errs()){
 	doStop();

@@ -159,21 +159,27 @@ sub msgDummy {
 # Error message (should always be logged event if TTP let the site integrator disable that)
 # (I):
 # - the message to be printed on STDERR
+# - an optional options hash with following keys:
+#   > incErr: whether increment the errors count, defaulting to true
 # (O):
 # - increments the exit code
 
 sub msgErr {
+	my ( $msg, $opts ) = @_;
+	$opts //= {};
 	if( defined( $ep )){
 		# let have a stack trace
 		#TTP::stackTrace();
 		# and send the message
 		_printMsg({
-			msg => shift,
+			msg => $msg,
 			level => ERR,
 			handle => \*STDERR
 		});
 		my $running = $ep->runner();
-		$running->runnableErrInc() if $running;
+		my $increment = true;
+		$increment = $opts->{incErr} if exists $opts->{incErr};
+		$running->runnableErrInc() if $running and $increment;
 	}
 }
 

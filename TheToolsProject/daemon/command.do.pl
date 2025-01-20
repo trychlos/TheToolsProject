@@ -107,25 +107,10 @@ sub doSend {
 		}
 	}
 	if( TTP::errs()){
-		msgErr( "NOT OK" );
+		msgErr( "NOT OK", { incErr => false });
 	} else {
 		msgOut( "success" );
 	}
-}
-
-# -------------------------------------------------------------------------------------------------
-# get an answer from the daemon
-
-sub getAnswer {
-	my ( $socket ) = @_;
-	my $response = '';
-	$socket->recv( $response, 4096 );
-	chomp $response;
-	if( $response ){
-		print "$response".EOL;
-		msgLog( $response );
-	}
-	return $response;
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -148,18 +133,6 @@ sub getAnswerOk {
 		}
 	}
 	return $hasOk;
-}
-
-# -------------------------------------------------------------------------------------------------
-# whether the received answer is just 'OK'
-
-sub isAnswerOk {
-	my ( $answer ) = @_;
-	my @lines = split( /[\r\n]+/, $answer );
-	foreach my $line ( @lines ){
-		return true if $line =~ m/^[0-9]+\s+OK/;
-	}
-	return false;
 }
 
 # =================================================================================================
