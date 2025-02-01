@@ -123,7 +123,7 @@ sub doGet {
 			msgVerbose( "receiving HTTP status='$status', success='true'" );
 			msgLog( "content='".$response->decoded_content."'" );
 		} else {
-			msgErr( "received HTTP status='$status', success='false'" );
+			msgErr( "received HTTP status='$status', success='false' for '$opt_url'" );
 			$status = $response->status_line;
 			msgLog( "additional status: '$status'" );
 			my $acceptedRegex = undef;
