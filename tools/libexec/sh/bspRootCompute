@@ -1,0 +1,73 @@
+# @(#) Display on stdout the ordered chain of candidate TTPROOT trees
+#
+# The Tools Project: a Tools System and Paradigm for IT Production
+# Copyright (©) 2003-2021 Pierre Wieser (see AUTHORS)
+#
+# The Tools Project is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation; either version 2 of the
+# License, or (at your option) any later version.
+#
+# The Tools Project is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with The Tools Project; see the file COPYING. If not,
+# see <http://www.gnu.org/licenses/>.
+#
+# Synopsis:
+#
+#   The list of TTPROOT paths is computed from the ordered list of
+#   FPATH, making sure at least one of bindir, etcdir or fndir
+#   subdirectory exists.
+#
+#   If not already present, the TTPROOT path of the currently running
+#   command is appended to this list.
+#
+# (I): 1. (opt) full pathname of the command
+#
+# (O): stdout: ttp_roots is echoed as a colon (:) separated list
+#
+# BootstrappingProcess:
+#
+#   This function is involved in the bootstrapping process, either
+#   as part of the FPATH initialization, or as part of the execution
+#   node setup.
+#   Because of that, it must be executed as an in-process run.
+#   Consequently, it has to be reviewed each time another login shell
+#   has to be managed.
+#
+# pwi 2013- 2-16 creation
+# pwi 2013- 6-27 the currently running command goes to the end of the list
+# pwi 2017- 6-21 publish the release at last
+
+function bspRootCompute
+{
+	#set -x
+	typeset _cmdpath="${1%/*}"
+	typeset _roots=""
+	typeset _dir
+	typeset _rootdir
+	typeset _fndir
+
+	for _dir in $(echo "${FPATH}" | sed 's?:? ?g'); do
+		_fndir="${_dir:-.}"
+		_rootdir="${_fndir%/*}"
+		_rootdir="${_rootdir%/*}"
+		if [ ! -z "${_rootdir}" ]; then
+			if [ -d "${_rootdir}/${ttp_binsubdir}" -o -d "${_rootdir}/${ttp_etcsubdir}" -o -d "${_fndir}" ]; then
+				_roots="$(bspPathAppendByValue "${_roots}" "${_rootdir}")"
+			fi
+		fi
+	done
+
+	# at the end of the enumeration, take care of adding the path to the
+	#  currently running command (if not already in the list)
+	typeset _cmdtree="${_cmdpath%/*}"
+	[ -z "${_cmdtree}" ] || _roots="$(bspPathAppendByValue "${_roots}" "${_cmdtree}")"
+
+	# echoes the result
+	echo "${_roots}"
+}

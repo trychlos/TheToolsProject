@@ -1,0 +1,136 @@
+# @(#) TTP bootstrapping for sh/bash/ksh
+#
+# The Tools Project: a work paradigm for IT productions
+# Copyright (©) 2003-2021 Pierre Wieser (see AUTHORS)
+#
+# The Tools Project is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation; either version 2 of the
+# License, or (at your option) any later version.
+#
+# The Tools Project is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with The Tools Project; see the file COPYING. If not,
+# see <http://www.gnu.org/licenses/>.
+#
+# Synopsis:
+#
+#   This shell function is expected to be sourced from inside a sh,
+#   bash- or korn-derived login shell, with the drop-in directory as
+#   unique parameter
+#
+#     # Bootstrap The Tools Project
+#     . /opt/TheToolsProject/libexec/bootstrap/sh_bootstrap <drop-in-directory>
+#
+#   This shell function will:
+#   - scan <drop-in-directory>/*.conf and HOME/.ttp.d/*.conf
+#   - for each path found, append it (or prepend if begins with a dash '-')
+#     to FPATH and PATH variables
+#   - setup an initial default node
+#
+# Notes
+#    pwi 2021- 5-25
+#    These functions do not leave any remaining variable in the environment
+#    (checked under Fedora 34).
+#
+#    pwi 2021- 5-25
+#    Honors the VERBOSE environment variable, executing verbosely if VERBOSE=1
+#    (outputting to stderr).
+#
+# pwi 2013- 6-11 creation
+# pwi 2015- 7- 2 update to trychlos.pwi
+# pwi 2017- 6-21 publish the release at last
+# pwi 2021- 5-24 change the bootstrapping process to ttp.d/ *.conf
+# pwi 2025- 2- 7 get the drop-in directory as an argument
+
+# Enumerates on stdout path read from conf files for initial TTP addressing
+function f_bootstrap_enumerate_path
+{
+	typeset _dropin="${1}"
+	for _dir in ${_dropin} ${HOME}/.ttp.d; do
+		LANG=C /bin/ls -1 "${_dir}"/*.conf 2>/dev/null | while read _conf; do
+			[ "${VERBOSE}" = "1" ] && echo "[sh_bootstrap] found ${_conf}" 1>&2
+			grep -vE '^\s*#' "${_conf}"
+		done
+	done
+}
+
+# Enumerates on stdout the list of external functions do be preloaded
+function f_bootstrap_enumerate_functions
+{
+	echo "bspPathAppendByName bspPathAppendByValue bspPathPrependByName bspPathPrependByValue"
+}
+
+# Loads external functions or emits an error message on stderr
+# Returns an error count
+function f_bootstrap_load_functions
+{
+	typeset _path="${1}"
+	typeset -i _count=0
+	for _funcread in $(f_bootstrap_enumerate_functions); do
+		typeset _funcfull="${_path}/libexec/sh/${_funcread}"
+		if [ -r "${_funcfull}" ]; then
+			source "${_funcfull}"
+			[ "${VERBOSE}" = "1" ] && echo "[sh_bootstrap] sourcing ${_funcfull}" 1>&2 
+		else
+			echo "[sh_bootstrap] ${_funcfull}: not found or not readable" 1>&2
+			let _count+=1;
+		fi
+	done
+	[ "${VERBOSE}" = "1" ] && echo "[sh_bootstrap] returning ${_count} errors on functions preload" 1>&2
+	return ${_count}
+}
+
+# Set PATH and FPATH global environment variables
+function f_bootstrap_setup
+{
+	typeset _prefix="${1}"
+	typeset _path="${2}"
+	if [ "${_prefix}" = "-" ]; then
+		[ "${VERBOSE}" = "1" ] && echo "[sh_bootstrap] prepending ${_path}" 1>&2
+		bspPathPrependByName     PATH "${_path}/bin"
+		bspPathPrependByName    FPATH "${_path}/libexec/sh"
+		bspPathPrependByName PERL5DIR "${_path}/libexec/perl"
+	else
+		[ "${VERBOSE}" = "1" ] && echo "[sh_bootstrap] appending ${_path}" 1>&2
+		bspPathAppendByName      PATH "${_path}/bin"
+		bspPathAppendByName     FPATH "${_path}/libexec/sh"
+		bspPathPrependByName PERL5DIR "${_path}/libexec/perl"
+	fi
+}
+
+# Main function
+function f_bootstrap
+{
+	typeset _loaded=""
+	for _pathread in $(f_bootstrap_enumerate_path); do
+		if [ ! -z "${_pathread}" ]; then
+			typeset _pathclean="${_pathread}"
+			[ "${_pathread:0:1}" = "-" ] && _pathclean="${_pathread:1}"
+			if [ -z "${_loaded}" ]; then
+				f_bootstrap_load_functions "${_pathclean}"
+				[ $? -eq 0 ] && _loaded="done" || _loaded="tried with errors"
+				[ "${VERBOSE}" = "1" ] && echo "[sh_bootstrap] load functions ${_loaded}"
+			fi
+			[ "${_loaded}" = "done" ] && f_bootstrap_setup "${_pathread:0:1}" "${_pathclean}"
+		fi
+	done
+	[ "${_loaded}" = "done" ] && return 0 || return 1
+}
+
+# Ansible interprets anything it find on stderr as a fatal error, and
+#  refuses to connect to the machine
+[ -z "${1}" ] && echo "[sh_bootstrap] expect drop-in directory as argument" 1>&2 && return 1
+f_bootstrap "${1}" && . ttp.sh switch -default 2>&1
+typeset -i _ret=$?
+
+[ "${VERBOSE}" = "1" ] && echo "[sh_bootstrap] PATH='${PATH}'" 1>&2
+[ "${VERBOSE}" = "1" ] && echo "[sh_bootstrap] FPATH='${FPATH}'" 1>&2
+[ "${VERBOSE}" = "1" ] && echo "[sh_bootstrap] PERL5DIR='${PERL5DIR}'" 1>&2
+
+unset $(set | grep -E '^f_|^bspPath') 1>/dev/null 2>&1
+return ${_ret}

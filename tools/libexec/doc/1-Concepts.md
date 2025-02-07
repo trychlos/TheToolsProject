@@ -76,7 +76,7 @@ Through the node configuration files, each of them being attached to its own env
 
 An execution node is an ensemble of services, on a single host, in a single environment.
 
-For [historical reasons](./TheToolsProject/libexec/doc/historic.md), we still provide a logical machine notion. But nowadays we are most often talking of a (physical or virtual) operating system.
+For [historical reasons](./historic.md), we still provide a logical machine notion. But nowadays we are most often talking of a (physical or virtual) operating system.
 
 As of its 2.x version, __TheToolsProject__ manages two types of nodes:
 
@@ -84,7 +84,7 @@ As of its 2.x version, __TheToolsProject__ manages two types of nodes:
 
 - the logical machine and there may be several execution nodes on an host
 
-Whether it is a logical machine or a host, __TTP__ considers it as an execution node as soon as its properties are described in a `[TTP_ROOT]/etc/nodes/<name>.ini` configuration file.
+Whether it is a logical machine or a host, __TTP__ considers it as an execution node as soon as its properties are described in a `[TTPROOT]/etc/nodes/<name>.ini` configuration file.
 
 The execution node is identified by its DNS short name.
 

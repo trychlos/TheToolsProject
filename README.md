@@ -204,29 +204,4 @@ Two layers are usually defined:
 
 As many layers as needed can be installed, each one containing only the subset needed by this layer. They are resolved in the usual way: the first found wins.
 
-### On a shell-based system
-
-The base `TTP_ROOTS` environment variable can be defined by the site integrator at the OS level.
-
-The layers are addressed through the `/etc/ttp.d/*.conf` drop-in files which must contain all the layers to be defined for this node. They are read and interpreted in C-order.
-
-Example:
-
-```sh
-    $ LANG=C ls -1 /etc/ttp.d/*.conf
-/etc/ttp.d/TTP.conf
-/etc/ttp.d/site.conf
-    $
-    $ cat /etc/ttp.d/TTP.conf
-# Address the installed (standard) version of The Tools Project
-/opt/TTP/tools
-    $
-    $ cat /etc/ttp.d/site.conf
-# Address site configuration
-/opt/site/tools
-```
-
-The `*.conf` configuration files found in this `/etc/ttp.d` drop-in directory are evaluated to build the `TTP_ROOTS` environment variable, here:
-
-
-### On a cmd-based system
+See all details in [Install](./src/libexec/doc/2-Install.md).
