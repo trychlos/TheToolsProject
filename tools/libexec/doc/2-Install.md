@@ -12,18 +12,6 @@
 
 [Per-user configuration](#per-user-configuration)
 
-   Installation
-   Addressing The Tools Project
-     User environment
-     Remote execution
-
-     Mandatory: address the shell functions
-     Optional: address the commands
-     Define TTP_SHDIR variable
-     Setup a default node
-     Bootstrap from the login profile
-   Initial configuration
-
 ## Liminaries
 
 We are going here to deep dive into bootstrapping details of both:
@@ -109,15 +97,17 @@ Say that the site integrator has decided to install:
 
 - the site configuration in `/opt/site/ttp`.
 
-As root, install `/etc/profile.d/ttp.sh`, addressing the drop-in directory:
+As root, create `/etc/profile.d/ttp.sh`, which will address the drop-in directories:
 
 ```sh
   $ cat /etc/profile.d/ttp.sh
 # Address the installed (standard) version of The Tools Project
-. /opt/TTP/libexec/bootstrap/sh_bootstrap /etc/ttp.d
+. /opt/TTP/libexec/bootstrap/sh_bootstrap
 ```
 
-Install in `/etc/ttp.d` drop-in directory a configuration to address the __TheToolsProject__ scripts, commands and verbs, and another configuration to address site specifics:
+The provided `sh_bootstrap` script accepts in the command-line a list of drop-in directories to examine for __TTP__ paths. This list defaults to `${HOME}/.ttp.d /etc/ttp.d`.
+I
+nstall in `/etc/ttp.d` drop-in directory a configuration to address the __TheToolsProject__ scripts, commands and verbs, and another configuration to address site specifics:
 
 ```sh
     $ LANG=C ls -1 /etc/ttp.d/*.conf
@@ -177,9 +167,9 @@ Both shell-based and Perl-based bootstrap processes do:
 
 As the site integrator must define the available __TTP__ layers, every user can define its own layer, for example to write and test a new verb.
 
-The bootstrapping process takes care of keeping the user's layers in front of the site defined ones, so that they are read in priority.
+The bootstrapping process reads first the user configuration, and then the site one, adding successively found tree path to the list of TTP_ROOT's. This way, the user configuration takes precedence over the site-wide configuration.
 
-__TTP__ reads first machine-wide configuration, and then user-wide one, appending each tree after the previous. As an exception to the previous rule, the tree is prepended to the previous if the specified path begins with a dash `-`.
+As an exception to this rule, the path is prepended to the built list when it is prefixed by a dash (`-`).
 
 ### Shell-based OS (any unix-like)
 

@@ -7,12 +7,9 @@
 # @(-) --[no]default           whether to setup the first available node [${default}]
 # @(-) --node=<name>           the node to be set as current [${node}]
 #
-# @(@) This command is needed because TheToolsProject supports the
-# @(@)  'logical machine' paradigm.
-# @(@) It has the unique particularity of having to be executed 'in-process'
-# @(@)  i.e. with the dot notation: ". ttp.sh switch --node <name>".
-# @(@) It should be run from the user profile as:
-# @(@)  ". ttp.sh switch --default".
+# @(@) This command is needed because TheToolsProject supports the 'logical machine' paradigm.
+# @(@) It has the unique particularity of having to be executed 'in-process', i.e. with the dot notation: ". ttp.sh switch --node <name>".
+# @(@) It should be run from the user profile as ". ttp.sh switch --default".
 #
 # The Tools Project: a Tools System and Paradigm for IT Production
 # Copyright (©) 2003-2021 Pierre Wieser (see AUTHORS)
@@ -47,61 +44,45 @@
 # pwi 2017- 6-21 publish the release at last
 # pwi 2025- 2- 7 merge shell-based and Perl-based flavors to make TheToolsProject available both on shell-based and cmd-based OSes
 
-# set the default values
-typeset default_help="no"
-typeset default_colored="no"
-typeset default_dummy="no"
-typeset default_verbose="no"
-typeset default_default="no"
-typeset default_node=""
+# set the default values (all defaults below are actually TTP defaults)
+opt_help_def="no"
+opt_colored_def="no"
+opt_dummy_def="no"
+opt_verbose_def="no"
+opt_default_def="no"
+opt_node_def=""
 
-# ---------------------------------------------------------------------
-# check arguments
-#  all optional and positional arguments and their values have been set
-#  default values have been applied if any
+# =================================================================================================
+# MAIN
+# =================================================================================================
 
-function verb_arg_check {
-	typeset -i _ret=0
+optGetOptions "$@"
 
-	# either 'default' or a target execution node must be specified
-	typeset -i _action=0
-	[ "${opt_default}" = "yes" ] && let _action+=1
-	[ -z "${opt_node}" ] || let _action+=1
-	if [ ${_action} -ne 1 ]; then
+# check arguments, making sure we either have chosen the 'default' option or have named a target node
+if [ "${opt_default}" != "yes" ]; then
+	if [ -z "${opt_node}" ]; then
 		msgErr "one of '--default' or '--node=<name>' option must be specified"
-		let _ret+=1
+	fi
+fi
+if [ ${ttp_errs} -gt 0 ]; then
+	return 1
+fi
+
+# this verb is executed from bootstrap/sh_switch script which expects the node to be printed on stdout
+if [ "${opt_default}" = "yes" ]; then
+	_node="$(bspNodeFindCandidate)"
+	if [ -z "${_node}" ]; then
+		msgErr "no available execution node on this host"
+		return 1
 	fi
 
-	return ${_ret}
-}
-
-# ---------------------------------------------------------------------
-# This verb is executed from bootstrap/sh_switch script
-#  which expects the node to be printed on stdout
-
-function verb_main {
-	#set -x
-	typeset -i _ret=0
-	typeset _node=""
-
-	if [ "${opt_default}" = "yes" ]; then
-		_node="$(bspNodeFindCandidate)"
-		if [ -z "${_node}" ]; then
-			msgErr "no available execution node on this host"
-			return 1
-		fi
-
-	else
-		_node="$(bspNodeEnum | grep -w "${opt_node}" 2>/dev/null)"
-		if [ -z "${_node}" ]; then
-			msgErr "'${opt_node}': execution node not found or not available on this host"
-			return 1
-		fi
+else
+	_node="$(bspNodeEnum | grep -w "${opt_node}" 2>/dev/null)"
+	if [ -z "${_node}" ]; then
+		msgErr "'${opt_node}': execution node not found or not available on this host"
+		return 1
 	fi
+fi
 
-	echo "success: ${_node}"
-	TTP_NODE="${_node}"
-	msgLog "${ttp_cmdline}"
-
-	return ${_ret}
-}
+echo "success: ${_node}"
+TTP_NODE="${_node}"

@@ -38,12 +38,13 @@
 #
 # pwi 2013- 6-10 creation
 # pwi 2017- 6-21 publish the release at last
+# pwi 2025- 2- 8 remove VERBOSE log
 
 function bspPathAppendByName
 {
 	typeset _name="${1}"
 	typeset _dir="${2}"
-	[ "${VERBOSE}" = "1" ] && echo "[bspPathAppendByName] name='${_name}' dir='${_dir}'" 1>&2
+	#[ "${VERBOSE}" = "1" ] && echo "[bspPathAppendByName] name='${_name}' dir='${_dir}'" 1>&2
 
 	if [ ! -z "${_name}" -a ! -z "${_dir}" ]; then
 		typeset _value="$(eval echo '${'${_name}'}')"

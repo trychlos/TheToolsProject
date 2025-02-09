@@ -1,0 +1,128 @@
+# @(#) Load from the verb positional and optional arguments
+#
+# The Tools Project: a Tools System and Paradigm for IT Production
+# Copyright (©) 2003-2021 Pierre Wieser (see AUTHORS)
+#
+# The Tools Project is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation; either version 2 of the
+# License, or (at your option) any later version.
+#
+# The Tools Project is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with The Tools Project; see the file COPYING. If not,
+# see <http://www.gnu.org/licenses/>.
+#
+# Synopsis:
+#
+#   Initialize global array 'ttp_args_option' as an array of option arguments
+# 	detected in the help lines of the verb script.
+#
+#   Option arguments are defined as:
+#
+#		a boolean option:
+#
+#     		--[no]<option>            	<help line>
+#
+#		an option which wants a value:
+#
+#     		--<option>=<something>      <help line>
+#
+#		an option which accepts an optional value:
+#
+#     		--<option>[=<something>]    <help line>
+#
+#     		in the command-line, the syntax '--option=<value>' is required
+#     		(the '=' equal sign is mandatory for an optional argument value)
+#
+#   Option arguments are interpreted like this:
+#
+#   - the 'opt_<option>_set' variable is set to 'yes' if the option
+#     has been entered in the  command-line, to 'no' else
+#
+#   - default values may be initialized in the verb script as 'def_<option>' values;
+#     they default to an empty string for options which accept or want a value;
+#     they default to 'no' for boolean options
+#
+#   - result values are set as 'opt_<option>' values to 'yes' or 'no' for a boolean option,
+#     or to the found or default values else
+#
+#	Simultaneously, initialize corresponding runtime and default values:
+#
+#	- opt_<name>_set="no"
+#	- opt_<name>_def="no" (for a boolean option) or "" (for a valued option)
+#
+# (I): -
+#
+# (O): On output, the global array is set as:
+#
+#      ttp_args_option[i] the option name
+#      ttp_args_help[i]   the help line
+#      ttp_args_type[i]   the option type
+#                              = "b" (boolean)
+#                              = "m" (mandatory value)
+#                              = "o" (optional value)
+#
+# pwi 2025- 2- 7 creation
+
+function optInitOptionArgs
+{
+	typeset -i _opt=0
+	typeset _name
+	typeset _help
+
+	#echo "optInitOptionArgs: opt_default_def='${opt_default_def}'" >&2
+	#set | grep -E '^opt_' >&2
+
+	cat "${ttp_verb_path}" | perl -se '{
+		while( <STDIN> ) {
+			next if !/^# @\(-\)/;
+			s/^# @\(-\)\s*--//;
+			print;
+		}
+	}' | while read _name _help; do
+		# if begins with '[no]', then is boolean
+		typeset _type=""
+		if [ "${_name:0:4}" = "[no]" ]; then
+			_type="b"
+			_name="${_name:4}"
+		else
+			# must be name=value or name[=value]
+			# code by ChatGPT
+			if [[ "${_name}" == *'['*']' ]]; then
+				# This is in the form of "name[=value]"
+				_type="o"
+				# Remove the brackets and split by '='
+				_name="${_name%%[*}"
+				#value="${input_string#*=[}"
+				#value="${value%]}"
+			else
+				# This is in the form of "name=value"
+				_type="m"
+				# Split by '='
+				_name="${_name%%=*}"
+				#value="${input_string#*=}"
+			fi
+		fi
+		ttp_args_option[${_opt}]="${_name}"
+		ttp_args_help[${_opt}]="${_help}"
+		ttp_args_type[${_opt}]="${_type}"
+		# option defaults to not be set on command-line
+		eval $(echo "opt_"${_name}"_set=no")
+		# check default value if any, set it else
+		typeset _def="$(echo $(eval echo '${opt_'${_name}'_def}'))"
+		if [ "${_type}" = "b" ]; then
+			if [ -z "${_def}" ]; then
+				eval $(echo "opt_"${_name}"_def=no")
+			elif [ "${_def}" != "yes" -a "${_def}" != "no" ]; then
+				msgErr "invalid default value '${_def}' for '${_name}' option"
+			fi
+		fi
+		# next option
+		let _opt+=1
+	done
+}

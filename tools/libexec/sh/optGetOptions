@@ -1,0 +1,73 @@
+# @(#) Analyse the verb options
+#
+# The Tools Project: a Tools System and Paradigm for IT Production
+# Copyright (©) 2003-2021 Pierre Wieser (see AUTHORS)
+#
+# The Tools Project is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation; either version 2 of the
+# License, or (at your option) any later version.
+#
+# The Tools Project is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with The Tools Project; see the file COPYING. If not,
+# see <http://www.gnu.org/licenses/>.
+#
+# Synopsis:
+#
+#	This function tries to mimic the Perl Getopt::Long( qw GetOptions ) function:
+#
+#	- known options are read from the top of the verb script '# @(-) '-prefixed lines
+#	  where the first word is the option itself, the rest of the lines the help sentence
+#
+#	- default values are expected to be set in the verb as 'opt_<name>_def' variables
+#
+#	- this function define and set 'opt_<name>' variables with values which come either
+#	  from the default or from the command-line
+#
+# (I): 1. the command-line arguments array
+#
+# (O): Doesn't return if an error is detected, but display an error message and exit.
+#	   Else returns zero.
+#
+# pwi 2025- 2- 7 creation
+
+function optGetOptions
+{
+	# interpret the verb script to detect option arguments
+	# may detect an error in the way boolean default values are initialized
+	optInitOptionArgs
+	typeset -i _ret=$?
+
+	# save the arguments both as a 'ttp_args_args' string and a 'ttp_args_arga' array (indexed from 1)
+	# have a ttp_args_argc count of arguments
+	optSaveArgs "$@"
+
+	# interpret the command-line to get option arguments as well as positional args
+	# may detect an error in the way options are named in the command-line
+	optEvalArgs "$@"
+	let _ret+=$?
+
+	# set the default values for option arguments
+	optSetOptionDefaults
+
+	# set the 'ttp_args_pos' array with positional arguments
+	optReadPosArgs
+
+	# check for --help option, printing helps and exit if found (or no args)
+	optReadHelp
+
+	#set | grep -E '^ttp_args_' >&2
+	#set | grep -E '^opt_' >&2
+
+	if [ ${_ret} -gt 0 ]; then
+		msgOut "try '${ttp_command} ${ttp_verb} --help' to get full usage syntax"
+		verbExitOnErr 1 "no"
+	fi
+
+	return ${_ret}
+}

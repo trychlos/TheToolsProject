@@ -118,7 +118,7 @@
 #                         files are expected to be found;
 #                         defaults to '<ttp_etcsubdir>/ttp'
 #
-#   ttp_usedargs          an array which let us mark the interpreted
+#   ttp_args_used          an array which let us mark the interpreted
 #                         command-line arguments
 #
 #   ttp_user              current user, taken from USER or LOGNAME variables
@@ -179,11 +179,8 @@ function ttpf_main
 		&& { echo "[TTP] no current execution node, aborting" >&2; let ttp_errs+=1; let ttp_code+=1; return ${ttp_code}; }
 
 	# setup global constants which are used in the Tools
+	# note that we parameterize also variables which are hardcoded at bootstrap time
 	bspInitVars
-
-	# compute the ordered list of candidate TTP_ROOT trees from FPATH
-	ttp_roots="$(bspRootCompute)"
-	#echo "ttp_roots='${ttp_roots}'" >&2
 
 	# loads the site-wide default configuration file into an array
 	typeset _req="${ttp_ttpsubdir}/defaults.ini"
@@ -191,7 +188,6 @@ function ttpf_main
 	[ -z "${_file}" ] || confLoadKeys "ttp_default_keys" "${_file}"
 
 	# load the machine configuration file into an in-memory array
-	#typeset -A ttp_node_keys
 	if [ ! -z "${TTP_NODE}" ]; then
 		_req="${ttp_nodesubdir}/${TTP_NODE}.ini"
 		_file="$(bspFind "${_req}")"
@@ -203,7 +199,7 @@ function ttpf_main
 
 		# trace here this call
 		# this always work, unless no node is currently set
-		# which only happens ate first connection, before end of bootstrap/sh_switch
+		# which only happens at first connection, before end of bootstrap/sh_switch
 		msgLog "$*"
 	fi
 
@@ -245,62 +241,6 @@ function ttpf_main
 	# append the local FPATH variable to add libexec/<command>
 	commandMunge "${ttp_command%.*}"
 
-	# source the verb script so that functions defined in it are
-	#  available here
+	# source the verb script so that functions defined in it are available here
 	. "${ttp_verb_path}"
-
-	# load positional and optional arg definitions
-	#  call 'verb_arg_define_opt' and 'verb_arg_define_pos' functions
-	#  if they are defined by the verb
-	#typeset -A ttp_optargs_key			option name (e.g. 'node')
-	#typeset -A ttp_optargs_hlp			option help
-	#typeset -A ttp_optargs_dsc			option arg description (e.g. <name>) 
-	#typeset -A ttp_optargs_mdt			whether arg is mandatory
-	#typeset -i ttp_optargs_count=0
-	#typeset -A ttp_posargs_key
-	#typeset -A ttp_posargs_hlp
-	#typeset -A ttp_posargs_mdt
-	#typeset -i ttp_posargs_count=0
-	optLoadArgDefinitions
-
-	# check once and get rid of non unique or unknown or unrecognized
-	#  options; save the command-line arguments both as a string and an
-	#  array
-	optSaveArgs "$@"; verbExitOnErr $?
-
-	# initialize the default values of both standard and verb options,
-	#  so that they can be displayed in the help message
-	#  TTP is able to provide a 'no' default value for boolean options
-	#  all other relevant defaults must be provided by the
-	#  'verb_arg_set_defaults' function
-	typeset -A ttp_usedargs
-	optInitDefaults
-	type verb_arg_set_defaults >/dev/null 2>&1 && verb_arg_set_defaults
-
-	# no argument, then just display the script usage
-	if [ $# -eq 0 ]; then
-		scriptUsage
-		return 0
-	fi
-
-	# check for --help option, printing helps and exit if found
-	optReadHelp
-
-	# check for --verbose option
-	# it is always checked first, even if not advertised by the
-	#  'verb_arg_define_opt' verb function
-	optReadVerbose "$@"; verbExitOnErr $?
-
-	# check for provided optional and positional arguments
-	optReadOptArgs "$@"; verbExitOnErr $?
-	optReadPosArgs "$@"; verbExitOnErr $?
-	optCheckMandatory  ; verbExitOnErr $?
-
-	# let the verb check itself its arguments
-	#  as we are not able to provide any suitable or relevant default
-	#set | grep -e '^opt_'
-	type verb_arg_check >/dev/null 2>&1 && { verb_arg_check; verbExitOnErr $?; }
-	
-	# execute the verb at last
-	type verb_main >/dev/null 2>&1 && { verb_main "$@"; verbExitOnErr $?; }
 }

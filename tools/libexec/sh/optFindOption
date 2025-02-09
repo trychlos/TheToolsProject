@@ -1,0 +1,113 @@
+# @(#) Return the index of the option advertised by the verb
+#
+# The Tools Project: a Tools System and Paradigm for IT Production
+# Copyright (©) 2003-2021 Pierre Wieser (see AUTHORS)
+#
+# The Tools Project is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation; either version 2 of the
+# License, or (at your option) any later version.
+#
+# The Tools Project is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with The Tools Project; see the file COPYING. If not,
+# see <http://www.gnu.org/licenses/>.
+#
+# Synopsis:
+#
+#   Check if the provided argument (taken from the command-line) is a
+#   valid option, maybe abbreviated, and returns its index counted from
+#   1 in the 'ttp_args_option' array.
+#
+#   This only returns an option if the argument let us choose a unique
+#   option. Else we just return empty.
+#
+#   Note that we have to deal with a situation where an option may be
+#   the same that the abbreviation of another.
+#   E.g. --node <name> is same than -node[fault]
+#   So we consider first the full equality before abbreviations.
+#
+# (I): 1. the command-line argument to be checked
+#         (without the hyphens)
+#      2. (opt) whether to print error messages (yes|no)
+#               default to 'yes'
+#
+# (O): Return code: index of the found option counted from 1,
+#                   or zero if not found or not unique
+#
+# pwi 2013- 6- 3 creation
+# pwi 2017- 6-21 publish the release at last 
+
+function optFindOption
+{
+	typeset _opt="${1}"
+	typeset _with_error="${2:-yes}"
+	typeset -i _countfull=0
+	typeset -i _foundfull=-1
+	typeset -i _countbrev=0
+	typeset -i _foundbrev=-1
+
+	if [ ! -z "${_opt}" ]; then
+		typeset -i _i=0
+		typeset _prefix="${_opt:0:2}"
+		typeset _sufix="${_opt:2}"
+
+		while [ ${_i} -lt ${#ttp_args_option[@]} ]; do
+			typeset _arg="${ttp_args_option[${_i}]}"
+			typeset _abbrev="${_arg:0:${#_opt}}"
+			#echo "opt=$_opt, arg=$_arg, abbrev=$_abbrev" >&2
+
+			if [ "${_arg}" = "${_opt}" ]; then
+				let _countfull+=1
+				_foundfull=${_i}
+
+			elif [ "${_abbrev}" = "${_opt}" ]; then
+				let _countbrev+=1
+				_foundbrev=${_i}
+				#echo "$_opt: found valid abbreviation for $_arg" >&2
+
+			elif [ "${_prefix}" = "no" -a "${ttp_args_type[${_i}]}" = "b" ]; then
+				if [ "${_sufix}" = "${_arg}" ]; then
+					let _countfull+=1
+					_foundfull=${_i}
+				else
+					_abbrev="${_arg:0:${#_sufix}}"
+					if [ "${_abbrev}" = "${_sufix}" ]; then
+						let _countbrev+=1
+						_foundbrev=${_i}
+					fi
+				fi
+			fi
+			let _i+=1
+		done
+
+		if [ ${_countfull} -ne 1 -a "${_with_error}" = "yes" ]; then
+			if [ ${_countfull} -eq 0 -a ${_countbrev} -eq 0 ]; then
+				msgErr "'--${_opt}': unrecognized option"
+
+			elif [ ${_countfull} -gt 1 ]; then
+				msgErr "'--${_opt}': non unique option"
+				let _found=-1
+
+			elif [ ${_countfull} -eq 0 -a ${_countbrev} -gt 1 ]; then
+				msgErr "'--${_opt}': non unique option, several abbreviations match"
+				let _found=-1
+			fi
+		fi
+	fi
+
+	typeset -i _ret=0
+	if [ ${_countfull} -eq 1 ]; then
+		let _ret=${_foundfull}+1
+
+	elif [ ${_countbrev} -eq 1 ]; then
+		let _ret=${_foundbrev}+1
+	fi
+
+	#echo "optFindOption: opt=$_opt, ret=$_ret" >&2
+	return ${_ret}
+}

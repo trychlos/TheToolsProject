@@ -32,25 +32,32 @@
 #
 # pwi 2017- 6-22 creation
 # pwi 2021- 5-24 get rid of ttp_toolslogsubdir
+# pwi 2025- 2- 7 identify the variables which are harcoded in bootstrap process
 
 function bspInitVars
 {
 	# standard field separator in the configuration file
+	# is that useful here ?
 	ttp_sep=":"
 
 	# output csv separator
+	# is that useful here ?
 	ttp_csvsep=";"
 
 	# output tabular separator
+	# is that useful here ?
 	ttp_tabularsep="|"
 
 	# subdirectory of the in-PATH executable commands
+	# bootstrap hardcoded
 	ttp_binsubdir="bin"
 
 	# top subdirectory of the configuration files
+	# bootstrap hardcoded
 	ttp_etcsubdir="etc"
 
 	# top subdirectory of the auxiliary functions
+	# bootstrap hardcoded
 	ttp_execsubdir="libexec"
 
 	# main log file of The Tools Project execution track
@@ -60,9 +67,11 @@ function bspInitVars
 	ttp_privsubdir="${ttp_etcsubdir}/private"
 
 	# etc-subdirectory which contains nodes configuration files
+	# bootstrap hardcoded
 	ttp_nodesubdir="${ttp_etcsubdir}/nodes"
 
 	# etc-subdirectory which contains TTP-wide configuration files
+	# bootstrap hardcoded
 	ttp_ttpsubdir="${ttp_etcsubdir}/ttp"
 
 	# identifies the nodes in the 'logical machine' paradigm

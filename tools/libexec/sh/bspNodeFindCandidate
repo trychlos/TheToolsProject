@@ -1,4 +1,4 @@
-# @(#) Prepend some value to a named global variable
+# @(#) Find a suitable candidate execution node
 #
 # The Tools Project: a Tools System and Paradigm for IT Production
 # Copyright (©) 2003-2021 Pierre Wieser (see AUTHORS)
@@ -19,13 +19,17 @@
 #
 # Synopsis:
 #
-#   Prepend a value to a colon-separated variable, making sure it is
-#   not registered twice.
+#   Because The Tools Project wants to manage the 'logical machines'
+#   paradigm, it requires to be able to setup a default execution node
+#   at login time, making sure at least one exists, and setting up a
+#   TTP_NODE variable in the user environment.
 #
-# (I): 1. name of the variable to be updated
-#      2. value to be prepended
+#   This function searches for such a suitable candidate, making sure
+#   a node configuration file is defined for the candidate.
 #
-# (O):
+# (I): -
+#
+# (O): - stdout: best candidate, or nothing
 #
 # BootstrappingProcess:
 #
@@ -36,19 +40,14 @@
 #   Consequently, it has to be reviewed each time another login shell
 #   has to be managed.
 #
-# pwi 2013- 6-10 creation
-# pwi 2017- 6-21 publish the release at last
-# pwi 2025- 2- 8 remove VERBOSE log
+# pwi 2013- 2-16 creation
+# pwi 2017- 6-21 publish the release at last 
+# pwi 2025- 2- 8 no more relies on the obsolete ttp_roots
 
-function bspPathPrependByName
+function bspNodeFindCandidate
 {
-	typeset _name="${1}"
-	typeset _dir="${2}"
-	#[ "${VERBOSE}" = "1" ] && echo "[bspPathPrependByName] name='${_name}' dir='${_dir}'" 1>&2
+	# if TTP_NODE is already set, just return it
+	[ -z "${TTP_NODE}" ] || { echo "${TTP_NODE}"; return 0; }
 
-	if [ ! -z "${_name}" -a ! -z "${_dir}" ]; then
-		typeset _value="$(eval echo '${'${_name}'}')"
-		typeset _new_value="$(bspPathPrependByValue "${_value}" "${_dir}")"
-		eval $(echo "export "${_name}"="${_new_value})
-	fi
+	bspNodeEnum | head -1
 }
