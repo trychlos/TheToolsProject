@@ -614,7 +614,8 @@ sub computeSeancesDernierCours {
 
 sub computeSeancesDernierCoursModifie {
 	my ( $row, $prev ) = @_;
-	return $prev && exists( $row->{SeancesDernierCours} ) && exists( $prev->{SeancesDernierCours} ) ? ( $row->{SeancesDernierCours} eq $prev->{SeancesDernierCours} ? '' : 'Modifie' ) : '';
+	my $res = ( $row and $row->{SeancesDernierCours} and $prev and $prev->{SeancesDernierCours} ) ? ( $row->{SeancesDernierCours} eq $prev->{SeancesDernierCours} ? '' : 'Modifie' ) : '';
+	return $res;
 }
 
 sub computeSeancesMiParcoursDate {
@@ -629,12 +630,13 @@ sub computeSeancesPremierCours {
 
 sub computeSeancesPremierCoursModifie {
 	my ( $row, $prev ) = @_;
-	return $prev && exists( $row->{SeancesPremierCours} ) && exists( $prev->{SeancesPremierCours} ) ? ( $row->{SeancesPremierCours} eq $prev->{SeancesPremierCours} ? '' : 'Modifie' ) : '';
+	my $res = ( $row and $row->{SeancesPremierCours} and $prev and $prev->{SeancesPremierCours} ) ? ( $row->{SeancesPremierCours} eq $prev->{SeancesPremierCours} ? '' : 'Modifie' ) : '';
+	return $res;
 }
 
 sub computeStagiaireAbsencesCountSincePrev {
 	my ( $row, $prev ) = @_;
-	return $prev && exists( $row->{StagiaireAbsencesCount} ) && exists( $prev->{StagiaireAbsencesCount} ) ? ( $row->{StagiaireAbsencesCount} == $prev->{StagiaireAbsencesCount} ? '' : $row->{StagiaireAbsencesCount} - $prev->{StagiaireAbsencesCount} ) : '';
+	my $res = ( $row and $row->{StagiaireAbsencesCount} and $prev and $prev->{StagiaireAbsencesCount} ) ? ( $row->{StagiaireAbsencesCount} == $prev->{StagiaireAbsencesCount} ? '' : $row->{StagiaireAbsencesCount} - $prev->{StagiaireAbsencesCount} ) : '';
 }
 
 # -------------------------------------------------------------------------------------------------
