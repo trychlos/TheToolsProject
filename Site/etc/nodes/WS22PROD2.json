@@ -3,7 +3,7 @@
 	],
 	"DBMS": {
 		"archivesDir": "[eval:File::Spec->catdir( TTP::var([ 'DBMS', 'archivesRoot' ]), localtime->strftime( '%y%m%d' ))]",
-		"archivesRoot": "\\[eval:File::Spec->catdir( '\\ftpback-rbx7-618.ovh.net', 'ns3153065.ip-51-91.25.eu', '<NODE>', 'SQLBackups' )]",
+		"archivesRoot": "\\[eval:File::Spec->catdir( '\\ftpback-rbx7-618.ovh.net', 'ns3153065.ip-51-91-25.eu', '<NODE>', 'SQLBackups' )]",
 		"byInstance": {
 			"PROD": {
 				"dataPath": "C:\\Program Files\\Microsoft SQL Server\\MSSQL16.PROD\\MSSQL\\DATA",
