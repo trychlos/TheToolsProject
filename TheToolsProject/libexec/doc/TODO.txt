@@ -25,7 +25,7 @@ TODO
 
   56 2025- 2-17 daemon.pl status should publish the same telemetries that Daemon.pm status advertising
 
-  55
+  57 2025- 2-17 daemon.pl status should have an option to publish to text too
 
   55
 

@@ -16,16 +16,16 @@
 # along with The Tools Project; see the file COPYING. If not,
 # see <http://www.gnu.org/licenses/>.
 #
-# The options management of commands+verbs and external scripts.
+# The options management of commands+verbs, daemons and external scripts.
 #
 # 'help', 'colored', 'dummy' and 'verbose' option flags are set into ttp->{run} hash both for
 # historical reasons and for the ease of handlings.
-# They are all initiallized to false at Optionable instanciation time.
+# They are all initialized to false at IOptionable instanciation time.
 #
 # 'help' is automatically set when there the command-line only contains the command, or the command
 # and the verb. After that, this is managed by GetOptions().
 #
-# 'colored' is message-evel dependant (see Message.pm), and defaults to be ignored for msgLog(),
+# 'colored' is message-level dependant (see Message.pm), and defaults to be ignored for msgLog(),
 # false for msgOut(), true in all other cases.
 #
 # After their initialization here, 'dummy' and 'verbose' flags only depend of GetOptions().
@@ -116,7 +116,7 @@ sub verbose {
 };
 
 # -------------------------------------------------------------------------------------------------
-# Optionable initialization
+# IOptionable initialization
 # Initialization of a command or of an external script
 # (I):
 # - none

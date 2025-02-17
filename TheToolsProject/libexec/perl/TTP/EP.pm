@@ -110,9 +110,9 @@ sub runCommand {
 # -------------------------------------------------------------------------------------------------
 # Getter/Setter
 # (I):
-# - optional object to be set as the current Runnable
+# - optional object to be set as the current IRunnable
 # (O):
-# - returns the Runnable running command
+# - returns the IRunnable running command
 
 sub runner {
 	my ( $self, $runner ) = @_;

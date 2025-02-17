@@ -45,7 +45,7 @@ requires qw( _newBase );
 
 # -------------------------------------------------------------------------------------------------
 # Getter
-# Returns the Runnable name
+# Returns the IRunnable name
 # (I]:
 # - none
 # (O):
@@ -59,7 +59,7 @@ sub command {
 
 # -------------------------------------------------------------------------------------------------
 # A placeholder run() method which does nothing but may be called even if the implementation doesn't
-# need it - Let Optionable auto-initialize
+# need it - Let IRunnable auto-initialize
 # (I):
 # - none
 # (O):
@@ -70,7 +70,7 @@ sub run {
 
 # -------------------------------------------------------------------------------------------------
 # Getter
-# Returns the Runnable command-line arguments
+# Returns the IRunnable command-line arguments
 # (I]:
 # - none
 # (O):
@@ -192,7 +192,7 @@ sub runnableSetQualifier {
 };
 
 # -------------------------------------------------------------------------------------------------
-# Runnable initialization
+# IRunnable initialization
 # Initialization of a command or of an external script
 # (I):
 # - the TTP EntryPoint ref

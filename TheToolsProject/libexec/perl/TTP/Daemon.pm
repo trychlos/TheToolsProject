@@ -1119,7 +1119,7 @@ sub finder {
 # -------------------------------------------------------------------------------------------------
 # Run by the daemon program
 # Initialize the TTP environment as soon as possible
-# Instanciating the Daemon also initialize the underlying Runnable
+# Instanciating the Daemon also initialize the underlying IRunnable
 
 sub init {
 	my ( $class ) = @_;
