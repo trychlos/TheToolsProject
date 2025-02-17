@@ -137,7 +137,7 @@ sub _switchAndWait {
 				my $command = "ovh.pl ipget -ip $opt_ipfo -routed -nocolored $dummy $verbose";
 				my $stdout = TTP::filter( `$command` );
 				msgLog( "filter() returns: '".Dumper( $stdout )."'" );
-				my @words = split( /\s+/, $out->[0] );
+				my @words = split( /\s+/, $stdout->[0] );
 				my $current = $words[1];
 				if( $current eq $opt_to ){
 					$end = true;
@@ -157,7 +157,7 @@ sub _switchAndWait {
 						my $command = "http.pl get -url $opt_url -header X-Sent-By -accept [1-3].. -nocolored $dummy $verbose";
 						my $stdout = TTP::filter( `$command` );
 						msgLog( "filter() returns: '".Dumper( $stdout )."'" );
-						my @words = split( /\s+/, $out->[0] );
+						my @words = split( /\s+/, $stdout->[0] );
 						my $line = $words[1];
 						if( $line eq $opt_sender ){
 							$end = true;
