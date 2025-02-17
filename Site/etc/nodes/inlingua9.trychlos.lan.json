@@ -35,7 +35,7 @@
 				],
 				"startup": [
 					{
-						"label": "Advertize at startup",
+						"label": "Advertise at startup",
 						"commands": [
 						]
 					}

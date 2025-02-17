@@ -21,6 +21,12 @@ TODO
 
   54 2025- 1-19 verbs should have an internal telemetry for the memory they consume, the execution elapsed time
 
+  55 2025- 2-17 daemon.pl status should have an option to publish to mqtt too
+
+  56 2025- 2-17 daemon.pl status should publish the same telemetries that Daemon.pm status advertising
+
+  55
+
   55
 
 # -------------------------------------------------------------------------------------------------
@@ -50,7 +56,7 @@ DONE
 	 2024- 5- 2 is move to TTP:;:filter() -> to be retested
 	 2024- 5- 3 happened that the arguments format depends of the call mode -> fixed
 
-   7 2024- 5- 1 Daemon.pm let the daemon advertize its status to http-based and text-based telemetry
+   7 2024- 5- 1 Daemon.pm let the daemon advertise its status to http-based and text-based telemetry
                 provides labels through json configuration
 	 2024- 5- 2 labels can be added via the Daemon API - closing
 
@@ -58,7 +64,7 @@ DONE
                 line is "# HELP ttp_tom17-backup-monitor-daemon The last epoch time the daemon has been seen alive"
 	 2024- 5- 2 done (fix regexes)
 
-  10 2024- 5- 2 backup-monitor-daemon.pl should advertize the remoteExecReportsDir but not as a msgVerbose as this later is too frequent
+  10 2024- 5- 2 backup-monitor-daemon.pl should advertise the remoteExecReportsDir but not as a msgVerbose as this later is too frequent
      2024- 5- 2 done (see #13)
 
   11 2024- 5- 2 check that httpMessaging and textMessaging can be disabled in daemon configuration (zero is it valid ?)

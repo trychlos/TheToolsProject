@@ -26,12 +26,12 @@
 # - execPath: the full path to the program to be executed as the main code of the daemon, mandatory
 # - listeningPort: the listening port number, mandatory
 # - listeningInterval: the interval in ms. between two listening loops, defaulting to 1000 ms
-# - messagingInterval: either <=0 (do not advertize to messaging system), or the advertizing interval in ms,
+# - messagingInterval: either <=0 (do not advertise to messaging system), or the advertising interval in ms,
 #   defaulting to 60000 ms (1 mn)
 # - messagingTimeout: the timeout in sec. of the MQTT connection (if applied), defaulting to 60sec.
-# - httpingInterval: either <=0 (do not advertize to http-based telemetry system), or the advertizing interval in ms,
+# - httpingInterval: either <=0 (do not advertise to http-based telemetry system), or the advertising interval in ms,
 #   defaulting to 60000 ms (1 mn)
-# - textingInterval: either <=0 (do not advertize to text-based telemetry system), or the advertizing interval in ms,
+# - textingInterval: either <=0 (do not advertise to text-based telemetry system), or the advertising interval in ms,
 #   defaulting to 60000 ms (1 mn)
 #
 # Also the daemon writer must be conscious of the dynamic character of TheToolsProject.
@@ -233,12 +233,12 @@ sub _daemonize {
 }
 
 # ------------------------------------------------------------------------------------------------
-# the daemon advertize of its status every 'httpingInterval' seconds (defaults to 60)
-# the metric advertizes the last time we have seen the daemon alive
+# the daemon advertise of its status every 'httpingInterval' seconds (defaults to 60)
+# the metric advertises the last time we have seen the daemon alive
 # (I):
 # - none
 
-sub _http_advertize {
+sub _http_advertise {
 	my ( $self ) = @_;
 	$self->_metrics({ http => true });
 	if( $self->{_telemetry_sub} ){
@@ -346,7 +346,7 @@ sub _metrics_page_file_usage {
 }
 
 # ------------------------------------------------------------------------------------------------
-# the daemon advertize of its status every 'messagingInterval' seconds (defaults to 60)
+# the daemon advertise of its status every 'messagingInterval' seconds (defaults to 60)
 # topics are:
 #	'<node>/daemon/<json_basename_wo_ext>/status'				'running since yyyy-mm-dd hh:mm:ss.nnnnn`|offline'	retained
 #	'<node>/daemon/<json_basename_wo_ext>/pid'					<pid>
@@ -361,9 +361,9 @@ sub _metrics_page_file_usage {
 #	'<node>/daemon/<json_basename_wo_ext>/execPath'				<execPath>
 # Other topics may be added by the daemon itself via the messagingSub() method.
 
-sub _mqtt_advertize {
+sub _mqtt_advertise {
 	my ( $self ) = @_;
-	msgVerbose( __PACKAGE__."::_mqtt_advertize()" );
+	msgVerbose( __PACKAGE__."::_mqtt_advertise()" );
 
 	if( $self->{_mqtt} ){
 		# let the daemon have its own topics
@@ -375,14 +375,14 @@ sub _mqtt_advertize {
 						if( $it->{topic} && exists( $it->{payload} )){
 							$self->_mqtt_publish( $it );
 						} else {
-							msgErr( __PACKAGE__."::_mqtt_advertize() expects a hash { topic, payload }, found $it" );
+							msgErr( __PACKAGE__."::_mqtt_advertise() expects a hash { topic, payload }, found $it" );
 						}
 					}
 				} else {
-					msgErr( __PACKAGE__."::_mqtt_advertize() expects an array from messagingSub() function, got '".ref( $array )."'" );
+					msgErr( __PACKAGE__."::_mqtt_advertise() expects an array from messagingSub() function, got '".ref( $array )."'" );
 				}
 			} else {
-				msgLog( __PACKAGE__."::_mqtt_advertize() got undefined value from messagingSub() function, nothing to do" );
+				msgLog( __PACKAGE__."::_mqtt_advertise() got undefined value from messagingSub() function, nothing to do" );
 			}
 		}
 		# and publish ours
@@ -399,7 +399,7 @@ sub _mqtt_advertize {
 		$self->_mqtt_publish({ 'topic' => "$topic/textingInterval",   'payload' => $self->textingInterval() });
 		$self->_mqtt_publish({ 'topic' => "$topic/execPath",          'payload' => $self->execPath() });
 	} else {
-		msgVerbose( __PACKAGE__."::_mqtt_advertize() not publishing as MQTT is not initialized" );
+		msgVerbose( __PACKAGE__."::_mqtt_advertise() not publishing as MQTT is not initialized" );
 	}
 }
 
@@ -495,11 +495,11 @@ sub _running {
 }
 
 # ------------------------------------------------------------------------------------------------
-# the daemon advertize of its status every 'textingInterval' seconds (defaults to 60)
+# the daemon advertise of its status every 'textingInterval' seconds (defaults to 60)
 # (I):
 # - none
 
-sub _text_advertize {
+sub _text_advertise {
 	my ( $self ) = @_;
 	msgVerbose( "text-based telemetry not honored at the moment" );
 }
@@ -534,13 +534,13 @@ sub declareSleepables {
 	$self->sleepableDeclareFn( sub => sub { $self->listen( $commands ); }, interval => $self->listeningInterval() );
 	# the mqtt status publication, each 'mqttInterval'
 	my $mqttInterval = $self->messagingInterval();
-	$self->sleepableDeclareFn( sub => sub { $self->_mqtt_advertize(); }, interval => $mqttInterval ) if $mqttInterval > 0;
+	$self->sleepableDeclareFn( sub => sub { $self->_mqtt_advertise(); }, interval => $mqttInterval ) if $mqttInterval > 0;
 	# the http telemetry publication, each 'httpInterval'
 	my $httpInterval = $self->httpingInterval();
-	$self->sleepableDeclareFn( sub => sub { $self->_http_advertize(); }, interval => $httpInterval ) if $httpInterval > 0;
+	$self->sleepableDeclareFn( sub => sub { $self->_http_advertise(); }, interval => $httpInterval ) if $httpInterval > 0;
 	# the text telemetry publication, each 'textInterval'
 	my $textInterval = $self->textingInterval();
-	$self->sleepableDeclareFn( sub => sub { $self->_text_advertize(); }, interval => $textInterval ) if $textInterval > 0;
+	$self->sleepableDeclareFn( sub => sub { $self->_text_advertise(); }, interval => $textInterval ) if $textInterval > 0;
 
 	$self->sleepableDeclareStop( sub => sub { return $self->terminating(); });
 
@@ -642,7 +642,7 @@ sub execPath {
 }
 
 # ------------------------------------------------------------------------------------------------
-# Returns the interval in sec. between two advertizings to http-based telemetry system.
+# Returns the interval in sec. between two advertisings to http-based telemetry system.
 # May be set to false in the configuration file to disable that.
 # (I):
 # - none
@@ -758,7 +758,7 @@ sub loaded {
 }
 
 # ------------------------------------------------------------------------------------------------
-# Returns the interval in sec. between two advertizings to messaging system.
+# Returns the interval in sec. between two advertisings to messaging system.
 # May be set to false in the configuration file to disable that.
 # (I):
 # - none
@@ -785,7 +785,7 @@ sub messagingInterval {
 # - must return a ref to an array of hashes { topic, payload )
 #   the returned hash may have a 'retain' key, with true|false value, defaulting to false
 # (I):
-# - a code ref to be called at mqtt-advertizing time
+# - a code ref to be called at mqtt-advertising time
 # (O):
 # - this same object
 
@@ -1007,9 +1007,9 @@ sub terminate {
 	# close MQTT connection
 	TTP::MQTT::disconnect( $self->{_mqtt} ) if $self->{_mqtt};
 
-	# advertize http and text-based telemetry
-	$self->_http_advertize() if $self->httpingInterval() > 0;
-	$self->_text_advertize() if $self->textingInterval() > 0;
+	# advertise http and text-based telemetry
+	$self->_http_advertise() if $self->httpingInterval() > 0;
+	$self->_text_advertise() if $self->textingInterval() > 0;
 
 	# close TCP connection
 	$self->{_socket}->close();
@@ -1048,7 +1048,7 @@ sub terminating {
 }
 
 # ------------------------------------------------------------------------------------------------
-# Returns the interval in sec. between two advertizings to text-based telemetry system.
+# Returns the interval in sec. between two advertisings to text-based telemetry system.
 # May be set to false in the configuration file to disable that.
 # (I):
 # - none

@@ -36,7 +36,7 @@
 				],
 				"startup": [
 					{
-						"label": "Advertize at startup",
+						"label": "Advertise at startup",
 						"commands": [
 							"call [eval:File::Spec->catfile( TTP::var([ 'site', 'commandsDir' ]), 'startup.cmd' )]",
 							"daemon.pl start -nocolored -name node-monitor-daemon"
