@@ -11,7 +11,7 @@
 # @(-) --[no]http              publish HTTP telemetry [${http}]
 #
 # @(@) This script relies on the 'status/live' entry in the JSON configuration file.
-# @(@) *All* machines are scanned until a 'status/get_live' command has been found for the service for the environment.
+# @(@) *All* machines of the environment are scanned until a 'status/live' command has been found for the service.
 #
 # The Tools Project: a Tools System and Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
@@ -105,11 +105,11 @@ sub getLive {
 				}
 			}
 			# telemetry
-			my $labels = "-append service=$opt_service -append environment=$opt_environment";
+			my $labels = "-append environment=$opt_environment -append service=$opt_service -append command=".$running->command()." -append verb=".$running->verb();
 			my $next = join( ',', @nexts );
 			if( $opt_mqtt ){
-				# topic is HOST/telemetry/service/SERVICE/environment/ENVIRONMENT/machine/live=live
-				# topic is HOST/telemetry/service/SERVICE/environment/ENVIRONMENT/machine/next=next
+				# topic is HOST/telemetry/environment/<ENVIRONMENT>/service/<SERVICE>/command/<COMMAND>/verb/<VERB>/machine/live=live
+				# topic is HOST/telemetry/environment/<ENVIRONMENT>/service/<SERVICE>/command/<COMMAND>/verb/<VERB>/machine/backup=next
 				my $mqtt_live = $live || 'none';
 				$command = "telemetry.pl publish -metric live $labels -value=$mqtt_live -mqtt -mqttPrefix machine/ -nohttp $dummy $verbose";
 				msgVerbose( $command );
