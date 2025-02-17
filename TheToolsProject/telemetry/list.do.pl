@@ -29,6 +29,7 @@ use utf8;
 use strict;
 use warnings;
 
+use Data::Dumper;
 use HTML::Parser;
 use HTTP::Request;
 use LWP::UserAgent;
@@ -67,7 +68,7 @@ sub doListPush {
 			msgVerbose( "requesting '$url'" );
 			my $ua = LWP::UserAgent->new();
 			my $request = HTTP::Request->new( GET => $url );
-			$request->content( $body );
+			#$request->content( $body );
 			my $answer = $ua->request( $request );
 			if( $answer->is_success ){
 				$count = _parse( $answer->decoded_content, $groups );
@@ -106,8 +107,9 @@ sub _parse {
 			my ( $self, $tagname, $attr ) = @_;
 			# identify the metric group
 			if( $tagname eq 'div' ){
+				#print Dumper( $attr );
 				return if scalar keys %{$attr} != 2;
-				return if $attr->{id} !~ m/^group-panel-/;
+				return if !$attr->{id} or $attr->{id} !~ m/^group-panel-/;
 				return if $attr->{class} ne 'card-header';
 				$id = $attr->{id};
 				$id =~ s/group-panel-//;
