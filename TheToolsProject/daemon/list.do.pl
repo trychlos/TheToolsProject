@@ -65,7 +65,8 @@ sub doListJSON {
 	my $kepts = {};
 	foreach my $it ( @{$jsons} ){
 		my $daemon = TTP::Daemon->new( $ep, { path => $it, checkConfig => $opt_check, daemonize => false });
-		$kepts->{$daemon->name()} = $it if !exists( $kepts->{$file} ) && $daemon->loaded();
+		my $name = $daemon->name();
+		$kepts->{$name} = $it if !exists( $kepts->{$name} ) && $daemon->loaded();
 	}
 	# and list in ascii order
 	foreach my $it ( sort keys %{$kepts} ){
