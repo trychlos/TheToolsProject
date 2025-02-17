@@ -241,8 +241,18 @@ msgVerbose( "found appends='".join( ',', @opt_appends )."'" );
 msgErr( "'--name' service name is mandatory when querying for a status" ) if $opt_state && !$opt_name;
 
 if( !TTP::errs()){
-	doServicesList() if $opt_list;
-	doServiceState() if $opt_name && $opt_state;
+	my $count = 0;
+	if( $opt_list ){
+		doServicesList();
+		$count += 1;
+	}
+	if( $opt_name && $opt_state ){
+		doServiceState();
+		$count += 1;
+	}
+	if( !$count ){
+		msgWarn( "no action has been specified, doing nothing" );
+	}
 }
 
 TTP::exit();
