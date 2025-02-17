@@ -17,23 +17,11 @@
 # @(@) Obviously, all that stuff will work a bit less than optimal, but there will not be any loss of data.
 # @(@) So fine from this script point of view.
 #
-# The Tools Project: a Tools System and Paradigm for IT Production
-# Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
-# Copyright (©) 2023-2024 PWI Consulting
+# Copyright (©) 2023-2025 PWI Consulting for Inlingua
 #
-# The Tools Project is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License as
-# published by the Free Software Foundation; either version 2 of the
-# License, or (at your option) any later version.
-#
-# The Tools Project is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-# General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with The Tools Project; see the file COPYING. If not,
-# see <http://www.gnu.org/licenses/>.
+# This script is mostly written like a TTP verb but is not. This is an example of how to take advantage of TTP
+# to write your own (rather pretty and efficient) daemon.
+# Just to be sure: this makes use of Toops, but is not part itself of Toops (though a not so bad example of application).
 
 use utf8;
 use strict;
