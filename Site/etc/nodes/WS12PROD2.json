@@ -21,8 +21,8 @@
 					"commands": [
 						"dbms.pl status -nocolored -service <SERVICE> -state -mqtt -http",
 						"daemon.pl status -name canal33-backup-monitor-daemon -http -label service=<SERVICE> -label role=backup -label environment=<ENVIRONMENT>",
-						"mswin.pl service -name Canal33Ftp -state -mqtt -http -append service=<SERVICE>",
-						"mswin.pl service -name Canal33Svc -state -mqtt -http -append service=<SERVICE>"
+						"mswin.pl service -name Canal33Ftp -state -mqtt -http -append service=<SERVICE> <nul",
+						"mswin.pl service -name Canal33Svc -state -mqtt -http -append service=<SERVICE> <nul"
 					]
 				}
 			},
