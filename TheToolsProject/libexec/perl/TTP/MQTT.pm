@@ -102,8 +102,10 @@ sub disconnect {
 		if( $handle->{ttpLastWill} ){
 			msgLog( "executing lastwill for the daemon" );
 			if( $handle->{ttpLastWill}{retain} ){
+				msgLog( "retain ".$handle->{ttpLastWill}{topic}." [".$handle->{ttpLastWill}{payload}."]" );
 				$handle->retain( $handle->{ttpLastWill}{topic}, $handle->{ttpLastWill}{payload} );
 			} else {
+				msgLog( "publish ".$handle->{ttpLastWill}{topic}." [".$handle->{ttpLastWill}{payload}."]" );
 				$handle->publish( $handle->{ttpLastWill}{topic}, $handle->{ttpLastWill}{payload} );
 			}
 		}

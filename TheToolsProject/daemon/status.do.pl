@@ -11,6 +11,8 @@
 # @(-) --metric=<metric>       the metric to be published [${metric}]
 # @(-) --label=<name=value>    label(s) to be added to the published metric, may be specified several times or as comma-separated strings [${label}]
 #
+# @(@) Published telemetries exhibit the very same metrics than those periodically advertised by the daemon itself.
+#
 # The Tools Project: a Tools System and Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
 # Copyright (©) 2023-2024 PWI Consulting

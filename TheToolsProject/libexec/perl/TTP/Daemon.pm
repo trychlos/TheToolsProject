@@ -134,7 +134,9 @@ sub _do_help {
 }
 
 # ------------------------------------------------------------------------------------------------
-# answers to 'status' command with three lines
+# answers to 'status' command
+# we display the 'status' line first, and the ordered keys after that
+# the daemon-specific status will come after this common status, in a daemon-specific order
 # (I):
 # - the received request
 # - the daemon-specific commands
@@ -146,9 +148,13 @@ sub _do_help {
 sub _do_status {
 	my ( $self, $req, $commands ) = @_;
 
-	my $answer = $self->_running().EOL;
-	$answer .= "json: ".$self->jsonPath().EOL;
-	$answer .= "listeningPort: ".$self->listeningPort().EOL;
+	my $status = $self->_status();
+	my $answer = 'status: '.$status->{status}.EOL;
+	foreach my $k ( sort keys %{$status} ){
+		if( $k ne 'status' ){
+			$answer .= "$k: ".$status->{$k}.EOL;
+		}
+	}
 
 	return $answer;
 }
@@ -348,7 +354,7 @@ sub _metrics_page_file_usage {
 # ------------------------------------------------------------------------------------------------
 # the daemon advertise of its status every 'messagingInterval' seconds (defaults to 60)
 # topics are:
-#	'<node>/daemon/<json_basename_wo_ext>/status'				'running since yyyy-mm-dd hh:mm:ss.nnnnn`|offline'	retained
+#	'<node>/daemon/<daemon_name>/status'				'running since yyyy-mm-dd hh:mm:ss.nnnnn`|offline'	retained
 #	'<node>/daemon/<json_basename_wo_ext>/pid'					<pid>
 #	'<node>/daemon/<json_basename_wo_ext>/json'					<full_json_path>
 #	'<node>/daemon/<json_basename_wo_ext>/enabled'				'true|false'
@@ -359,6 +365,9 @@ sub _metrics_page_file_usage {
 #	'<node>/daemon/<json_basename_wo_ext>/httpingInterval'		<httpingInterval>
 #	'<node>/daemon/<json_basename_wo_ext>/textingInterval'		<textingInterval>
 #	'<node>/daemon/<json_basename_wo_ext>/execPath'				<execPath>
+# where:
+#	<daemon_name> is the JSON basename without the extension
+#
 # Other topics may be added by the daemon itself via the messagingSub() method.
 
 sub _mqtt_advertise {
@@ -387,17 +396,11 @@ sub _mqtt_advertise {
 		}
 		# and publish ours
 		my $topic = $self->topic();
-		$self->_mqtt_publish({ 'topic' => "$topic/status",            'payload' => $self->_running(), 'retain' => true });
-		$self->_mqtt_publish({ 'topic' => "$topic/pid",               'payload' => $$ });
-		$self->_mqtt_publish({ 'topic' => "$topic/json",              'payload' => $self->jsonPath() });
-		$self->_mqtt_publish({ 'topic' => "$topic/enabled",           'payload' => $self->enabled( $self->jsonData()) ? 'true' : 'false' });
-		$self->_mqtt_publish({ 'topic' => "$topic/listeningPort",     'payload' => $self->listeningPort() });
-		$self->_mqtt_publish({ 'topic' => "$topic/listeningInterval", 'payload' => $self->listeningInterval() });
-		$self->_mqtt_publish({ 'topic' => "$topic/messagingInterval", 'payload' => $self->messagingInterval() });
-		$self->_mqtt_publish({ 'topic' => "$topic/messagingTimeout",  'payload' => $self->messagingTimeout() });
-		$self->_mqtt_publish({ 'topic' => "$topic/httpingInterval",   'payload' => $self->httpingInterval() });
-		$self->_mqtt_publish({ 'topic' => "$topic/textingInterval",   'payload' => $self->textingInterval() });
-		$self->_mqtt_publish({ 'topic' => "$topic/execPath",          'payload' => $self->execPath() });
+		my $status = $self->_status();
+		foreach my $k ( keys %{$status} ){
+			my $retain = $k eq 'status';
+			$self->_mqtt_publish({ 'topic' => "$topic/$k", 'payload' => $status->{$k}, 'retain' => $retain });
+		}
 	} else {
 		msgVerbose( __PACKAGE__."::_mqtt_advertise() not publishing as MQTT is not initialized" );
 	}
@@ -431,17 +434,11 @@ sub _mqtt_disconnect {
 	
 	# and erase or own topics
 	my $topic = $self->topic();
-	$self->_mqtt_publish({ 'topic' => "$topic/status" });
-	$self->_mqtt_publish({ 'topic' => "$topic/pid" });
-	$self->_mqtt_publish({ 'topic' => "$topic/json" });
-	$self->_mqtt_publish({ 'topic' => "$topic/enabled" });
-	$self->_mqtt_publish({ 'topic' => "$topic/listeningPort" });
-	$self->_mqtt_publish({ 'topic' => "$topic/listeningInterval" });
-	$self->_mqtt_publish({ 'topic' => "$topic/messagingInterval" });
-	$self->_mqtt_publish({ 'topic' => "$topic/messagingTimeout" });
-	$self->_mqtt_publish({ 'topic' => "$topic/httpingInterval" });
-	$self->_mqtt_publish({ 'topic' => "$topic/textingInterval" });
-	$self->_mqtt_publish({ 'topic' => "$topic/execPath" });
+	my $status = $self->_status();
+	foreach my $k ( keys %{$status} ){
+		my $retain = $k eq 'status';
+		$self->_mqtt_publish({ 'topic' => "$topic/$k", 'retain' => $retain });
+	}
 }
 
 # ------------------------------------------------------------------------------------------------
@@ -492,6 +489,32 @@ sub _running {
 	my ( $self ) = @_;
 
 	return "running since ".$self->runnableStarted()->strftime( '%Y-%m-%d %H:%M:%S.%5N' );
+}
+
+# ------------------------------------------------------------------------------------------------
+# Status of the daemon
+# (I):
+# - none
+# (O):
+# - returns a hash with all advertised metrics for the daemon
+
+sub _status {
+	my ( $self ) = @_;
+
+	my $status = {};
+	$status->{status} = $self->_running();
+	$status->{pid} = $$;
+	$status->{json} = $self->jsonPath();
+	$status->{enabled} = $self->enabled( $self->jsonData()) ? 'true' : 'false';
+	$status->{listeningPort} = $self->listeningPort();
+	$status->{listeningInterval} = $self->listeningInterval();
+	$status->{messagingInterval} = $self->messagingInterval();
+	$status->{messagingTimeout} = $self->messagingTimeout();
+	$status->{httpingInterval} = $self->httpingInterval();
+	$status->{textingInterval} = $self->textingInterval();
+	$status->{execPath} = $self->execPath();
+
+	return $status;
 }
 
 # ------------------------------------------------------------------------------------------------

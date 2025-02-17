@@ -23,11 +23,11 @@ TODO
 
   55 2025- 2-17 daemon.pl status should have an option to publish to mqtt too
 
-  56 2025- 2-17 daemon.pl status should publish the same telemetries that Daemon.pm status advertising
-
   57 2025- 2-17 daemon.pl status should have an option to publish to text too
 
-  55
+  58 2025- 2-17 all verbs: on arguments verbose, use 'got' instead of 'found'
+
+  59
 
 # -------------------------------------------------------------------------------------------------
 
@@ -211,3 +211,6 @@ DONE
 
   51 2024- 5-13 replace <HOST> macros by <NODE>
      2024- 5-13 done
+
+  56 2025- 2-17 daemon.pl status should publish the same telemetries that Daemon.pm status advertising
+     2025- 2-17 done
