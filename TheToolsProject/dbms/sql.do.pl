@@ -167,19 +167,19 @@ if( $running->help()){
 	TTP::exit();
 }
 
-msgVerbose( "found colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "found dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "found verbose='".( $running->verbose() ? 'true':'false' )."'" );
-msgVerbose( "found service='$opt_service'" );
-msgVerbose( "found instance='$opt_instance'" );
-msgVerbose( "found instance_set='".( $opt_instance_set ? 'true':'false' )."'" );
-msgVerbose( "found stdin='".( $opt_stdin ? 'true':'false' )."'" );
-msgVerbose( "found script='$opt_script'" );
-msgVerbose( "found command='$opt_command'" );
-msgVerbose( "found tabular='".( $opt_tabular ? 'true':'false' )."'" );
-msgVerbose( "found multiple='".( $opt_multiple ? 'true':'false' )."'" );
-msgVerbose( "found json='$opt_json'" );
-msgVerbose( "found columns='$opt_columns'" );
+msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got service='$opt_service'" );
+msgVerbose( "got instance='$opt_instance'" );
+msgVerbose( "got instance_set='".( $opt_instance_set ? 'true':'false' )."'" );
+msgVerbose( "got stdin='".( $opt_stdin ? 'true':'false' )."'" );
+msgVerbose( "got script='$opt_script'" );
+msgVerbose( "got command='$opt_command'" );
+msgVerbose( "got tabular='".( $opt_tabular ? 'true':'false' )."'" );
+msgVerbose( "got multiple='".( $opt_multiple ? 'true':'false' )."'" );
+msgVerbose( "got json='$opt_json'" );
+msgVerbose( "got columns='$opt_columns'" );
 
 # must have either -service or -instance options
 # compute instance from service

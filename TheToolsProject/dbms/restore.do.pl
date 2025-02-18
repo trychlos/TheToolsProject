@@ -147,15 +147,15 @@ if( $running->help()){
 	TTP::exit();
 }
 
-msgVerbose( "found colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "found dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "found verbose='".( $running->verbose() ? 'true':'false' )."'" );
-msgVerbose( "found instance='$opt_instance'" );
-msgVerbose( "found instance_set='".( $opt_instance_set ? 'true':'false' )."'" );
-msgVerbose( "found database='$opt_database'" );
-msgVerbose( "found full='$opt_full'" );
-msgVerbose( "found diff='$opt_diff'" );
-msgVerbose( "found verifyonly='".( $opt_verifyonly ? 'true':'false' )."'" );
+msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got instance='$opt_instance'" );
+msgVerbose( "got instance_set='".( $opt_instance_set ? 'true':'false' )."'" );
+msgVerbose( "got database='$opt_database'" );
+msgVerbose( "got full='$opt_full'" );
+msgVerbose( "got diff='$opt_diff'" );
+msgVerbose( "got verifyonly='".( $opt_verifyonly ? 'true':'false' )."'" );
 
 msgErr( "'--instance' option is mandatory, but is not specified" ) if !$opt_instance;
 msgErr( "'--database' option is mandatory, but is not specified" ) if !$opt_database && !$opt_verifyonly;

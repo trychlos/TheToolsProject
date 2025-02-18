@@ -97,11 +97,11 @@ if( $running->help()){
 	TTP::exit();
 }
 
-msgVerbose( "found colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "found dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "found verbose='".( $running->verbose() ? 'true':'false' )."'" );
-msgVerbose( "found json='".( $opt_json ? 'true':'false' )."'" );
-msgVerbose( "found check='".( $opt_check ? 'true':'false' )."'" );
+msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got json='".( $opt_json ? 'true':'false' )."'" );
+msgVerbose( "got check='".( $opt_check ? 'true':'false' )."'" );
 
 msgWarn( "no action as '--json' option is not set" ) if !$opt_json;
 

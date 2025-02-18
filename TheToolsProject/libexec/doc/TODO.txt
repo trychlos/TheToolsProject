@@ -25,9 +25,9 @@ TODO
 
   57 2025- 2-17 daemon.pl status should have an option to publish to text too
 
-  58 2025- 2-17 all verbs: on arguments verbose, use 'got' instead of 'found'
+  59 2025- 2-18 Daemon.pm: metrics for the daemon are windows-specific: re-code for unix'es
 
-  59
+  60
 
 # -------------------------------------------------------------------------------------------------
 
@@ -214,3 +214,6 @@ DONE
 
   56 2025- 2-17 daemon.pl status should publish the same telemetries that Daemon.pm status advertising
      2025- 2-17 done
+
+  58 2025- 2-17 all verbs: on arguments verbose, use 'got' instead of 'found'
+     2025- 2-18 done

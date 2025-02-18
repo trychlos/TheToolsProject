@@ -78,10 +78,10 @@ if( $running->help()){
 	TTP::exit();
 }
 
-msgVerbose( "found colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "found dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "found verbose='".( $running->verbose() ? 'true':'false' )."'" );
-msgVerbose( "found confDirs='".( $opt_confDirs ? 'true':'false' )."'" );
+msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got confDirs='".( $opt_confDirs ? 'true':'false' )."'" );
 
 if( !TTP::errs()){
 	listConfdir() if $opt_confDirs;

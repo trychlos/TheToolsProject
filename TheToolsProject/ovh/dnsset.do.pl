@@ -114,11 +114,11 @@ if( $running->help()){
 	TTP::exit();
 }
 
-msgVerbose( "found colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "found dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "found verbose='".( $running->verbose() ? 'true':'false' )."'" );
-msgVerbose( "found record='$opt_record'" );
-msgVerbose( "found target='$opt_target'" );
+msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got record='$opt_record'" );
+msgVerbose( "got target='$opt_target'" );
 
 # the to-be-updated reoord is mandatory, must have at least a subdomain
 if( $opt_record ){

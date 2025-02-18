@@ -171,11 +171,11 @@ if( $running->help()){
 	TTP::exit();
 }
 
-msgVerbose( "found colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "found dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "found verbose='".( $running->verbose() ? 'true':'false' )."'" );
-msgVerbose( "found push='".( $opt_push ? 'true':'false' )."'" );
-msgVerbose( "found limit='$opt_limit'" );
+msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got push='".( $opt_push ? 'true':'false' )."'" );
+msgVerbose( "got limit='$opt_limit'" );
 
 msgWarn( "will not list anything as '--push' option is not set" ) if !$opt_push;
 

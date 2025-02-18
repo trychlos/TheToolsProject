@@ -201,21 +201,21 @@ if( $running->help()){
 	TTP::exit();
 }
 
-msgVerbose( "found colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "found dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "found verbose='".( $running->verbose() ? 'true':'false' )."'" );
-msgVerbose( "found service='$opt_service'" );
-msgVerbose( "found instance='$opt_instance'" );
-msgVerbose( "found instance_set='".( $opt_instance_set ? 'true':'false' )."'" );
-msgVerbose( "found database='$opt_database'" );
-msgVerbose( "found state='".( $opt_state ? 'true':'false' )."'" );
-msgVerbose( "found mqtt='".( $opt_mqtt ? 'true':'false' )."'" );
-msgVerbose( "found http='".( $opt_http ? 'true':'false' )."'" );
-msgVerbose( "found text='".( $opt_text ? 'true':'false' )."'" );
+msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got service='$opt_service'" );
+msgVerbose( "got instance='$opt_instance'" );
+msgVerbose( "got instance_set='".( $opt_instance_set ? 'true':'false' )."'" );
+msgVerbose( "got database='$opt_database'" );
+msgVerbose( "got state='".( $opt_state ? 'true':'false' )."'" );
+msgVerbose( "got mqtt='".( $opt_mqtt ? 'true':'false' )."'" );
+msgVerbose( "got http='".( $opt_http ? 'true':'false' )."'" );
+msgVerbose( "got text='".( $opt_text ? 'true':'false' )."'" );
 @opt_prepends = split( /,/, join( ',', @opt_prepends ));
-msgVerbose( "found prepends='".join( ',', @opt_prepends )."'" );
+msgVerbose( "got prepends='".join( ',', @opt_prepends )."'" );
 @opt_appends = split( /,/, join( ',', @opt_appends ));
-msgVerbose( "found appends='".join( ',', @opt_appends )."'" );
+msgVerbose( "got appends='".join( ',', @opt_appends )."'" );
 
 # must have either -service or -instance options
 # compute instance from service

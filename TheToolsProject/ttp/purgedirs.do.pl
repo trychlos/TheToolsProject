@@ -146,12 +146,12 @@ if( $running->help()){
 	TTP::exit();
 }
 
-msgVerbose( "found colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "found dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "found verbose='".( $running->verbose() ? 'true':'false' )."'" );
-msgVerbose( "found dirpath='$opt_dirpath'" );
-msgVerbose( "found dircmd='$opt_dircmd'" );
-msgVerbose( "found keep='$opt_keep'" );
+msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got dirpath='$opt_dirpath'" );
+msgVerbose( "got dircmd='$opt_dircmd'" );
+msgVerbose( "got keep='$opt_keep'" );
 
 # dircmd and dirpath options are not compatible
 my $count = 0;

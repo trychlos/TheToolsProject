@@ -134,11 +134,11 @@ if( $running->help()){
 	TTP::exit();
 }
 
-msgVerbose( "found colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "found dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "found verbose='".( $running->verbose() ? 'true':'false' )."'" );
-msgVerbose( "found check='".( $opt_check ? 'true':'false' )."'" );
-msgVerbose( "found tag='".( $opt_tag ? 'true':'false' )."'" );
+msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got check='".( $opt_check ? 'true':'false' )."'" );
+msgVerbose( "got tag='".( $opt_tag ? 'true':'false' )."'" );
 
 if( $opt_check ){
 	# must publish a clean development environment from master branch

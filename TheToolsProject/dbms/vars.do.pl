@@ -123,14 +123,14 @@ if( $running->help()){
 	TTP::exit();
 }
 
-msgVerbose( "found colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "found dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "found verbose='".( $running->verbose() ? 'true':'false' )."'" );
-msgVerbose( "found backupsRoot='".( $opt_backupsRoot ? 'true':'false' )."'" );
-msgVerbose( "found backupsDir='".( $opt_backupsDir ? 'true':'false' )."'" );
-msgVerbose( "found archivesRoot='".( $opt_archivesRoot ? 'true':'false' )."'" );
-msgVerbose( "found archivesDir='".( $opt_archivesDir ? 'true':'false' )."'" );
-msgVerbose( "found service='$opt_service'" );
+msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got backupsRoot='".( $opt_backupsRoot ? 'true':'false' )."'" );
+msgVerbose( "got backupsDir='".( $opt_backupsDir ? 'true':'false' )."'" );
+msgVerbose( "got archivesRoot='".( $opt_archivesRoot ? 'true':'false' )."'" );
+msgVerbose( "got archivesDir='".( $opt_archivesDir ? 'true':'false' )."'" );
+msgVerbose( "got service='$opt_service'" );
 
 # if a service is specified, must be defined on the current node
 if( $opt_service ){

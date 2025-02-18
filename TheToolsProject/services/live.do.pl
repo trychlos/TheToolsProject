@@ -172,14 +172,14 @@ if( $running->help()){
 	TTP::exit();
 }
 
-msgVerbose( "found colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "found dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "found verbose='".( $running->verbose() ? 'true':'false' )."'" );
-msgVerbose( "found service='$opt_service'" );
-msgVerbose( "found environment='$opt_environment'" );
-msgVerbose( "found next='".( $opt_next ? 'true':'false' )."'" );
-msgVerbose( "found mqtt='".( $opt_mqtt ? 'true':'false' )."'" );
-msgVerbose( "found http='".( $opt_http ? 'true':'false' )."'" );
+msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got service='$opt_service'" );
+msgVerbose( "got environment='$opt_environment'" );
+msgVerbose( "got next='".( $opt_next ? 'true':'false' )."'" );
+msgVerbose( "got mqtt='".( $opt_mqtt ? 'true':'false' )."'" );
+msgVerbose( "got http='".( $opt_http ? 'true':'false' )."'" );
 
 msgErr( "'--service' service name must be specified, but is not found" ) if !$opt_service;
 msgErr( "'--environment' environment type must be specified, but is not found" ) if !$opt_environment;

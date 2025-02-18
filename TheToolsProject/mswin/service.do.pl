@@ -220,22 +220,22 @@ if( $running->help()){
 	TTP::exit();
 }
 
-msgVerbose( "found colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "found dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "found verbose='".( $running->verbose() ? 'true':'false' )."'" );
-msgVerbose( "found list='".( $opt_list ? 'true':'false' )."'" );
-msgVerbose( "found name='$opt_name'" );
-msgVerbose( "found state='".( $opt_state ? 'true':'false' )."'" );
-msgVerbose( "found mqtt='".( $opt_mqtt ? 'true':'false' )."'" );
-msgVerbose( "found mqttPrefix='$opt_mqttPrefix'" );
-msgVerbose( "found http='".( $opt_http ? 'true':'false' )."'" );
-msgVerbose( "found httpPrefix='$opt_httpPrefix'" );
-msgVerbose( "found text='".( $opt_text ? 'true':'false' )."'" );
-msgVerbose( "found textPrefix='$opt_textPrefix'" );
+msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got list='".( $opt_list ? 'true':'false' )."'" );
+msgVerbose( "got name='$opt_name'" );
+msgVerbose( "got state='".( $opt_state ? 'true':'false' )."'" );
+msgVerbose( "got mqtt='".( $opt_mqtt ? 'true':'false' )."'" );
+msgVerbose( "got mqttPrefix='$opt_mqttPrefix'" );
+msgVerbose( "got http='".( $opt_http ? 'true':'false' )."'" );
+msgVerbose( "got httpPrefix='$opt_httpPrefix'" );
+msgVerbose( "got text='".( $opt_text ? 'true':'false' )."'" );
+msgVerbose( "got textPrefix='$opt_textPrefix'" );
 @opt_prepends = split( /,/, join( ',', @opt_prepends ));
-msgVerbose( "found prepends='".join( ',', @opt_prepends )."'" );
+msgVerbose( "got prepends='".join( ',', @opt_prepends )."'" );
 @opt_appends = split( /,/, join( ',', @opt_appends ));
-msgVerbose( "found appends='".join( ',', @opt_appends )."'" );
+msgVerbose( "got appends='".join( ',', @opt_appends )."'" );
 
 # a service name is mandatory when querying its status
 msgErr( "'--name' service name is mandatory when querying for a status" ) if $opt_state && !$opt_name;

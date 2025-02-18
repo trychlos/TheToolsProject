@@ -140,23 +140,23 @@ if( $running->help()){
 	TTP::exit();
 }
 
-msgVerbose( "found colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "found dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "found verbose='".( $running->verbose() ? 'true':'false' )."'" );
-msgVerbose( "found metric='$opt_metric'" );
-msgVerbose( "found value='".( defined $opt_value ? $opt_value : '(undef)' )."'" );
-msgVerbose( "found description='$opt_description'" );
-msgVerbose( "found type='$opt_type'" );
-msgVerbose( "found mqtt='".( $opt_mqtt ? 'true':'false' )."'" );
-msgVerbose( "found mqttPrefix='$opt_mqttPrefix'" );
-msgVerbose( "found http='".( $opt_http ? 'true':'false' )."'" );
-msgVerbose( "found httpPrefix='$opt_httpPrefix'" );
-msgVerbose( "found text='".( $opt_text ? 'true':'false' )."'" );
-msgVerbose( "found textPrefix='$opt_textPrefix'" );
+msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got metric='$opt_metric'" );
+msgVerbose( "got value='".( defined $opt_value ? $opt_value : '(undef)' )."'" );
+msgVerbose( "got description='$opt_description'" );
+msgVerbose( "got type='$opt_type'" );
+msgVerbose( "got mqtt='".( $opt_mqtt ? 'true':'false' )."'" );
+msgVerbose( "got mqttPrefix='$opt_mqttPrefix'" );
+msgVerbose( "got http='".( $opt_http ? 'true':'false' )."'" );
+msgVerbose( "got httpPrefix='$opt_httpPrefix'" );
+msgVerbose( "got text='".( $opt_text ? 'true':'false' )."'" );
+msgVerbose( "got textPrefix='$opt_textPrefix'" );
 @opt_prepends = split( /,/, join( ',', @opt_prepends ));
-msgVerbose( "found prepends='".join( ',', @opt_prepends )."'" );
+msgVerbose( "got prepends='".join( ',', @opt_prepends )."'" );
 @opt_appends = split( /,/, join( ',', @opt_appends ));
-msgVerbose( "found appends='".join( ',', @opt_appends )."'" );
+msgVerbose( "got appends='".join( ',', @opt_appends )."'" );
 
 # metric and values are mandatory
 msgErr( "'--metric' option is required, but is not specified" ) if !$opt_metric;

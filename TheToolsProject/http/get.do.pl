@@ -237,28 +237,28 @@ if( $running->help()){
 	TTP::exit();
 }
 
-msgVerbose( "found colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "found dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "found verbose='".( $running->verbose() ? 'true':'false' )."'" );
-msgVerbose( "found url='$opt_url'" );
-msgVerbose( "found header='$opt_header'" );
-msgVerbose( "found publishHeader='".( $opt_publishHeader ? 'true':'false' )."'" );
-msgVerbose( "found response='".( $opt_response ? 'true':'false' )."'" );
-msgVerbose( "found ignore='".( $opt_ignore ? 'true':'false' )."'" );
-msgVerbose( "found accept='".join( ',', @{$opt_accept} )."'" );
-msgVerbose( "found status='".( $opt_status ? 'true':'false' )."'" );
-msgVerbose( "found epoch='".( $opt_epoch ? 'true':'false' )."'" );
-msgVerbose( "found mqtt='".( $opt_mqtt ? 'true':'false' )."'" );
-msgVerbose( "found mqttPrefix='$opt_mqttPrefix'" );
-msgVerbose( "found http='".( $opt_http ? 'true':'false' )."'" );
-msgVerbose( "found httpPrefix='$opt_httpPrefix'" );
-msgVerbose( "found text='".( $opt_text ? 'true':'false' )."'" );
-msgVerbose( "found textPrefix='$opt_textPrefix'" );
+msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got url='$opt_url'" );
+msgVerbose( "got header='$opt_header'" );
+msgVerbose( "got publishHeader='".( $opt_publishHeader ? 'true':'false' )."'" );
+msgVerbose( "got response='".( $opt_response ? 'true':'false' )."'" );
+msgVerbose( "got ignore='".( $opt_ignore ? 'true':'false' )."'" );
+msgVerbose( "got accept='".join( ',', @{$opt_accept} )."'" );
+msgVerbose( "got status='".( $opt_status ? 'true':'false' )."'" );
+msgVerbose( "got epoch='".( $opt_epoch ? 'true':'false' )."'" );
+msgVerbose( "got mqtt='".( $opt_mqtt ? 'true':'false' )."'" );
+msgVerbose( "got mqttPrefix='$opt_mqttPrefix'" );
+msgVerbose( "got http='".( $opt_http ? 'true':'false' )."'" );
+msgVerbose( "got httpPrefix='$opt_httpPrefix'" );
+msgVerbose( "got text='".( $opt_text ? 'true':'false' )."'" );
+msgVerbose( "got textPrefix='$opt_textPrefix'" );
 @opt_prepends = split( /,/, join( ',', @opt_prepends ));
-msgVerbose( "found prepends='".join( ',', @opt_prepends )."'" );
+msgVerbose( "got prepends='".join( ',', @opt_prepends )."'" );
 @opt_appends = split( /,/, join( ',', @opt_appends ));
-msgVerbose( "found appends='".join( ',', @opt_appends )."'" );
-msgVerbose( "found service='$opt_service'" );
+msgVerbose( "got appends='".join( ',', @opt_appends )."'" );
+msgVerbose( "got service='$opt_service'" );
 
 # url is mandatory
 msgErr( "url is required, but is not specified" ) if !$opt_url;

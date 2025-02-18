@@ -117,15 +117,15 @@ if( $running->help()){
 	TTP::exit();
 }
 
-msgVerbose( "found colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "found dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "found verbose='".( $running->verbose() ? 'true':'false' )."'" );
-msgVerbose( "found file='$opt_file'" );
-msgVerbose( "found dir='$opt_dir'" );
-msgVerbose( "found template='$opt_template'" );
-msgVerbose( "found suffix='$opt_suffix'" );
-msgVerbose( "found data='$opt_data'" );
-msgVerbose( "found append='".( defined $opt_append ? ( $opt_append ? 'true':'false' ) : '(undef)' )."'" );
+msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got file='$opt_file'" );
+msgVerbose( "got dir='$opt_dir'" );
+msgVerbose( "got template='$opt_template'" );
+msgVerbose( "got suffix='$opt_suffix'" );
+msgVerbose( "got data='$opt_data'" );
+msgVerbose( "got append='".( defined $opt_append ? ( $opt_append ? 'true':'false' ) : '(undef)' )."'" );
 
 # data is mandatory
 msgErr( "data is mandatory, not specified" ) if !$opt_data;

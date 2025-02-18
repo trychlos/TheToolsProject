@@ -152,13 +152,13 @@ if( $running->help()){
 	TTP::exit();
 }
 
-msgVerbose( "found colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "found dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "found verbose='".( $running->verbose() ? 'true':'false' )."'" );
-msgVerbose( "found list='".( $opt_list ? 'true':'false' )."'" );
-msgVerbose( "found task='$opt_task'" );
-msgVerbose( "found status='".( $opt_status ? 'true':'false' )."'" );
-msgVerbose( "found enabled='".( $opt_enabled ? 'true':'false' )."'" );
+msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got list='".( $opt_list ? 'true':'false' )."'" );
+msgVerbose( "got task='$opt_task'" );
+msgVerbose( "got status='".( $opt_status ? 'true':'false' )."'" );
+msgVerbose( "got enabled='".( $opt_enabled ? 'true':'false' )."'" );
 
 # a task name is mandatory when asking for the status
 msgErr( "a task name is mandatory when asking for a status" ) if ( $opt_status or $opt_enabled ) and !$opt_task;

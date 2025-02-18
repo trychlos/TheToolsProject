@@ -136,19 +136,19 @@ if( $running->help()){
 	TTP::exit();
 }
 
-msgVerbose( "found colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "found dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "found verbose='".( $running->verbose() ? 'true':'false' )."'" );
-msgVerbose( "found subject='$opt_subject'" );
-msgVerbose( "found text='$opt_text'" );
-msgVerbose( "found textfname='$opt_textfname'" );
-msgVerbose( "found html='$opt_html'" );
-msgVerbose( "found htmlfname='$opt_htmlfname'" );
-msgVerbose( "found to='$opt_to'" );
-msgVerbose( "found cc='$opt_cc'" );
-msgVerbose( "found bcc='$opt_bcc'" );
-msgVerbose( "found join='$opt_join'" );
-msgVerbose( "found debug='".( defined $opt_debug ? ( $opt_debug ? 'true':'false' ) : '(undef)' )."'" );
+msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got subject='$opt_subject'" );
+msgVerbose( "got text='$opt_text'" );
+msgVerbose( "got textfname='$opt_textfname'" );
+msgVerbose( "got html='$opt_html'" );
+msgVerbose( "got htmlfname='$opt_htmlfname'" );
+msgVerbose( "got to='$opt_to'" );
+msgVerbose( "got cc='$opt_cc'" );
+msgVerbose( "got bcc='$opt_bcc'" );
+msgVerbose( "got join='$opt_join'" );
+msgVerbose( "got debug='".( defined $opt_debug ? ( $opt_debug ? 'true':'false' ) : '(undef)' )."'" );
 
 # all data are mandatory, and we must provide some content, either text or html
 msgErr( "subject is empty, but shouldn't" ) if !$opt_subject;

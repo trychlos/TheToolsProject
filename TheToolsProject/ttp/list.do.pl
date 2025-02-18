@@ -125,11 +125,11 @@ if( $running->help()){
 	TTP::exit();
 }
 
-msgVerbose( "found colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "found dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "found verbose='".( $running->verbose() ? 'true':'false' )."'" );
-msgVerbose( "found commands='".( $opt_commands ? 'true':'false' )."'" );
-msgVerbose( "found nodes='".( $opt_nodes ? 'true':'false' )."'" );
+msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got commands='".( $opt_commands ? 'true':'false' )."'" );
+msgVerbose( "got nodes='".( $opt_nodes ? 'true':'false' )."'" );
 
 if( !TTP::errs()){
 	listCommands() if $opt_commands;

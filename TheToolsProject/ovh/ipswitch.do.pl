@@ -212,16 +212,16 @@ if( $running->help()){
 	TTP::exit();
 }
 
-msgVerbose( "found colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "found dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "found verbose='".( $running->verbose() ? 'true':'false' )."'" );
-msgVerbose( "found service='$opt_service'" );
-msgVerbose( "found ipfo='$opt_ipfo'" );
-msgVerbose( "found to='$opt_to'" );
-msgVerbose( "found wait='".( $opt_wait ? 'true':'false' )."'" );
-msgVerbose( "found url='$opt_url'" );
-msgVerbose( "found sender='$opt_sender'" );
-msgVerbose( "found timeout='$opt_timeout'" );
+msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got service='$opt_service'" );
+msgVerbose( "got ipfo='$opt_ipfo'" );
+msgVerbose( "got to='$opt_to'" );
+msgVerbose( "got wait='".( $opt_wait ? 'true':'false' )."'" );
+msgVerbose( "got url='$opt_url'" );
+msgVerbose( "got sender='$opt_sender'" );
+msgVerbose( "got timeout='$opt_timeout'" );
 
 # either the OVH IP FO service name is provided, or it can be found as part of an applicative service definition
 if( $opt_service ){

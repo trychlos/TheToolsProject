@@ -135,16 +135,16 @@ if( $running->help()){
 	TTP::exit();
 }
 
-msgVerbose( "found colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "found dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "found verbose='".( $running->verbose() ? 'true':'false' )."'" );
-msgVerbose( "found service='$opt_service'" );
-msgVerbose( "found listinstance='".( $opt_listinstance ? 'true':'false' )."'" );
-msgVerbose( "found instance='$opt_instance'" );
-msgVerbose( "found instance_set='".( $opt_instance_set ? 'true':'false' )."'" );
-msgVerbose( "found listdb='".( $opt_listdb ? 'true':'false' )."'" );
-msgVerbose( "found database='$opt_database'" );
-msgVerbose( "found listtables='".( $opt_listtables ? 'true':'false' )."'" );
+msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got service='$opt_service'" );
+msgVerbose( "got listinstance='".( $opt_listinstance ? 'true':'false' )."'" );
+msgVerbose( "got instance='$opt_instance'" );
+msgVerbose( "got instance_set='".( $opt_instance_set ? 'true':'false' )."'" );
+msgVerbose( "got listdb='".( $opt_listdb ? 'true':'false' )."'" );
+msgVerbose( "got database='$opt_database'" );
+msgVerbose( "got listtables='".( $opt_listtables ? 'true':'false' )."'" );
 
 # must have either -service or -instance options
 # compute instance from service

@@ -118,12 +118,12 @@ if( $running->help()){
 	TTP::exit();
 }
 
-msgVerbose( "found colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "found dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "found verbose='".( $running->verbose() ? 'true':'false' )."'" );
-msgVerbose( "found service='$opt_service'" );
+msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got service='$opt_service'" );
 @opt_keys = split( /,/, join( ',', @opt_keys ));
-msgVerbose( "found keys='".join( ',', @opt_keys )."'" );
+msgVerbose( "got keys='".join( ',', @opt_keys )."'" );
 
 msgErr( "'--service' service name is required, but not found" ) if !$opt_service;
 msgErr( "at least a key is required, but none found" ) if !scalar( @opt_keys );

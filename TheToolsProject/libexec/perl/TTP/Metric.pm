@@ -311,7 +311,7 @@ sub _http_publish {
 
 # to MQTT
 # prepend the topic with the hostname
-# only used ordered values from labels (just do not use the label's names)
+# only used values from ordered labels (do not use the label's names)
 
 sub _mqtt_publish {
 	my ( $self, $prefix ) = @_;

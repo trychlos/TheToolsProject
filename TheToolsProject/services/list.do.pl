@@ -340,19 +340,19 @@ if( $running->help()){
 	TTP::exit();
 }
 
-msgVerbose( "found colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "found dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "found verbose='".( $running->verbose() ? 'true':'false' )."'" );
-msgVerbose( "found services='".( $opt_services ? 'true':'false' )."'" );
-msgVerbose( "found hidden='".( $opt_hidden ? 'true':'false' )."'" );
-msgVerbose( "found workloads='".( $opt_workloads ? 'true':'false' )."'" );
-msgVerbose( "found workload='$opt_workload'" );
-msgVerbose( "found commands='".( $opt_commands ? 'true':'false' )."'" );
-msgVerbose( "found details='".( $opt_details ? 'true':'false' )."'" );
-msgVerbose( "found service='$opt_service'" );
-msgVerbose( "found environment='".( $opt_environment ? 'true':'false' )."'" );
-msgVerbose( "found type='$opt_type'" );
-msgVerbose( "found machines='".( $opt_machines ? 'true':'false' )."'" );
+msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got services='".( $opt_services ? 'true':'false' )."'" );
+msgVerbose( "got hidden='".( $opt_hidden ? 'true':'false' )."'" );
+msgVerbose( "got workloads='".( $opt_workloads ? 'true':'false' )."'" );
+msgVerbose( "got workload='$opt_workload'" );
+msgVerbose( "got commands='".( $opt_commands ? 'true':'false' )."'" );
+msgVerbose( "got details='".( $opt_details ? 'true':'false' )."'" );
+msgVerbose( "got service='$opt_service'" );
+msgVerbose( "got environment='".( $opt_environment ? 'true':'false' )."'" );
+msgVerbose( "got type='$opt_type'" );
+msgVerbose( "got machines='".( $opt_machines ? 'true':'false' )."'" );
 
 if( $opt_service && !$opt_machines ){
 	msgWarn( "a service is named, but without any requested information" );

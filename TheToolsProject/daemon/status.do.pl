@@ -129,17 +129,17 @@ if( $running->help()){
 	TTP::exit();
 }
 
-msgVerbose( "found colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "found dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "found verbose='".( $running->verbose() ? 'true':'false' )."'" );
-msgVerbose( "found json='$opt_json'" );
-msgVerbose( "found name='$opt_name'" );
-msgVerbose( "found port='$opt_port'" );
-msgVerbose( "found port_set='".( $opt_port_set ? 'true':'false' )."'" );
-msgVerbose( "found http='".( $opt_http ? 'true':'false' )."'" );
-msgVerbose( "found metric='$opt_metric'" );
+msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got json='$opt_json'" );
+msgVerbose( "got name='$opt_name'" );
+msgVerbose( "got port='$opt_port'" );
+msgVerbose( "got port_set='".( $opt_port_set ? 'true':'false' )."'" );
+msgVerbose( "got http='".( $opt_http ? 'true':'false' )."'" );
+msgVerbose( "got metric='$opt_metric'" );
 @opt_labels = split( /,/, join( ',', @opt_labels ));
-msgVerbose( "found labels='".join( ',', @opt_labels )."'" );
+msgVerbose( "got labels='".join( ',', @opt_labels )."'" );
 
 # either the json or the basename or the port must be specified (and not both)
 my $count = 0;

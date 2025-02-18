@@ -101,12 +101,12 @@ if( $running->help()){
 	TTP::exit();
 }
 
-msgVerbose( "found colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "found dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "found verbose='".( $running->verbose() ? 'true':'false' )."'" );
-msgVerbose( "found topic='$opt_topic'" );
-msgVerbose( "found payload='$opt_payload'" );
-msgVerbose( "found retain='".( $opt_retain ? 'true':'false' )."'" );
+msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got topic='$opt_topic'" );
+msgVerbose( "got payload='$opt_payload'" );
+msgVerbose( "got retain='".( $opt_retain ? 'true':'false' )."'" );
 
 # topic is mandatory
 msgErr( "topic is required, but is not specified" ) if !$opt_topic;

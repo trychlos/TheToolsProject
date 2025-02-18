@@ -97,13 +97,13 @@ if( $running->help()){
 	TTP::exit();
 }
 
-msgVerbose( "found colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "found dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "found verbose='".( $running->verbose() ? 'true':'false' )."'" );
-msgVerbose( "found service='$opt_service'" );
-msgVerbose( "found ipfo='$opt_ipfo'" );
-msgVerbose( "found routed='".( $opt_routed ? 'true':'false' )."'" );
-msgVerbose( "found address='".( $opt_address ? 'true':'false' )."'" );
+msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got service='$opt_service'" );
+msgVerbose( "got ipfo='$opt_ipfo'" );
+msgVerbose( "got routed='".( $opt_routed ? 'true':'false' )."'" );
+msgVerbose( "got address='".( $opt_address ? 'true':'false' )."'" );
 
 # either the OVH IP FO service name is provided, or it can be found as part of an applicative service definition
 if( $opt_service ){

@@ -103,15 +103,15 @@ if( $running->help()){
 	TTP::exit();
 }
 
-msgVerbose( "found colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "found dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "found verbose='".( $running->verbose() ? 'true':'false' )."'" );
-msgVerbose( "found sourcepath='$opt_sourcepath'" );
-msgVerbose( "found sourcecmd='$opt_sourcecmd'" );
-msgVerbose( "found targetpath='$opt_targetpath'" );
-msgVerbose( "found targetcmd='$opt_targetcmd'" );
-msgVerbose( "found dirs='".( $opt_dirs ? 'true':'false' )."'" );
-msgVerbose( "found skip='$opt_skip'" );
+msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got sourcepath='$opt_sourcepath'" );
+msgVerbose( "got sourcecmd='$opt_sourcecmd'" );
+msgVerbose( "got targetpath='$opt_targetpath'" );
+msgVerbose( "got targetcmd='$opt_targetcmd'" );
+msgVerbose( "got dirs='".( $opt_dirs ? 'true':'false' )."'" );
+msgVerbose( "got skip='$opt_skip'" );
 
 # sourcecmd and sourcepath options are not compatible
 my $count = 0;

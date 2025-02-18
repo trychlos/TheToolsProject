@@ -114,11 +114,11 @@ if( $running->help()){
 	TTP::exit();
 }
 
-msgVerbose( "found colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "found dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "found verbose='".( $running->verbose() ? 'true':'false' )."'" );
-msgVerbose( "found get='".( $opt_get ? 'true':'false' )."'" );
-msgVerbose( "found wait='$opt_wait'" );
+msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got get='".( $opt_get ? 'true':'false' )."'" );
+msgVerbose( "got wait='$opt_wait'" );
 
 if( !TTP::errs()){
 	doGetRetained() if $opt_get;

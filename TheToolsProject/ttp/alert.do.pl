@@ -253,16 +253,16 @@ if( $running->help()){
 	TTP::exit();
 }
 
-msgVerbose( "found colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "found dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "found verbose='".( $running->verbose() ? 'true':'false' )."'" );
-msgVerbose( "found emitter='$opt_emitter'" );
-msgVerbose( "found level='$opt_level'" );
-msgVerbose( "found message='$opt_message'" );
-msgVerbose( "found json='".( $opt_json ? 'true':'false' )."'" );
-msgVerbose( "found mqtt='".( $opt_mqtt ? 'true':'false' )."'" );
-msgVerbose( "found smtp='".( $opt_smtp ? 'true':'false' )."'" );
-msgVerbose( "found sms='".( $opt_sms ? 'true':'false' )."'" );
+msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got emitter='$opt_emitter'" );
+msgVerbose( "got level='$opt_level'" );
+msgVerbose( "got message='$opt_message'" );
+msgVerbose( "got json='".( $opt_json ? 'true':'false' )."'" );
+msgVerbose( "got mqtt='".( $opt_mqtt ? 'true':'false' )."'" );
+msgVerbose( "got smtp='".( $opt_smtp ? 'true':'false' )."'" );
+msgVerbose( "got sms='".( $opt_sms ? 'true':'false' )."'" );
 
 # all data are mandatory (and we provide a default value for all but the message)
 msgErr( "emitter is empty, but shouldn't" ) if !$opt_emitter;

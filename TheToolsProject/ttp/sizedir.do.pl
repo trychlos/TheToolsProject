@@ -176,18 +176,18 @@ if( $running->help()){
 	TTP::exit();
 }
 
-msgVerbose( "found colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "found dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "found verbose='".( $running->verbose() ? 'true':'false' )."'" );
-msgVerbose( "found dirpath='$opt_dirpath'" );
-msgVerbose( "found dircmd='$opt_dircmd'" );
-msgVerbose( "found mqtt='".( $opt_mqtt ? 'true':'false' )."'" );
-msgVerbose( "found http='".( $opt_http ? 'true':'false' )."'" );
-msgVerbose( "found text='".( $opt_text ? 'true':'false' )."'" );
+msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got dirpath='$opt_dirpath'" );
+msgVerbose( "got dircmd='$opt_dircmd'" );
+msgVerbose( "got mqtt='".( $opt_mqtt ? 'true':'false' )."'" );
+msgVerbose( "got http='".( $opt_http ? 'true':'false' )."'" );
+msgVerbose( "got text='".( $opt_text ? 'true':'false' )."'" );
 @opt_prepends = split( /,/, join( ',', @opt_prepends ));
-msgVerbose( "found prepends='".join( ',', @opt_prepends )."'" );
+msgVerbose( "got prepends='".join( ',', @opt_prepends )."'" );
 @opt_appends = split( /,/, join( ',', @opt_appends ));
-msgVerbose( "found appends='".join( ',', @opt_appends )."'" );
+msgVerbose( "got appends='".join( ',', @opt_appends )."'" );
 
 # dircmd and dirpath options are not compatible
 my $count = 0;

@@ -152,16 +152,16 @@ if( $running->help()){
 	TTP::exit();
 }
 
-msgVerbose( "found colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "found dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "found verbose='".( $running->verbose() ? 'true':'false' )."'" );
-msgVerbose( "found json='$opt_json'" );
-msgVerbose( "found name='$opt_name'" );
-msgVerbose( "found port='$opt_port'" );
-msgVerbose( "found port_set='".( $opt_port_set ? 'true':'false' )."'" );
-msgVerbose( "found ignore='".( $opt_ignore ? 'true':'false' )."'" );
-msgVerbose( "found wait='".( $opt_wait ? 'true':'false' )."'" );
-msgVerbose( "found timeout='$opt_timeout'" );
+msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got json='$opt_json'" );
+msgVerbose( "got name='$opt_name'" );
+msgVerbose( "got port='$opt_port'" );
+msgVerbose( "got port_set='".( $opt_port_set ? 'true':'false' )."'" );
+msgVerbose( "got ignore='".( $opt_ignore ? 'true':'false' )."'" );
+msgVerbose( "got wait='".( $opt_wait ? 'true':'false' )."'" );
+msgVerbose( "got timeout='$opt_timeout'" );
 
 # either the json or the basename or the port must be specified (and not both)
 my $count = 0;

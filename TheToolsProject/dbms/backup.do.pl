@@ -158,17 +158,17 @@ if( $running->help()){
 	TTP::exit();
 }
 
-msgVerbose( "found colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "found dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "found verbose='".( $running->verbose() ? 'true':'false' )."'" );
-msgVerbose( "found service='$opt_service'" );
-msgVerbose( "found instance='$opt_instance'" );
-msgVerbose( "found instance_set='".( $opt_instance_set ? 'true':'false' )."'" );
-msgVerbose( "found database='$opt_database'" );
-msgVerbose( "found full='".( $opt_full ? 'true':'false' )."'" );
-msgVerbose( "found diff='".( $opt_diff ? 'true':'false' )."'" );
-msgVerbose( "found compress='".( $opt_compress ? 'true':'false' )."'" );
-msgVerbose( "found output='$opt_output'" );
+msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got service='$opt_service'" );
+msgVerbose( "got instance='$opt_instance'" );
+msgVerbose( "got instance_set='".( $opt_instance_set ? 'true':'false' )."'" );
+msgVerbose( "got database='$opt_database'" );
+msgVerbose( "got full='".( $opt_full ? 'true':'false' )."'" );
+msgVerbose( "got diff='".( $opt_diff ? 'true':'false' )."'" );
+msgVerbose( "got compress='".( $opt_compress ? 'true':'false' )."'" );
+msgVerbose( "got output='$opt_output'" );
 
 # must have either -service or -instance options
 # compute instance from service

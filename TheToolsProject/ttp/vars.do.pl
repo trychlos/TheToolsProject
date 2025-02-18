@@ -172,19 +172,19 @@ if( $running->help()){
 	TTP::exit();
 }
 
-msgVerbose( "found colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "found dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "found verbose='".( $running->verbose() ? 'true':'false' )."'" );
-msgVerbose( "found siteSpec='".( $opt_siteSpec ? 'true':'false' )."'" );
-msgVerbose( "found nodeRoot='".( $opt_nodeRoot ? 'true':'false' )."'" );
-msgVerbose( "found nodesDirs='".( $opt_nodesDirs ? 'true':'false' )."'" );
-msgVerbose( "found logsRoot='".( $opt_logsRoot ? 'true':'false' )."'" );
-msgVerbose( "found logsDaily='".( $opt_logsDaily ? 'true':'false' )."'" );
-msgVerbose( "found logsCommands='".( $opt_logsCommands ? 'true':'false' )."'" );
-msgVerbose( "found logsMain='".( $opt_logsMain ? 'true':'false' )."'" );
-msgVerbose( "found alertsDir='".( $opt_alertsDir ? 'true':'false' )."'" );
+msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got siteSpec='".( $opt_siteSpec ? 'true':'false' )."'" );
+msgVerbose( "got nodeRoot='".( $opt_nodeRoot ? 'true':'false' )."'" );
+msgVerbose( "got nodesDirs='".( $opt_nodesDirs ? 'true':'false' )."'" );
+msgVerbose( "got logsRoot='".( $opt_logsRoot ? 'true':'false' )."'" );
+msgVerbose( "got logsDaily='".( $opt_logsDaily ? 'true':'false' )."'" );
+msgVerbose( "got logsCommands='".( $opt_logsCommands ? 'true':'false' )."'" );
+msgVerbose( "got logsMain='".( $opt_logsMain ? 'true':'false' )."'" );
+msgVerbose( "got alertsDir='".( $opt_alertsDir ? 'true':'false' )."'" );
 @opt_keys= split( /,/, join( ',', @opt_keys ));
-msgVerbose( "found keys='".join( ',', @opt_keys )."'" );
+msgVerbose( "got keys='".join( ',', @opt_keys )."'" );
 
 if( !TTP::errs()){
 	listAlertsdir() if $opt_alertsDir;
