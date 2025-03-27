@@ -210,8 +210,13 @@ my $columns = {
 			width => 20
 		},
 		{
-			name => 'QuestionnaireDebut',
-			computed => \&computeQuestionnaireDebut,
+			name => 'QuestionnaireDebutDue',
+			computed => \&computeQuestionnaireDebutDue,
+			width => 20
+		},
+		{
+			name => 'QuestionnaireDebutDone',
+			computed => \&computeQuestionnaireDebutDone,
 			width => 20
 		},
 		{
@@ -433,8 +438,13 @@ my $columns = {
 			width => 20
 		},
 		{
-			name => 'QuestionnaireDebut',
-			computed => \&computeQuestionnaireDebut,
+			name => 'QuestionnaireDebutDue',
+			computed => \&computeQuestionnaireDebutDue,
+			width => 20
+		},
+		{
+			name => 'QuestionnaireDebutDone',
+			computed => \&computeQuestionnaireDebutDone,
 			width => 20
 		},
 		{
@@ -574,9 +584,14 @@ sub computeModuleDateTo {
 	return computeDateOnly( $row->{ModuleDateTo} );
 }
 
-sub computeQuestionnaireDebut {
+sub computeQuestionnaireDebutDone {
 	my ( $row, $prev ) = @_;
-	return computeDateOnly( $row->{QuestionnaireDebut} );
+	return computeDateOnly( $row->{QuestionnaireDebutDone} );
+}
+
+sub computeQuestionnaireDebutDue {
+	my ( $row, $prev ) = @_;
+	return computeDateOnly( $row->{QuestionnaireDebutDue} );
 }
 
 sub computeQuestionnaireFin {

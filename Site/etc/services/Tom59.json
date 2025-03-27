@@ -49,7 +49,8 @@
 			{
 				"label": "(Production Live) Génération hebdomadaire du suivi pédagogique",
 				"commands": [
-					"[eval:File::Spec->catfile( TTP::var([ 'site', 'commandsDir' ]), 'tom59_suivi_pedago.pl' )] -service <SERVICE> -script [eval:File::Spec->catdir( TTP::nodeRoot(), 'Site', 'Sql', 'Suivi_Pedago_v6.sql' )] -fnews [eval:File::Spec->catdir( TTP::nodeRoot(), 'Site', 'Sql', 'news_v6.html' )] -to cbonnier@inlingua-pro.com,fwanlin@inlingua-pro.com,alexs.delamotte@inlingua-pro.com"
+					"[eval:File::Spec->catfile( TTP::var([ 'site', 'commandsDir' ]), 'tom59_suivi_pedago.pl' )] -service <SERVICE> -script [eval:File::Spec->catdir( TTP::nodeRoot(), 'Site', 'Sql', 'Suivi_Pedago_v9.sql' )] -fnews [eval:File::Spec->catdir( TTP::nodeRoot(), 'Site', 'Sql', 'news_v9.html' )] -to cbonnier@inlingua-pro.com,fwanlin@inlingua-pro.com,alexs.delamotte@inlingua-pro.com",
+					"[eval:File::Spec->catfile( TTP::var([ 'site', 'commandsDir' ]), 'tom59_suivi_pedago.pl' )] -service <SERVICE> -script [eval:File::Spec->catdir( TTP::nodeRoot(), 'Site', 'Sql', 'Suivi_Pedago_v8.1.sql' )] -fnews [eval:File::Spec->catdir( TTP::nodeRoot(), 'Site', 'Sql', 'news_v8.1.html' )] -to cbonnier@inlingua-pro.com,fwanlin@inlingua-pro.com"
 				]
 			}
 		],

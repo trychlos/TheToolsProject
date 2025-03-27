@@ -1,0 +1,16 @@
+<p>La v9 apporte les modifications suivantes :</p>
+<ul>
+<li>la colonne <code>QuestionnaireDebut</code> est renommée <code>QuestionnaireDebutDone</code></li>
+<li>une nouvelle colonne <code>QuestionnaireDebutDue</code> est renseignée lorsque le questionnaire de début est en retard.</li>
+</ul>
+<p>Quelques règles de calcul utilisées :</p>
+<ul>
+<li>Les modules considérés sont les modules en cours, ou terminés depuis moins d'un mois, ou qui débutent dans moins d'un mois.</li>
+<li><b>NotesPedagoManquantes</b> : Calculée comme la différence entre le nombre de notes dues (c'est-à-dire le nombre de séances passées) et le nombre de notes trouvées. On notera que la mention 'NoShow' n'est pas filtrée et compte comme une note.</li>
+<li><b>SeancesMiParcoursDate</b> : Si tous les cours ont été planifiés, la date de mi-parcours est calculée comme la médiane entre le premier et le dernier cours ; sinon comme la date médiane de début et de fin de la ou des convention(s).</li>
+<li><b>SeancesSignFormateurManquantes</b> : La signature du formateur est considérée manquante lorsque la logistique de la séance implique un formateur, et que NoShow vaut zéro.<br />
+	Cela peut inclure néanmoins les séances dont le lieu est sous-traité.</li>
+<li><b>StagiaireAbsencesCount</b> : Un stagiaire est considéré absent lorsque sa présence est 'ABS' (ou 'AB10' ou 'AB20' ou ...).</li>
+<li><b>StagiaireSignManquantes</b> : La signature est considérée manquante lorsque le TypePresence n'est pas encore renseigné, et que NoShow vaut zéro, et que la logistique de la séance n'est pas sous-traitée.<br />
+	Cela peut inclure néanmoins les séances dont le lieu est sous-traité.</li>
+</ul>
