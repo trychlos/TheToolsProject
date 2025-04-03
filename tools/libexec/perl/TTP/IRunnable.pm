@@ -164,6 +164,20 @@ sub runnableQualifier {
 
 # -------------------------------------------------------------------------------------------------
 # Getter
+# Returns the run mode of this command, e.g. 'sh' or 'perl'
+# (I):
+# - none
+# (O):
+# -returns the run mode
+
+sub runnableRunMode {
+	my ( $self ) = @_;
+
+	return $self->{_irunnable}{runMode};
+};
+
+# -------------------------------------------------------------------------------------------------
+# Getter
 # Returns the start time of this runnable
 # (I):
 # - none
@@ -205,13 +219,28 @@ after _newBase => sub {
 	#print __PACKAGE__."::new()".EOL;
 
 	$self->{_irunnable} //= {};
+
+	# Starting with v4, TheToolsProject is merged with the sh version. If a 'ttp_me' environment variable
+	#  exists, then this perl is embedded into a sh run. So shift the command-line arguments
+	$ENV{TTP_DEBUG} && print STDERR "ttp_me='".( $ENV{ttp_me} || "" )."'".EOL;
 	$self->{_irunnable}{me} = $0;
+	if( $ENV{ttp_me} ){
+		$self->{_irunnable}{me} = shift @ARGV;
+		if( $ENV{ttp_me} eq "sh/ttpf_main" ){
+			$self->{_irunnable}{runMode} = "sh";
+		} else {
+			msgErr( __PACKAGE__."::after _newBase() $ENV{ttp_me}='".$ENV{ttp_me}." which is not managed" );
+		}
+	} else {
+			$self->{_irunnable}{runMode} = "perl";
+	}
+
 	my @argv = @ARGV;
 	$self->{_irunnable}{argv} = \@argv;
 	$self->{_irunnable}{started} = Time::Moment->now;
 	$self->{_irunnable}{errs} = 0;
 
-	my( $vol, $dirs, $file ) = File::Spec->splitpath( $0 );
+	my( $vol, $dirs, $file ) = File::Spec->splitpath( $self->{_irunnable}{me} );
 	$self->{_irunnable}{basename} = $file;
 	$file =~ s/\.[^\.]+$//;
 	$self->{_irunnable}{namewoext} = $file;

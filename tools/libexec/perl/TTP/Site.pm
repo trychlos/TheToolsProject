@@ -168,7 +168,7 @@ sub new {
 
 	# unable to find and load a site configuration file ? this is an unrecoverable error
 	if( !$loaded ){
-		msgErr( "Unable to find the site configuration file among [".( join( ',', @{$class->finder()->{dirs}}))."]" );
+		msgErr( "Unable to find the site configuration file among [ ".( join( ', ', @{$class->finder()->{dirs}}))." ]" );
 		msgErr( "Please make sure that the file exists in one of the TTP_ROOTS paths" );
 		msgErr( "Exiting with code 1" );
 		exit( 1 );

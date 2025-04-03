@@ -26,12 +26,14 @@
 # pwi 2010- 9- 8 creation
 # pwi 2013- 7-10 no need to increment ttp_code if already not zero
 # pwi 2017- 6-21 publish the release at last 
+# pwi 2025- 4- 3 starting with v4, VERBOSE environment variable is replaced with TTP_DEBUG
 
 # This function must be defined using the name() syntax in order
 # to share traps with the caller process (cf. man (1) ksh).
 
 trap_int()
 {
+	[ "${TTP_DEBUG}" = "1" ] && echo "trap_int()" >&2
 	msgOut "exiting on keyboard interrupt"
 	[ ${ttp_code} -eq 0 ] && ttp_code=1
 	exit

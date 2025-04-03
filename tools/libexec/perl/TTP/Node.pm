@@ -260,7 +260,7 @@ sub new {
 		my $abort = true;
 		$abort = $args->{abortOnError} if exists $args->{abortOnError};
 		if( $abort ){
-			msgErr( "Unable to find a valid execution node for '$node' in [".join( ',', @{$dirs} )."]" );
+			msgErr( "Unable to find a valid execution node for '$node' in [ ".join( ', ', @{$dirs} )." ]" );
 			msgErr( "Exiting with code 1" );
 			exit( 1 );
 		} else {

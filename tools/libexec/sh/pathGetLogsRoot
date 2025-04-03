@@ -1,0 +1,85 @@
+# @(#) Compute the logs directory
+#
+# The Tools Project: a Tools System and Paradigm for IT Production
+# Copyright (©) 2003-2021 Pierre Wieser (see AUTHORS)
+#
+# The Tools Project is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation; either version 2 of the
+# License, or (at your option) any later version.
+#
+# The Tools Project is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with The Tools Project; see the file COPYING. If not,
+# see <http://www.gnu.org/licenses/>.
+#
+# Synopsis:
+#
+#   The logs directory is computed based on the 'logsroot' found in the
+#   node configuration file, which defaults to the value defined in the
+#   site-wide configuration file, which itself defaults to '/tmp'.
+#
+#   Whether it is read from the node or the site-wide configuration
+#   files, this value may be an absolute path, or the name of a
+#   function which is itself expected to output an absolute path.
+#
+#   Note that, as we are trying here to compute the logs directory, we
+#   are not able to write any error message in logs. They are so sent
+#   to stderr.
+#
+# (I): -
+#
+# (O): - stdout: _logsdir is displayed
+#
+# pwi 1999- 2-17 creation
+# pwi 2002- 6- 4 set variables as local
+# pwi 2006-10-27 tools become The Tools Project, released under GPL
+# pwi 2013- 7- 5 search values in in-memory arrays
+# pwi 2013- 7-29 fix #50 logsdir should be eval-ed
+# pwi 2017- 6-21 publish the release at last
+# pwi 2021- 5-24 get rid of ttp_toolslogsubdir
+# pwi 2021- 9- 4 set gid bit on all created directories
+# pwi 2025- 2- 9 make sure directory is rightly created even if already computed
+
+function pathGetLogsRoot
+{
+	#set -x
+	typeset _logsroot=""
+
+	if [ -z "${ttp_logsroot}" ]; then
+		# search for a logsroot keyword in node configuration keys
+		#_logsroot="$(confGetKey "ttp_node_keys" "${TTP_NODE}" "0=logsroot" 1 | tabSubstitute)"
+		# if not found, then search in default keys
+		#[ -z "${_logsroot}" ] && _logsroot="$(confGetKey "ttp_default_keys" "logsroot" "" 0 | tabSubstitute)"
+		# fallback to hardcoded /tmp
+		#[ -z "${_logsroot}" ] && _logsroot="/tmp"
+
+		# search the variable which addresses the logs root, from the node configuration, defaulting to the site configuration, defaulting to '/tmp'
+		_logsroot="$(nodeVar "logsRoot" "/tmp")"
+
+		# if a function, then evaluate
+		typeset _is_path
+		_logsroot="$(eval echo ${_logsroot})"
+		[ "${_logsroot:0:1}" = "/" ] && _is_path="yes" || _is_path="no"
+		if [ "${_is_path}" = "no" ]; then
+			typeset _fnlogs="${_logsroot}"
+			_logsroot="$("${_fnlogs}" 2>/dev/null)"
+			if [ ! -z "${_logsroot}" ]; then
+				if [ "${_logsroot:0:1}" != "/" ]; then
+					echo "(pathGetLogsRoot) '${_logsroot}': not a full path after function evaluation, fallback to /tmp" >&2 
+					_logsroot="/tmp"
+				fi
+			fi
+		fi
+	else
+		_logsroot="${ttp_logsroot}"
+	fi
+
+	mkdir -p -m 0775 "${_logsroot}"
+	chmod g+s "${_logsroot}" 2>/dev/null
+	echo "${_logsroot}"
+}

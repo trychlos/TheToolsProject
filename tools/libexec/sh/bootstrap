@@ -1,0 +1,195 @@
+# @(#) TTP bootstrapping for sh/bash/ksh
+#
+# TheToolsProject: a work paradigm for IT productions
+# Copyright (©) 2003-2022 Pierre Wieser (see AUTHORS)
+# Copyright (©) 2023-2025 PWI Consulting
+#
+# TheToolsProject is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation; either version 2 of the
+# License, or (at your option) any later version.
+#
+# TheToolsProject is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with TheToolsProject; see the file COPYING. If not,
+# see <http://www.gnu.org/licenses/>.
+#
+# Synopsis:
+#
+#   This shell function is expected to be sourced from inside a sh,
+#   bash- or korn-derived login shell, with the drop-in directory as
+#   unique parameter
+#
+#     # Bootstrap The Tools Project
+#     . /opt/TheToolsProject/libexec/sh/bootstrap/sh/bootstrap <drop-in-directory>
+#
+#   This shell function will:
+#   - scan <drop-in-directory>/*.conf and HOME/.ttp.d/*.conf
+#   - for each path found, append it (or prepend if begins with a dash '-')
+#     to FPATH and PATH variables
+#   - setup an initial default node
+#
+# Notes:
+#    pwi 2021- 5-25
+#    These functions do not leave any remaining variable in the environment
+#    (checked under Fedora 34).
+#
+#    pwi 2021- 5-25
+#    Honors the VERBOSE environment variable, executing verbosely if VERBOSE=1
+#    (outputting to stderr).
+#
+#    Please remind that Ansible interprets anything it finds on stderr as a
+#    fatal error, and refuses to connect to the machine. So bootstrapping
+#	 process involved by the Ansible account should take care of that.
+#
+#    pwi 2025- 2- 9
+#    Please note that this script executes in-process, and has been validated
+#	 with a bash-like login shell. Using another (say ksh-like or csh-like)
+#	 may require minor adjustments.
+#
+# pwi 2013- 6-11 creation
+# pwi 2015- 7- 2 update to trychlos.pwi
+# pwi 2017- 6-21 publish the release at last
+# pwi 2021- 5-24 change the bootstrapping process to ttp.d/*.conf
+# pwi 2025- 2- 7 get the drop-in directories as argument(s), providing nonetheless a default value
+# pwi 2025- 4- 3 starting with v4, VERBOSE environment variable is replaced with TTP_DEBUG
+
+function f_append_by_name
+{
+	typeset _name="${1}"
+	typeset _dir="${2}"
+	[ "${TTP_DEBUG}" = "1" ] && echo "f_append_by_name() _name='${_name}' _dir='${_dir}'" 1>&2
+
+	if [ ! -z "${_name}" -a ! -z "${_dir}" ]; then
+		typeset _value="$(eval echo '${'${_name}'}')"
+		typeset _new_value="$(f_append_by_value "${_value}" "${_dir}")"
+		eval $(echo "export "${_name}"="${_new_value})
+	fi
+}
+
+function f_append_by_value
+{
+	typeset _init_value="${1}"
+	typeset _added_val="${2}"
+	[ "${TTP_DEBUG}" = "1" ] && echo "f_append_by_value() _init_value='${_init_value}' _added_val='${_added_val}'" 1>&2
+
+	case ":${_init_value}:" in
+		*:${_added_val}:*)
+			echo "${_init_value}"
+			;;
+		*)
+			[ -z "${_init_value}" ] || _init_value="${_init_value}:"
+			echo "${_init_value}${_added_val}"
+			;;
+	esac
+}
+
+# Main function
+# enumerate droppped-in paths to setup our environment variables
+# Eventually, PATH and FPATH (resp. PERL5LIB) are set in current process
+function f_bootstrap
+{
+	typeset _dropins="$@"
+	[ "${TTP_DEBUG}" = "1" ] && echo "f_bootstrap() _dropins='${_dropins}'" 1>&2
+
+	typeset -i _ret=0
+	if [ -z "${_missing}" ]; then
+		for _pathread in $(f_enumerate_path "${_dropins}"); do
+			if [ ! -z "${_pathread}" ]; then
+				[ "${TTP_DEBUG}" = "1" ] && echo "f_bootstrap() got path '${_pathread}'" 1>&2
+				typeset _pathclean="${_pathread}"
+				[ "${_pathread:0:1}" = "-" ] && _pathclean="${_pathread:1}"
+				f_setup "${_pathread:0:1}" "${_pathclean}"
+			fi
+		done
+	else
+		echo "f_bootstrap() unable to load '${_missing}' functions" >&2
+		_ret=1
+	fi
+	return ${_ret}
+}
+
+# Enumerates on stdout path read from conf files for initial TTP addressing
+function f_enumerate_path
+{
+	for _dir in $*; do
+		[ "${TTP_DEBUG}" = "1" ] && echo "f_enumerate_path() got drop-in '${_dir}'" 1>&2
+		LANG=C /bin/ls -1 "${_dir}"/*.conf 2>/dev/null | while read _conf; do
+			[ "${TTP_DEBUG}" = "1" ] && echo "f_enumerate_path() got conf '${_conf}'" 1>&2
+			grep -vE '^\s*#' "${_conf}"
+		done
+	done
+}
+
+function f_prepend_by_name
+{
+	typeset _name="${1}"
+	typeset _dir="${2}"
+	[ "${TTP_DEBUG}" = "1" ] && echo "f_prepend_by_name() _name='${_name}' _dir='${_dir}'" 1>&2
+
+	if [ ! -z "${_name}" -a ! -z "${_dir}" ]; then
+		typeset _value="$(eval echo '${'${_name}'}')"
+		typeset _new_value="$(f_prepend_by_value "${_value}" "${_dir}")"
+		eval $(echo "export "${_name}"="${_new_value})
+	fi
+}
+
+function f_prepend_by_value
+{
+	typeset _init_value="${1}"
+	typeset _added_val="${2}"
+	[ "${TTP_DEBUG}" = "1" ] && echo "f_prepend_by_value() _init_value='${_init_value}' _added_val='${_added_val}'" 1>&2
+
+	case ":${_init_value}:" in
+		*:${_added_val}:*)
+			echo "${_init_value}"
+			;;
+		*)
+			[ -z "${_init_value}" ] || _init_value=":${_init_value}"
+			echo "${_added_val}${_init_value}"
+			;;
+	esac
+}
+
+# Set global environment variables
+function f_setup
+{
+	typeset _prefix="${1}"
+	typeset _path="${2}"
+	if [ "${_prefix}" = "-" ]; then
+		[ "${TTP_DEBUG}" = "1" ] && echo "f_setup() prepending '${_path}'" 1>&2
+		f_prepend_by_name      PATH "${_path}/bin"
+		f_prepend_by_name     FPATH "${_path}/libexec/sh"
+		f_prepend_by_name  PERL5LIB "${_path}/libexec/perl"
+		f_prepend_by_name TTP_ROOTS "${_path}"
+	else
+		[ "${TTP_DEBUG}" = "1" ] && echo "f_setup() appending '${_path}'" 1>&2
+		f_append_by_name      PATH "${_path}/bin"
+		f_append_by_name     FPATH "${_path}/libexec/sh"
+		f_append_by_name  PERL5LIB "${_path}/libexec/perl"
+		f_append_by_name TTP_ROOTS "${_path}"
+	fi
+}
+
+###
+### MAIN
+###
+
+# Have the usual 'HOME/.ttp.d /etc/ttp.d' default values, letting the caller override that
+typeset d_bootstrap_list="$@"
+[ -z "${1}" ] && d_bootstrap_list=""${HOME}/.ttp.d" "/etc/ttp.d""
+
+f_bootstrap "${d_bootstrap_list}" && . ttp.sh switch -default 2>&1
+typeset -i _ret=$?
+
+[ "${TTP_DEBUG}" = "1" ] && echo "[sh/bootstrap] PATH='${PATH}'" 1>&2
+[ "${TTP_DEBUG}" = "1" ] && echo "[sh/bootstrap] FPATH='${FPATH}'" 1>&2
+[ "${TTP_DEBUG}" = "1" ] && echo "[sh/bootstrap] PERL5LIB='${PERL5LIB}'" 1>&2
+[ "${TTP_DEBUG}" = "1" ] && echo "[sh/bootstrap] TTP_ROOTS='${TTP_ROOTS}'" 1>&2
+
+unset $(set | grep -E '^f_bootstrap|^d_bootstrap') 1>/dev/null 2>&1
+return ${_ret}

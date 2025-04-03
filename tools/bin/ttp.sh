@@ -61,7 +61,10 @@
 # (ksh being the only known shell to be able to autoload its functions,
 #  typical sh-like shells, e.g. bash, would else fail) 
 if [ "${0:0:1}" == "-" -o "${0}" == "${SHELL}" -o "${0##*/}" == "${SHELL##*/}" ]; then
-	[ "${1}" == "switch" ] && { . $(echo "${FPATH}" | awk -F: '{ print $1 }')/../bootstrap/sh_switch "$(which ttp.sh 2>/dev/null)" "${@}"; return $?; }
+	[ "${1}" == "switch" ] && {
+		. $(echo "${FPATH}" | tr ':' '\n' | while read _dir; do [[ -f "${_dir}/switch" ]] && echo "${_dir}" && break; done)/switch "$(which ttp.sh 2>/dev/null)" "${@}";
+		return $?;
+	}
 fi
 
 ttpf_main "${0}" "${@}"

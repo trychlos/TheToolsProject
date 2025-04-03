@@ -25,110 +25,6 @@
 #
 #   See also the output of 'ttp.sh list --variables'
 #
-#   ttp_arga              a copy of original command-line arguments as
-#                         an array where options have their double dash;
-#                         e.g. [--mnemo, TRYSMA, --command, show parameters, un file.csv]
-#
-#   ttp_argc              count of command-line arguments
-#
-#   ttp_args              a copy of original command-line arguments as
-#                         a string where options have their double dash
-#                         and values are quoted;
-#                         e.g. "--mnemo 'TRYSMA' --command 'show parameters' 'un file.csv'"
-#
-#   ttp_binsubdir         TTPROOT subdirectory where commands are expected
-#                         to be found;
-#                         defaults to 'bin'
-#
-#   ttp_code              exit code;
-#                         defaults to count of functions which have
-#                         detected an error
-#
-#   ttp_cmdline           command line (command path being expanded)
-#                         e.g. '/opt/trychlos.pwi/TTP/tools/bin/ttp.sh list -var'
-#
-#   ttp_command           command name
-#                         e.g. 'tools.sh'
-#
-#   ttp_command_path      command full pathname
-#                         e.g. '/net/tools/bin/tools.sh'
-#
-#   ttp_csvsep            the separator character when outputing a CSV file
-#                         defaults to semi-comma ';'
-#
-#   ttp_default_keys      the keys which are loaded from the site-wide configuration
-#                         file
-#
-#   ttp_errs              errors count
-#
-#   ttp_etcsubdir         TTPROOT subdirectory where configuration files
-#                         are expected to be found;
-#                         defaults to 'etc'
-#
-#   ttp_execsubdir        TTPROOT subdirectory where auxiliary functions
-#                         are stored; 
-#                         defaults to 'libexec'
-#
-#   ttp_node_keys
-#
-#   ttp_logicals_re       the end of the pathname to the configuration file
-#                         which defines the regular expression which identifies
-#                         the logical machines;
-#                         defaults to '<ttp_ttpsubdir>/logicals.re'
-#
-#   ttp_logsroot          the absolute path of the root of the TTP logs
-#                         directory;
-#                         e.g. '/host/prod/var/dayly'
-#
-#   ttp_main_log          basename of the main log file;
-#                         defaults to 'main.log'
-#
-#   ttp_node_conf         .ini configuration full pathname (mandatory);
-#                         e.g. 'TTPROOT/etc/nodes/mstintin.ini'
-#
-#   ttp_node_environment  environment string of the current execution node
-#                         read from node configuration file
-#
-#   ttp_node_keys         the keys which are loaded from the node configuration
-#                         file
-#
-#   ttp_nodesubdir        TTPROOT subdirectory where nodes configuration
-#                         files are expected to be found;
-#                         defaults to '<ttp_etcsubdir>/nodes'
-#
-#   ttp_privsubdir        TTPROOT subdirectory which contains the passwords;
-#                         defaults to '<ttp_etcsubdir>/private'
-#
-#   ttp_roots             colon-separated list of TTPROOT trees in a
-#                         decreasing order of precedence
-#                         e.g. '<HOME>/TTPDev:<TTPROOT_PROD>'
-#
-#   ttp_sep               the separator character in configuration files
-#                         defaults to semi-colon ':'
-#
-#   ttp_stamp             count of seconds since 1970-01-01 (epoch time)
-#                         at start of the execution;
-#                         used e.g. in pathGetTempFile to ensure the unicity
-#                         of the 'verb-pid-stamp-mnemo' sequence
-#
-#   ttp_tabularsep        the separator character when outputing a tabular display
-#                         defaults to pipe '|'
-#
-#   ttp_ttpsubdir         TTPROOT subdirectory where global configuration
-#                         files are expected to be found;
-#                         defaults to '<ttp_etcsubdir>/ttp'
-#
-#   ttp_args_used          an array which let us mark the interpreted
-#                         command-line arguments
-#
-#   ttp_user              current user, taken from USER or LOGNAME variables
-#
-#   ttp_verb              verb name
-#                         e.g. 'list'
-#
-#   ttp_verb_path         the full pathname of the verb script
-#                         e.g. '/net/tools/cft/list.sh'
-#
 # First argument is supposed to be the pathname of the calling script
 # (the command). If the calling script is addressed via the PATH
 # variable, the pathname is a full pathname:
@@ -152,13 +48,14 @@
 # pwi 2017- 6-21 publish the release at last
 # pwi 2021- 5-21 fix typo
 # pwi 2021- 5-25 get rid of ttp_node
+# pwi 2025- 2- 9 get rid of ttp_roots
+# pwi 2025- 4- 3 starting with v4, shell part takes advantage of Perl environment
+# pwi 2025- 4- 3 starting with v4, VERBOSE environment variable is replaced with TTP_DEBUG
 
 function ttpf_main
 {
-	#set -x
-	#echo "ttpf_main: 0=$0 #=$# *=$*" >&2
+	[ "${TTP_DEBUG}" = "1" ] && echo "ttpf_main() 0=$0 #=$# *=$*" >&2
 
-	ttp_errs=0
 	ttp_code=0
 	ttp_command="TTP"
 
@@ -167,80 +64,19 @@ function ttpf_main
 
 	# check for in-process invocation
 	#  this should never happen because even the ". ttp.sh switch" command
-	#  is run as a standard ksh command from the bootstrap/sh_switch script
+	#  is run as a standard ksh command from the sh_switch script
 	[ "${0:0:1}" = "-" -o "${0}" = "${SHELL##*/}" ] \
-		&& { echo "[TTP] in-process invocation only allowed in '. ttp.sh switch' command" >&2; let ttp_errs+=1; let ttp_code+=1; return ${ttp_code}; }
+		&& { echo "[${ttp_command}] in-process invocation only allowed in '. ttp.sh switch' command" >&2; let ttp_errs+=1; let ttp_code+=1; return ${ttp_code}; }
 
 	# when setting the initial execution node, there is not yet any TTP_NODE
 	#  in the user environment; the first command to be executed must be one of
 	#  ". ttp.sh switch --default" or ". ttp.sh switch --node <nodename>"
 	#  usually from the user profile
 	[ -z "${NOTTP}" -a -z "${TTP_NODE}" ] \
-		&& { echo "[TTP] no current execution node, aborting" >&2; let ttp_errs+=1; let ttp_code+=1; return ${ttp_code}; }
+		&& { echo "[${ttp_command}] no current execution node, aborting" >&2; let ttp_errs+=1; let ttp_code+=1; return ${ttp_code}; }
 
-	# setup global constants which are used in the Tools
-	# note that we parameterize also variables which are hardcoded at bootstrap time
-	bspInitVars
-
-	# loads the site-wide default configuration file into an array
-	typeset _req="${ttp_ttpsubdir}/defaults.ini"
-	typeset _file="$(bspFind "${_req}")"
-	[ -z "${_file}" ] || confLoadKeys "ttp_default_keys" "${_file}"
-
-	# load the machine configuration file into an in-memory array
-	if [ ! -z "${TTP_NODE}" ]; then
-		_req="${ttp_nodesubdir}/${TTP_NODE}.ini"
-		_file="$(bspFind "${_req}")"
-		[ -z "${_file}" ] \
-			&& { echo "[TTP] ${_req}: file not found or not readable" >&2; return 1; } \
-			|| { ttp_node_conf="${_file}"; confLoadKeys "ttp_node_keys" "${ttp_node_conf}"; }
-
-		ttp_node_environment="$(confGetKey "ttp_node_keys" "${TTP_NODE}" "0=environment" 1)"
-
-		# trace here this call
-		# this always work, unless no node is currently set
-		# which only happens at first connection, before end of bootstrap/sh_switch
-		msgLog "$*"
-	fi
-
-	#
-	# end of global initialization
-	# end of node initialization
-	# beginning with the command
-	#
-
-	ttp_cmdline="$*"
-	ttp_user="${USER:-${LOGNAME}}"	
-	ttp_stamp="$(date '+%s')"
-	ttp_command_path="$(commandGetPath "${1}")"
-	ttp_command="${ttp_command_path##*/}"
-
-	shift
-	#echo "ttp_command='${ttp_command}'"
-	#ttp_command='tools.sh'
-
-	# no verb nor option, then just display the list of available verbs
-	#  for this command
-	if [ $# -eq 0 ]; then
-		scriptDetail "${ttp_command_path}" &&
-		scriptListVerbs "${ttp_command_path}"
-		verbExitOnErr $?
-		return
-	fi
-
-	# the first word should be the verb
-	ttp_verb="${1}"
-	shift
-	ttp_verb_path="$(scriptFindVerb "${ttp_verb}")"
-	if [ -z "${ttp_verb_path}" ]; then
-		msgErr "no '${ttp_verb}' verb found for '${ttp_command}' command" &&
-		msgOut "try '${ttp_command}' command to get the list of available verbs"
-		verbExitOnErr 1 "no"
-	fi
-
-	# append the local FPATH variable to add libexec/<command>
-	commandMunge "${ttp_command%.*}"
-
-	# source the verb script so that functions defined in it are available here
-	. "${ttp_verb_path}"
+	# sub-contract to new Perl version which returns the exit code of TTP::run()
+	ttp_me="sh/ttpf_main" perl -MTTP -e 'TTP::run();' -- $*
+	ttp_code=$?
+	#echo $? 1>&2
 }

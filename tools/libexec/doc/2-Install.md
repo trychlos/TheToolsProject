@@ -60,7 +60,8 @@ __TheToolsProject__ tree has the following structure:
    |  |                    This is automatically adressed by the FPATH variable in shell-based __TTP__ flavor
    |  |
    |  +- perl/             Perl resources
-   |                       This is automatically adressed by the PERL5LIB variable in Perl-based __TTP__ flavor
+   |     |                 This is automatically adressed by the PERL5LIB variable in Perl-based __TTP__ flavor
+   |     +- TTP/
    |
    +- <command1>/          The verbs for the <command1> command
    |
@@ -69,21 +70,31 @@ __TheToolsProject__ tree has the following structure:
 
 The above structure explains the reason for why a command name cannot be in `bin`, `etc` or `libexec`: one could not create the corresponding verb directory.
 
-Obviously, all users of __TheToolsProject__ must have read permissions on all of each TTP trees, plus execute permission on `bin/` subdirectories.
+Users of __TheToolsProject__ must have read permissions on all of each TTP trees, plus execute permission on `bin/` subdirectories.
 
-It would be a good idea too to define a group and an account which would be the owner of each __TTP__ trees, and to make sure all users of __TheToolsProject__ are members of this group.
+It is be a good idea too to define a group and an account which will be the owner of each __TTP__ trees, and to make sure all users of __TheToolsProject__ are members of this group.
+
+Several trees can be defined and addressed, each of them being more or less complete. Each time a file is needed, __TheToolsProject__ searches for it in the list of trees, taking into account the first one found. This way, several trees may address differents needs (say, e.g., a development tree, a configuration tree, a production code tree).
 
 ## Bootstrapping
 
-The bootstrapping process is run every time a user logs-in on the node, and setup the current running execution node.
+__TheToolsProject__ requires :
 
-It tries to minimize hard-coded difficult to maintain paths, while keeping dynamic and be as much auto-discoverable than possible.
+- a `TTP_ROOTS` environment variable which addresses the available layers of code
+
+- an up-to-date `PATH` variable to address the `bin/` directories which contain the executable commands
+
+- an up-to-date `PERL5LIB` variable to address the `libexec/perl/TTP/` directories which contain the Perl modules.
+
+Though these variables can be manually defined at the OS level by the adminitrator, letting each user define his/her own personalization, they can also be built by the bootstrapping script provided by __TheToolsProject__. This bootstrapping process is run every time a user logs-in on the node, and initialize the execution environment.
+
+It tries to minimize hard-coded, difficult to maintain, paths, while keeping dynamic and be as much auto-discoverable than possible.
 
 The general principle is that:
 
 - the site integrator installs a small bootstrap script at the OS level
 
-- this script manages both shell-based and Perl-based flavors; it addresses a site-level drop-in directory where `.conf` files define the addressed __TTP__ trees.
+- this script manages both shell-based and Perl-based flavors; it addresses a site-level drop-in directory where `.conf` files define the to-be-addressed __TTP__ trees.
 
 Yes, this is an example of the usual chicken-and-egg problem: trying to auto-discover all available __TTP__ layers, we have to hard-code the path to a first __TTP__ tree!
 
@@ -91,23 +102,29 @@ Yes, this is an example of the usual chicken-and-egg problem: trying to auto-dis
 
 Say that the site integrator has decided to install:
 
-- the drop-in directory in `/etc/ttp.d`
-
 - __TheToolsProject__ released scripts, commands and verbs in `/opt/TTP`
 
-- the site configuration in `/opt/site/ttp`.
+- the site configuration in `/usr/share/site/ttp`.
+
+1. Define the bootstrap script
 
 As root, create `/etc/profile.d/ttp.sh`, which will address the drop-in directories:
 
 ```sh
   $ cat /etc/profile.d/ttp.sh
 # Address the installed (standard) version of The Tools Project
-. /opt/TTP/libexec/bootstrap/sh_bootstrap
+. /opt/TTP/libexec/sh/bootstrap
 ```
 
-The provided `sh_bootstrap` script accepts in the command-line a list of drop-in directories to examine for __TTP__ paths. This list defaults to `${HOME}/.ttp.d /etc/ttp.d`.
-I
-nstall in `/etc/ttp.d` drop-in directory a configuration to address the __TheToolsProject__ scripts, commands and verbs, and another configuration to address site specifics:
+And that's all.
+
+The provided `bootstrap` script accepts in the command-line a list of drop-in directories to examine for __TTP__ paths. If no argument is specified, this list defaults to `${HOME}/.ttp.d /etc/ttp.d`.
+
+Please note that this script has been validated with a bash-like login shell. Using another (say ksh-like or csh-like) may require minor adjustments.
+
+2. Define configuration drop-ins
+
+Install in `/etc/ttp.d` default drop-in directory a configuration to address the __TheToolsProject__ scripts, and another configuration to address site specifics:
 
 ```sh
     $ LANG=C ls -1 /etc/ttp.d/*.conf
@@ -120,10 +137,12 @@ nstall in `/etc/ttp.d` drop-in directory a configuration to address the __TheToo
     $
     $ cat /etc/ttp.d/site.conf
 # Address site configuration
-/opt/site/ttp
+/usr/share/site/ttp
 ```
 
-Each configuration file should address one __TTP__ tree though __TTP__ itself treats each non-comment-non-blank line as an individual path to a __TTP__ tree.
+The files are read in C lexical order.
+
+We suggest that each configuration file should address one __TTP__ tree even if __TTP__ itself treats each non-comment-non-blank line as a path to an individual __TTP__ tree.
 
 ### cmd-based OS (any windows-like)
 

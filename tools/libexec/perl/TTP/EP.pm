@@ -17,6 +17,7 @@
 # see <http://www.gnu.org/licenses/>.
 #
 # The TTP global Entry Point, notably usable in configuration files to get up-to-date data
+# The global '$ep' let the caller access TTP mmodules, functions and variables.
 
 package TTP::EP;
 

@@ -1,0 +1,47 @@
+# @(#) Compute the commands logs directory
+#
+# The Tools Project: a Tools System and Paradigm for IT Production
+# Copyright (©) 2003-2021 Pierre Wieser (see AUTHORS)
+#
+# The Tools Project is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation; either version 2 of the
+# License, or (at your option) any later version.
+#
+# The Tools Project is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with The Tools Project; see the file COPYING. If not,
+# see <http://www.gnu.org/licenses/>.
+#
+# Synopsis:
+#
+#   The commands logs directory is a 'TTP/' subdirectory of the daily logs directory.
+#
+# (I): -
+#
+# (O): - stdout: _logsdir is displayed
+#
+# pwi 2025- 2-10 creation
+
+function pathGetLogsCommands
+{
+	if [ -z "${ttp_logscommands}" ]; then
+		# search for a logsroot keyword in node configuration keys
+		#_logsdir="$(confGetKey "ttp_node_keys" "${TTP_NODE}" "0=logsroot" 1 | tabSubstitute)"
+		# if not found, then search in default keys
+		#[ -z "${_logsdir}" ] && _logsdir="$(confGetKey "ttp_default_keys" "logsroot" "" 0 | tabSubstitute)"
+		# fallback to hardcoded /tmp
+		#[ -z "${_logsdir}" ] && _logsdir="/tmp"
+
+		# search the variable which addresses the logs root, from the node configuration, defaulting to the site configuration, defaulting to '/tmp'
+		ttp_logscommands="$(nodeVar "logsCommands" "/tmp")"
+	fi
+
+	mkdir -p -m 0775 "${ttp_logscommands}"
+	chmod g+s "${ttp_logscommands}" 2>/dev/null
+	echo "${ttp_logscommands}"
+}

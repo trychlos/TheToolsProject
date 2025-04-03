@@ -12,7 +12,7 @@
 		"- those specified by '[eval:...]' indicate some code to be evaluated at run time.",
 		"  'eval' may be prefixed with an underscore in order to delay the eval (e.g. if it refers to another dynamic variable which needs to be resolved first).",
 		"",
-		"Note 1: unless otherwise specified, variables here may be overriden on a per-host basis.",
+		"Note 1: unless otherwise specified, variables here may be overriden on a per-node basis.",
 		"Note 2: Site integrator may use this same configuration file (and is encouraged to) to set his own site-level variables.",
 		"These variables are free to the site integrator and NOT considered by TheToolsProject, though they can be used in below TTP JSON dynamic evaluations."
 	],
@@ -91,14 +91,13 @@
 
 		"credentialsDirs_comments": [
 			"The directories to be searched for credentials, passwords and other secrets",
-			"Defaults to (successively searched for) subdirectories of TTP_ROOTS:",
-			" - 'etc/credentials'",
-			" - 'credentials'",
-			" - 'etc/private'",
-			" - 'private'",
+			"Defaults to (successively searched for) subdirectories of TTP_ROOTS",
 			""
 		],
-		"credentialsDirs": "etc/private",
+		"credentialsDirs": [
+			"etc/credentials",
+			"etc/private"
+		],
 
 		"daemonsDirs_comments": [
 			"The directories where are written the daemons JSON configuration files.",
@@ -106,8 +105,7 @@
 			"Below the hardcoded default values"
 		],
 		"daemonsDirs": [
-			"etc/daemons",
-			"daemons"
+			"etc/daemons"
 		],
 
 		"DBMS": {
@@ -236,15 +234,13 @@
 
 		"nodesDirs_comments": [
 			"The directories where are written the nodes JSON configuration files.",
-			"We can here define several subdirectories of TTP_ROOTS tree, which let us have distinct nodes in distinct directories (even if we ourselves advise against this type of architecture).",
+			"We can here define several subdirectories of TTP_ROOTS tree, which let us have distinct nodes in distinct directories (though we ourselves advise against this type of setup).",
 			"This is obviously not overridable on a per-node basis (due to the well-known chicken and eggs problem).",
 			"Below the hardcoded default values"
 		],
 		"nodesDirs": [
 			"etc/nodes",
-			"nodes",
-			"etc/machines",
-			"machines"
+			"etc/machines"
 		],
 
 		"nodeRoot_comments": [
@@ -254,13 +250,6 @@
 			"The 'nodeRoot' directory can be got by the user via the 'ttp.pl vars --nodeRoot' command"
 		],
 		"nodeRoot": "C:\\Temp|/tmp",
-
-		"privateDirs": [
-			"etc/private",
-			"private",
-			"etc/credentials",
-			"credentials"
-		],
 
 		"SMTPGateway_comments": [
 			"This is needed to send mails in order to be able to supply to the lack of a local MTA",

@@ -19,7 +19,8 @@
 #
 # Synopsis:
 #
-#      Set the ttp_logsroot variable to the logs directory.
+#	   Write a message in log file.
+#      Set the ttp_logscommands variable to the logs directory.
 #
 # (I): 1. line to be written
 #      2. (opt.) name of the log file,
@@ -43,12 +44,12 @@ function msgLog
 	typeset _file="${2##*/}"
 	[ -z "${_file}" ] && _file="${ttp_main_log:-main.log}"
 
-	[ -z "${ttp_logsroot}" ] && ttp_logsroot="$(pathGetLogsRoot)"
+	[ -z "${ttp_logscommands}" ] && ttp_logscommands="$(pathGetLogsCommands)"
 
-	if [ ! -z "${ttp_logsroot}" ]; then
+	if [ ! -z "${ttp_logscommands}" ]; then
 		typeset _msgOut="$(msgOut "${1}")"
 		typeset _msgpfx="$(msgLogPrefix)"
-		echo "${_msgpfx} ${_msgOut}" >> "${ttp_logsroot}/${_file}"
+		echo "${_msgpfx} ${_msgOut}" >> "${ttp_logscommands}/${_file}"
 	fi
 
 	return 0

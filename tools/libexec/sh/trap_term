@@ -31,6 +31,7 @@
 
 trap_term()
 {
+	[ "${VERBOSE}" = "1" ] && echo "trap_term()" >&2
 	[ "${opt_verbose}" = "yes" ] && msgOut "quitting on TERM signal"
 	exit
 }

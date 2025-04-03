@@ -1,13 +1,13 @@
 {
 	"comments": [
-		"A machine JSON configuration file.",
-		"Define here the machine configuration, maybe its role(s), the run services and their configuration."
+		"A node JSON configuration file.",
+		"Define here the node configuration, maybe its role(s), the run services and their configuration."
 	],
 
 	"enabled_comments": [
-		"Whether this machine configuration file should be examined when scanning all machine configuration files.",
-		"This let us have this 'machine.sample.json' in the machines/ directory",
-		"Note that disabling this node will fully prevent the machine to be visible in the list or loadable, or anything. The machine will no more be visible in TTP context.",
+		"Whether this node configuration file should be examined when scanning all nodes.",
+		"This let us have this 'node.sample.json' in the node/ directory without being actually used.",
+		"Note that disabling this node will fully prevent it to be visible in the list or loadable, or anything. The node will no more be visible in TTP context.",
 		"Hardcoded default is 'true'"
 	],
 	"enabled": false,

@@ -24,7 +24,11 @@
 	},
 	"status_comments": [
 		"Describe here the commands used to periodically check the service status.",
-		"These commands are run at the service level, whatever be the source host of the commands execution"
+		"Because these commands are also expected to test URLs, they have to be run from a machine outside of our physical architecture which both hold the FailOver IPs",
+		"Hence a crontab in an external Linux machine. Hence the below ssh..",
+		"Commands default to be specified at the service level: see the below 'commands' array. They will be executed once for each status round run by the monitoring machine,",
+		"whatever be the count of machines which define this service.",
+		"Commands can also be specified on a per-host basis: see 'before', 'replace' or 'after' keys in the host configuration."
 	],
 	"status": {
 		"extern_comments": [
@@ -47,7 +51,7 @@
 	"switch_comments": [
 		"These commands have to be run when we want switch the service from a live machine to another.",
 		"They have to be run via 'SiteResources\\Commands\\extern_service_switch.pl' script."
-	]
+	],
 	"switch": {
 		"to_backup": {
 			"commands": [
