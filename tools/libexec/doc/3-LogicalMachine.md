@@ -88,3 +88,7 @@ As another drawback, when the logical machine paradigm is used in a site, there 
 Distributing a new version of The Tools Project may so be (much) longer.
 
 For these two reasons, it is always better to install __TheToolsProject__ either in the hosts, on in a centralized NFS place (or as a mix of the two solutions).
+
+---
+P. Wieser
+- Last updated on 2025, Apr. 4th

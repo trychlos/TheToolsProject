@@ -63,3 +63,7 @@ The node configuration MUST be defined in a `<node>.json` or a `<node>.ini` file
 ## Service configuration
 
 The service configuration MUST be defined in a `<service>.json` or a `<service>.ini` file. It is searched for in `[TTPROOT]>/etc/services/` trees.
+
+---
+P. Wieser
+- Last updated on 2025, Apr. 4th

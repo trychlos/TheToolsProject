@@ -32,40 +32,46 @@ We are going here to deep dive into bootstrapping details of both:
 
 ## The TTP tree
 
-__TheToolsProject__ tree has the following structure:
+Once installed, __TheToolsProject__ tree exhibits the following structure:
 
 ```
   [TTPROOT]/
    |
-   +- bin/                 Hosts the commands
-   |                       This must be adressed by the PATH variable
+   +- maintainer/
    |
-   +- etc/                 Configuration files
-   |  |
-   |  +- nodes/            The nodes configuration files
-   |  |
-   |  +- private/          Passwords and other credentials
-   |  |
-   |  +- services/         The services configuration files
-   |  |
-   |  +- ttp/              Global TTP configuration
+   +- site.samples/
    |
-   +- libexec/             Functions and subroutines
+   +- tools/
    |  |
-   |  +- bootstrap/        The bootstrapping code
+   |  +- bin/                 Hosts the commands
+   |  |                       This must be adressed by the PATH variable
    |  |
-   |  +- doc/              This documentation directory
+   |  +- etc/                 Configuration files
+   |  |  |
+   |  |  +- nodes/            The nodes configuration files
+   |  |  |
+   |  |  +- private/          Passwords and other credentials
+   |  |  |
+   |  |  +- services/         The services configuration files
+   |  |  |
+   |  |  +- ttp/              Global TTP configuration
    |  |
-   |  +- sh/               Shell resources
-   |  |                    This is automatically adressed by the FPATH variable in shell-based __TTP__ flavor
+   |  +- libexec/             Functions and subroutines
+   |  |  |
+   |  |  +- bootstrap/        The bootstrapping code
+   |  |  |
+   |  |  +- doc/              This documentation directory
+   |  |  |
+   |  |  +- sh/               Shell resources
+   |  |  |                    This is automatically adressed by the FPATH variable in shell-based __TTP__ flavor
+   |  |  |
+   |  |  +- perl/             Perl resources
+   |  |     |                 This is automatically adressed by the PERL5LIB variable in Perl-based __TTP__ flavor
+   |  |     +- TTP/
    |  |
-   |  +- perl/             Perl resources
-   |     |                 This is automatically adressed by the PERL5LIB variable in Perl-based __TTP__ flavor
-   |     +- TTP/
-   |
-   +- <command1>/          The verbs for the <command1> command
-   |
-   +- <command2>/          The verbs for the <command2> command
+   |  +- <command1>/          The verbs for the <command1> command
+   |  |
+   |  +- <command2>/          The verbs for the <command2> command
 ```
 
 The above structure explains the reason for why a command name cannot be in `bin`, `etc` or `libexec`: one could not create the corresponding verb directory.
@@ -83,6 +89,8 @@ __TheToolsProject__ requires :
 - a `TTP_ROOTS` environment variable which addresses the available layers of code
 
 - an up-to-date `PATH` variable to address the `bin/` directories which contain the executable commands
+
+- an up-to-date `FPATH` variable to address the `libexec/sh/` directory which contains the KornShell functions
 
 - an up-to-date `PERL5LIB` variable to address the `libexec/perl/TTP/` directories which contain the Perl modules.
 
@@ -113,7 +121,7 @@ As root, create `/etc/profile.d/ttp.sh`, which will address the drop-in director
 ```sh
   $ cat /etc/profile.d/ttp.sh
 # Address the installed (standard) version of The Tools Project
-. /opt/TTP/libexec/sh/bootstrap
+. /opt/TTP/tools/libexec/sh/bootstrap
 ```
 
 And that's all.
@@ -133,7 +141,7 @@ Install in `/etc/ttp.d` default drop-in directory a configuration to address the
     $
     $ cat /etc/ttp.d/TTP.conf
 # Address the installed (standard) version of The Tools Project
-/opt/TTP
+/opt/TTP/tools
     $
     $ cat /etc/ttp.d/site.conf
 # Address site configuration
@@ -198,61 +206,6 @@ The bootstrap process reads any `.conf` file dropped in `HOME/.ttp.d/` directory
 
 The bootstrap process reads any `.conf` file dropped in `USERPROFILE/.ttp.d/` directory.
 
------------------------------------------------------------------------
- Addressing The Tools Project
- ============================
-
-   2. Mandatory: define TTP_SHDIR variable
-
-      Because The Tools Project supports the 'logical machine' paradigm,
-      there is some situations where it cannot rely on the FPATH
-      variable.
-      A TTP_SHDIR must be defined to address (one of) the main shell functions
-      directory.
-
-      Note 1:
-         The 'TTP_SHDIR' variable must address only one directory.
-         You probably want address the standard Tools Project tree here.
-
-      Ex:
-         export TTP_SHDIR=/opt/TTP/libexec/sh
-
-   3. Mandatory: define the initial execution node
-
-      This is done by calling the '. ttp.sh switch --default' command.
-
-   As a convenience, The Tools Project provides in the
-   'libexec/bootstrap/' subdirectory some scripts which may be called
-   from a user profile to make this initialization easyer:
-
-     TTP=<dir>; . ${TTP}/libexec/bootstrap/sh_profile
-     TTP=<dir>; . ${TTP}/libexec/bootstrap/sh_node
-
-   or:
-
-     TTP=<dir>; source ${TTP}/libexec/bootstrap/csh_profile
-     TTP=<dir>; source ${TTP}/libexec/bootstrap/csh_node
-
-   Remote execution
-   ----------------
-   a) SSH key
-
-     When a command targets a service which is available on another
-     node, The Tools Project automatically ssh to the target node and
-     re-executes itself.
-
-     You have to install the required ssh public keys in all possible
-     target accounts/hosts in order these ssh's may be password-less.
-
-     We suggest defining a single ssh key, shared among all users/hosts,
-     dedicated to this usage.
-
-   b) Bootstrapping
-
-     While The Tools Project relies on an initialized user's environment,
-     ssh does not open a login shell when it executes a remote command
-     (i.e. does not initialize the user's environment).
-
-     The Tools Project provides a TTPROOT/libexec/bootstrap/sh_remote
-     script, which has to be adapted to the user's shell, and installed
-     in the user home directory with the '.ttp_remote' name.
+---
+P. Wieser
+- Last updated on 2025, Apr. 4th
