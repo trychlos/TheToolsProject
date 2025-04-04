@@ -189,6 +189,11 @@ sub DESTROY {
 	return;
 }
 
+### Global functions
+### Note for the developer: while a global function doesn't take any argument, it can be called both
+### as a class method 'TTP::Package->method()' or as a global function 'TTP::Package::method()',
+### the former being preferred (hence the writing inside of the 'Class methods' block).
+
 1;
 
 __END__

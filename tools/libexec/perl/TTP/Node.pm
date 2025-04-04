@@ -46,9 +46,7 @@ my $Const = {
 	finder => {
 		dirs => [
 			'etc/nodes',
-			'nodes',
-			'etc/machines',
-			'machines'
+			'etc/machines'
 		],
 		sufix => '.json'
 	}
@@ -209,7 +207,7 @@ sub dirs {
 	my ( $class ) = @_;
 	$class = ref( $class ) || $class;
 
-	my $dirs = $ep->site()->var( 'nodesDirs' ) || $ep->site()->var([ 'nodes', 'dirs' ]) || $class->finder()->{dirs};
+	my $dirs = $ep->site() ? $ep->site()->var( 'nodesDirs' ) || $ep->site()->var([ 'nodes', 'dirs' ]) || $class->finder()->{dirs} : $class->finder()->{dirs};
 
 	return $dirs;
 }
@@ -362,7 +360,7 @@ sub new {
 	# of which node are we talking about ?
 	my $node = $args->{node} || $self->_hostname();
 
-	# allowed nodesDirs are configured at site-level
+	# allowed nodesDirs can be configured at site-level
 	my $dirs = $class->dirs();
 	my $findable = {
 		dirs => [ $dirs, $node.$class->finder()->{sufix} ],

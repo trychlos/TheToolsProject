@@ -168,8 +168,8 @@ sub new {
 
 	# unable to find and load a site configuration file ? this is an unrecoverable error
 	if( !$loaded ){
-		msgErr( "Unable to find the site configuration file among [ ".( join( ', ', @{$class->finder()->{dirs}}))." ]" );
-		msgErr( "Please make sure that the file exists in one of the TTP_ROOTS paths" );
+		msgErr( "Unable to find an acceptable site configuration file among [ ".( join( ', ', @{$class->finder()->{dirs}}))." ]" );
+		msgErr( "Please make sure that the file exists in one of the TTP_ROOTS paths, is JSON-valid, and is not disabled" );
 		msgErr( "Exiting with code 1" );
 		exit( 1 );
 	}
@@ -179,7 +179,7 @@ sub new {
 	$self->{_disallowed} = $self->_checkTopKeys( $self->jsonData(), $Const->{keys } );
 	if( scalar @{$self->{_disallowed}} ){
 		msgErr( "Invalid key(s) found in site configuration file: [".join( ', ', @{$self->disallowed()} )."]" );
-		msgErr( "Remind that site own keys should be inside 'site' hierarchy while TTP global configuration must be inside 'toops' hierarchy" );
+		msgErr( "Remind that site own keys should be inside 'site' hierarchy while TTP global configuration must be inside 'TTP' hierarchy" );
 		msgErr( "Exiting with code 1" );
 		exit( 1 );
 	}

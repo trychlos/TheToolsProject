@@ -69,7 +69,7 @@ my $Const = {
 };
 
 # -------------------------------------------------------------------------------------------------
-# Returns the configured alertsDir (when alerts are sent by file), defaultin gto tempDir()
+# Returns the configured alertsDir (when alerts are sent by file), defaulting to tempDir()
 # (I):
 # - none
 # (O):
@@ -865,12 +865,11 @@ sub nodeRoot {
 # (I):
 # - none
 # (O):
-# - returns the 'nodesDirs' array of directories specified in the site configuration which are the
+# - returns the 'nodes.dirs' array of directories specified in the site configuration which are the
 #   subdirectories of TTP_ROOTS where we can find nodes JSON configuration files.
 
 sub nodesDirs {
-	my $result = $ep->site() ? TTP::Node->dirs() : undef;
-	return $result;
+	return TTP::Node->dirs();
 }
 
 # ------------------------------------------------------------------------------------------------
