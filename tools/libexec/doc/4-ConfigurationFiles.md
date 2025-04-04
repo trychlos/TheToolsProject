@@ -1,4 +1,4 @@
-# The Tools Project: a Tools System and Paradigm for IT Production
+# The Tools Project - Tools System and Working Paradigm for IT Production
 
 ## Summary
 
