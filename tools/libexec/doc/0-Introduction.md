@@ -104,3 +104,7 @@ This has two main benefits:
 - we can have a production-state __TTP__ code, besides of a development tree on a coder home directory, without having to duplicate all the unchanged stuff.
 
 Each time __TheToolsProject__ searches for a file, it searches it in the ordered list of TTPROOT's trees, the first being found winning. The order is determined when populating the FPATH variable, most often at bootstrap time.
+
+---
+P. Wieser
+- Last updated on 2025, Apr. 4th

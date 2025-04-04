@@ -135,3 +135,7 @@ Example:
      svn.sh: Subversion management
      ttp.sh: The Tools Project (TTP) management
 ```
+
+---
+P. Wieser
+- Last updated on 2025, Apr. 4th

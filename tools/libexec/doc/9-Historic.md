@@ -72,3 +72,7 @@ Configuration files have become JSON-based, and this v3 has been published in 20
 ## Merge sh and Perl
 
 In 2025, I still believe this architecture is usefull and bring more quality to IT teams. It is so time to merge these two flavors in a fourth version.
+
+---
+P. Wieser
+- Last updated on 2025, Apr. 4th

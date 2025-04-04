@@ -143,7 +143,7 @@ Two layers are usually defined:
 
 - the first one is just an empty copy of __TheToolsProject__, only containing site-specific configuration files
 
-- the last addressed tree usually contains the script themselves.
+- the last addressed tree usually contains the script themselve (this project installation).
 
 As many layers as needed can be installed, each one containing only the subset needed by this layer. They are resolved in the usual way: the first found wins.
 
