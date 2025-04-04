@@ -2,12 +2,12 @@
 
 ## ChangeLog
 
-### 4.0.0-rc.0
+### 4.0.0
 
-    Release date: 
+    Release date: 2025- 4- 4
 
-    - 
+    - Initial v4 release
 
 ---
 P. Wieser
-- Last updated on 2025, March 25th
+- Last updated on 2025, Apr. 4th
