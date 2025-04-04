@@ -7,8 +7,8 @@
 
 package TTP::OvhApi;
 
-use utf8;
 use strict;
+use utf8;
 use warnings;
 
 use constant VERSION => '1.2';

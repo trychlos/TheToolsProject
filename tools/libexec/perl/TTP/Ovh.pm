@@ -20,8 +20,8 @@
 
 package TTP::Ovh;
 
-use utf8;
 use strict;
+use utf8;
 use warnings;
 
 use Data::Dumper;

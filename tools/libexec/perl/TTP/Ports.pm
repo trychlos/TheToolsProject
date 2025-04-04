@@ -5,6 +5,7 @@
 package TTP::Ports;
 
 use strict;
+use utf8;
 use warnings;
 
 use Config;

@@ -2,8 +2,8 @@
 
 package TTP::Constants;
 
-use utf8;
 use strict;
+use utf8;
 use warnings;
 
 use Sub::Exporter;

@@ -21,8 +21,8 @@
 # see <http://www.gnu.org/licenses/>.
 
 use strict;
-use warnings;
 use utf8;
+use warnings;
 
 use TTP;
 

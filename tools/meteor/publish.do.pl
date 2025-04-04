@@ -29,6 +29,10 @@
 # along with The Tools Project; see the file COPYING. If not,
 # see <http://www.gnu.org/licenses/>.
 
+use strict;
+use utf8;
+use warnings;
+
 use TTP::MQTT;
 
 my $defaults = {
