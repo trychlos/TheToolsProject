@@ -47,7 +47,7 @@ use TTP::Message qw( :all );
 
 my $Const = {
 	# reserved words: the commands must be named outside of this array
-	#  because they are current or historic folders of the Toops installation tree
+	#  because they are current or historic folders of the TTP installation tree
 	reservedWords => [
 		'bin',
 		'libexec',
@@ -101,7 +101,7 @@ sub _getVerbs {
 
 # -------------------------------------------------------------------------------------------------
 # command initialization
-# (I]:
+# (I):
 # - none
 # (O):
 # - this object
@@ -127,7 +127,7 @@ sub _init {
 # - a one-liner from the command itself
 # - and the one-liner help of each available verb
 # Verbs are displayed as an ASCII-sorted (i.e. in [0-9A-Za-z] order) list
-# (I]:
+# (I):
 # - none
 # (O):
 # - this object
@@ -168,7 +168,6 @@ sub commandHelp {
 sub run {
 	my ( $self ) = @_;
 
-	#print STDERR Dumper( $self );
 	try {
 		# first argument is supposed to be the verb
 		my @command_args = @ARGV;
@@ -215,7 +214,7 @@ sub run {
 # -------------------------------------------------------------------------------------------------
 # Getter
 # Returns the verb name
-# (I]:
+# (I):
 # - none
 # (O):
 # - the verb, e.g. 'vars'
@@ -287,7 +286,7 @@ sub finder {
 
 # -------------------------------------------------------------------------------------------------
 # Constructor
-# (I]:
+# (I):
 # - the TTP EP entry point
 # (O):
 # - this object
@@ -306,7 +305,7 @@ sub new {
 
 # -------------------------------------------------------------------------------------------------
 # Destructor
-# (I]:
+# (I):
 # - instance
 # (O):
 

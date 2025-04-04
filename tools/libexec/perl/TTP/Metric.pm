@@ -99,7 +99,7 @@ my $Const = {
 
 # -------------------------------------------------------------------------------------------------
 # Getter/Setter
-# (I]:
+# (I):
 # - an optional one-liner description
 # (O):
 # - the current description
@@ -115,7 +115,7 @@ sub help {
 # -------------------------------------------------------------------------------------------------
 # Getter/Setter
 # Check that each label name and value matches the relevant regular expression
-# (I]:
+# (I):
 # - an optional array ref of 'name=value' labels
 # (O):
 # - the current content of the labels array ref
@@ -148,7 +148,7 @@ sub labels {
 # -------------------------------------------------------------------------------------------------
 # Getter/Setter
 # Check that the name matches the relevant regular expression
-# (I]:
+# (I):
 # - an optional name
 # (O):
 # - the current name
@@ -173,7 +173,7 @@ sub name {
 
 # -------------------------------------------------------------------------------------------------
 # Properties setter
-# (I]:
+# (I):
 # - an arguments hash with following keys:
 #   > help
 #   > type
@@ -199,7 +199,7 @@ sub props {
 
 # -------------------------------------------------------------------------------------------------
 # Publish the metric to the specified media
-# (I]:
+# (I):
 # - an arguments hash ref with following keys:
 #   > mqtt, whether to publish to (MQTT-based) messaging system, defaulting to false
 #   > mqttPrefix, a prefix to the metric name on MQTT publication
@@ -424,7 +424,7 @@ sub _text_publish {
 # not specified at the very first time the value is sent, and the value type can never be modified.
 # So better to always provide it.
 # Doesn't check here if the value is known as messaging (MQTT) doesn't care
-# (I]:
+# (I):
 # - an optional type
 # (O):
 # - the current type
@@ -465,7 +465,7 @@ sub type_check {
 # Getter/Setter
 # Doesn't check here if the value is numeric or not, as messaging (MQTT) based telemetry accepts
 # both numeric and string values.
-# (I]:
+# (I):
 # - an optional value
 # (O):
 # - the current value
@@ -490,7 +490,7 @@ sub value {
 
 # -------------------------------------------------------------------------------------------------
 # Constructor
-# (I]:
+# (I):
 # - the TTP EP entry point
 # - an optional arguments hash with following keys:
 #   > help
@@ -524,7 +524,7 @@ sub new {
 
 # -------------------------------------------------------------------------------------------------
 # Destructor
-# (I]:
+# (I):
 # - instance
 # (O):
 

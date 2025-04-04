@@ -1,4 +1,4 @@
-# TheToolsProject - a work paradigm for IT productions
+# TheToolsProject - a Tools System and Paradigm for IT Production
 
 ## Bootstrapping
 

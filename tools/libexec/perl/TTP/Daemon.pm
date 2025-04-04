@@ -1163,7 +1163,7 @@ sub init {
 # Constructor
 # We never abort if we cannot find or load the daemon configuration file. We rely instead on the
 # 'jsonable-loaded' flag that the caller MUST test.
-# (I]:
+# (I):
 # - the TTP EP entry point
 # - an optional argument object with following keys:
 #   > path: the absolute path to the JSON configuration file
@@ -1192,7 +1192,7 @@ sub new {
 
 # -------------------------------------------------------------------------------------------------
 # Destructor
-# (I]:
+# (I):
 # - instance
 # (O):
 

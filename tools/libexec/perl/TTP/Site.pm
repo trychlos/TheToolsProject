@@ -96,7 +96,7 @@ sub _checkTopKeys {
 
 # -------------------------------------------------------------------------------------------------
 # Returns the disallowed keys found in the site configuration file
-# (I]:
+# (I):
 # - none
 # (O):
 # - disallowed keys as an array ref, maybe empty
@@ -127,7 +127,7 @@ sub var {
 
 # -------------------------------------------------------------------------------------------------
 # Returns the (hardcoded) site specifications
-# (I]:
+# (I):
 # - none
 # (O):
 # - Returns the Const->{finder} specification as an array ref
@@ -139,7 +139,7 @@ sub finder {
 # -------------------------------------------------------------------------------------------------
 # Constructor
 # May abort and exit immediately with code=1 if site configuration not found or with unknown keys.
-# (I]:
+# (I):
 # - the TTP EP entry point
 # (O):
 # - this object
@@ -189,7 +189,7 @@ sub new {
 
 # -------------------------------------------------------------------------------------------------
 # Destructor
-# (I]:
+# (I):
 # - instance
 # (O):
 

@@ -41,7 +41,7 @@ use TTP::Constants qw( :all );
 # A placeholder so that roles can come after or before this function which is called at instanciation time
 # 'ttp' is already set, so that the roles not only get the 'ttp' in the arguments list, but can also
 # call $self->ep() 
-# (I]:
+# (I):
 # - the TTP EntryPoint ref
 # (O):
 # - this same object
@@ -55,7 +55,7 @@ sub _newBase {
 
 # -------------------------------------------------------------------------------------------------
 # Getter
-# (I]:
+# (I):
 # - none 
 # (O):
 # - the TheToolsProject EntryPoint ref recorded at instanciation time
@@ -69,7 +69,7 @@ sub ep {
 
 # -------------------------------------------------------------------------------------------------
 # Constructor
-# (I]:
+# (I):
 # - ttp: the current TheToolsProject EntryPoint ref
 # (O):
 # - this object
@@ -97,7 +97,7 @@ sub new {
 
 # -------------------------------------------------------------------------------------------------
 # Destructor
-# (I]:
+# (I):
 # - instance
 # (O):
 

@@ -312,7 +312,7 @@ sub toPackage {
 
 # -------------------------------------------------------------------------------------------------
 # Constructor
-# (I]:
+# (I):
 # - the TTP EP entry point
 # - an argument object with following keys:
 #   > instance: the instance name
@@ -348,7 +348,7 @@ sub new {
 
 # -------------------------------------------------------------------------------------------------
 # Destructor
-# (I]:
+# (I):
 # - instance
 # (O):
 
