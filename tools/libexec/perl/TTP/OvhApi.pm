@@ -1,4 +1,4 @@
-# Copyright (@) 2023-2024 PWI Consulting
+# Copyright (@) 2023-2025 PWI Consulting
 #
 # Copied from https://github.com/ovh/perl-ovh
 # Because installing these two Perl packages involves 'make' command, which doesn't exist on Windows.

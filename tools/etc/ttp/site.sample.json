@@ -229,7 +229,7 @@
 			}
 		},
 		"MQTTGateway": {
-			"broker": "10.122.1.15"
+			"broker": "10.11.12.13"
 		},
 
 		"nodes": {
@@ -240,27 +240,11 @@
 			"hostname": {
 				"short": false
 			},
-			"logicals_comments": [
-				"The 'regexp' can be specified either as an array or regexps or as a string.",
-				"Each specified regexp should contain a group to isolate the candidate node name from path specifications"
-			],
 			"logicals": {
 				"regexp": [
-					""
 				]
 			}
 		},
-
-		"nodesDirs_comments": [
-			"The directories where are written the nodes JSON configuration files.",
-			"We can here define several subdirectories of TTP_ROOTS tree, which let us have distinct nodes in distinct directories (though we ourselves advise against this type of setup).",
-			"This is obviously not overridable on a per-node basis (due to the well-known chicken and eggs problem).",
-			"Below the hardcoded default values"
-		],
-		"nodesDirs": [
-			"etc/nodes",
-			"etc/machines"
-		],
 
 		"nodeRoot_comments": [
 			"Historical reminder: in the logical machine paradigm, the root tree is located under the dynamically mounted filesystem, and this is one of its main prooperties.",
