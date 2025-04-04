@@ -1,0 +1,23 @@
+{
+	"comments": [
+		"Executes the node-configured commands every <runInterval> time"
+	],
+
+	"execPath": "[eval:File::Spec->catfile( TTP::var([ 'site', 'commandsDir' ]), 'node-monitor-daemon.pl' )]",
+	"listeningPort": 14397,
+	"textingInterval": -1,
+	
+	"runInterval_comments": [
+		"the monitoring period in ms, the time between each execution start, defaulting to 5mn",
+		"e.g.: 10mn = 10*60*1000 = 600000 ms"
+	],
+	"runInterval": 600000,
+	
+	"keys_comments": [
+		"the keys to be searched for in the running node JSON, defaulting to status/monitor"
+	],
+	"keys": [
+		"status",
+		"monitor"
+	]
+}

@@ -1,0 +1,36 @@
+{
+	"comments": [
+		"Subscribes to below topics, trigerring an action on each received message"
+	],
+
+	"execPath0": "[eval:File::Spec->catfile( TTP::var([ 'site', 'commandsDir' ]), 'mqtt-daemon.pl' )]",
+	"execPath": "[eval:File::Spec->catfile( 'C:\\INLINGUA\\dev\\scripts\\Site\\Commands', 'mqtt-daemon.pl' )]",
+	"listeningPort": 14390,
+	"textingInterval": -1,
+
+	"topics_comments": [
+		"The MQTT daemon always suscribes to the '#' and '$SYS/#' wildcards.",
+		"The below configuration only says what to do with some topics we want monitor",
+		"Each received topic is matched against each (key) regular expression. When matched, configuration applies as follow:",
+		"- toLog: whether to log the topic and its payload, defaulting to false",
+		"- toStdout: whether to print the topic and its payload, defaulting to false",
+		"- command: when set, then the daemon will answer that command with the corresponding topics and their last known payload",
+		"Note that regular expressions provided as keys of 'topics' hash may overlap each other: they will all be examined on each receive MQTT message.",
+		"...",
+		"...",
+		""
+	],
+	"topics": {
+		"^(?!\\$SYS)": {
+			"comment": "match all which is not $SYS and let logs",
+			"toLog": true
+		},
+		"^[^/]+/executionReport/dbms\\.pl/backup": {
+			"comment": "match 'dbms.pl backup' execution reports, no need to log them again"
+		},
+		"^\\$SYS/": {
+			"comment": "match $SYS broker internal messages - do not log them (they are too numerous), but let a client request them",
+			"command": "SYS"
+		}
+	}
+}
