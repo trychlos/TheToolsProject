@@ -33,8 +33,8 @@
 package TTP::IJSONable;
 our $VERSION = '1.00';
 
-use utf8;
 use strict;
+use utf8;
 use warnings;
 
 use Carp;

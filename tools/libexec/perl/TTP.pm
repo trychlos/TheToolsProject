@@ -19,8 +19,8 @@
 package TTP;
 
 use strict;
-use warnings;
 use utf8;
+use warnings;
 
 use Config;
 use Data::Dumper;

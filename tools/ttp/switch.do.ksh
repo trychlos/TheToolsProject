@@ -50,6 +50,10 @@
 #                even if named 'switch.do.ksh', this script is ran from within a perl runtime environment embedded into a shell execution
 #                this is so actually a *perl* code
 
+use strict;
+use utf8;
+use warnings;
+
 use TTP::Constants qw( :all );
 use TTP::Message qw( :all );
 use TTP::Node;

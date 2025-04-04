@@ -30,8 +30,8 @@
 # along with The Tools Project; see the file COPYING. If not,
 # see <http://www.gnu.org/licenses/>.
 
-use utf8;
 use strict;
+use utf8;
 use warnings;
 
 use Data::Dumper;
