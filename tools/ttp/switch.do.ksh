@@ -33,6 +33,9 @@
 #   When the user logs in, the first available execution node is setup.
 #   This verb let the user select another node in the same host.
 #
+# NB:
+#   This verb is executed from sh/switch which expects the node to be printed on stdout.
+#
 # pwi 1998-10-21 new production architecture definition - creation
 # pwi 1999- 2-17 set LD_LIBRARY_PATH is GEDAA is set
 # pwi 2001-10-17 remove GEDTOOL variable
@@ -43,46 +46,88 @@
 # pwi 2006-10-27 the tools become The Tools Project, released under GPL
 # pwi 2017- 6-21 publish the release at last
 # pwi 2025- 2- 7 merge shell-based and Perl-based flavors to make TheToolsProject available both on shell-based and cmd-based OSes
+# pwi 2025- 4- 3 starting with v4, VERBOSE environment variable is replaced with TTP_DEBUG
+#                even if named 'switch.do.ksh', this script is ran from within a perl runtime environment embedded into a shell execution
+#                this is so actually a *perl* code
 
-# set the default values (all defaults below are actually TTP defaults)
-opt_help_def="no"
-opt_colored_def="no"
-opt_dummy_def="no"
-opt_verbose_def="no"
-opt_default_def="no"
-opt_node_def=""
+use TTP::Constants qw( :all );
+use TTP::Message qw( :all );
+use TTP::Node;
+
+my $defaults = {
+	help => 'no',
+	colored => 'no',
+	dummy => 'no',
+	verbose => 'no',
+	default => 'no',
+	node => ''
+};
+
+my $opt_default = false;
+my $opt_node = '';
+
+# -------------------------------------------------------------------------------------------------
+# receive here all found files in the searched directories
+# According to https://perldoc.perl.org/File::Find
+#   $File::Find::dir is the current directory name,
+#   $_ is the current filename within that directory
+#   $File::Find::name is the complete pathname to the file.
+
+sub doFindNode {
+	if( $opt_default ){
+		$opt_node = TTP::Node->findCandidate();
+		if( !$opt_node ){
+			msgErr( "unable to find an available execution node on this host" );
+		}
+	} else {
+		my $nodes = TTP::Node->enum();
+		if( !grep( /$opt_node/, @{$nodes} )){
+			msgErr( "'${opt_node}': execution node not found or not available on this host" );
+			$opt_node = undef;
+		}
+	}
+}
 
 # =================================================================================================
 # MAIN
 # =================================================================================================
 
-optGetOptions "$@"
+if( !GetOptions(
+	"help!"				=> \$ep->{run}{help},
+	"colored!"			=> \$ep->{run}{colored},
+	"dummy!"			=> \$ep->{run}{dummy},
+	"verbose!"			=> \$ep->{run}{verbose},
+	"default!"			=> \$opt_default,
+	"node=s"			=> \$opt_node )){
 
-# check arguments, making sure we either have chosen the 'default' option or have named a target node
-if [ "${opt_default}" != "yes" ]; then
-	if [ -z "${opt_node}" ]; then
-		msgErr "one of '--default' or '--node=<name>' option must be specified"
-	fi
-fi
-if [ ${ttp_errs} -gt 0 ]; then
-	return 1
-fi
+		msgOut( "try '".$running->command()." ".$running->verb()." --help' to get full usage syntax" );
+		TTP::exit( 1 );
+}
 
-# this verb is executed from bootstrap/sh_switch script which expects the node to be printed on stdout
-if [ "${opt_default}" = "yes" ]; then
-	_node="$(bspNodeFindCandidate)"
-	if [ -z "${_node}" ]; then
-		msgErr "no available execution node on this host"
-		return 1
-	fi
+if( $running->help()){
+	$running->verbHelp( $defaults );
+	TTP::exit();
+}
 
-else
-	_node="$(bspNodeEnum | grep -w "${opt_node}" 2>/dev/null)"
-	if [ -z "${_node}" ]; then
-		msgErr "'${opt_node}': execution node not found or not available on this host"
-		return 1
-	fi
-fi
+msgVerbose( "found colored='".( $running->colored() ? 'true':'false' )."'" );
+msgVerbose( "found dummy='".( $running->dummy() ? 'true':'false' )."'" );
+msgVerbose( "found verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "found default='".( $opt_default ? 'true':'false' )."'" );
+msgVerbose( "found node='$opt_node'" );
 
-echo "success: ${_node}"
-TTP_NODE="${_node}"
+# must have one of --default or --node
+if( !$opt_default && !$opt_node ){
+	msgErr( "one of '--default' and '--node=<node>' options must be specified" );
+}
+if( $opt_default && $opt_node ){
+	msgErr( "only one of '--default' and '--node=<node>' options must be specified" );
+}
+
+if( !TTP::errs()){
+	doFindNode();
+}
+if( !TTP::errs()){
+	print "success: ${opt_node}".EOL;
+}
+
+TTP::exit();

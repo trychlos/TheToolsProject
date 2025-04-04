@@ -38,6 +38,7 @@ with 'TTP::IAcceptable', 'TTP::IEnableable', 'TTP::IFindable', 'TTP::IJSONable';
 
 use TTP::Constants qw( :all );
 use TTP::Message qw( :all );
+use TTP::Ports;
 
 my $Const = {
 	# hardcoded subpaths to find the <node>.json files
@@ -56,7 +57,9 @@ my $Const = {
 ### Private methods
 
 # -------------------------------------------------------------------------------------------------
-# returns the hostname
+# Returns the hostname
+# Default is to return the hostname as provided by the operating system.
+# The site may specify only a short hostname via the 'hostname.short=true' value
 # (I):
 # - none
 # (O):
@@ -68,6 +71,12 @@ sub _hostname {
 	# not a method - just a function
 	my $name = hostname;
 	$name = uc $name if $Config{osname} eq 'MSWin32';
+	my $short = $ep->site()->var([ 'nodes', 'hostname', 'short' ]);
+	if( $short ){
+		my @a = split( /\./, $name );
+		$name = $a[0];
+	}
+	$ENV{TTP_DEBUG} && print STDERR __PACKAGE__."::_hostname() returns '$name'".EOL;
 	return $name;
 }
 
@@ -200,9 +209,124 @@ sub dirs {
 	my ( $class ) = @_;
 	$class = ref( $class ) || $class;
 
-	my $dirs = $ep->var( 'nodesDirs' ) || $class->finder()->{dirs};
+	my $dirs = $ep->site()->var( 'nodesDirs' ) || $ep->site()->var([ 'nodes', 'dirs' ]) || $class->finder()->{dirs};
 
 	return $dirs;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns the list of available nodes
+# (I):
+# - none
+# (O):
+# - the list of available nodes as an array ref
+
+sub enum {
+	my ( $class ) = @_;
+	$class = ref( $class ) || $class;
+	$ENV{TTP_DEBUG} && print STDERR __PACKAGE__."::enum()".EOL;
+
+	my $availables = [];
+
+	# start with available logical machines if implemented in this site
+	my $logicalRe = $ep->site()->var([ 'nodes', 'logicals', 'regexp' ]);
+	my $ref = ref( $logicalRe );
+	$ENV{TTP_DEBUG} && print STDERR __PACKAGE__."::enum() logicalRe='".( $logicalRe || '' )."' ref='".( $ref ? $ref : '(undef)' )."'".EOL;
+	if( $logicalRe ){
+		my $mounteds = TTP::Ports::rootMountPoints();
+		$ENV{TTP_DEBUG} && print STDERR __PACKAGE__."::enum() mounteds ".Dumper( $mounteds );
+		foreach my $mount( @${mounteds} ){
+			my $candidate = $class->_enumTestForRe( $mount, $logicalRe, $ref );
+			if( $candidate ){
+				$ENV{TTP_DEBUG} && print STDERR __PACKAGE__."::enum() candidate '".$candidate."'".EOL;
+				my $node = TTP::Node->new( $ep, { node => $candidate, abortOnError => false });
+				if( $node ){
+					push( @{$availables}, $node->name());
+				}
+			}
+		}
+	}
+
+	# then try this host
+	my $node = TTP::Node->new( $ep, { abortOnError => false });
+	if( $node ){
+		push( @{$availables}, $node->name());
+	}
+
+	$ENV{TTP_DEBUG} && print STDERR __PACKAGE__."::enum() returning [ ".( join( ', ', @${availables} ))." ]".EOL;
+	return $availables;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Test a mount point against the regexp or the list of regexps
+# (I):
+# - mount point
+# - the regexp or the list of regexps
+# - the ref of the logicalRe variable
+# (O):
+# - either the candidate name if a match is found, or a falsy value
+
+sub _enumTestForRe {
+	my ( $class, $mount, $res, $ref ) = @_;
+	$class = ref( $class ) || $class;
+	$ENV{TTP_DEBUG} && print STDERR __PACKAGE__."::_enumTestForRe() mount='".$mount."' res='".( $res || '' )."' ref='".( $ref ? $ref : '(undef)' )."'".EOL;
+
+	my $candidate = undef;
+
+	if( $ref eq 'ARRAY' ){
+		foreach my $re ( @{$res} ){
+			$candidate = $class->_enumTestSingle( $mount, $re );
+			if( $candidate ){
+				return $candidate;
+			}
+		}
+	} else {
+		return $class->_enumTestSingle( $mount, $res );
+	}
+
+	return undef;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Test a mount point against one single regexp
+# NB:
+# 	The provided RE must not only match the desired mount point, but also should be able to return
+# 	the node name as its first captured group
+# (I):
+# - mount point
+# - a regexp
+# (O):
+# - either the candidate name if a match is found, or a falsy value
+
+sub _enumTestSingle {
+	my ( $class, $mount, $re ) = @_;
+	$class = ref( $class ) || $class;
+	$ENV{TTP_DEBUG} && print STDERR __PACKAGE__."::_enumTestSingle() mount='".$mount."' re='".( $re || '' )."'".EOL;
+
+	my $candidate = undef;
+
+	if( $mount =~ m/$re/ ){
+		$candidate = $1;
+	}
+
+	return $candidate;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns the first available node candidate on this host
+# (I):
+# - none
+# (O):
+# - the first available node candidate on this host
+
+sub findCandidate {
+	my ( $class ) = @_;
+	$class = ref( $class ) || $class;
+	$ENV{TTP_DEBUG} && print STDERR __PACKAGE__."::findCandidate()".EOL;
+
+	my $nodes = $class->enum();
+
+	return $nodes && scalar( $nodes ) ? $nodes->[0] : undef;
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -233,9 +357,10 @@ sub new {
 	$args //= {};
 	my $self = $class->SUPER::new( $ep, $args );
 	bless $self, $class;
+	$ENV{TTP_DEBUG} && print STDERR __PACKAGE__."::new() candidate='".( $args->{node} || '' )."' abortOnError=".( $args->{abortOnError} ? 'true' : 'false' ).EOL;
 
 	# of which node are we talking about ?
-	my $node = $args->{node} || _hostname();
+	my $node = $args->{node} || $self->_hostname();
 
 	# allowed nodesDirs are configured at site-level
 	my $dirs = $class->dirs();
@@ -265,6 +390,7 @@ sub new {
 			exit( 1 );
 		} else {
 			$self = undef;
+			$ENV{TTP_DEBUG} && print STDERR __PACKAGE__."::new() an invalid JSON configuration is detected".EOL;
 		}
 	}
 

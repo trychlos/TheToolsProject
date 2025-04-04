@@ -192,7 +192,6 @@ sub run {
 				# + have direct access to 'ttp' entry point
 				local @ARGV = @command_args;
 				our $running = $ep->runner();
-
 				unless( defined do $self->{_verb}{path} ){
 					msgErr( "do $self->{_verb}{path}: ".( $! || $@ ));
 				}

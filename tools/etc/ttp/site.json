@@ -24,5 +24,16 @@
 	},
 
 	"TTP": {
+		"nodes": {
+			"hostname": {
+				"short": true
+			},
+			"logicals": {
+				"regexp": [
+					"^/(ne.*)$",
+					"^/(bo.*)$"
+				]
+			}
+		}
 	}
 }

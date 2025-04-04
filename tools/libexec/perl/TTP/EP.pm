@@ -60,17 +60,17 @@ sub bootstrap {
 	# when first evaluating the site json, disable warnings so that we do not get flooded with
 	# 'use of uninitialized value' message when evaluating the json (because there is no host yet)
 	my $site = TTP::Site->new( $self );
-	print __PACKAGE__."::bootstrap() site instanciated".EOL if $bootstrapDebugInstanciation;
+	print STDERR __PACKAGE__."::bootstrap() site instanciated".EOL if $bootstrapDebugInstanciation || $ENV{TTP_DEBUG};
 	$self->{_site} = $site;
 	$site->evaluate({ warnOnUninitialized => false });
-	print __PACKAGE__."::bootstrap() site set and evaluated".EOL if $bootstrapDebugEvaluation;
+	print STDERR __PACKAGE__."::bootstrap() site set and evaluated".EOL if $bootstrapDebugEvaluation || $ENV{TTP_DEBUG};
 
 	# identify current host (remind that there is no logical node in this Perl version) and load its configuration
 	my $node = TTP::Node->new( $self );
-	print __PACKAGE__."::bootstrap() node instanciated".EOL if $bootstrapDebugInstanciation;
+	print STDERR __PACKAGE__."::bootstrap() node instanciated".EOL if $bootstrapDebugInstanciation || $ENV{TTP_DEBUG};
 	$self->{_node} = $node;
 	$node->evaluate();
-	print __PACKAGE__."::bootstrap() node set and evaluated".EOL if $bootstrapDebugEvaluation;
+	print STDERR __PACKAGE__."::bootstrap() node set and evaluated".EOL if $bootstrapDebugEvaluation || $ENV{TTP_DEBUG};
 
 	# reevaluate the site when the node is set
 	$site->evaluate();

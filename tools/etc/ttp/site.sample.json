@@ -232,6 +232,25 @@
 			"broker": "10.122.1.15"
 		},
 
+		"nodes": {
+			"dirs": [
+				"etc/nodes",
+				"etc/machines"
+			],
+			"hostname": {
+				"short": false
+			},
+			"logicals_comments": [
+				"The 'regexp' can be specified either as an array or regexps or as a string.",
+				"Each specified regexp should contain a group to isolate the candidate node name from path specifications"
+			],
+			"logicals": {
+				"regexp": [
+					""
+				]
+			}
+		},
+
 		"nodesDirs_comments": [
 			"The directories where are written the nodes JSON configuration files.",
 			"We can here define several subdirectories of TTP_ROOTS tree, which let us have distinct nodes in distinct directories (though we ourselves advise against this type of setup).",
