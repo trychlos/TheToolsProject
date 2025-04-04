@@ -1,4 +1,4 @@
-# TheToolsProject - a work paradigm for IT productions
+# The Tools Project: a Tools System and Paradigm for IT Production
 
 ## Summary
 
@@ -7,6 +7,8 @@
 [How does it work ?](#how-does-it-work-)
 
 [Installing](#installing-thetoolsproject)
+
+[A word of the history](#a-word-of-the-history)
 
 ## What is it ?
 
@@ -28,7 +30,7 @@ __TheToolsProject__ is an organized set of commands and verbs whose aims are:
 
 - provide logs: who has done what and when ?
 
-    Even if the stdout console output can be highly configured, all informations, results, warnings, errors and logged and kept. No information is neither lost (though can be archived).
+    Even if the stdout console output can be highly configured, all informations, results, warnings, errors are logged and kept. No information is never lost (though can be archived).
 
 - manage several services spanned on several nodes, for several environments.
 
@@ -38,9 +40,7 @@ __TheToolsProject__ is an organized set of commands and verbs whose aims are:
 
 But, most of all, __TheToolsProject__ materializes a work paradigm where all environments managed by our IT team use the exact same version of scripts and configuration files.
 
-No more install or manage scripts which must slightly be updated when moving from an environment to another and this implies a much better quality of these moves. Instead of this painful work, just one configuration file which contains all parameters required for all managed environments.
-
-No more scripts which must be modified for targeting one SGBD or another depending of the current environment. Instead of that, just one configuration file which contains all parameters required for all managed environments.
+No more install or manage scripts which must slightly be updated when moving from an environment to another! This implies a much better quality of these moves. Instead of this painful work, just one configuration file which contains all parameters required for all managed environments.
 
 As a plus, __TheToolsProject__ brings to the daily usage some comfortable enhancements:
 
@@ -48,7 +48,7 @@ As a plus, __TheToolsProject__ brings to the daily usage some comfortable enhanc
 
 - commands and their verbs are well identified, and safe to be discovered; they are self-explanatory; this let the IT team safely play with and learn every command;
 
-- executions are logged, temporary files are kept; I repeat: all execution of any __TTP__ command are logged, all temporary files are kept; this is at last the dream of the Security Officer!
+- executions are logged, temporary files are kept; I repeat: all executions of any __TTP__ command are logged, all temporary files are kept; this is at last the dream of the Security Officer!
 
 - commands and verbs build a standardized API for the developers, thus easying the transfert to the production.
 
@@ -64,7 +64,11 @@ Note that __TheToolsProject__ is before all a console interface. All interaction
 
 At the very beginning, the only command you have to remember is:
 
-`$ ttp.pl` or `$ ttp.sh`
+`$ ttp.pl`
+
+or
+
+`$ ttp.sh`
 
 depending of the exact flavor you are running.
 
@@ -179,7 +183,7 @@ NB 1. Yes, lot of tools use nowadays this same paradigm of a command, a verb and
 
 ## Installing TheToolsProject
 
-__TheToolsProject__ is all contained into a single directory tree which contains not only all __TTP__ code, scripts, functions and so on, but is also released with simple configuration files.
+__TheToolsProject__ is all contained into a single directory tree which contains not only all __TTP__ code, scripts, functions and so on, but is also released with simple configuration files along with the documentation.
 
 Two layers are usually defined:
 
@@ -189,7 +193,7 @@ Two layers are usually defined:
 
 As many layers as needed can be installed, each one containing only the subset needed by this layer. They are resolved in the usual way: the first found wins.
 
-See all details in [Install](./src/libexec/doc/2-Install.md).
+See all details in [Install](./tools/libexec/doc/2-Install.md).
 
 ## A word of the history
 
@@ -251,3 +255,13 @@ Adressing a cmd-based (Windows-like) OS with this shell-based code, though possi
 Configuration files have become JSON-based, and this v3 has been published in 2023-2024.
 
 At this time, the Perl version has lost the logical machine notion, and only looks at nodes which are mainly execution machines. Due to the general use of virtualizers, logicals machines and their important drawkbacks are no more used (and this is fine!).
+
+## Have the best of the two worlds
+
+This v4 version merges these two worlds, and let us at last accepts both sh-based and perl-based commands and verbs.
+
+Under the cover, the Perl version is used almost everywhere, but the Shell version let us keep the logical machine paradigm.
+
+---
+P. Wieser
+- Last updated on 2025, Apr. 4th

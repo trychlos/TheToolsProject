@@ -165,7 +165,7 @@ sub _evaluatePrint {
 
 # -------------------------------------------------------------------------------------------------
 # Evaluates the raw data in this Perl context
-# (I]:
+# (I):
 # - an optional options hash with following keys:
 #   > warnOnUninitialized, defaulting to true
 # (O):
@@ -183,7 +183,7 @@ sub evaluate {
 
 # -------------------------------------------------------------------------------------------------
 # Returns the evaluated data
-# (I]:
+# (I):
 # - none
 # (O):
 # - the evaluated data
@@ -198,7 +198,7 @@ sub jsonData {
 # Load the specified JSON configuration file
 # This method is expected to be called at instanciation time.
 #
-# (I]:
+# (I):
 # - an argument object with following keys:
 
 #	> path: the path as a string
@@ -278,7 +278,7 @@ sub jsonLoad {
 # -------------------------------------------------------------------------------------------------
 # Getter/Setter
 # Says if the JSON raw data has been successfully loaded
-# (I]:
+# (I):
 # - optional boolean to set the 'loaded' status
 # (O):
 # - true|false

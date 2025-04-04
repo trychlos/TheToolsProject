@@ -18,7 +18,6 @@
 
 package TTP;
 
-use utf8;
 use strict;
 use warnings;
 use utf8;

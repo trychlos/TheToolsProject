@@ -241,7 +241,7 @@ sub enumerate {
 
 # -------------------------------------------------------------------------------------------------
 # Returns the list of dirs where nodes are to be found
-# (I]:
+# (I):
 # - none
 # (O):
 # - Returns the Const->{finder} specification as an array ref
@@ -254,7 +254,7 @@ sub finder {
 
 # -------------------------------------------------------------------------------------------------
 # Constructor
-# (I]:
+# (I):
 # - the TTP EP entry point ref
 # - an arguments hash with following keys:
 #   > service: the service name to be initialized
@@ -301,7 +301,7 @@ sub new {
 
 # -------------------------------------------------------------------------------------------------
 # Destructor
-# (I]:
+# (I):
 # - instance
 # (O):
 
@@ -315,7 +315,7 @@ sub DESTROY {
 
 # -------------------------------------------------------------------------------------------------
 # List the services defined a a given host
-# (I]:
+# (I):
 # - an optional node name, defaulting to the current execution node
 # (O):
 # - a ref to an array of the defined services

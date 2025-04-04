@@ -329,7 +329,7 @@ sub findCandidate {
 
 # -------------------------------------------------------------------------------------------------
 # Returns the list of dirs where nodes are to be found
-# (I]:
+# (I):
 # - none
 # (O):
 # - Returns the Const->{finder} specification as an array ref
@@ -340,7 +340,7 @@ sub finder {
 
 # -------------------------------------------------------------------------------------------------
 # Constructor
-# (I]:
+# (I):
 # - the TTP EP entry point
 # - an argument object with following keys:
 #   > node: the name of the targeted node, defaulting to current host
@@ -397,7 +397,7 @@ sub new {
 
 # -------------------------------------------------------------------------------------------------
 # Destructor
-# (I]:
+# (I):
 # - instance
 # (O):
 

@@ -41,7 +41,7 @@ requires qw( _newBase );
 # -------------------------------------------------------------------------------------------------
 # Returns the list of files which match the given specification by walking through TTP_ROOTS
 # Honors TTP::IAcceptable role for each candidate.
-# (I]:
+# (I):
 # - an argument object with following keys:
 #   > dirs: the specifications to be searched for in TTP_ROOTS tree
 #     as a scalar, or as a ref to an array of items which have to be concatenated,

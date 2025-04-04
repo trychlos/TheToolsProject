@@ -47,7 +47,7 @@ requires qw( _newBase );
 # We call successively each test function, AND-ing each result to get the final result
 # (of course stopping as soon as we get a false result).
 # Functions prototype is fn( $obj, $opts ): boolean
-# (I]:
+# (I):
 # - an arguments hash with following keys:
 #   > accept: a code ref or an array of code refs, to be successively executed with passed-in object
 #     and options; the result of each function is AND-ed to get the final result
@@ -109,7 +109,7 @@ sub _accept_run {
 
 # -------------------------------------------------------------------------------------------------
 # Getter/Setter
-# (I]:
+# (I):
 # - as a getter:
 #   > none
 # - as a setter

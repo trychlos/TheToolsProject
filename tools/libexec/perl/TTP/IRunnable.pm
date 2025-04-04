@@ -46,7 +46,7 @@ requires qw( _newBase );
 # -------------------------------------------------------------------------------------------------
 # Getter
 # Returns the IRunnable name
-# (I]:
+# (I):
 # - none
 # (O):
 # - the command e.g. 'ttp.pl'
@@ -71,7 +71,7 @@ sub run {
 # -------------------------------------------------------------------------------------------------
 # Getter
 # Returns the IRunnable command-line arguments
-# (I]:
+# (I):
 # - none
 # (O):
 # - the arguments as an array ref
