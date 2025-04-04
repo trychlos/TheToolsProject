@@ -1,0 +1,23 @@
+{
+	"Services": {
+		"Technical Workloads": {
+			"hidden": true,
+			"workloads": {
+				"daily.morning": [
+				],
+				"startup": [
+					{
+						"label": "Advertise at startup",
+						"commands": [
+						]
+					}
+				]
+			}
+		}
+	},
+	"Environment": {
+		"type_comments": [],
+		"type": "X",
+	},
+	"logsRoot": "[eval:File::Spec->catdir( '/tmp', 'Myself' )]"
+}
