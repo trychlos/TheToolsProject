@@ -1,0 +1,53 @@
+{
+	"DBMS": {
+		"databases": [
+			"Dom1",
+			"Dom33"
+		]
+	},
+	"status": {
+		"commands_comments": [
+			"Describe here the commands used to periodically check the service status",
+			"Commands can be specified at the service level, or at the machine level",
+			"Commands defined here at the host level will be executed for each and every host which declare the service",
+			"A host may still declare its own commands which will be executed after these common ones"
+		],
+		"commands": [
+			"http.pl get -nocolored -url https://tom17.blingua.fr -accept [1-3].. -mqtt -http -- -metric ttp_url_status -label service=<SERVICE> -label environment=X",
+			"http.pl get -nocolored -url https://inlingua17.blingua.fr -accept [1-3].. -mqtt -http -- -metric ttp_url_status -label service=<SERVICE> -label environment=X",
+			"http.pl get -nocolored -url https://tom17.backup.blingua.fr -accept [1-3].. -mqtt -http -- -metric ttp_url_status -label service=<SERVICE> -label environment=X",
+			"daemon.pl stop -nocolored -name tom17-backup-monitor-daemon -ignore -wait"
+		]
+	},
+	"switch_comments": [
+		"These commands have to be run when we want switch the status of a machine, from live to backup, or from backup to live",
+		"They have to be run via 'SiteResources\\Commands\\extern_service_switch.pl' script."
+	],
+	"switch": {
+		"to_backup": {
+			"commands": [
+				"ssh inlingua-adm@<NODE> sc stop Dom1",
+				"ssh inlingua-adm@<NODE> sc config start= disabled Dom1"
+			]
+		},
+		"to_live": {
+			"commands": [
+				"ssh inlingua-user@<NODE> daemon.pl stop -nocolored -name canal33-backup-monitor-daemon -ignore -wait",
+				"ssh inlingua-adm@<NODE> sc config start= auto Dom1",
+				"ssh inlingua-adm@<NODE> sc start Dom1"
+			]
+		}
+	},
+	"workloads": {
+		"daily.morning": [
+			{
+				"label": "Databases backup",
+				"commands": [
+					"dbms.pl backup -nocolored -service <SERVICE> -full"
+				]
+			}
+		],
+		"daily.evening": [
+		]
+	}
+}
