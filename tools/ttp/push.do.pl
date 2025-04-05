@@ -53,7 +53,6 @@ my $opt_tag = true;
 
 sub doPush {
 	my $result = false;
-	msgOut( "publishing..." );
 	my $asked = 0;
 	my $done = 0;
 	# if a byOS command is specified, then use it
@@ -61,22 +60,33 @@ sub doPush {
 	msgVerbose( "found command='$command'" );
 	# may have several source trees: will iterate on each
 	my $sourceTrees = $ep->var([ 'deployments', 'push', 'trees' ]);
-	foreach my $tree ( @{$sourceTrees} ){
-		my $res = doPush_byTree( $tree, $command );
-		$asked += $res->{asked};
-		$done += $res->{done};
+	# if source checks are asked, then all must be OK before copying first
+	if( $opt_check ){
+		foreach my $tree ( @{$sourceTrees} ){
+			my $res = doPush_check( $tree );
+		}
+	} else {
+		msgWarn( "no check is made as '--check' option has been set to false" );
 	}
-	if( 0 ){
-		if( $done == $asked && !TTP::errs() && $opt_tag ){
-			msgOut( "tagging the git repository" );
-			my $now = localtime->strftime( '%Y%m%d_%H%M%S' );
-			my $message = $running->command()." ".$running->verb();
-			my $command = "git tag -am \"$message\" $now";
-			if( $running->dummy()){
-				msgDummy( $command );
-			} else {
-				msgVerbose( $command );
-				print `$command`;
+	# only copy if checks have no error at all
+	if( !TTP::errs()){
+		foreach my $tree ( @{$sourceTrees} ){
+			my $res = doPush_byTree( $tree, $command );
+			$asked += $res->{asked};
+			$done += $res->{done};
+		}
+		if( 0 ){
+			if( $done == $asked && !TTP::errs() && $opt_tag ){
+				msgOut( "tagging the git repository" );
+				my $now = localtime->strftime( '%Y%m%d_%H%M%S' );
+				my $message = $running->command()." ".$running->verb();
+				my $command = "git tag -am \"$message\" $now";
+				if( $running->dummy()){
+					msgDummy( $command );
+				} else {
+					msgVerbose( $command );
+					print `$command`;
+				}
 			}
 		}
 	}
@@ -97,7 +107,7 @@ sub doPush_byTree {
 		asked => 0,
 		done => 0
 	};
-	msgVerbose( "pushing source='$tree->{source}' to target='$tree->{target}'" );
+	msgOut( "pushing source='$tree->{source}' to target='$tree->{target}'" );
 	$result->{asked} += 1;
 	if( $command ){
 		my $cmdres = TTP::commandByOs({
@@ -131,6 +141,57 @@ sub doPush_byTree {
 		}
 	}
 	return $result;
+}
+
+# check a source tree
+# must publish a clean development environment from master branch
+# 'tree' is an object { source, target }
+
+sub doPush_check {
+	my ( $tree ) = @_;
+	msgOut( "checking source='$tree->{source}'" );
+	my @status = `git -C $tree->{source} status`;
+	my $branch = '';
+	my $changes = false;
+	my $untracked = false;
+	my $clean = false;
+	foreach my $line ( @status ){
+		chomp $line;
+		if( $line =~ /^On branch/ ){
+			$branch = $line;
+			$branch =~ s/^On branch //;
+		}
+		if( $line =~ /working tree clean/ ){
+			$clean = true;
+		}
+		# either changes not staged or changes to be committed
+		if( $line =~ /^Changes / ){
+			$changes  = true;
+		}
+		if( $line =~ /^Untracked files:/ ){
+			$untracked  = true;
+		}
+	}
+	if( $branch ne 'master' ){
+		msgErr( "$tree->{source}: must publish from 'master' branch, found '$branch'" );
+	} else {
+		msgVerbose( "$tree->{source}: publishing from '$branch' branch: fine" );
+	}
+	if( $changes ){
+		msgErr( "$tree->{source}: have found uncommitted changes, but shouldn't" );
+	} else {
+		msgVerbose( "$tree->{source}: no uncommitted change found: fine" );
+	}
+	if( $untracked ){
+		msgErr( "$tree->{source}: have found untracked files, but shouldn't (maybe move them to uncommitted/)" );
+	} else {
+		msgVerbose( "$tree->{source}: no untracked file found: fine" );
+	}
+	if( !$clean ){
+		msgErr( "$tree->{source}: must publish from a clean working tree, but this one is not" );
+	} else {
+		msgVerbose( "$tree->{source}: found clean working tree: fine" );
+	}
 }
 
 # =================================================================================================
@@ -167,54 +228,6 @@ if( $target_host ne $this_host ){
 	msgErr( "must push on pull reference host '$target_host', found '$this_host'" );
 } else {
 	msgVerbose( "pushing on pull reference host '$target_host': fine" );
-}
-
-if( $opt_check ){
-	# must publish a clean development environment from master branch
-	my $status = `git status`;
-	my @status = split( /[\r\n]/, $status );
-	my $branch = '';
-	my $changes = false;
-	my $untracked = false;
-	my $clean = false;
-	foreach my $line ( @status ){
-		if( $line =~ /^On branch/ ){
-			$branch = $line;
-			$branch =~ s/^On branch //;
-		}
-		if( $line =~ /working tree clean/ ){
-			$clean = true;
-		}
-		# either changes not staged or changes to be committed
-		if( $line =~ /^Changes / ){
-			$changes  = true;
-		}
-		if( $line =~ /^Untracked files:/ ){
-			$untracked  = true;
-		}
-	}
-	if( $branch ne 'master' ){
-		msgErr( "must publish from 'master' branch, found '$branch'" );
-	} else {
-		msgVerbose( "publishing from '$branch' branch: fine" );
-	}
-	if( $changes ){
-		msgErr( "have found uncommitted changes, but shouldn't" );
-	} else {
-		msgVerbose( "no uncommitted change found: fine" );
-	}
-	if( $untracked ){
-		msgErr( "have found untracked files, but shouldn't (maybe move them to uncommitted/)" );
-	} else {
-		msgVerbose( "no untracked file found: fine" );
-	}
-	if( !$clean ){
-		msgErr( "must publish from a clean working tree, but this one is not" );
-	} else {
-		msgVerbose( "found clean working tree: fine" );
-	}
-} else {
-	msgWarn( "no check is made as '--check' option has been set to false" );
 }
 
 if( !TTP::errs()){
