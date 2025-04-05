@@ -1,0 +1,20 @@
+# This workflow will run tests using node and then publish a package to GitHub Packages when a release is created
+# For more information see: https://docs.github.com/en/actions/publishing-packages/publishing-nodejs-packages
+
+name: Publish tar.gz and zip releases
+
+on:
+  release:
+    types: [created]
+  workflow_dispatch:
+
+jobs:
+  pack-n-push:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Have a tar.gz
+      run: |
+        version=$(cat .VERSION) && git archive --format tar.gz --prefix TheToolsProject-$version/ HEAD > /tmp/TheToolsProject-$version.tar.gz
+    - name: Have a zip
+      run: |
+        version=$(cat .VERSION) && git archive --format zip --prefix TheToolsProject-$version/ HEAD > /tmp/TheToolsProject-$version.tar.gz
