@@ -14,7 +14,12 @@ jobs:
     - uses: actions/checkout@v4
     - name: Have a tar.gz
       run: |
-        version=$(cat .VERSION) && git archive --format tar.gz --prefix TheToolsProject-$version/ master > /tmp/TheToolsProject-$version.tar.gz
+        pwd
+        ls -l
+        version=$(cat .VERSION)
+        git archive --format tar.gz --prefix TheToolsProject-$version/ master > /tmp/TheToolsProject-$version.tar.gz
     - name: Have a zip
       run: |
-        version=$(cat .VERSION) && git archive --format zip --prefix TheToolsProject-$version/ master > /tmp/TheToolsProject-$version.tar.gz
+        cd ${GITHUB_WORKSPACE}
+        version=$(cat .VERSION)
+        git archive --format zip --prefix TheToolsProject-$version/ master > /tmp/TheToolsProject-$version.tar.gz
