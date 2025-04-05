@@ -11,6 +11,7 @@ jobs:
   pack-n-push:
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout@v4
     - name: Have a tar.gz
       run: |
         version=$(cat .VERSION) && git archive --format tar.gz --prefix TheToolsProject-$version/ master > /tmp/TheToolsProject-$version.tar.gz
