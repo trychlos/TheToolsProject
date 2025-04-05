@@ -44,7 +44,7 @@ my $defaults = {
 	colored => 'no',
 	dummy => 'no',
 	verbose => 'no',
-	fromhost => $ep->var([ 'deployments', 'pullReference' ]) || ''
+	fromhost => $ep->var([ 'deployments', 'pull', 'reference' ]) || ''
 };
 
 my $opt_fromhost = $defaults->{fromhost};
@@ -66,10 +66,8 @@ sub doPull {
 		if( $pullShare ){
 			my ( $pull_vol, $pull_dirs, $pull_file ) = File::Spec->splitpath( $pullShare );
 			# if a byOS command is specified, then use it
-			my $command = $ep->var([ 'deployments', 'byOS', $Config{osname}, 'command' ]);
+			my $command = $ep->var([ 'deployments', 'command', 'byOS', $Config{osname} ]);
 			msgVerbose( "found command='$command'" );
-			# may have exclusions
-			my $excludes = $ep->var([ 'deployments', 'excludes' ]);
 			# may have several source dirs: will iterate on each
 			my $sourceDirs = $ep->var([ 'deployments', 'sourceDirs' ]);
 			foreach my $pullDir ( @{$sourceDirs} ){
