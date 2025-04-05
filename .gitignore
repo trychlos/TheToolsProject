@@ -2,4 +2,5 @@ tools/etc/nodes/*.json
 !tools/etc/nodes/node.sample.json
 tools/etc/ttp/*.json
 !tools/etc/ttp/site.sample.json
-uncommitted/
+tools/etc/private/*.json
+tools/etc/private/*.ini
