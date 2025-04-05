@@ -29,6 +29,7 @@ use strict;
 use utf8;
 use warnings;
 
+use Config;
 use File::Copy::Recursive qw( dircopy pathrmdir );
 use File::Spec;
 use Time::Piece;
@@ -48,61 +49,35 @@ my $opt_check = true;
 my $opt_tag = true;
 
 # -------------------------------------------------------------------------------------------------
-# publish  the reference tree to the pull target
+# publish the development trees to the pull target
 
-sub doPublish {
+sub doPush {
 	my $result = false;
-	my $tohost = $ep->var([ 'deployments', 'pullReference' ]);
-	msgOut( "publishing to '$tohost'..." );
+	msgOut( "publishing..." );
 	my $asked = 0;
 	my $done = 0;
-	foreach my $dir ( @{$ep->var([ 'deployments', 'sourceDirs' ])} ){
-		$asked += 1;
-		my @dirs = File::Spec->splitdir( $dir );
-		my $srcdir = File::Spec->rel2abs( File::Spec->catdir( File::Spec->curdir(), $dirs[scalar @dirs - 1] ));
-		msgVerbose( " from $srcdir" );
-		msgOut( " to $dir" );
-		if( $running->dummy()){
-			msgDummy( "File::Copy::Recursive->dircopy( $srcdir, $dir )" );
-		} else {
-			my $removeTree = $ep->var([ 'deployments', 'before', 'removeTree' ]);
-			$removeTree = true if !defined $removeTree;
-			if( $removeTree ){
-				my $rc = pathrmdir( $dir );
-				if( defined $rc ){
-					msgVerbose( "doPublish.pathrmdir() got rc=$rc" );
-				} else {
-					msgErr( "error detected in pathrmdir(): $!" );
-				}
-			} else {
-				msgVerbose( "target dir not emptied as removeTree is false" );
-			}
-			# may happen:
-			# (ERR) error detected in dircopy(): Permission denied
-			# (ERR) error detected in dircopy(): Not a directory
-			my( $num_of_files_and_dirs, $num_of_dirs, $depth_traversed ) = dircopy( $srcdir, $dir );
-			if( defined $num_of_files_and_dirs ){
-				msgVerbose( "num_of_files_and_dirs='$num_of_files_and_dirs'" );
-				msgVerbose( "num_of_dirs='$num_of_dirs'" );
-				msgVerbose( "depth_traversed='$depth_traversed'" );
-			} else {
-				msgErr( "error detected in dircopy(): $!" );
-			}
-		}
-		if( !TTP::errs()){
-			$done += 1;
-		}
+	# if a byOS command is specified, then use it
+	my $command = $ep->var([ 'deployments', 'command', 'byOS', $Config{osname} ]);
+	msgVerbose( "found command='$command'" );
+	# may have several source trees: will iterate on each
+	my $sourceTrees = $ep->var([ 'deployments', 'push', 'trees' ]);
+	foreach my $tree ( @{$sourceTrees} ){
+		my $res = doPush_byTree( $tree, $command );
+		$asked += $res->{asked};
+		$done += $res->{done};
 	}
-	if( $done == $asked && !TTP::errs() && $opt_tag ){
-		msgOut( "tagging the git repository" );
-		my $now = localtime->strftime( '%Y%m%d_%H%M%S' );
-		my $message = $running->command()." ".$running->verb();
-		my $command = "git tag -am \"$message\" $now";
-		if( $running->dummy()){
-			msgDummy( $command );
-		} else {
-			msgVerbose( $command );
-			print `$command`;
+	if( 0 ){
+		if( $done == $asked && !TTP::errs() && $opt_tag ){
+			msgOut( "tagging the git repository" );
+			my $now = localtime->strftime( '%Y%m%d_%H%M%S' );
+			my $message = $running->command()." ".$running->verb();
+			my $command = "git tag -am \"$message\" $now";
+			if( $running->dummy()){
+				msgDummy( $command );
+			} else {
+				msgVerbose( $command );
+				print `$command`;
+			}
 		}
 	}
 	my $str = "$done/$asked copied subdir(s)";
@@ -111,6 +86,51 @@ sub doPublish {
 	} else {
 		msgErr( "NOT OK ($str)" );
 	}
+}
+
+# push one source tree
+# 'tree' is an object { source, target }
+
+sub doPush_byTree {
+	my ( $tree, $command ) = @_;
+	my $result = {
+		asked => 0,
+		done => 0
+	};
+	msgVerbose( "pushing source='$tree->{source}' to target='$tree->{target}'" );
+	$result->{asked} += 1;
+	if( $command ){
+		my $cmdres = TTP::commandByOs({
+			command => $command,
+			macros => {
+				SOURCE => $tree->{source},
+				TARGET => $tree->{target}
+			}
+		});
+		$result->{done} += 1 if $cmdres->{result};
+	} else {
+		my $rc = pathrmdir( $tree->{target} );
+		if( defined $rc ){
+			msgVerbose( "doPush.pathrmdir() got rc=$rc" );
+		} else {
+			msgErr( "error detected in pathrmdir(): $!" );
+		}
+		# may happen:
+		# (ERR) error detected in dircopy(): Permission denied
+		# (ERR) error detected in dircopy(): Not a directory
+		my( $num_of_files_and_dirs, $num_of_dirs, $depth_traversed ) = dircopy( $tree->{source}, $tree->{target} );
+		if( defined $num_of_files_and_dirs ){
+			msgVerbose( "num_of_files_and_dirs='$num_of_files_and_dirs'" );
+			msgVerbose( "num_of_dirs='$num_of_dirs'" );
+			msgVerbose( "depth_traversed='$depth_traversed'" );
+		} else {
+			msgErr( "error detected in dircopy(): $!" );
+		}
+		if( !TTP::errs()){
+			$result->{done} += 1;
+		}
+	}
+	return $result;
 }
 
 # =================================================================================================
@@ -189,7 +209,7 @@ if( $opt_check ){
 }
 
 if( !TTP::errs()){
-	doPublish();
+	doPush();
 }
 
 TTP::exit();
