@@ -44,10 +44,11 @@ my $defaults = {
 	colored => 'no',
 	dummy => 'no',
 	verbose => 'no',
-	fromhost => $ep->var([ 'deployments', 'pull', 'reference' ]) || ''
+	fromhost => $ep->var([ 'deployments', 'reference' ]) || ''
 };
 
 my $opt_fromhost = $defaults->{fromhost};
+my $fromNode = undef;
 
 # -------------------------------------------------------------------------------------------------
 # pull the reference tree from the specified machine
@@ -57,27 +58,24 @@ sub doPull {
 	msgOut( "pulling from '$opt_fromhost'..." );
 	my $asked = 0;
 	my $done = 0;
-	my $fromNode = TTP::Node->new( $ep, { node => $opt_fromhost });
-	if( $fromNode ){
-		# have pull share
-		my $fromData = $fromNode->jsonData();
-		my $pullShare = undef;
-		$pullShare = $fromData->{remoteShare} if exists $fromData->{remoteShare};
-		if( $pullShare ){
-			my ( $pull_vol, $pull_dirs, $pull_file ) = File::Spec->splitpath( $pullShare );
-			# if a byOS command is specified, then use it
-			my $command = $ep->var([ 'deployments', 'command', 'byOS', $Config{osname} ]);
-			msgVerbose( "found command='$command'" );
-			# may have several source dirs: will iterate on each
-			my $sourceDirs = $ep->var([ 'deployments', 'sourceDirs' ]);
-			foreach my $pullDir ( @{$sourceDirs} ){
-				my $res = doPull_byDir( $pull_vol, $pullDir, $command, $excludes );
-				$asked += $res->{asked};
-				$done += $res->{done};
-			}
-		} else {
-			msgErr( "remoteShare is not specified in '$opt_fromhost' host configuration" );
+	# have pull share
+	my $fromData = $fromNode->jsonData();
+	my $pullShare = undef;
+	$pullShare = $fromData->{remoteShare} if exists $fromData->{remoteShare};
+	if( $pullShare ){
+		my ( $pull_vol, $pull_dirs, $pull_file ) = File::Spec->splitpath( $pullShare );
+		# if a byOS command is specified, then use it
+		my $command = $ep->var([ 'deployments', 'command', 'byOS', $Config{osname} ]);
+		msgVerbose( "found command='$command'" );
+		# may have several source dirs: will iterate on each
+		my $trees = $ep->var([ 'deployments', 'trees' ]);
+		foreach my $tree ( @{$trees} ){
+			my $res = doPull_byTree( $pull_vol, $tree, $command );
+			$asked += $res->{asked};
+			$done += $res->{done};
 		}
+	} else {
+		msgErr( "remoteShare is not specified in '$opt_fromhost' host configuration" );
 	}
 	my $str = "$done/$asked copied subdir(s)";
 	if( $done == $asked && !TTP::errs()){
@@ -90,23 +88,23 @@ sub doPull {
 # pull a directory from the reference
 # returns an object { asked, done }
 
-sub doPull_byDir {
-	my ( $pullVol, $pullDir, $command, $excludes ) = @_;
+sub doPull_byTree {
+	my ( $pullVol, $tree, $command ) = @_;
 	my $result = {
 		asked => 0,
 		done => 0
 	};
-	msgVerbose( "pulling '$pullDir'" );
-	my ( $dir_vol, $dir_dirs, $dir_file ) = File::Spec->splitpath( $pullDir );
+	msgVerbose( "pulling '$tree->{target}'" );
+	my ( $dir_vol, $dir_dirs, $dir_file ) = File::Spec->splitpath( $tree->{target} );
 	my $srcPath = File::Spec->catpath( $pullVol, $dir_dirs, $dir_file );
 	if( $command ){
 		$result->{asked} += 1;
-		msgVerbose( "source='$srcPath' target='$pullDir'" );
+		msgVerbose( "source='$srcPath' target='$tree->{target}'" );
 		my $cmdres = TTP::commandByOs({
 			command => $command,
 			macros => {
 				SOURCE => $srcPath,
-				TARGET => $pullDir
+				TARGET => $tree->{target}
 			}
 		});
 		$result->{done} += 1 if $cmdres->{result};
@@ -116,10 +114,9 @@ sub doPull_byDir {
 			$result = true;
 			while( my $it = readdir( FD )){
 				next if $it eq "." or $it eq "..";
-				next if grep( /$it/i, @{$excludes} );
 				$result->{asked} += 1;
 				my $pull_path = File::Spec->catdir( $srcPath, $it );
-				my $dst_path = File::Spec->catdir( $pullDir, $it );
+				my $dst_path = File::Spec->catdir( $tree->{target}, $it );
 				msgOut( "  resetting from '$pull_path' into '$dst_path'" );
 				msgDummy( "TTP::removeTree( $dst_path )" );
 				if( !$running->dummy()){
@@ -170,7 +167,18 @@ msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got fromhost='$opt_fromhost'" );
 
 # a pull host must be defined in command-line and have a json configuration file
-msgErr( "'--fromhost' value is required, but not specified" ) if !$opt_fromhost;
+# must not be the reference host
+if( $opt_fromhost ){
+	my $host = $ep->node()->name();
+	if( $opt_fromhost eq $host ){
+		msgErr( "cowardly refuse to pull from this same host ($host)" );
+	} else {
+		$fromNode = TTP::Node->new( $ep, { node => $opt_fromhost });
+		msgErr( "unable to get the '$opt_fromhost' node configuration" ) if !$fromNode;
+	}
+} else {
+	msgErr( "'--fromhost' value is required, but not specified" );
+}
 
 if( !TTP::errs()){
 	doPull();
