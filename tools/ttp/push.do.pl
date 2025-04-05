@@ -63,7 +63,7 @@ sub doPush {
 	# if source checks are asked, then all must be OK before copying first
 	if( $opt_check ){
 		foreach my $tree ( @{$sourceTrees} ){
-			my $res = doPush_check( $tree );
+			doPush_check( $tree );
 		}
 	} else {
 		msgWarn( "no check is made as '--check' option has been set to false" );
@@ -75,19 +75,11 @@ sub doPush {
 			$asked += $res->{asked};
 			$done += $res->{done};
 		}
-		if( 0 ){
-			if( $done == $asked && !TTP::errs() && $opt_tag ){
-				msgOut( "tagging the git repository" );
-				my $now = localtime->strftime( '%Y%m%d_%H%M%S' );
-				my $message = $running->command()." ".$running->verb();
-				my $command = "git tag -am \"$message\" $now";
-				if( $running->dummy()){
-					msgDummy( $command );
-				} else {
-					msgVerbose( $command );
-					print `$command`;
-				}
-			}
+	}
+	# only tag git repositories if all copies are OK and tag has been asked and this tree allows tagging
+	if( !TTP::errs() && $done == $asked && $opt_tag ){
+		foreach my $tree ( @{$sourceTrees} ){
+			doPush_tag( $tree );
 		}
 	}
 	my $str = "$done/$asked copied subdir(s)";
@@ -191,6 +183,30 @@ sub doPush_check {
 		msgErr( "$tree->{source}: must publish from a clean working tree, but this one is not" );
 	} else {
 		msgVerbose( "$tree->{source}: found clean working tree: fine" );
+	}
+}
+
+# git-tag a source tree
+# not all source trees are candidate to git tagging - this must be allowed in the JSON configuration
+# 'tree' is an object { source, target, git-tag }
+
+sub doPush_tag {
+	my ( $tree ) = @_;
+	my $allowed = false;
+	$allowed = $tree->{'git-tag'} if defined $tree->{'git-tag'};
+	if( $allowed ){
+		msgOut( "tagging '$tree->{source}' git repository" );
+		my $now = localtime->strftime( '%Y%m%d_%H%M%S' );
+		my $message = $running->command()." ".$running->verb();
+		my $command = "git -C $tree->{source} tag -am \"$message\" $now";
+		if( $running->dummy()){
+			msgDummy( $command );
+		} else {
+			msgVerbose( $command );
+			print `$command`;
+		}
+	} else {
+		msgVerbose( "do not tag '$tree->{source}' git repository as not allowed by the configuration" );
 	}
 }
 
