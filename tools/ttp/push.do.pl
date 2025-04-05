@@ -160,6 +160,15 @@ msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got check='".( $opt_check ? 'true':'false' )."'" );
 msgVerbose( "got tag='".( $opt_tag ? 'true':'false' )."'" );
 
+# check that we are pushing only on the pull reference host
+my $target_host = $ep->var([ 'deployments', 'pull', 'reference' ]);
+my $this_host = $ep->node()->name();
+if( $target_host ne $this_host ){
+	msgErr( "must push on pull reference host '$target_host', found '$this_host'" );
+} else {
+	msgVerbose( "pushing on pull reference host '$target_host': fine" );
+}
+
 if( $opt_check ){
 	# must publish a clean development environment from master branch
 	my $status = `git status`;
