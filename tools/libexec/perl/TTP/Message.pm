@@ -29,7 +29,7 @@
 #	This behavior can too be disabled in toops/host configuration in key Message/msgOut/withColor
 #
 # msgLog
-#	in contrary just add a line to Toops/main.log
+#	in contrary just add a line to TTP/main.log
 
 package TTP::Message;
 
@@ -186,7 +186,7 @@ sub msgErr {
 # -------------------------------------------------------------------------------------------------
 # prefix and log a message
 # (I):
-# - the message(s) to be written in Toops/main.log
+# - the message(s) to be written in TTP/main.log
 #   may be a scalar (a string) or an array ref of scalars
 # - an optional options hash with following keys:
 #   > logFile: the path to the log file to be appended
@@ -213,7 +213,7 @@ sub msgLog {
 # do not try to write in logs while they are not initialized
 # the host config is silently reevaluated on each call to be sure we are writing in the logs of the day
 # (I):
-# - the message(s) to be written in Toops/main.log
+# - the message(s) to be written in TTP/main.log
 #   may be a scalar (a string) or an array ref of scalars
 # - an optional options hash with following keys:
 #   > logFile: the path to the log file to be appended, defaulting to node or site 'logsMain'

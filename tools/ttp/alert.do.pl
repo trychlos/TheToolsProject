@@ -154,7 +154,7 @@ sub doMqttAlert {
 
 # -------------------------------------------------------------------------------------------------
 # send the alert by SMS
-# Expects have some sort of configuration in Toops json
+# Expects have some sort of configuration in TTP json
 
 sub doSmsAlert {
 	msgOut( "sending a '$opt_level' alert by SMS..." );

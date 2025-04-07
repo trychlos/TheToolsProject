@@ -95,7 +95,7 @@ sub getWithFiles {
 	} else {
 		my $finder = TTP::Finder->new( $ep );
 
-		# first look in the Toops/host configurations
+		# first look in the TTP/host configurations
 		$res = $ep->var( $keys );
 
 		# if not found, looks at credentialsDirs/credentialsFiles

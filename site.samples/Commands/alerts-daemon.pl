@@ -15,7 +15,7 @@
 #
 # This script is mostly written like a TTP verb but is not. This is an example of how to take advantage of TTP
 # to write your own (rather pretty and efficient) daemon.
-# Just to be sure: this makes use of Toops, but is not part itself of Toops (though a not so bad example of application).
+# Just to be sure: this makes use of TTP, but is not part itself of TTP (though a not so bad example of application).
 #
 # JSON configuration:
 #

@@ -137,7 +137,7 @@ sub doMoveDirs {
 
 # (recursively) move a directory and its content from a source to a target
 # this is a design decision to make this recursive copy file by file in order to have full logs
-# Toops allows to provide a system-specific command in its configuration file
+# TTP allows to provide a system-specific command in its configuration file
 # well suited for example to move big files to network storage
 
 sub _moveDir {
