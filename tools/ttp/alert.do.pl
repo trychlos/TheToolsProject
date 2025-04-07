@@ -148,6 +148,7 @@ sub doFileAlert {
 	}
 	TTP::makeDirExist( $dir );
 	my $prettyJson = $ep->var([ 'alerts', 'withFile', 'prettyJson' ]);
+	$prettyJson = true if !defined $prettyJson;
 	my $json;
 	if( $prettyJson ){
 		my $data = buildAlertData();
@@ -203,6 +204,7 @@ sub doSmsAlert {
 	my $recipients = $ep->var([ 'alerts', 'withSms', 'recipients' ]);
 	if( $command && scalar( @{$recipients} )){
 		my $prettyJson = $ep->var([ 'alerts', 'withSms', 'prettyJson' ]);
+		$prettyJson = true if !defined $prettyJson;
 		my $json;
 		if( $prettyJson ){
 			my $data = buildAlertData();
@@ -238,6 +240,7 @@ sub doSmtpAlert {
 	my $title = "[$opt_level] Alert";
 	$title .= " - $opt_title" if $opt_title;
 	my $prettyJson = $ep->var([ 'alerts', 'withSmtp', 'prettyJson' ]);
+	$prettyJson = true if !defined $prettyJson;
 	my $json;
 	if( $prettyJson ){
 		my $data = buildAlertData();

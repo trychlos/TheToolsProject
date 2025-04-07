@@ -37,7 +37,8 @@
 				"enabled": true,
 				"default": true,
 				"dropDir": "[eval:File::Spec->catdir( TTP::logsRoot(), localtime->strftime( '%y%m%d' ), 'Alerts' )]",
-				"command": "ttp.pl writejson -file [eval:File::Spec->catfile( TTP::alertsDir({ makeDirExist => false }), Time::Moment->now->strftime( '%Y%m%d%H%M%S%6N' ).'.json' )] -data \"<JSON>\" <OPTIONS>"
+				"command": "ttp.pl writejson -file [eval:File::Spec->catfile( TTP::alertsDir({ makeDirExist => false }), Time::Moment->now->strftime( '%Y%m%d%H%M%S%6N' ).'.json' )] -data \"<JSON>\" <OPTIONS>",
+				"prettyJson": true
 			},
 			"withMqtt": {
 				"default": true,
@@ -47,12 +48,14 @@
 			"withSms" : {
 				"enabled": true,
 				"default": true,
-				"command": "smtp.pl send -to mail2sms@trychlos.org -subject \"SMSTO: +33234567890\" <OPTIONS>"
+				"command": "smtp.pl send -to mail2sms@trychlos.org -subject \"SMSTO: +33234567890\" <OPTIONS>",
+				"prettyJson": true
 			},
 			"withSmtp" : {
 				"enabled": true,
 				"default": true,
-				"command": "smtp.pl send -to alerts@example.com -subject <TITLE> -text <MESSAGE> <OPTIONS>"
+				"command": "smtp.pl send -to alerts@example.com -subject <TITLE> -text <MESSAGE> <OPTIONS>",
+				"prettyJson": true
 			}
 		},
 

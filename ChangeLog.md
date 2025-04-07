@@ -6,14 +6,14 @@
 
     Release date: 
 
-    - Change the semantic of 'alert.xxx.enabled' introducing 'alerts.xxx.default'
+    - Change the semantic of 'alerts.xxx.enabled' introducing 'alerts.xxx.default'
     - Alerts now have a title and a message, each of them (but not both) being optional
     - Deprecate 'TTP::alertsDir()' in favor of 'TTP::alertsFileDropdir()'
     - Define ttp.pl alert --list-levels option
-    - TTP::CommandByOs() is renamed TTP::CommandExec()
+    - TTP::commandByOs() is renamed TTP::commandExec() as this is a command execution
+    - TTP::commandByOs() is now the function which find a configured (maybe per-OS) command
     - Introduce TTP::nodeName() function
-    - Introduce TTP::commandExec() function
-    - Introduce 'prettyJson' property to display a pretty JSON data
+    - Introduce 'alerts.xxx.prettyJson' property to display a pretty JSON data, defaulting to true
 
 ### 4.0.1-rc.5
 
