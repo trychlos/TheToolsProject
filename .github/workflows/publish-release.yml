@@ -34,6 +34,8 @@ jobs:
     - name: Have a tar.gz
       run: |
         git archive --format tar.gz --prefix ${{ steps.package.outputs.package }}/ ${{ steps.vars.outputs.source }} > ${RUNNER_TEMP}/${{ steps.package.outputs.package }}.tar.gz
+        ls -l ${RUNNER_TEMP}/${{ steps.package.outputs.package }}.tar.gz
+        file ${RUNNER_TEMP}/${{ steps.package.outputs.package }}.tar.gz
 
     - name: Upload tar.gz artifact
       uses: actions/upload-release-asset@v1
