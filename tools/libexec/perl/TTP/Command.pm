@@ -52,7 +52,7 @@ my $Const = {
 		'bin',
 		'libexec',
 		'Mods',
-		'Toops',
+		'TTP',
 		'TTP'
 	],
 	verbSed => '\.do\.pl$|\.do\.ksh$',

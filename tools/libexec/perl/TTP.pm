@@ -48,7 +48,7 @@ use TTP::Node;
 # autoflush STDOUT
 $| = 1;
 
-# store here our Toops variables
+# store here our TTP variables
 my $Const = {
 	# defaults which depend of the host OS provided by 'Config' package
 	byOS => {
@@ -81,7 +81,7 @@ sub alertsDir {
 
 # -------------------------------------------------------------------------------------------------
 # Execute a command dependant of the running OS.
-# This is expected to be configured in TOOPS.json as TOOPS => {<key>} => {command}
+# This is expected to be configured in TTP/site.json as command.byOS.<OSname>
 # where command may have some keywords to be remplaced before execution
 # (I):
 # argument is a hash with following keys:
@@ -100,13 +100,13 @@ sub commandByOs {
 	my $result = {};
 	$result->{command} = $args->{command};
 	$result->{result} = false;
-	msgVerbose( "Toops::commandByOs() evaluating and executing command='".( $args->{command} || '(undef)' )."'" );
+	msgVerbose( "TTP::commandByOs() evaluating and executing command='".( $args->{command} || '(undef)' )."'" );
 	if( defined $args->{command} ){
 		$result->{evaluated} = $args->{command};
 		foreach my $key ( keys %{$args->{macros}} ){
 			$result->{evaluated} =~ s/<$key>/$args->{macros}{$key}/;
 		}
-		msgVerbose( "Toops::commandByOs() evaluated to '$result->{evaluated}'" );
+		msgVerbose( "TTP::commandByOs() evaluated to '$result->{evaluated}'" );
 		if( $ep->runner()->dummy()){
 			msgDummy( $result->{evaluated} );
 			$result->{result} = true;
@@ -120,29 +120,29 @@ sub commandByOs {
 			# https://ss64.com/nt/robocopy-exit.html
 			my $res = $?;
 			$result->{result} = ( $res == 0 ) ? true : false;
-			msgVerbose( "Toops::commandByOs() return_code=$res firstly interpreted as result=$result->{result}" );
+			msgVerbose( "TTP::commandByOs() return_code=$res firstly interpreted as result=$result->{result}" );
 			if( $args->{command} =~ /robocopy/i ){
 				$res = ( $res >> 8 );
 				$result->{result} = ( $res <= 7 ) ? true : false;
-				msgVerbose( "Toops::commandByOs() robocopy specific interpretation res=$res result=$result->{result}" );
+				msgVerbose( "TTP::commandByOs() robocopy specific interpretation res=$res result=$result->{result}" );
 			}
 		}
 	}
-	msgVerbose( "Toops::commandByOs() result=$result->{result}" );
+	msgVerbose( "TTP::commandByOs() result=$result->{result}" );
 	return $result;
 }
 
 # -------------------------------------------------------------------------------------------------
 # copy a directory and its content from a source to a target
 # this is a design decision to make this recursive copy file by file in order to have full logs
-# Toops allows to provide a system-specific command in its configuration file
+# TTP allows to provide a system-specific command in its configuration file
 # well suited for example to move big files to network storage
 # return true|false
 
 sub copyDir {
 	my ( $source, $target ) = @_;
 	my $result = false;
-	msgVerbose( "Toops::copyDir() entering with source='$source' target='$target'" );
+	msgVerbose( "TTP::copyDir() entering with source='$source' target='$target'" );
 	if( ! -d $source ){
 		msgErr( "$source: source directory doesn't exist" );
 		return false;
@@ -156,7 +156,7 @@ sub copyDir {
 	});
 	if( defined $cmdres->{command} ){
 		$result = $cmdres->{result};
-		msgVerbose( "Toops::copyDir() commandByOs() result=$result" );
+		msgVerbose( "TTP::copyDir() commandByOs() result=$result" );
 	} elsif( $ep->runner()->dummy()){
 		msgDummy( "dircopy( $source, $target )" );
 	} else {
@@ -165,15 +165,15 @@ sub copyDir {
 		# whereas in list context it returns the number of files and directories, number of directories only, depth level traversed.
 		my $res = dircopy( $source, $target );
 		$result = $res ? true : false;
-		msgVerbose( "Toops::copyDir() dircopy() res=$res result=$result" );
+		msgVerbose( "TTP::copyDir() dircopy() res=$res result=$result" );
 	}
-	msgVerbose( "Toops::copyDir() returns result=$result" );
+	msgVerbose( "TTP::copyDir() returns result=$result" );
 	return $result;
 }
 
 # -------------------------------------------------------------------------------------------------
 # copy a file from a source to a target
-# Toops allows to provide a system-specific command in its configuration file
+# TTP allows to provide a system-specific command in its configuration file
 # well suited for example to copy big files to network storage
 # (I):
 # - source: the source volume, directory and filename
@@ -184,7 +184,7 @@ sub copyDir {
 sub copyFile {
 	my ( $source, $target ) = @_;
 	my $result = false;
-	msgVerbose( "Toops::copyFile() entering with source='$source' target='$target'" );
+	msgVerbose( "TTP::copyFile() entering with source='$source' target='$target'" );
 	# isolate the file from the source directory path
 	my ( $vol, $dirs, $file ) = File::Spec->splitpath( $source );
 	my $srcpath = File::Spec->catpath( $vol, $dirs );
@@ -198,7 +198,7 @@ sub copyFile {
 	});
 	if( defined $cmdres->{command} ){
 		$result = $cmdres->{result};
-		msgVerbose( "Toops::copyFile() commandByOs() result=$result" );
+		msgVerbose( "TTP::copyFile() commandByOs() result=$result" );
 	} elsif( $ep->runner()->dummy()){
 		msgDummy( "copy( $source, $target )" );
 	} else {
@@ -206,12 +206,12 @@ sub copyFile {
 		# This function returns true or false
 		$result = copy( $source, $target );
 		if( $result ){
-			msgVerbose( "Toops::copyFile() result=true" );
+			msgVerbose( "TTP::copyFile() result=true" );
 		} else {
-			msgErr( "Toops::copyFile() $!" );
+			msgErr( "TTP::copyFile() $!" );
 		}
 	}
-	msgVerbose( "Toops::copyFile() returns result=$result" );
+	msgVerbose( "TTP::copyFile() returns result=$result" );
 	return $result;
 }
 
@@ -411,7 +411,7 @@ sub _executionReportToFile {
 	return $res;
 }
 
-# send an execution report on the MQTT bus if Toops is configured for
+# send an execution report on the MQTT bus if TTP is configured for
 # managed macros:
 # - SUBJECT
 # - DATA
@@ -453,7 +453,7 @@ sub _executionReportToMqtt {
 						msgOut( "executing '$cmd'" );
 						`$cmd`;
 						my $rc = $?;
-						msgVerbose( "Toops::_executionReportToMqtt() got rc=$rc" );
+						msgVerbose( "TTP::_executionReportToMqtt() got rc=$rc" );
 						$res = ( $rc == 0 );
 					} else {
 						msgVerbose( "do not publish excluded '$key' key" );
@@ -959,7 +959,7 @@ sub random {
 sub removeTree {
 	my ( $dir ) = @_;
 	my $result = true;
-	msgVerbose( "Toops::removeTree() removing '$dir'" );
+	msgVerbose( "TTP::removeTree() removing '$dir'" );
 	my $error;
 	remove_tree( $dir, {
 		verbose => $ep->{run}{verbose},
@@ -977,7 +977,7 @@ sub removeTree {
 		}
 		$result = false;
 	}
-	msgVerbose( "Toops::removeTree() dir='$dir' result=$result" );
+	msgVerbose( "TTP::removeTree() dir='$dir' result=$result" );
 	return $result;
 }
 

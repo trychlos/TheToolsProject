@@ -82,7 +82,7 @@ sub listByKeys {
 }
 
 # -------------------------------------------------------------------------------------------------
-# list logsCommands value - e.g. 'C:\INLINGUA\Logs\240201\Toops'
+# list logsCommands value - e.g. 'C:\INLINGUA\Logs\240201\TTP'
 
 sub listLogscommands {
 	my $str = "logsCommands: ".TTP::logsCommands();
@@ -100,7 +100,7 @@ sub listLogsdaily {
 }
 
 # -------------------------------------------------------------------------------------------------
-# list logsMain value - e.g. 'C:\INLINGUA\Logs\240201\Toops\main.log'
+# list logsMain value - e.g. 'C:\INLINGUA\Logs\240201\TTP\main.log'
 
 sub listLogsmain {
 	my $str = "logsMain: ".TTP::logsMain();

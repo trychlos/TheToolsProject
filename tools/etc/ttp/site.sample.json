@@ -26,7 +26,7 @@
 			"manage macros: SUBJECT, OPTIONS"
 		],
 		"workloadSummary": {
-			"command": "smtp.pl send -subject \"<SUBJECT>\" -to inlingua-adm@trychlos.org <OPTIONS>"
+			"command": "smtp.pl send -subject \"<SUBJECT>\" -to my-admin@example.com <OPTIONS>"
 		}
 	},
 
@@ -118,25 +118,29 @@
 				}
 			}
 		},
+
+		"deployemnts_comments": [
+			"When you develop on your machine, you may want to push the current state of your developments to a master reference tree, which will be later pulled to other nodes.",
+			"This is used by 'ttp.pl push' and 'ttp.pl pull' commands."
+		],
 		"deployments": {
-			"sourceDirs": [
-				"[eval:File::Spec->catdir( TTP::nodeRoot(), 'SiteResources' )]",
-				"[eval:File::Spec->catdir( TTP::nodeRoot(), 'TheToolsProject' )]"
+			"trees": [
+				{
+					"source": "/path/to/development/tree/aka/source/of/pushes",
+					"target": "/path/to/target/pushed/tree/which/happens/to/be/master/reference/tree/of/deployments/aka/source/of/pulls",
+					"git-check": false,
+					"git-tag": false
+				}
+
 			],
-			"excludes": [
-			],
-			"before": {
-				"removeTree": true
-			},
-			"after": [
-			],
-			"pullReference": "WS12DEV1",
-			"byOS": {
-				"MSWin32": {
-					"command": "robocopy <SOURCE> <TARGET> /MIR"
+			"reference": "pull-reference-node-name",
+			"command": {
+				"byOS": {
+					"MSWin32": "robocopy <SOURCE> <TARGET> /MIR"
 				}
 			}
 		},
+
 		"executionReports": {
 			"withFile_comments": [
 				"manage macros: DATA"
@@ -248,7 +252,7 @@
 
 		"nodeRoot_comments": [
 			"Historical reminder: in the logical machine paradigm, the root tree is located under the dynamically mounted filesystem, and this is one of its main prooperties.",
-			"Because Perl cannot implement this paradigm, we have to define it explicitly.",
+			"When the site doesn't implement this paradigm, we have to define it explicitly.",
 			"This is a per-node overridable value, which defaults to C:\\Temp or /tmp depending of the running OS",
 			"The 'nodeRoot' directory can be got by the user via the 'ttp.pl vars --nodeRoot' command"
 		],
@@ -266,9 +270,9 @@
 			"if needed, username and password are managed through the credentials usual way."
 		],
 		"SMTPGateway": {
-			"host": "mail.trychlos.org",
+			"host": "mail.example.com",
 			"port": 465,
-			"mailfrom": "No Reply <no-reply@blingua.fr>"
+			"mailfrom": "No Reply <no-reply@example.com>"
 		},
 
 		"Telemetry_comments": [
@@ -286,7 +290,7 @@
 			],
 			"withHttp": {
 				"enabled": false,
-				"url": "http://10.122.1.15:9091/metrics/job/telemetry/host/[eval:TTP::host()]"
+				"url": "http://10.11.12.13:9091/metrics/job/telemetry/host/[eval:TTP::host()]"
 			},
 			"withTextfile_comments": [
 				"The Prometheus TextFileCollector"

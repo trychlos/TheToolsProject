@@ -7,7 +7,7 @@
 # - as environment variables:
 #
 #   > TTP_CONFDIR: as the path to the tree which contains all configurations files, and specially 'toops.json'
-#     it is suggested that this configuration tree be outside of the Toops installation
+#     it is suggested that this configuration tree be outside of the TTP installation
 #     it is addressed by siteConfigurationsDir()
 #     the structure is fixed at the moment:
 #
