@@ -2,11 +2,13 @@
 
 ## ChangeLog
 
-### 4.0.2-rc.0
+### 4.1.0-rc
 
     Release date: 
 
-    - 
+    - Change the semantic of 'alert.xxx.enabled' introducing 'alerts.xxx.default'
+    - Deprecate 'alerts.withFile' in favor of 'alert.withJson'
+    - Define ttp.pl alert --list-levels option
 
 ### 4.0.1-rc.5
 

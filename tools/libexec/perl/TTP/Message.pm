@@ -122,6 +122,17 @@ my $Const = {
 	}
 };
 
+my $Order = [
+	EMERG,
+	ALERT,
+	CRIT,
+	ERR,
+	WARN,
+	NOTICE,
+	INFO,
+	DEBUG
+];
+
 # make sure colors are resetted after end of line
 $Term::ANSIColor::EACHLINE = EOL;
 
@@ -136,6 +147,36 @@ sub isKnownLevel {
 	my ( $level ) = @_;
 	my $res = grep( /$level/i, keys %{$Const} );
 	return $res;
+}
+
+# -------------------------------------------------------------------------------------------------
+# returns the ordered list of known levels, maybe with their aliases
+# (I):
+# - (none)
+# (O):
+# - the list as a reference to an array where each item can be either a string or an array of strings
+
+sub knownLevels {
+	my $levels = {};
+	# get all defined aliases
+	foreach my $level( sort keys %{$Const} ){
+		if( defined( $Const->{$level}{level} )){
+			$levels->{$Const->{$level}{level}} = [] if !defined $levels->{$Const->{$level}{level}};
+			push( @{$levels->{$Const->{$level}{level}}}, $level );
+		} else {
+			$levels->{$level} = [] if !defined $levels->{$level};
+		}
+	}
+	# build an array of strings or of array of strings
+	my $result = [];
+	foreach my $level( @{$Order} ){
+		if( scalar( @{$levels->{$level}} ) > 0 ){
+			push( @{$result}, [ $level, @{$levels->{$level}} ]);
+		} else {
+			push( @{$result}, $level );
+		}
+	}
+	return $result;
 }
 
 # -------------------------------------------------------------------------------------------------

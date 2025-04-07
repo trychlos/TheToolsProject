@@ -6,11 +6,13 @@
 # @(-) --[no]verbose           run verbosely [${verbose}]
 # @(-) --emitter=<name>        the emitter's name [${emitter}]
 # @(-) --level=<level>         the alert level [${level}]
+# @(-) --title=<name>          the alert title [${title}]
 # @(-) --message=<name>        the alert message [${message}]
 # @(-) --[no]json              set a JSON file alert to be monitored by the alert daemon [${json}]
 # @(-) --[no]mqtt              send the alert on the MQTT bus [${mqtt}]
 # @(-) --[no]smtp              send the alert by SMTP [${smtp}]
 # @(-) --[no]sms               send the alert by SMS [${sms}]
+# @(-) --list-levels           display the known alert levels [${listLevels}]
 #
 # The Tools Project - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
@@ -38,6 +40,7 @@ use JSON;
 use Path::Tiny;
 use Time::Piece;
 
+use TTP::Message;
 use TTP::SMTP;
 my $running = $ep->runner();
 
@@ -48,21 +51,55 @@ my $defaults = {
 	verbose => 'no',
 	emitter => $ep->node()->name(),
 	level => 'INFO',
-	message => ''
+	title => '',
+	message => '',
+	listLevels => 'no'
 };
 
 my $opt_emitter = $defaults->{emitter};
 my $opt_level = INFO;
+my $opt_title = $defaults->{title};
 my $opt_message = $defaults->{message};
-my $opt_json = TTP::var([ 'alerts', 'withFile', 'enabled' ]);
-my $opt_mqtt = TTP::var([ 'alerts', 'withMqtt', 'enabled' ]);
-my $opt_smtp = TTP::var([ 'alerts', 'withSmtp', 'enabled' ]);
-my $opt_sms = TTP::var([ 'alerts', 'withSms', 'enabled' ]);
+my $opt_listLevels = false;
 
+my $opt_json = TTP::var([ 'alerts', 'withJson', 'default' ]);
+$opt_json = true if !defined $opt_json;
 $defaults->{json} = $opt_json ? 'yes' : 'no';
+my $opt_json_set = false;
+
+my $opt_mqtt = TTP::var([ 'alerts', 'withMqtt', 'default' ]);
+$opt_mqtt = true if !defined $opt_mqtt;
 $defaults->{mqtt} = $opt_mqtt ? 'yes' : 'no';
+my $opt_mqtt_set = false;
+
+my $opt_smtp = TTP::var([ 'alerts', 'withSmtp', 'default' ]);
+$opt_smtp = true if !defined $opt_smtp;
 $defaults->{smtp} = $opt_smtp ? 'yes' : 'no';
+my $opt_smtp_set = false;
+
+my $opt_sms = TTP::var([ 'alerts', 'withSms', 'default' ]);
+$opt_sms = true if !defined $opt_sms;
 $defaults->{sms} = $opt_sms ? 'yes' : 'no';
+my $opt_sms_set = false;
+
+# -------------------------------------------------------------------------------------------------
+# display the known alert levels
+
+sub doDisplayLevels {
+	msgOut( "displaying known alert levels..." );
+	my $levels = TTP::Message::knownLevels();
+	my $count = 0;
+	foreach my $level( @{$levels} ){
+		if( ref( $level ) eq 'ARRAY' ){
+			my $first = shift @{$level};
+			print " $first (".join( ', ', @{$level} ).")".EOL;
+		} else {
+			print " $level".EOL;
+		}
+		$count += 1;
+	}
+	msgOut( "found $count known alert levels" );
+}
 
 # -------------------------------------------------------------------------------------------------
 # send the alert by file
@@ -238,12 +275,29 @@ if( !GetOptions(
 	"verbose!"			=> \$ep->{run}{verbose},
 	"emitter=s"			=> \$opt_emitter,
 	"level=s"			=> \$opt_level,
+	"title=s"			=> \$opt_title,
 	"message=s"			=> \$opt_message,
-	"json!"				=> \$opt_json,
-	"mqtt!"				=> \$opt_mqtt,
-	"smtp!"				=> \$opt_smtp,
-	"sms!"				=> \$opt_sms )){
-
+	"json!"				=> sub {
+		my( $name, $value ) = @_;
+		$opt_json = $value;
+		$opt_json_set = true;
+	},
+	"mqtt!"				=> sub {
+		my( $name, $value ) = @_;
+		$opt_mqtt = $value;
+		$opt_mqtt_set = true;
+	},
+	"smtp!"				=> sub {
+		my( $name, $value ) = @_;
+		$opt_smtp = $value;
+		$opt_smtp_set = true;
+	},
+	"sms!"				=> sub {
+		my( $name, $value ) = @_;
+		$opt_sms = $value;
+		$opt_sms_set = true;
+	},
+	"list-levels!"		=> \$opt_listLevels )){
 		msgOut( "try '".$running->command()." ".$running->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
 }
@@ -258,30 +312,91 @@ msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
 msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got emitter='$opt_emitter'" );
 msgVerbose( "got level='$opt_level'" );
+msgVerbose( "got title='$opt_title'" );
 msgVerbose( "got message='$opt_message'" );
 msgVerbose( "got json='".( $opt_json ? 'true':'false' )."'" );
 msgVerbose( "got mqtt='".( $opt_mqtt ? 'true':'false' )."'" );
 msgVerbose( "got smtp='".( $opt_smtp ? 'true':'false' )."'" );
 msgVerbose( "got sms='".( $opt_sms ? 'true':'false' )."'" );
+msgVerbose( "got list-levels='".( $opt_listLevels ? 'true':'false' )."'" );
 
-# all data are mandatory (and we provide a default value for all but the message)
-msgErr( "emitter is empty, but shouldn't" ) if !$opt_emitter;
-msgErr( "message is empty, but shouldn't" ) if !$opt_message;
-msgErr( "level is empty, but shouldn't" ) if !$opt_level;
-#level must be known
-msgErr( "level='$opt_level' is unknown" ) if $opt_level && !TTP::Message::isKnownLevel( $opt_level );
+if( $opt_listLevels ){
+	# nothing to check here
+} else {
+	# all data are mandatory (and we provide a default value for all but the title and the message)
+	msgErr( "emitter is empty, but shouldn't" ) if !$opt_emitter;
+	msgErr( "level is empty, but shouldn't" ) if !$opt_level;
+	my $content = $opt_title.$opt_message;
+	msgErr( "both title and message are empty, but at least one of them should be set" ) if !$content;
+	# level must be known
+	msgErr( "level='$opt_level' is unknown" ) if $opt_level && !TTP::Message::isKnownLevel( $opt_level );
 
-# at least one of json or mqtt media must be specified
-if( !$opt_json && !$opt_mqtt && !$opt_smtp && !$opt_sms ){
-	msgErr( "at least one of '--json', '--mqtt', '--smtp' or '--sms' options must be specified" ) if !$opt_emitter;
+	# disabled media are just ignored (or refused if option was explicit)
+	if( $opt_json ){
+		my $enabled = $ep->var([ 'alerts', 'withJson', 'enabled' ]);
+		$enabled = true if !defined $enabled;
+		if( !$enabled ){
+			if( $opt_json_set ){
+				msgErr( "JSON medium is disabled, --json option is not valid" );
+			} else {
+				msgWarn( "JSON medium is disabled and thus ignored" );
+				$opt_json = false;
+			}
+		}
+	}
+	if( $opt_mqtt ){
+		my $enabled = $ep->var([ 'alerts', 'withMqtt', 'enabled' ]);
+		$enabled = true if !defined $enabled;
+		if( !$enabled ){
+			if( $opt_mqtt_set ){
+				msgErr( "MQTT medium is disabled, --mqtt option is not valid" );
+			} else {
+				msgWarn( "MQTT medium is disabled and thus ignored" );
+				$opt_mqtt = false;
+			}
+		}
+	}
+	if( $opt_smtp ){
+		my $enabled = $ep->var([ 'alerts', 'withSmtp', 'enabled' ]);
+		$enabled = true if !defined $enabled;
+		if( !$enabled ){
+			if( $opt_smtp_set ){
+				msgErr( "SMTP medium is disabled, --smtp option is not valid" );
+			} else {
+				msgWarn( "SMTP medium is disabled and thus ignored" );
+				$opt_smtp = false;
+			}
+		}
+	}
+	if( $opt_sms ){
+		my $enabled = $ep->var([ 'alerts', 'withSms', 'enabled' ]);
+		$enabled = true if !defined $enabled;
+		if( !$enabled ){
+			if( $opt_sms_set ){
+				msgErr( "SMS medium is disabled, --sms option is not valid" );
+			} else {
+				msgWarn( "SMS medium is disabled and thus ignored" );
+				$opt_sms = false;
+			}
+		}
+	}
+
+	# at least one medium must be specified
+	if( !$opt_json && !$opt_mqtt && !$opt_smtp && !$opt_sms ){
+		msgErr( "at least one of '--json', '--mqtt', '--smtp' or '--sms' options must be specified" ) if !$opt_emitter;
+	}
 }
 
 if( !TTP::errs()){
-	$opt_level = uc $opt_level;
-	doJsonAlert() if $opt_json;
-	doMqttAlert() if $opt_mqtt;
-	doSmtpAlert() if $opt_smtp;
-	doSmsAlert() if $opt_sms;
+	if( $opt_listLevels ){
+		doDisplayLevels();
+	} else {
+		$opt_level = uc $opt_level;
+		doJsonAlert() if $opt_json;
+		doMqttAlert() if $opt_mqtt;
+		doSmtpAlert() if $opt_smtp;
+		doSmsAlert() if $opt_sms;
+	}
 }
 
 TTP::exit();
