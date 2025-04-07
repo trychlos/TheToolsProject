@@ -1,6 +1,6 @@
 # This workflow creates a .tar.gz and a .zip packages for the latest release
 
-name: Publish tar.gz and zip releases
+name: Publish a release with tar.gz and zip assets
 
 on:
   release:
@@ -12,14 +12,62 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+
+    - name: Dump github context
+      run:   echo "$GITHUB_CONTEXT"
+   
+    - name: Get version
+      id: version
+      run: |
+          echo "version=$(cat .VERSION)" >> $GITHUB_OUTPUT
+
+    - name: Get last tag
+      id: tag
+      run: |
+          echo "tag=$(git describe --tags --abbrev=0)" >> $GITHUB_OUTPUT
+
+    - name: Compute package name
+      id: package
+      run: |
+          echo "package=TheToolsProject-${{ steps.version.outputs.version }}" >> $GITHUB_OUTPUT
+
+    - name: Compute the branch we archive from
+      id: source
+      run: |
+          echo "source=master" >> $GITHUB_OUTPUT
+
+    - name: Compute the desired download url
+      id: url
+      run: |
+          echo "url=https://github.com/trychlos/TheToolsProject/TheToolsProject" >> $GITHUB_OUTPUT
+
     - name: Have a tar.gz
       run: |
-        pwd
-        ls -l
-        version=$(cat .VERSION)
-        git archive --format tar.gz --prefix TheToolsProject-$version/ master > /tmp/TheToolsProject-$version.tar.gz
+        git archive --format tar.gz --prefix ${{ steps.package.outputs.package }}/ ${{ steps.source.outputs.source }} > ${RUNNER_TEMP}/${{ steps.package.outputs.package }}.tar.gz
+
+    - name: Upload tar.gz artifact
+      uses: actions/upload-release-asset@v1
+      env:
+#        GITHUB_TOKEN: ${{ github.token }}
+        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ${RUNNER_TEMP}/${{ steps.package.outputs.package }}.tar.gz
+        asset_name: ${{ steps.package.outputs.package }}.tar.gz
+        asset_content_type: application/gzip
+
     - name: Have a zip
       run: |
-        cd ${GITHUB_WORKSPACE}
-        version=$(cat .VERSION)
-        git archive --format zip --prefix TheToolsProject-$version/ master > /tmp/TheToolsProject-$version.tar.gz
+        git archive --format zip --prefix ${{ steps.package.outputs.package }}/ ${{ steps.source.outputs.source }} > ${RUNNER_TEMP}/${{ steps.package.outputs.package }}.zip
+
+    - name: upload zip artifact
+      uses: actions/upload-release-asset@v1
+      env:
+#        GITHUB_TOKEN: ${{ github.token }}
+        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ${RUNNER_TEMP}/${{ steps.package.outputs.package }}.zip
+        asset_name: ${{ steps.package.outputs.package }}.zip
+        asset_content_type: application/zip
+        
