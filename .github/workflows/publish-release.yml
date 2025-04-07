@@ -39,6 +39,7 @@ jobs:
 
     - name: Check tar.gz
       run: |
+        pwd
         ls -l ${RUNNER_TEMP}/${{ steps.package.outputs.package }}.tar.gz
         file ${RUNNER_TEMP}/${{ steps.package.outputs.package }}.tar.gz
 
