@@ -17,7 +17,7 @@
 	},
 	"Environment": {
 		"type_comments": [],
-		"type": "X",
+		"type": "X"
 	},
 	"logsRoot": "[eval:File::Spec->catdir( '/tmp', 'Myself' )]"
 }
