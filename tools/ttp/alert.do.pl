@@ -8,11 +8,12 @@
 # @(-) --level=<level>         the alert level [${level}]
 # @(-) --title=<name>          the alert title [${title}]
 # @(-) --message=<name>        the alert message [${message}]
-# @(-) --[no]json              set a JSON file alert to be monitored by the alert daemon [${json}]
+# @(-) --[no]file              create a JSON file alert, monitorable e.g. by the alert daemon [${file}]
 # @(-) --[no]mqtt              send the alert on the MQTT bus [${mqtt}]
 # @(-) --[no]smtp              send the alert by SMTP [${smtp}]
 # @(-) --[no]sms               send the alert by SMS [${sms}]
 # @(-) --list-levels           display the known alert levels [${listLevels}]
+# @(-) --options=<options>     additional options to be passed to the command [${options}]
 #
 # The Tools Project - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
@@ -53,7 +54,8 @@ my $defaults = {
 	level => 'INFO',
 	title => '',
 	message => '',
-	listLevels => 'no'
+	listLevels => 'no',
+	options => ''
 };
 
 my $opt_emitter = $defaults->{emitter};
@@ -61,18 +63,12 @@ my $opt_level = INFO;
 my $opt_title = $defaults->{title};
 my $opt_message = $defaults->{message};
 my $opt_listLevels = false;
+my $opt_options = $defaults->{options};
 
-my $opt_json = TTP::var([ 'alerts', 'withJson', 'default' ]);
-if( !defined( $opt_json )){
-	# deprecated in v4.1
-	$opt_json = TTP::var([ 'alerts', 'withFile', 'default' ]);
-	if( defined( $opt_json )){
-		msgWarn( "'alerts.withFile' configuration property is deprecated in favor of 'alerts.withJson'. You should update your code." );
-	}
-}
-$opt_json = true if !defined $opt_json;
-$defaults->{json} = $opt_json ? 'yes' : 'no';
-my $opt_json_set = false;
+my $opt_file = TTP::var([ 'alerts', 'withFile', 'default' ]);
+$opt_file = true if !defined $opt_file;
+$defaults->{file} = $opt_file ? 'yes' : 'no';
+my $opt_file_set = false;
 
 my $opt_mqtt = TTP::var([ 'alerts', 'withMqtt', 'default' ]);
 $opt_mqtt = true if !defined $opt_mqtt;
@@ -88,6 +84,33 @@ my $opt_sms = TTP::var([ 'alerts', 'withSms', 'default' ]);
 $opt_sms = true if !defined $opt_sms;
 $defaults->{sms} = $opt_sms ? 'yes' : 'no';
 my $opt_sms_set = false;
+
+# -------------------------------------------------------------------------------------------------
+# build the alert data object
+
+sub buildAlertData {
+	my $data = {
+		emitter => $opt_emitter,
+		level => $opt_level,
+		stamp => Time::Moment->now->strftime( '%Y-%m-%d %H:%M:%S.%5N' )
+	};
+	$data->{title} = $opt_title if $opt_title;
+	$data->{message} = $opt_message if $opt_message;
+	return $data;
+}
+
+# -------------------------------------------------------------------------------------------------
+# build the JSON alert data
+# returns a JSON stringified object (so, a string)
+
+sub buildJsonStr {
+	my $data = buildAlertData();
+	my $json = JSON->new;
+	my $str = $json->encode( $data );
+	# protect the double quotes against the CMD.EXE command-line
+	$str =~ s/"/\\"/g;
+	return $str;
+}
 
 # -------------------------------------------------------------------------------------------------
 # display the known alert levels
@@ -112,93 +135,58 @@ sub doDisplayLevels {
 # send the alert by file
 # as far as we are concerned here, this is just executing the configured command
 # managed macros:
-# - DATA: the JSON content
+# - JSON: the alert data as a JSON stringified object
 
-sub doJsonAlert {
-	msgOut( "creating a new '$opt_level' JSON alert..." );
-	my $command = TTP::commandByOs([ 'alerts', 'withJson' ]);
-	my $dir = TTP::alertsJsonDropdir();
-	if( !defined( $command )){
-		# deprecated in v4.1
-		$command = TTP::commandByOs([ 'alerts', 'withFile' ]);
-		if( defined( $command )){
-			msgWarn( "'alerts.withFile' configuration property is deprecated in favor of 'alerts.withJson'. You should update your code." );
-		} else {
-			my $file = File::Spec->catfile( $dir, 'alert-', Time::Moment->now->strftime( '%Y%m%d%H%M%S%6N' ).'.json' );
-			$command = "ttp.pl writejson -nocolored -file $file -data \"<JSON>\"";
-		}
+sub doFileAlert {
+	msgOut( "creating a new '$opt_level' JSON file alert..." );
+	my $command = TTP::commandByOs([ 'alerts', 'withFile' ]);
+	my $dir = TTP::alertsFileDropdir();
+	if( !$command ){
+		my $file = File::Spec->catfile( $dir, 'alert-'.Time::Moment->now->strftime( '%Y%m%d%H%M%S%6N' ).'.json' );
+		my $verbose = $running->verbose() ? "-verbose" : "-noverbose";
+		$command = "ttp.pl writejson -nocolored $verbose -file $file -data \"<JSON>\" <OPTIONS>";
 	}
 	TTP::makeDirExist( $dir );
-	my $data = {
-		emitter => $opt_emitter,
-		level => $opt_level,
-		stamp => Time::Moment->now->strftime( '%Y-%m-%d %H:%M:%S.%5N' )
-	};
-	$data->{title} = $opt_title if $opt_title;
-	$data->{message} = $opt_message if $opt_message;
-	my $json = JSON->new;
-	my $str = $json->encode( $data );
-	# protect the double quotes against the CMD.EXE command-line
-	$str =~ s/"/\\"/g;
-	my $verbose = $running->verbose() ? "-verbose" : "-noverbose";
-	my $result = TTP::commandByOs({
-		command => "$command $verbose",
-		macros => {
-			EMITTER => $opt_emitter,
-			LEVEL => $opt_level,
-			TITLE => $opt_title,
-			MESSAGE => $opt_message,
-			JSON => $str
-		}
-	});
-	if( $result->{result} ){
-		msgOut( "success" );
+	my $prettyJson = $ep->var([ 'alerts', 'withFile', 'prettyJson' ]);
+	my $json;
+	if( $prettyJson ){
+		my $data = buildAlertData();
+		$json = JSON->new->pretty->encode( $data );
 	} else {
-		msgErr( 'NOT OK' );
+		$json = buildJsonStr();
 	}
+	my $macros = {
+		EMITTER => $opt_emitter,
+		LEVEL => $opt_level,
+		TITLE => $opt_title,
+		MESSAGE => $opt_message,
+		JSON => $json,
+		OPTIONS => $opt_options
+	};
+	execute( $command, $macros, "success", "alert by File NOT OK" );
 }
 
 # -------------------------------------------------------------------------------------------------
 # send the alert by mqtt
 # as far as we are concerned here, this is just executing the configured command
-# managed macros:
-# - TOPIC
-# - PAYLOAD
-# - OPTIONS
 
 sub doMqttAlert {
 	msgOut( "publishing a '$opt_level' alert on MQTT bus..." );
-	my $command = $ep->var([ 'alerts', 'withMqtt', 'command' ]);
-	my $res = false;
-	if( $command ){
-		my $topic = $ep->node()->name()."/alert";
-		my $data = {
-			emitter => $opt_emitter,
-			level => $opt_level,
-			message => $opt_message,
-			host => $ep->node()->name(),
-			stamp => localtime->strftime( "%Y-%m-%d %H:%M:%S" )
-		};
-		my $json = JSON->new;
-		my $str = $json->encode( $data );
-		# protect the double quotes against the CMD.EXE command-line
-		$str =~ s/"/\\"/g;
-		$command =~ s/<DATA>/$str/;
-		$command =~ s/<SUBJECT>/$topic/;
-		my $options = "";
-		$command =~ s/<OPTIONS>/$options/;
-		my $dummy = $running->dummy() ? "-dummy" : "-nodummy";
+	my $command = TTP::commandByOs([ 'alerts', 'withMqtt' ]);
+	if( !$command ){
 		my $verbose = $running->verbose() ? "-verbose" : "-noverbose";
-		print `$command -nocolored $dummy $verbose`;
-		$res = ( $? == 0 );
-	} else {
-		msgWarn( "unable to get a command for alerts by MQTT" );
+		$command = "mqtt.pl publish -nocolored $verbose -topic ".$ep->node()->name()."/alert -payload \"<JSON>\" <OPTIONS>";
 	}
-	if( $res ){
-		msgOut( "success" );
-	} else {
-		msgErr( "alert by MQTT NOT OK" );
-	}
+	my $json = buildJsonStr();
+	my $macros = {
+		EMITTER => $opt_emitter,
+		LEVEL => $opt_level,
+		TITLE => $opt_title,
+		MESSAGE => $opt_message,
+		JSON => $json,
+		OPTIONS => $opt_options
+	};
+	execute( $command, $macros, "success", "alert by MQTT NOT OK" );
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -207,72 +195,86 @@ sub doMqttAlert {
 
 sub doSmsAlert {
 	msgOut( "sending a '$opt_level' alert by SMS..." );
-	my $res = false;
-	my $command = $ep->var([ 'alerts', 'withSms', 'command' ]);
-	if( $command ){
-		my $text = "Hi,
-An alert has been raised:
-- level is $opt_level
-- timestamp is ".localtime->strftime( "%Y-%m-%d %H:%M:%S" )."
-- emitter is $opt_emitter
-- message is '$opt_message'
-Best regards.
-";
-		my $textfname = TTP::getTempFileName();
-		my $fh = path( $textfname );
-		$fh->spew( $text );
-		$command =~ s/<OPTIONS>/-textfname $textfname/;
-		my $dummy = $running->dummy() ? "-dummy" : "-nodummy";
+	my $command = TTP::commandByOs([ 'alerts', 'withSms' ]);
+	if( !$command ){
 		my $verbose = $running->verbose() ? "-verbose" : "-noverbose";
-		print `$command -nocolored $dummy $verbose`;
-		$res = ( $? == 0 );
-	} else {
-		msgWarn( "unable to get a command for alerts by SMS" );
+		#$command = "smtp.pl send -nocolored $verbose -to <RECIPIENTS> -subject <TITLE> -text <MESSAGE> <OPTIONS>";
 	}
-	if( $res ){
-		msgOut( "success" );
-	} else {
-		msgErr( "alert by SMS NOT OK" );
+	my $recipients = $ep->var([ 'alerts', 'withSms', 'recipients' ]);
+	if( $command && scalar( @{$recipients} )){
+		my $prettyJson = $ep->var([ 'alerts', 'withSms', 'prettyJson' ]);
+		my $json;
+		if( $prettyJson ){
+			my $data = buildAlertData();
+			$json = JSON->new->pretty->encode( $data );
+		} else {
+			$json = buildJsonStr();
+		}
+		my $macros = {
+			EMITTER => $opt_emitter,
+			LEVEL => $opt_level,
+			TITLE => $opt_title,
+			MESSAGE => $opt_message,
+			JSON => $json,
+			OPTIONS => $opt_options,
+			RECIPIENTS => join( ',', @{$recipients} )
+		};
+		execute( $command, $macros, "success", "alert by SMS NOT OK" );
 	}
 }
 
 # -------------------------------------------------------------------------------------------------
 # send the alert by SMTP
 # send the mail by executing the configured command
-# managed macros:
-# - SUBJECT
-# - OPTIONS
 
 sub doSmtpAlert {
 	msgOut( "publishing a '$opt_level' alert by SMTP..." );
-	my $res = false;
-	my $command = $ep->var([ 'alerts', 'withSmtp', 'command' ]);
-	if( $command ){
-		my $subject = "[$opt_level] Alert";
-		my $text = "Hi,
-An alert has been raised:
-- level is $opt_level
-- timestamp is ".localtime->strftime( "%Y-%m-%d %H:%M:%S" )."
-- emitter is $opt_emitter
-- message is '$opt_message'
-Best regards.
-";
-		my $textfname = TTP::getTempFileName();
-		my $fh = path( $textfname );
-		$fh->spew( $text );
-		$command =~ s/<SUBJECT>/$subject/;
-		$command =~ s/<OPTIONS>/-textfname $textfname/;
-		my $dummy = $running->dummy() ? "-dummy" : "-nodummy";
+	my $command = TTP::commandByOs([ 'alerts', 'withSmtp' ]);
+	if( !$command ){
 		my $verbose = $running->verbose() ? "-verbose" : "-noverbose";
-		print `$command -nocolored $dummy $verbose`;
-		$res = ( $? == 0 );
-	} else {
-		msgWarn( "unable to get a command for alerts by SMTP" );
+		$command = "smtp.pl send -nocolored $verbose -to <RECIPIENTS> -subject <TITLE> -text <MESSAGE> <OPTIONS>";
 	}
-	if( $res ){
-		msgOut( "success" );
+	my $recipients = $ep->var([ 'alerts', 'withSmtp', 'recipients' ]) || [ 'root@localhost' ];
+	my $title = "[$opt_level] Alert";
+	$title .= " - $opt_title" if $opt_title;
+	my $prettyJson = $ep->var([ 'alerts', 'withSmtp', 'prettyJson' ]);
+	my $json;
+	if( $prettyJson ){
+		my $data = buildAlertData();
+		$json = JSON->new->pretty->encode( $data );
 	} else {
-		msgErr( "alert by SMTP NOT OK" );
+		$json = buildJsonStr();
+	}
+	my $macros = {
+		EMITTER => $opt_emitter,
+		LEVEL => $opt_level,
+		TITLE => $title,
+		MESSAGE => $opt_message,
+		JSON => $json,
+		OPTIONS => $opt_options,
+		RECIPIENTS => join( ',', @{$recipients} )
+	};
+	execute( $command, $macros, "success", "alert by SMTP NOT OK" );
+}
+
+# -------------------------------------------------------------------------------------------------
+# execute the prepared command
+# (I):
+# - the command
+# - the macros to be substituted
+# - the message to be displayed in case of success
+# - the message to be displayed in case of an error
+
+sub execute {
+	my ( $command, $macros, $msgok, $msgerr ) = @_;
+	my $result = TTP::commandExec({
+		command => $command,
+		macros => $macros
+	});
+	if( $result->{success} ){
+		msgOut( $msgok );
+	} else {
+		msgErr( $msgerr );
 	}
 }
 
@@ -289,10 +291,10 @@ if( !GetOptions(
 	"level=s"			=> \$opt_level,
 	"title=s"			=> \$opt_title,
 	"message=s"			=> \$opt_message,
-	"json!"				=> sub {
+	"file!"				=> sub {
 		my( $name, $value ) = @_;
-		$opt_json = $value;
-		$opt_json_set = true;
+		$opt_file = $value;
+		$opt_file_set = true;
 	},
 	"mqtt!"				=> sub {
 		my( $name, $value ) = @_;
@@ -309,7 +311,8 @@ if( !GetOptions(
 		$opt_sms = $value;
 		$opt_sms_set = true;
 	},
-	"list-levels!"		=> \$opt_listLevels )){
+	"list-levels!"		=> \$opt_listLevels,
+	"options=s"			=> \$opt_options )){
 		msgOut( "try '".$running->command()." ".$running->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
 }
@@ -326,11 +329,12 @@ msgVerbose( "got emitter='$opt_emitter'" );
 msgVerbose( "got level='$opt_level'" );
 msgVerbose( "got title='$opt_title'" );
 msgVerbose( "got message='$opt_message'" );
-msgVerbose( "got json='".( $opt_json ? 'true':'false' )."'" );
+msgVerbose( "got file='".( $opt_file ? 'true':'false' )."'" );
 msgVerbose( "got mqtt='".( $opt_mqtt ? 'true':'false' )."'" );
 msgVerbose( "got smtp='".( $opt_smtp ? 'true':'false' )."'" );
 msgVerbose( "got sms='".( $opt_sms ? 'true':'false' )."'" );
 msgVerbose( "got list-levels='".( $opt_listLevels ? 'true':'false' )."'" );
+msgVerbose( "got options='$opt_options'" );
 
 if( $opt_listLevels ){
 	# nothing to check here
@@ -344,15 +348,15 @@ if( $opt_listLevels ){
 	msgErr( "level='$opt_level' is unknown" ) if $opt_level && !TTP::Message::isKnownLevel( $opt_level );
 
 	# disabled media are just ignored (or refused if option was explicit)
-	if( $opt_json ){
-		my $enabled = $ep->var([ 'alerts', 'withJson', 'enabled' ]);
+	if( $opt_file ){
+		my $enabled = $ep->var([ 'alerts', 'withFile', 'enabled' ]);
 		$enabled = true if !defined $enabled;
 		if( !$enabled ){
-			if( $opt_json_set ){
-				msgErr( "JSON medium is disabled, --json option is not valid" );
+			if( $opt_file_set ){
+				msgErr( "File medium is disabled, --file option is not valid" );
 			} else {
-				msgWarn( "JSON medium is disabled and thus ignored" );
-				$opt_json = false;
+				msgWarn( "File medium is disabled and thus ignored" );
+				$opt_file = false;
 			}
 		}
 	}
@@ -394,8 +398,8 @@ if( $opt_listLevels ){
 	}
 
 	# at least one medium must be specified
-	if( !$opt_json && !$opt_mqtt && !$opt_smtp && !$opt_sms ){
-		msgErr( "at least one of '--json', '--mqtt', '--smtp' or '--sms' options must be specified" );
+	if( !$opt_file && !$opt_mqtt && !$opt_smtp && !$opt_sms ){
+		msgErr( "at least one of '--file', '--mqtt', '--smtp' or '--sms' options must be specified" );
 	}
 }
 
@@ -404,7 +408,7 @@ if( !TTP::errs()){
 		doDisplayLevels();
 	} else {
 		$opt_level = uc $opt_level;
-		doJsonAlert() if $opt_json;
+		doFileAlert() if $opt_file;
 		doMqttAlert() if $opt_mqtt;
 		doSmtpAlert() if $opt_smtp;
 		doSmsAlert() if $opt_sms;

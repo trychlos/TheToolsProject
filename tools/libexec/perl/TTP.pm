@@ -76,8 +76,8 @@ my $Const = {
 # - returns the alertsdir
 
 sub alertsDir {
-	msgWarn( "TTP::alertsDir() is deprecated in favor of TTP:alertsJsonDropdir(). You should update your code." );
-	return alertsJsonDropdir();
+	msgWarn( "TTP::alertsDir() is deprecated in favor of TTP:alertsFileDropdir(). You should update your code." );
+	return alertsFileDropdir();
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -87,16 +87,8 @@ sub alertsDir {
 # (O):
 # - returns the alertsdir
 
-sub alertsJsonDropdir {
-	my $dir = $ep->var([ 'alerts', 'withJson', 'dropDir' ]);
-	if( !defined( $dir )){
-		$dir = $ep->var([ 'alerts', 'withFile', 'dropDir' ]);
-		if( defined( $dir )){
-			msgWarn( "'alerts.withFile' configuration property is deprecated in favor of 'alerts.withJson'. You should update your code." );
-		} else {
-			$dir = tempDir();
-		}
-	}
+sub alertsFileDropdir {
+	my $dir = $ep->var([ 'alerts', 'withFile', 'dropDir' ]) || tempDir();
 	return $dir;
 }
 
@@ -114,25 +106,29 @@ sub commandByOs {
 	my $command = undef;
 	my @locals = @{$keys};
 	push( @locals, 'command' );
-	my $obj = $ep->var([ \@locals ]);
+	my $obj = $ep->var( \@locals );
 	if( defined( $obj )){
 		my $ref = ref( $obj );
 		if( $ref eq 'HASH' ){
 			push( @locals, 'byOS', $Config{osname} );
-			my $obj = $ep->var([ \@locals ]);
+			my $obj = $ep->var( \@locals );
 			if( defined( $obj )){
 				$ref = ref( $obj );
 				if( !$ref ){
 					$command = $obj;
+					msgVerbose( "TTP::commandByOs() found command '$command' at [ ".join( ', ', @locals )." ]" );
 				} else {
-					msgErr( "unexpected object found in [".join( ', ', @locals )."] configuration: $obj ($ref)." );
+					msgErr( "TTP::commandByOs() unexpected object found in [".join( ', ', @locals )."] configuration: $obj ($ref)." );
 				}
 			}
 		} elsif( !$ref ){
 			$command = $obj;
+			msgVerbose( "TTP::commandByOs() found command '$command' at [ ".join( ', ', @locals )." ]" );
 		} else {
-			msgErr( "unexpected object found in [".join( ', ', @locals )."] configuration: $obj ($ref)." );
+			msgErr( "TTP::commandByOs() unexpected object found in [".join( ', ', @locals )."] configuration: $obj ($ref)." );
 		}
+	} else {
+		msgVerbose( "TTP::commandByOs() nothing found at [ ".join( ', ', @locals )." ]" );
 	}
 	return $command;
 }
@@ -167,8 +163,9 @@ sub commandExec {
 	} else {
 		msgVerbose( "TTP::commandExec() got command='".( $args->{command} )."'" );
 		$result->{evaluated} = $args->{command};
-		foreach my $key ( keys %{$args->{macros}} ){
+		foreach my $key ( sort keys %{$args->{macros}} ){
 			$result->{evaluated} =~ s/<$key>/$args->{macros}{$key}/;
+			#print "key='$key' value='$args->{macros}{$key}'".EOL;
 		}
 		msgVerbose( "TTP::commandExec() evaluated to '$result->{evaluated}'" );
 		if( $ep->runner()->dummy()){
@@ -183,15 +180,15 @@ sub commandExec {
 			my $res = $?;
 			$result->{exit} = $res;
 			$result->{success} = ( $res == 0 ) ? true : false;
-			msgVerbose( "TTP::commandExec() return_code=$res firstly interpreted as success=$result->{success}" );
+			msgVerbose( "TTP::commandExec() return_code=$res firstly interpreted as success=".( $result->{success} ? 'true' : 'false' ));
 			if( $args->{command} =~ /robocopy/i ){
 				$res = ( $res >> 8 );
 				$result->{success} = ( $res <= 7 ) ? true : false;
-				msgVerbose( "TTP::commandExec() robocopy specific interpretation res=$res success=$result->{success}" );
+				msgVerbose( "TTP::commandExec() robocopy specific interpretation res=$res success=".( $result->{success} ? 'true' : 'false' ));
 			}
 			$result->{stdout} = \@out;
 		}
-		msgVerbose( "TTP::commandExec() success=$result->{success}" );
+		msgVerbose( "TTP::commandExec() success=".( $result->{success} ? 'true' : 'false' ));
 	}
 	return $result;
 }
@@ -910,6 +907,16 @@ sub makeDirExist {
 		msgVerbose( "makeDirExist() dir='$dir' result=$result" ) if $allowVerbose;
 	}
 	return $result;
+}
+
+# ------------------------------------------------------------------------------------------------
+# (I):
+# - none
+# (O):
+# - returns the name of the current node
+
+sub nodeName {
+	return $ep->node()->name();
 }
 
 # ------------------------------------------------------------------------------------------------
