@@ -109,14 +109,14 @@ sub doPush_byTree {
 	msgOut( "pushing source='$tree->{source}' to target='$tree->{target}'" );
 	$result->{asked} += 1;
 	if( $command ){
-		my $cmdres = TTP::commandByOs({
+		my $cmdres = TTP::commandExec({
 			command => $command,
 			macros => {
 				SOURCE => $tree->{source},
 				TARGET => $tree->{target}
 			}
 		});
-		$result->{done} += 1 if $cmdres->{result};
+		$result->{done} += 1 if $cmdres->{success};
 	} else {
 		my $rc = pathrmdir( $tree->{target} );
 		if( defined $rc ){

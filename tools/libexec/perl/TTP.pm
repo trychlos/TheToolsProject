@@ -101,68 +101,15 @@ sub alertsJsonDropdir {
 }
 
 # -------------------------------------------------------------------------------------------------
-# Execute a command dependant of the running OS.
-# This is expected to be configured in TTP/site.json as command.byOS.<OSname>
-# where command may have some keywords to be remplaced before execution
-# (I):
-# argument is a hash with following keys:
-# - command: the command to be evaluated and executed, may be undef
-# - macros: a hash of the macros to be replaced where:
-#   > key is the macro name, must be labeled in the toops.json as '<macro>' (i.e. between angle brackets)
-#   > value is the value to be replaced
-# (O):
-# return a hash with following keys:
-# - evaluated: the evaluated command after macros replacements
-# - return: original exit code of the command
-# - result: true|false
-
-sub commandByOs {
-	my ( $args ) = @_;
-	my $result = {};
-	$result->{command} = $args->{command};
-	$result->{result} = false;
-	msgVerbose( "TTP::commandByOs() evaluating and executing command='".( $args->{command} || '(undef)' )."'" );
-	if( defined $args->{command} ){
-		$result->{evaluated} = $args->{command};
-		foreach my $key ( keys %{$args->{macros}} ){
-			$result->{evaluated} =~ s/<$key>/$args->{macros}{$key}/;
-		}
-		msgVerbose( "TTP::commandByOs() evaluated to '$result->{evaluated}'" );
-		if( $ep->runner()->dummy()){
-			msgDummy( $result->{evaluated} );
-			$result->{result} = true;
-		} else {
-			my $out = `$result->{evaluated}`;
-			print $out;
-			msgLog( $out );
-			# https://www.perlmonks.org/?node_id=81640
-			# Thus, the exit value of the subprocess is actually ($? >> 8), and $? & 127 gives which signal, if any, the
-			# process died from, and $? & 128 reports whether there was a core dump.
-			# https://ss64.com/nt/robocopy-exit.html
-			my $res = $?;
-			$result->{result} = ( $res == 0 ) ? true : false;
-			msgVerbose( "TTP::commandByOs() return_code=$res firstly interpreted as result=$result->{result}" );
-			if( $args->{command} =~ /robocopy/i ){
-				$res = ( $res >> 8 );
-				$result->{result} = ( $res <= 7 ) ? true : false;
-				msgVerbose( "TTP::commandByOs() robocopy specific interpretation res=$res result=$result->{result}" );
-			}
-		}
-	}
-	msgVerbose( "TTP::commandByOs() result=$result->{result}" );
-	return $result;
-}
-
-# -------------------------------------------------------------------------------------------------
-# Read from configuration either a command as a string or a byOS-command.
+# Read from configuration either a command as a string or as a byOS-command.
 # We are searching for a 'command' property below the provided keys.
-# This command may be a string or an object 'byOS.<OSname>'.
+# This command may be a simple string or an object 'command.byOS.<OSname>'.
 # (I):
 # - the list of keys before the 'command' as an array ref
 # (O):
 # - the found command as a string, or undef
 
-sub commandGet {
+sub commandByOs {
 	my ( $keys ) = @_;
 	my $command = undef;
 	my @locals = @{$keys};
@@ -191,6 +138,65 @@ sub commandGet {
 }
 
 # -------------------------------------------------------------------------------------------------
+# Execute an external command.
+# The provided command is not modified at all. If it should support say --verbose or --[no]colored,
+# then these options should be specified by the caller.
+# (I):
+# argument is a hash with following keys:
+# - command: the command to be evaluated and executed
+# - macros: a hash of the macros to be replaced where:
+#   > key is the macro name, must be labeled in the toops.json as '<macro>' (i.e. between angle brackets)
+#   > value is the replacement value
+# (O):
+# return a hash with following keys:
+# - evaluated: the evaluated command after macros replacements
+# - stdout: a reference to the array of outputed lines
+# - exit: original exit code of the command
+# - success: true|false
+
+sub commandExec {
+	my ( $args ) = @_;
+	my $result = {
+		stdout => [],
+		exit => -1,
+		success => false
+	};
+	if( !$args->{command} ){
+		msgErr( "TTP::commandExec() undefined command" );
+		stackTrace();
+	} else {
+		msgVerbose( "TTP::commandExec() got command='".( $args->{command} )."'" );
+		$result->{evaluated} = $args->{command};
+		foreach my $key ( keys %{$args->{macros}} ){
+			$result->{evaluated} =~ s/<$key>/$args->{macros}{$key}/;
+		}
+		msgVerbose( "TTP::commandExec() evaluated to '$result->{evaluated}'" );
+		if( $ep->runner()->dummy()){
+			msgDummy( $result->{evaluated} );
+			$result->{result} = true;
+		} else {
+			my @out = `$result->{evaluated}`;
+			# https://www.perlmonks.org/?node_id=81640
+			# Thus, the exit value of the subprocess is actually ($? >> 8), and $? & 127 gives which signal, if any, the
+			# process died from, and $? & 128 reports whether there was a core dump.
+			# https://ss64.com/nt/robocopy-exit.html
+			my $res = $?;
+			$result->{exit} = $res;
+			$result->{success} = ( $res == 0 ) ? true : false;
+			msgVerbose( "TTP::commandExec() return_code=$res firstly interpreted as success=$result->{success}" );
+			if( $args->{command} =~ /robocopy/i ){
+				$res = ( $res >> 8 );
+				$result->{success} = ( $res <= 7 ) ? true : false;
+				msgVerbose( "TTP::commandExec() robocopy specific interpretation res=$res success=$result->{success}" );
+			}
+			$result->{stdout} = \@out;
+		}
+		msgVerbose( "TTP::commandExec() success=$result->{success}" );
+	}
+	return $result;
+}
+
+# -------------------------------------------------------------------------------------------------
 # copy a directory and its content from a source to a target
 # this is a design decision to make this recursive copy file by file in order to have full logs
 # TTP allows to provide a system-specific command in its configuration file
@@ -205,16 +211,16 @@ sub copyDir {
 		msgErr( "$source: source directory doesn't exist" );
 		return false;
 	}
-	my $cmdres = commandByOs({
+	my $cmdres = commandExec({
 		command => $ep->var([ 'copyDir', 'byOS', $Config{osname}, 'command' ]),
 		macros => {
 			SOURCE => $source,
 			TARGET => $target
 		}
 	});
-	if( defined $cmdres->{command} ){
-		$result = $cmdres->{result};
-		msgVerbose( "TTP::copyDir() commandByOs() result=$result" );
+	if( defined $cmdres->{evaluated} ){
+		$result = $cmdres->{success};
+		msgVerbose( "TTP::copyDir() commandExec() result=$result" );
 	} elsif( $ep->runner()->dummy()){
 		msgDummy( "dircopy( $source, $target )" );
 	} else {
@@ -246,7 +252,7 @@ sub copyFile {
 	# isolate the file from the source directory path
 	my ( $vol, $dirs, $file ) = File::Spec->splitpath( $source );
 	my $srcpath = File::Spec->catpath( $vol, $dirs );
-	my $cmdres = commandByOs({
+	my $cmdres = commandExec({
 		command => $ep->var([ 'copyFile', 'byOS', $Config{osname}, 'command' ]),
 		macros => {
 			SOURCE => $srcpath,
@@ -254,9 +260,9 @@ sub copyFile {
 			FILE => $file
 		}
 	});
-	if( defined $cmdres->{command} ){
-		$result = $cmdres->{result};
-		msgVerbose( "TTP::copyFile() commandByOs() result=$result" );
+	if( defined $cmdres->{evaluated} ){
+		$result = $cmdres->{success};
+		msgVerbose( "TTP::copyFile() commandExec() result=$result" );
 	} elsif( $ep->runner()->dummy()){
 		msgDummy( "copy( $source, $target )" );
 	} else {
@@ -1054,6 +1060,7 @@ sub run {
 # -------------------------------------------------------------------------------------------------
 # print a stack trace
 # https://stackoverflow.com/questions/229009/how-can-i-get-a-call-stack-listing-in-perl
+# to be called for code errors
 
 sub stackTrace {
 	my $trace = Devel::StackTrace->new;
