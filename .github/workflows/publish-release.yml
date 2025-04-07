@@ -23,7 +23,7 @@ jobs:
       run: |
           echo "version=$(cat .VERSION)" >> $GITHUB_OUTPUT
           echo "tag=$(git describe --tags --abbrev=0)" >> $GITHUB_OUTPUT
-          echo "source=master" >> $GITHUB_OUTPUT
+          echo "source=HEAD" >> $GITHUB_OUTPUT
           echo "url=https://github.com/${{ github.repository }}/${{ github.event.repository.name }}" >> $GITHUB_OUTPUT
    
     - name: Compute package name
