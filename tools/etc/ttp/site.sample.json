@@ -33,9 +33,7 @@
 	"TTP": {
 
 		"alerts_comments": [
-			"Configure here the alerts which can be sent via 'ttp.pl alert' to various external media.",
-			"enabled=true|false here only specifies defaults, as each medium can be individually selected in ttp.pl alert verb",
-			"when sending an email, whether use a text content or file, or a html content or file, or both is up to the verb, so just replace OPTIONS macro"
+			"Configure here the alerts which can be sent via 'ttp.pl alert' to various external media."
 		],
 		"alerts": {
 			"withFile_comments": [
@@ -43,6 +41,7 @@
 			],
 			"withFile": {
 				"enabled": true,
+				"default": true,
 				"dropDir": "[eval:File::Spec->catdir( TTP::logsRoot(), localtime->strftime( '%y%m%d' ), 'Alerts' )]",
 				"command": "ttp.pl writejson -file [eval:File::Spec->catfile( TTP::alertsDir({ makeDirExist => false }), Time::Moment->now->strftime( '%Y%m%d%H%M%S%6N' ).'.json' )] -data \"<DATA>\""
 			},
@@ -50,6 +49,7 @@
 				"manage macros: SUBJECT, DATA, OPTIONS"
 			],
 			"withMqtt": {
+				"default": true,
 				"enabled": true,
 				"command": "mqtt.pl publish -topic <SUBJECT> -payload \"<DATA>\" <OPTIONS>"
 			},
@@ -58,6 +58,7 @@
 			],
 			"withSmtp" : {
 				"enabled": true,
+				"default": true,
 				"command": "smtp.pl send -to alerts@trychlos.org,inlingua-adm@trychlos.org -subject <SUBJECT> <OPTIONS>"
 			},
 			"withSms_comments": [
@@ -65,6 +66,7 @@
 			],
 			"withSms" : {
 				"enabled": true,
+				"default": true,
 				"command": "smtp.pl send -to mail2sms@trychlos.org -subject \"SMSTO: +33234567890\" <OPTIONS>"
 			}
 		},

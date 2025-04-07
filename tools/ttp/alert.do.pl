@@ -36,9 +36,9 @@ use strict;
 use utf8;
 use warnings;
 
+use File::Spec;
 use JSON;
 use Path::Tiny;
-use Time::Piece;
 
 use TTP::Message;
 use TTP::SMTP;
@@ -63,6 +63,13 @@ my $opt_message = $defaults->{message};
 my $opt_listLevels = false;
 
 my $opt_json = TTP::var([ 'alerts', 'withJson', 'default' ]);
+if( !defined( $opt_json )){
+	# deprecated in v4.1
+	$opt_json = TTP::var([ 'alerts', 'withFile', 'default' ]);
+	if( defined( $opt_json )){
+		msgWarn( "'alerts.withFile' configuration property is deprecated in favor of 'alerts.withJson'. You should update your code." );
+	}
+}
 $opt_json = true if !defined $opt_json;
 $defaults->{json} = $opt_json ? 'yes' : 'no';
 my $opt_json_set = false;
@@ -108,41 +115,46 @@ sub doDisplayLevels {
 # - DATA: the JSON content
 
 sub doJsonAlert {
-	msgOut( "creating a new '$opt_level' json alert..." );
-	my $command = $ep->var([ 'alerts', 'withFile', 'command' ]);
-	if( $command ){
-		my $dir = $ep->var([ 'alerts', 'withFile', 'dropDir' ]);
-		if( $dir ){
-			TTP::makeDirExist( $dir );
-			my $data = {
-				emitter => $opt_emitter,
-				level => $opt_level,
-				message => $opt_message,
-				host => $ep->node()->name(),
-				stamp => localtime->strftime( "%Y-%m-%d %H:%M:%S" )
-			};
-			my $json = JSON->new;
-			my $str = $json->encode( $data );
-			# protect the double quotes against the CMD.EXE command-line
-			$str =~ s/"/\\"/g;
-			$command =~ s/<DATA>/$str/;
-			my $dummy = $running->dummy() ? "-dummy" : "-nodummy";
-			my $verbose = $running->verbose() ? "-verbose" : "-noverbose";
-			print `$command -nocolored $dummy $verbose`;
-			#$? = 256
-			my $res = $? == 0;
-			if( $res ){
-				msgOut( "success" );
-			} else {
-				msgErr( $! );
-			}
+	msgOut( "creating a new '$opt_level' JSON alert..." );
+	my $command = $ep->var([ 'alerts', 'withJson', 'command' ]);
+	my $dir = TTP::alertsJsonDropdir();
+	if( !defined( $command )){
+		# deprecated in v4.1
+		$command = $ep->var([ 'alerts', 'withFile', 'command' ]);
+		if( defined( $command )){
+			msgWarn( "'alerts.withFile' configuration property is deprecated in favor of 'alerts.withJson'. You should update your code." );
 		} else {
-			msgWarn( "unable to get a dropDir for 'withFile' alerts" );
-			msgErr( "alert by file NOT OK" );
+			my $file = File::Spec->catfile( $dir, 'alert-', Time::Moment->now->strftime( '%Y%m%d%H%M%S%6N' ).'.json' );
+			$command = "ttp.pl writejson -nocolored -file $file -data \"<JSON>\"";
 		}
+	}
+	TTP::makeDirExist( $dir );
+	my $data = {
+		emitter => $opt_emitter,
+		level => $opt_level,
+		stamp => Time::Moment->now->strftime( '%Y-%m-%d %H:%M:%S.%5N' )
+	};
+	$data->{title} = $opt_title if $opt_title;
+	$data->{message} = $opt_message if $opt_message;
+	my $json = JSON->new;
+	my $str = $json->encode( $data );
+	# protect the double quotes against the CMD.EXE command-line
+	$str =~ s/"/\\"/g;
+	my $verbose = $running->verbose() ? "-verbose" : "-noverbose";
+	my $result = TTP::commandByOs({
+		command => "$command $verbose",
+		macros => {
+			EMITTER => $opt_emitter,
+			LEVEL => $opt_level,
+			TITLE => $opt_title,
+			MESSAGE => $opt_message,
+			JSON => $str
+		}
+	});
+	if( $result->{result} ){
+		msgOut( "success" );
 	} else {
-		msgWarn( "unable to get a command for alerts by file" );
-		msgErr( "alert by file NOT OK" );
+		msgErr( 'NOT OK' );
 	}
 }
 

@@ -69,13 +69,34 @@ my $Const = {
 
 # -------------------------------------------------------------------------------------------------
 # Returns the configured alertsDir (when alerts are sent by file), defaulting to tempDir()
+# Deprecated in v4.1
 # (I):
 # - none
 # (O):
 # - returns the alertsdir
 
 sub alertsDir {
-	my $dir = $ep->var([ 'alerts', 'withFile', 'dropDir' ]) || tempDir();
+	msgWarn( "TTP::alertsDir() is deprecated in favor of TTP:alertsJsonDropdir(). You should update your code." );
+	return alertsJsonDropdir();
+}
+
+# -------------------------------------------------------------------------------------------------
+# Returns the configured alertsDir (when alerts are sent by file), defaulting to tempDir()
+# (I):
+# - none
+# (O):
+# - returns the alertsdir
+
+sub alertsJsonDropdir {
+	my $dir = $ep->var([ 'alerts', 'withJson', 'dropDir' ]);
+	if( !defined( $dir )){
+		$dir = $ep->var([ 'alerts', 'withFile', 'dropDir' ]);
+		if( defined( $dir )){
+			msgWarn( "'alerts.withFile' configuration property is deprecated in favor of 'alerts.withJson'. You should update your code." );
+		} else {
+			$dir = tempDir();
+		}
+	}
 	return $dir;
 }
 

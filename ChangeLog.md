@@ -7,7 +7,9 @@
     Release date: 
 
     - Change the semantic of 'alert.xxx.enabled' introducing 'alerts.xxx.default'
+    - Alerts now have a title and a message, each of them (but not both) being optional
     - Deprecate 'alerts.withFile' in favor of 'alert.withJson'
+    - Deprecate 'TTP::alertsDir()' in favor of 'TTP::alertsJsonDropdir()'
     - Define ttp.pl alert --list-levels option
 
 ### 4.0.1-rc.5
