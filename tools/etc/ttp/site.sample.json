@@ -32,44 +32,30 @@
 
 	"TTP": {
 
-		"alerts_comments": [
-			"Configure here the alerts which can be sent via 'ttp.pl alert' to various external media."
-		],
 		"alerts": {
-			"withFile_comments": [
-				"manage macros: DATA"
-			],
 			"withFile": {
 				"enabled": true,
 				"default": true,
 				"dropDir": "[eval:File::Spec->catdir( TTP::logsRoot(), localtime->strftime( '%y%m%d' ), 'Alerts' )]",
-				"command": "ttp.pl writejson -file [eval:File::Spec->catfile( TTP::alertsDir({ makeDirExist => false }), Time::Moment->now->strftime( '%Y%m%d%H%M%S%6N' ).'.json' )] -data \"<DATA>\""
+				"command": "ttp.pl writejson -file [eval:File::Spec->catfile( TTP::alertsDir({ makeDirExist => false }), Time::Moment->now->strftime( '%Y%m%d%H%M%S%6N' ).'.json' )] -data \"<JSON>\" <OPTIONS>"
 			},
-			"withMqtt_comments": [
-				"manage macros: SUBJECT, DATA, OPTIONS"
-			],
 			"withMqtt": {
 				"default": true,
 				"enabled": true,
-				"command": "mqtt.pl publish -topic <SUBJECT> -payload \"<DATA>\" <OPTIONS>"
+				"command": "mqtt.pl publish -topic [eval:$ep->node()->name()]/alert -payload \"<JSON>\" <OPTIONS>"
 			},
-			"withSmtp_comments": [
-				"manage macros: SUBJECT, OPTIONS"
-			],
-			"withSmtp" : {
-				"enabled": true,
-				"default": true,
-				"command": "smtp.pl send -to alerts@trychlos.org,inlingua-adm@trychlos.org -subject <SUBJECT> <OPTIONS>"
-			},
-			"withSms_comments": [
-				"manage macros: OPTIONS"
-			],
 			"withSms" : {
 				"enabled": true,
 				"default": true,
 				"command": "smtp.pl send -to mail2sms@trychlos.org -subject \"SMSTO: +33234567890\" <OPTIONS>"
+			},
+			"withSmtp" : {
+				"enabled": true,
+				"default": true,
+				"command": "smtp.pl send -to alerts@example.com -subject <TITLE> -text <MESSAGE> <OPTIONS>"
 			}
 		},
+
 		"copyDir_comments": [
 			"manage macros: SOURCE, TARGET"
 		],
