@@ -37,6 +37,11 @@ jobs:
         ls -l ${RUNNER_TEMP}/${{ steps.package.outputs.package }}.tar.gz
         file ${RUNNER_TEMP}/${{ steps.package.outputs.package }}.tar.gz
 
+    - name: Check tar.gz
+      run: |
+        ls -l ${RUNNER_TEMP}/${{ steps.package.outputs.package }}.tar.gz
+        file ${RUNNER_TEMP}/${{ steps.package.outputs.package }}.tar.gz
+
     - name: Upload tar.gz artifact
       uses: actions/upload-release-asset@v1
       env:
