@@ -100,14 +100,14 @@ sub doPull_byTree {
 	if( $command ){
 		$result->{asked} += 1;
 		msgVerbose( "source='$srcPath' target='$tree->{target}'" );
-		my $cmdres = TTP::commandByOs({
+		my $cmdres = TTP::commandExec({
 			command => $command,
 			macros => {
 				SOURCE => $srcPath,
 				TARGET => $tree->{target}
 			}
 		});
-		$result->{done} += 1 if $cmdres->{result};
+		$result->{done} += 1 if $cmdres->{success};
 	} else {
 		opendir( FD, "$srcPath" ) or msgErr( "unable to open directory $srcPath: $!" );
 		if( !TTP::errs()){

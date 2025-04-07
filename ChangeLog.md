@@ -11,6 +11,7 @@
     - Deprecate 'alerts.withFile' in favor of 'alert.withJson'
     - Deprecate 'TTP::alertsDir()' in favor of 'TTP::alertsJsonDropdir()'
     - Define ttp.pl alert --list-levels option
+    - TTP::CommandByOs() is renamed TTP::CommandExec()
 
 ### 4.0.1-rc.5
 

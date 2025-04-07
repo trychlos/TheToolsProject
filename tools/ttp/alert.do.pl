@@ -116,11 +116,11 @@ sub doDisplayLevels {
 
 sub doJsonAlert {
 	msgOut( "creating a new '$opt_level' JSON alert..." );
-	my $command = TTP::commandGet([ 'alerts', 'withJson' ]);
+	my $command = TTP::commandByOs([ 'alerts', 'withJson' ]);
 	my $dir = TTP::alertsJsonDropdir();
 	if( !defined( $command )){
 		# deprecated in v4.1
-		$command = TTP::commandGet([ 'alerts', 'withFile' ]);
+		$command = TTP::commandByOs([ 'alerts', 'withFile' ]);
 		if( defined( $command )){
 			msgWarn( "'alerts.withFile' configuration property is deprecated in favor of 'alerts.withJson'. You should update your code." );
 		} else {
