@@ -50,7 +50,7 @@ $| = 1;
 
 # store here our TTP variables
 my $Const = {
-	# defaults which depend of the host OS provided by 'Config' package
+	# defaults which depend of the host OS provided by 'Config{osname}' package's value
 	byOS => {
 		darwin => {
 			tempDir => '/tmp',
