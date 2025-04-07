@@ -116,11 +116,11 @@ sub doDisplayLevels {
 
 sub doJsonAlert {
 	msgOut( "creating a new '$opt_level' JSON alert..." );
-	my $command = $ep->var([ 'alerts', 'withJson', 'command' ]);
+	my $command = TTP::commandGet([ 'alerts', 'withJson' ]);
 	my $dir = TTP::alertsJsonDropdir();
 	if( !defined( $command )){
 		# deprecated in v4.1
-		$command = $ep->var([ 'alerts', 'withFile', 'command' ]);
+		$command = TTP::commandGet([ 'alerts', 'withFile' ]);
 		if( defined( $command )){
 			msgWarn( "'alerts.withFile' configuration property is deprecated in favor of 'alerts.withJson'. You should update your code." );
 		} else {
@@ -395,7 +395,7 @@ if( $opt_listLevels ){
 
 	# at least one medium must be specified
 	if( !$opt_json && !$opt_mqtt && !$opt_smtp && !$opt_sms ){
-		msgErr( "at least one of '--json', '--mqtt', '--smtp' or '--sms' options must be specified" ) if !$opt_emitter;
+		msgErr( "at least one of '--json', '--mqtt', '--smtp' or '--sms' options must be specified" );
 	}
 }
 

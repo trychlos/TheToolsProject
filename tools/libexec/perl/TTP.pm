@@ -154,6 +154,43 @@ sub commandByOs {
 }
 
 # -------------------------------------------------------------------------------------------------
+# Read from configuration either a command as a string or a byOS-command.
+# We are searching for a 'command' property below the provided keys.
+# This command may be a string or an object 'byOS.<OSname>'.
+# (I):
+# - the list of keys before the 'command' as an array ref
+# (O):
+# - the found command as a string, or undef
+
+sub commandGet {
+	my ( $keys ) = @_;
+	my $command = undef;
+	my @locals = @{$keys};
+	push( @locals, 'command' );
+	my $obj = $ep->var([ \@locals ]);
+	if( defined( $obj )){
+		my $ref = ref( $obj );
+		if( $ref eq 'HASH' ){
+			push( @locals, 'byOS', $Config{osname} );
+			my $obj = $ep->var([ \@locals ]);
+			if( defined( $obj )){
+				$ref = ref( $obj );
+				if( !$ref ){
+					$command = $obj;
+				} else {
+					msgErr( "unexpected object found in [".join( ', ', @locals )."] configuration: $obj ($ref)." );
+				}
+			}
+		} elsif( !$ref ){
+			$command = $obj;
+		} else {
+			msgErr( "unexpected object found in [".join( ', ', @locals )."] configuration: $obj ($ref)." );
+		}
+	}
+	return $command;
+}
+
+# -------------------------------------------------------------------------------------------------
 # copy a directory and its content from a source to a target
 # this is a design decision to make this recursive copy file by file in order to have full logs
 # TTP allows to provide a system-specific command in its configuration file
