@@ -18,34 +18,22 @@ jobs:
       env:
         GITHUB_CONTEXT: ${{ toJson(github) }}
    
-    - name: Get version
-      id: version
+    - name: Setup variables
+      id: vars
       run: |
           echo "version=$(cat .VERSION)" >> $GITHUB_OUTPUT
-
-    - name: Get last tag
-      id: tag
-      run: |
           echo "tag=$(git describe --tags --abbrev=0)" >> $GITHUB_OUTPUT
-
+          echo "source=master" >> $GITHUB_OUTPUT
+          echo "url=https://github.com/${{ github.repository }}/${{ github.event.repository.name }}" >> $GITHUB_OUTPUT
+   
     - name: Compute package name
       id: package
       run: |
-          echo "package=TheToolsProject-${{ steps.version.outputs.version }}" >> $GITHUB_OUTPUT
-
-    - name: Compute the branch we archive from
-      id: source
-      run: |
-          echo "source=master" >> $GITHUB_OUTPUT
-
-    - name: Compute the desired download url
-      id: url
-      run: |
-          echo "url=https://github.com/trychlos/TheToolsProject/TheToolsProject" >> $GITHUB_OUTPUT
+          echo "package=${{ github.event.repository.name }}-${{ steps.vars.outputs.version }}" >> $GITHUB_OUTPUT
 
     - name: Have a tar.gz
       run: |
-        git archive --format tar.gz --prefix ${{ steps.package.outputs.package }}/ ${{ steps.source.outputs.source }} > ${RUNNER_TEMP}/${{ steps.package.outputs.package }}.tar.gz
+        git archive --format tar.gz --prefix ${{ steps.package.outputs.package }}/ ${{ steps.vars.outputs.source }} > ${RUNNER_TEMP}/${{ steps.package.outputs.package }}.tar.gz
 
     - name: Upload tar.gz artifact
       uses: actions/upload-release-asset@v1
@@ -53,14 +41,14 @@ jobs:
 #        GITHUB_TOKEN: ${{ github.token }}
         GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
       with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        upload_url: ${{ github.event.release.upload_url }}
         asset_path: ${RUNNER_TEMP}/${{ steps.package.outputs.package }}.tar.gz
         asset_name: ${{ steps.package.outputs.package }}.tar.gz
         asset_content_type: application/gzip
 
     - name: Have a zip
       run: |
-        git archive --format zip --prefix ${{ steps.package.outputs.package }}/ ${{ steps.source.outputs.source }} > ${RUNNER_TEMP}/${{ steps.package.outputs.package }}.zip
+        git archive --format zip --prefix ${{ steps.package.outputs.package }}/ ${{ steps.vars.outputs.source }} > ${RUNNER_TEMP}/${{ steps.package.outputs.package }}.zip
 
     - name: upload zip artifact
       uses: actions/upload-release-asset@v1
@@ -68,7 +56,7 @@ jobs:
 #        GITHUB_TOKEN: ${{ github.token }}
         GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
       with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        upload_url: ${{ github.event.release.upload_url }}
         asset_path: ${RUNNER_TEMP}/${{ steps.package.outputs.package }}.zip
         asset_name: ${{ steps.package.outputs.package }}.zip
         asset_content_type: application/zip
