@@ -43,10 +43,11 @@ jobs:
         ls -l ${RUNNER_TEMP}/${{ steps.package.outputs.package }}.tar.gz
         file ${RUNNER_TEMP}/${{ steps.package.outputs.package }}.tar.gz
 
+# happens that actions/upload-release-asset@v1 doesn't like an asset path like "${RUNNER_TEMP}/${{ steps.package.outputs.package }}.tar.gz"
+# but is satisfied with a relative path (which unfortunately led us to hardcode this relative)
     - name: Upload tar.gz artifact
       uses: actions/upload-release-asset@v1
       env:
-#        GITHUB_TOKEN: ${{ github.token }}
         GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
       with:
         upload_url: ${{ github.event.release.upload_url }}
@@ -61,11 +62,10 @@ jobs:
     - name: upload zip artifact
       uses: actions/upload-release-asset@v1
       env:
-#        GITHUB_TOKEN: ${{ github.token }}
         GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
       with:
         upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ${RUNNER_TEMP}/${{ steps.package.outputs.package }}.zip
+        asset_path: ../../_temp/${{ steps.package.outputs.package }}.zip
         asset_name: ${{ steps.package.outputs.package }}.zip
         asset_content_type: application/zip
         
