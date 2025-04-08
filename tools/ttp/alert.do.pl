@@ -100,19 +100,6 @@ sub buildAlertData {
 }
 
 # -------------------------------------------------------------------------------------------------
-# build the JSON alert data
-# returns a JSON stringified object (so, a string)
-
-sub buildJsonStr {
-	my $data = buildAlertData();
-	my $json = JSON->new;
-	my $str = $json->encode( $data );
-	# protect the double quotes against the CMD.EXE command-line
-	$str =~ s/"/\\"/g;
-	return $str;
-}
-
-# -------------------------------------------------------------------------------------------------
 # display the known alert levels
 
 sub doDisplayLevels {
@@ -144,18 +131,13 @@ sub doFileAlert {
 	if( !$command ){
 		my $file = File::Spec->catfile( $dir, 'alert-'.Time::Moment->now->strftime( '%Y%m%d%H%M%S%6N' ).'.json' );
 		my $verbose = $running->verbose() ? "-verbose" : "-noverbose";
-		$command = "ttp.pl writejson -nocolored $verbose -file $file -data \"<JSON>\" <OPTIONS>";
+		$command = "ttp.pl writejson -nocolored $verbose -file $file -data '<JSON>' <OPTIONS>";
 	}
 	TTP::makeDirExist( $dir );
 	my $prettyJson = $ep->var([ 'alerts', 'withFile', 'prettyJson' ]);
 	$prettyJson = true if !defined $prettyJson;
-	my $json;
-	if( $prettyJson ){
-		my $data = buildAlertData();
-		$json = JSON->new->pretty->encode( $data );
-	} else {
-		$json = buildJsonStr();
-	}
+	my $data = buildAlertData();
+	my $json = $prettyJson ? JSON->new->pretty->encode( $data ) : JSON->new->encode( $data );
 	my $macros = {
 		EMITTER => $opt_emitter,
 		LEVEL => $opt_level,
@@ -176,9 +158,10 @@ sub doMqttAlert {
 	my $command = TTP::commandByOs([ 'alerts', 'withMqtt' ]);
 	if( !$command ){
 		my $verbose = $running->verbose() ? "-verbose" : "-noverbose";
-		$command = "mqtt.pl publish -nocolored $verbose -topic ".$ep->node()->name()."/alert -payload \"<JSON>\" <OPTIONS>";
+		$command = "mqtt.pl publish -nocolored $verbose -topic ".$ep->node()->name()."/alert -payload '<JSON>' <OPTIONS>";
 	}
-	my $json = buildJsonStr();
+	my $data = buildAlertData();
+	my $json = JSON->new->encode( $data );
 	my $macros = {
 		EMITTER => $opt_emitter,
 		LEVEL => $opt_level,
@@ -193,6 +176,7 @@ sub doMqttAlert {
 # -------------------------------------------------------------------------------------------------
 # send the alert by SMS
 # Expects have some sort of configuration in TTP json
+# No default command as of v4.1
 
 sub doSmsAlert {
 	msgOut( "sending a '$opt_level' alert by SMS..." );
@@ -201,17 +185,12 @@ sub doSmsAlert {
 		my $verbose = $running->verbose() ? "-verbose" : "-noverbose";
 		#$command = "smtp.pl send -nocolored $verbose -to <RECIPIENTS> -subject <TITLE> -text <MESSAGE> <OPTIONS>";
 	}
-	my $recipients = $ep->var([ 'alerts', 'withSms', 'recipients' ]);
+	my $recipients = $ep->var([ 'alerts', 'withSms', 'recipients' ]) || [];
 	if( $command && scalar( @{$recipients} )){
 		my $prettyJson = $ep->var([ 'alerts', 'withSms', 'prettyJson' ]);
 		$prettyJson = true if !defined $prettyJson;
-		my $json;
-		if( $prettyJson ){
-			my $data = buildAlertData();
-			$json = JSON->new->pretty->encode( $data );
-		} else {
-			$json = buildJsonStr();
-		}
+		my $data = buildAlertData();
+		my $json = $prettyJson ? JSON->new->pretty->encode( $data ) : JSON->new->encode( $data );
 		my $macros = {
 			EMITTER => $opt_emitter,
 			LEVEL => $opt_level,
@@ -234,20 +213,22 @@ sub doSmtpAlert {
 	my $command = TTP::commandByOs([ 'alerts', 'withSmtp' ]);
 	if( !$command ){
 		my $verbose = $running->verbose() ? "-verbose" : "-noverbose";
-		$command = "smtp.pl send -nocolored $verbose -to <RECIPIENTS> -subject <TITLE> -text <MESSAGE> <OPTIONS>";
+		$command = "smtp.pl send -nocolored $verbose -to <RECIPIENTS> -subject <TITLE> -text '<MESSAGE>' <OPTIONS>";
 	}
 	my $recipients = $ep->var([ 'alerts', 'withSmtp', 'recipients' ]) || [ 'root@localhost' ];
-	my $title = "[$opt_level] Alert";
-	$title .= " - $opt_title" if $opt_title;
+	my $prefixTitle = $ep->var([ 'alerts', 'withSmtp', 'prefixTitle' ]);
+	$prefixTitle = true if !defined $prefixTitle;
+	my $title;
+	if( $prefixTitle ){
+		$title = "[$opt_level] Alert";
+		$title .= " - $opt_title" if $opt_title;
+	} else {
+		$title = $opt_title || "[$opt_level] Alert";
+	}
 	my $prettyJson = $ep->var([ 'alerts', 'withSmtp', 'prettyJson' ]);
 	$prettyJson = true if !defined $prettyJson;
-	my $json;
-	if( $prettyJson ){
-		my $data = buildAlertData();
-		$json = JSON->new->pretty->encode( $data );
-	} else {
-		$json = buildJsonStr();
-	}
+	my $data = buildAlertData();
+	my $json = $prettyJson ? JSON->new->pretty->encode( $data ) : JSON->new->encode( $data );
 	my $macros = {
 		EMITTER => $opt_emitter,
 		LEVEL => $opt_level,

@@ -26,7 +26,9 @@
 |   55 | 2025- 2-17 | daemon.pl status should have an option to publish to mqtt too |
 |   57 | 2025- 2-17 | daemon.pl status should have an option to publish to text too |
 |   59 | 2025- 2-18 | Daemon.pm: metrics for the daemon are windows-specific: re-code for unix'es |
-|   60 |  |  |
+|   60 | 2025- 4- 6 | replace Time::Piece with Time::Moment |
+|   61 | 2025- 4- 8 | ttp.pl writejson should have a --pretty option -> update ttp.pl alert --file accordingly |
+|   62 |  |  |
 
 ---
 ## Done
@@ -45,15 +47,15 @@
 |    5 | 2024- 5- 1 | get rid of 'ttp'-prefixed TTP functions
 |      | 2024- 5- 2 | done
 |    6 | 2024- 5- 1 | IRunnable::filter() when called with direct command execution, only get the first line as in $running->filter( `$command` );
-|		 | 	        | while having my $res = `$command`; $running->filter( $res ) is fine
-|	    | 2024- 5- 2 | is move to TTP:;:filter() -> to be retested
-|	    | 2024- 5- 3 | happened that the arguments format depends of the call mode -> fixed
+|	   | 	        | while having my $res = `$command`; $running->filter( $res ) is fine
+|	   | 2024- 5- 2 | is move to TTP:;:filter() -> to be retested
+|	   | 2024- 5- 3 | happened that the arguments format depends of the call mode -> fixed
 |    7 | 2024- 5- 1 | Daemon.pm let the daemon advertise its status to http-based and text-based telemetry
 |      |            | provides labels through json configuration
-|	    | 2024- 5- 2 | labels can be added via the Daemon API - closing
+|	   | 2024- 5- 2 | labels can be added via the Daemon API - closing
 |    9 | 2024- 5- 2 | [backup-monitor-daemon.pl tom59-backup-monitor-daemon] (WAR) TTP::Metric::_http_publish() Code: 400 MSG: text format parsing error in line 1: invalid metric name in comment
 |      |            | line is "# HELP ttp_tom17-backup-monitor-daemon The last epoch time the daemon has been seen alive"
-|   	 | 2024- 5- 2 | done (fix regexes)
+|      | 2024- 5- 2 | done (fix regexes)
 |   10 | 2024- 5- 2 | backup-monitor-daemon.pl should advertise the remoteExecReportsDir but not as a msgVerbose as this later is too frequent
 |      | 2024- 5- 2 | done (see #13)
 |   11 | 2024- 5- 2 | check that httpMessaging and textMessaging can be disabled in daemon configuration (zero is it valid ?)
@@ -66,37 +68,37 @@
 |      | 2024- 5- 2 | actually jsonRead is moved from IJSONable to TTP (like jsonWrite and jsonAppend) -> done
 |   16 | 2024- 5- 2 | on ws12dev1, startup doesn't send alerts
 |      | 2024- 5- 5 | same even after scheduled tasks path update
-|	    |            | "services.pl list -workload startup -commands -hidden" returns (wrong) "C:\Temp\Site\Commands\startup.cmd"
-|		 | 		     | while "ttp.pl vars -key site,commandsDir" returns (right) "C:\INLINGUA\Site\Commands"
-|	    | 2024- 5- 5 | fixed
+|	   |            | "services.pl list -workload startup -commands -hidden" returns (wrong) "C:\Temp\Site\Commands\startup.cmd"
+|	   | 		    | while "ttp.pl vars -key site,commandsDir" returns (right) "C:\INLINGUA\Site\Commands"
+|	   | 2024- 5- 5 | fixed
 |   17 | 2024- 5- 3 | ns332346 tasks didn't execute this morning 
-|	    | 2024- 5- 3 | fixed with #24
+|	   | 2024- 5- 3 | fixed with #24
 |   18 | 2024- 5- 3 | ws22prod1
 |      |            | Can't stat //ns3232346.ovh.net/C/INLINGUA/dailyLogs/240503/execReports: No such file or directory
 |      |            |  at C:\INLINGUA\Site\Commands\backup-monitor-daemon.pl line 507.
 |      |            | Can't stat //ns3232346.ovh.net/C/INLINGUA/dailyLogs/240503/execReports: No such file or directory
 |      |            | at C:\INLINGUA\Site\Commands\backup-monitor-daemon.pl line 493.
-|		 | 		     | One line is normal as long as there is not yet any execution report to create the directory
-|		 | 		     | Why this second line ?
-|	    | 2024- 5- 5 | seems that this doesn't reproduce - wait for two days...
+|	   | 		    | One line is normal as long as there is not yet any execution report to create the directory
+|	   | 		    | Why this second line ?
+|	   | 2024- 5- 5 | seems that this doesn't reproduce - wait for two days...
 |      | 2024- 5- 6 | stdout is clean as of 2024-05-06 09:43
 |      | 2024- 5- 7 | stdout is clean as of 2024-05-06 09:41 -> closing
 |   19 | 2024- 5- 3 | ws22prod1 tasks didn't execute to purge the logs directories
-|	    | 2024- 5- 3 | fixed with #24
+|	   | 2024- 5- 3 | fixed with #24
 |   20 | 2024- 5- 3 | ttp.pl vars -logsCommands -nocolored
 |      |            | ws12dev1 Can't call method "verbose" on an undefined value at C:\INLINGUA\dev\scripts\TheToolsProject\libexec\perl/TTP.pm line 774.
-|		 | 		     | ns3232346 Can't call method "verbose" on an undefined value at C:\INLINGUA\TheToolsProject\libexec\perl/TTP.pm line 918.
-|	    | 2024- 5- 3 | fixed
+|	   | 		    | ns3232346 Can't call method "verbose" on an undefined value at C:\INLINGUA\TheToolsProject\libexec\perl/TTP.pm line 918.
+|	   | 2024- 5- 3 | fixed
 |   21 | 2024- 5- 3 | C:\INLINGUA\TheToolsProject\smtp\send.do.pl: Global symbol "$ttp" requires explicit package name (did you forget to declare "my $ttp"?) at C:\INLINGUA\TheToolsProject\libexec\perl/TTP/SMTP.pm line 48.
-|	    | 2024- 5- 3 | fixed
+|	   | 2024- 5- 3 | fixed
 |   22 | 2024- 5- 3 | Type of arg 1 to Try::Tiny::catch must be block or sub {} (not reference constructor) at C:\INLINGUA\TheToolsProject\libexec\perl/TTP/SMTP.pm line 99, near "};"
-|	    | 2024- 5- 3 | fixed
+|	   | 2024- 5- 3 | fixed
 |   23 | 2024- 5- 3 | [smtp.pl send] (ERR) Mail::send() expect smtp gateway, not found
 |      | 2024- 5- 3 | fixed
 |   24 | 2024- 5- 3 | ns3232346 C:\Users\inlingua-user>services.pl list -workload daily.morning -commands -hidden -nocolored
 |      |            | [services.pl list] displaying workload commands defined in 'NS3232346\daily.morning'...
 |      |            | [services.pl list] 0 found defined command(s)
-|	    | 2024- 5- 3 | fixed with #6
+|	   | 2024- 5- 3 | fixed with #6
 |   26 | 2024- 5- 3 | upgrade Canal33 backups from every.5h to every.2h (like the Tom's)
 |      | 2024- 5-10 | done, installed on WS12...
 |   27 | 2024- 5- 3 | archivesBackups should be set when purging dailyBackups so that we keep for example 5 days in daily Backups and move the 6th to the archives
@@ -107,7 +109,7 @@
 |      | 2024- 5- 5 | the scheduled tasks form yesterday was still running - thus not trigerred this morning
 |   30 | 2024- 5- 5 | ns3232346 while Tom59 has four databases, the execution reports show only one -> should have one execution report per database
 |      | 2024- 5- 6 | confirmed: all the databases are saved, but only three execution reports: tom17+tom21+tom59: the four execution reports are sent to the same file
-|	    |            | happens that TTP::random() is evaluated at bootstrap time, so once for the three files
+|	   |            | happens that TTP::random() is evaluated at bootstrap time, so once for the three files
 |      | 2024- 5- 6 | fixed by a) removing the TTP::random() evaluation from site.json b) replacing it with a temp file templating in ttp.pl writejson
 |   31 | 2024- 5- 5 | ws22prod1 inlingua33_archive is restored at 6h, but not inlingua31_archive nor inlingua59_archive
 |      | 2024- 5- 6 | confirmed - this may be because there was only one execution report json file, so should be fixed with #30
@@ -129,19 +131,19 @@
 |      |            | 'C:/INLINGUA/dailyLogs/240506/execReports/2024050606000238325-bcfd49ecb39b10149c0546b87b6865c8.json',
 |      |            | 'C:\\INLINGUA\\dailyLogs\\240506\\execReports\\2024050606000238325-bcfd49ecb39b10149c0546b87b6865c8.json'
 |      |            | ], 'Path::Tiny' ); -> two filenames ?
-|	    | 2024- 5- 6 | this is just the standard return value of Path::Tiny->path() -> closed
+|	   | 2024- 5- 6 | this is just the standard return value of Path::Tiny->path() -> closed
 |   37 | 2024- 5- 7 | ns3232346 no execution reports
 |      | 2024- 5- 7 | fixed
 |   38 | 2024- 5- 7 | backup daemons do not run
 |      | 2024- 5- 7 | actually, they are running, but do not answer
-|   	 | 2024- 5- 9 | they answer but this is very long
-|	    | 2024- 5- 9 | fixed by the freeing of rl9pilot1 work space
+|      | 2024- 5- 9 | they answer but this is very long
+|	   | 2024- 5- 9 | fixed by the freeing of rl9pilot1 work space
 |   39 | 2024- 5- 9 | daemons do not publish their status to mqtt
 |      | 2024- 5- 9 | they actually do publish, but 1mn later an 'offline' is also published
-|	    | 2024- 5- 9 | fixed by increasing the KEEPALIVE_INTERVAL for backup daemons
+|	   | 2024- 5- 9 | fixed by increasing the KEEPALIVE_INTERVAL for backup daemons
 |   40 | 2024- 5- 9 | telemetry: should have environment and emitter(command+verb) - see the push gateway @ 10.122.1.15:9091
 |      | 2024- 5- 9 | labels are added to dbms.pl status and dbms.pl telemetry, http.pl get, Daemon.pm, mswin.pl service, and ttp.pl sizedir
-|	    |            | only telemetry.pl publish is left unchanged
+|	   |            | only telemetry.pl publish is left unchanged
 |      | 2024- 5- 9 | done
 |   41 | 2024- 5- 9 | daemons mqtt: publish all status informations
 |      | 2024- 5- 9 | done

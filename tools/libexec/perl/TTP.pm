@@ -167,6 +167,9 @@ sub commandExec {
 			$result->{evaluated} =~ s/<$key>/$args->{macros}{$key}/;
 			#print "key='$key' value='$args->{macros}{$key}'".EOL;
 		}
+		# protect double quotes against shell/cmd interpretation - NOT HERE
+		# configured strings should be single-quoted
+		#$result->{evaluated} =~ s/"/\\"/g;
 		msgVerbose( "TTP::commandExec() evaluated to '$result->{evaluated}'" );
 		if( $ep->runner()->dummy()){
 			msgDummy( $result->{evaluated} );

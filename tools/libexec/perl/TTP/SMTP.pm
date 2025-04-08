@@ -49,10 +49,10 @@ sub send {
 	msgErr( "Mail::send() expect subject, not found" ) if $msg && ref( $msg ) eq 'HASH' && !$msg->{subject};
 	msgErr( "Mail::send() expect a content, not found" ) if $msg && ref( $msg ) eq 'HASH' && !$msg->{text} && !$msg->{html};
 	msgErr( "Mail::send() expect at least one target email address, not found" ) if $msg && ref( $msg ) eq 'HASH' && !$msg->{to};
-	if( !TTP::errs()){
-		my $sender = $ep->var([ 'SMTPGateway', 'mailfrom' ]);
-		$sender = 'me@localhost' if !$sender;
-		$sender = $msg->{from} if exists $msg->{from};
+	if( TTP::errs()){
+		TTP::stackTrace();
+	} else {
+		my $sender = $msg->{from} || $ep->var([ 'SMTPGateway', 'mailfrom' ]) || "No Reply <no-reply\@localhost>";
 
 		my $email = Email::Stuffer->new({
 			from => $sender,
@@ -75,42 +75,55 @@ sub send {
 		$email->text_body( $msg->{text} ) if $msg->{text};
 		$email->html_body( $msg->{html} ) if $msg->{html};
 
-		my $debug = $ep->var([ 'SMTPGateway', 'debug' ]);
-		$debug = false if !defined $debug;
-		$debug = $msg->{debug} if exists $msg->{debug};
-
-		# Email::Sender::Transport::SMTP is able to choose a default port if we set the 'ssl' option to 'ssl' or true
-		# but is not able to set a default ssl option starting from the port - fix that here
 		my $opts = {};
-		$opts->{host} = $ep->var([ 'SMTPGateway', 'host' ]) || 'localhost';
-		$opts->{port} = $ep->var([ 'SMTPGateway', 'port' ]);
-		#$opts->{sasl_authenticator} = $sasl;
-		
-		# use Credentials package to manage username and password (if any)
-		my $username = TTP::Credentials::get([ 'SMTPGateway', 'username' ]);
-		my $password = TTP::Credentials::get([ 'SMTPGateway', 'password' ]);
-		$opts->{sasl_username} = $username if $username;
-		$opts->{sasl_password} = $password if $username;
+		$opts->{host} = $ep->var([ 'SMTPGateway', 'host' ]);
 
-		$opts->{helo} = $ep->var([ 'SMTPGateway', 'helo' ]) || $ep->node()->name();
-		$opts->{ssl} = $ep->var([ 'SMTPGateway', 'security' ]);
-		if( $opts->{port} && !$opts->{ssl} ){
-			$opts->{ssl} = 'ssl' if $opts->{port} == 465;
-			$opts->{ssl} = 'starttls' if $opts->{port} == 587;
+		# if no MTA is configured, then default to local MTA (hoping it exists) and just send
+		if( !$opts->{host} ){
+			msgVerbose( "no configured MTA: just sending" );
+			$res = $email->send;
+			# returns "bless( {}, 'Email::Sender::Success' )"
+			$res = ( ref( $res ) eq "Email::Sender::Success" );
+
+		# a MTA is configured, use it
+		} else {
+			msgVerbose( "configured MTA is '$opts->{host}': try to use it" );
+			# Email::Sender::Transport::SMTP is able to choose a default port if we set the 'ssl' option to 'ssl' or true
+			# but is not able to set a default ssl option starting from the port - fix that here
+			$opts->{port} = $ep->var([ 'SMTPGateway', 'port' ]);
+			#$opts->{sasl_authenticator} = $sasl;
+
+			my $debug = $ep->var([ 'SMTPGateway', 'debug' ]);
+			$debug = false if !defined $debug;
+			$debug = $msg->{debug} if exists $msg->{debug};
+
+			# use Credentials package to manage username and password (if any)
+			my $username = TTP::Credentials::get([ 'SMTPGateway', 'username' ]);
+			my $password = TTP::Credentials::get([ 'SMTPGateway', 'password' ]);
+			$opts->{sasl_username} = $username if $username;
+			$opts->{sasl_password} = $password if $username;
+
+			$opts->{helo} = $ep->var([ 'SMTPGateway', 'helo' ]) || $ep->node()->name();
+			$opts->{ssl} = $ep->var([ 'SMTPGateway', 'security' ]);
+			if( $opts->{port} && !$opts->{ssl} ){
+				$opts->{ssl} = 'ssl' if $opts->{port} == 465;
+				$opts->{ssl} = 'starttls' if $opts->{port} == 587;
+			}
+			$opts->{timeout} = $ep->var([ 'SMTPGateway', 'timeout' ]) || 60;
+			$opts->{debug} = $debug;
+			$opts->{ssl_options} = { SSL_verify_mode => IO::Socket::SSL::SSL_VERIFY_NONE };
+			my $transport = Email::Sender::Transport::SMTP->new( $opts );
+			$email->transport( $transport );
+			msgVerbose( "sending with opts=".Dumper( $opts ));
+
+			try {
+				# see https://github.com/rjbs/Email-Stuffer/issues/17
+				$res = $email->send({ to => [ @{$msg->{to}}, @{$msg->{bcc}} ] });
+			} catch {
+				msgWarn( "Mail::send() $!" );
+				print Dumper( $res );
+			};
 		}
-		$opts->{timeout} = $ep->var([ 'SMTPGateway', 'timeout' ]) || 60;
-		$opts->{debug} = $debug;
-		$opts->{ssl_options} = { SSL_verify_mode => IO::Socket::SSL::SSL_VERIFY_NONE };
-		my $transport = Email::Sender::Transport::SMTP->new( $opts );
-		$email->transport( $transport );
-
-		try {
-			# see https://github.com/rjbs/Email-Stuffer/issues/17
-			$res = $email->send({ to => [ @{$msg->{to}}, @{$msg->{bcc}} ] });
-		} catch {
-			msgWarn( "Mail::send() $!" );
-			print Dumper( $res );
-		};
 	}
 	return $res;
 }
