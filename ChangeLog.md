@@ -2,6 +2,12 @@
 
 ## ChangeLog
 
+### 4.1.1
+
+    Release date: 2025- 4- 9
+
+    - Update execution permision (git update-index --chmod=+x tools/bin/*)
+
 ### 4.1.0
 
     Release date: 2025- 4- 9
