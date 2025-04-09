@@ -29,7 +29,9 @@
 |   60 | 2025- 4- 6 | replace Time::Piece with Time::Moment |
 |   61 | 2025- 4- 8 | ttp.pl writejson should should actually be ttp.pl filewrite as the json is provided as a string on input - so this is not dedicated to json |
 |   62 | 2024- 4- 9 | MQTTGateway.broker should be deprecated in favor of MQTT.host for consistency reason |
-|   63 |  |  |
+|   63 | 2024- 4- 9 | replace all $running with $ep->runner() (a specific variable seems useless) |
+|   64 | 2024- 4- 9 | when there is no execution node, trap_exit doesn't trigger sh/msgVerbose() on slim14 while triggering it in node93 - why ? |
+|   65 |  |  |
 
 ---
 ## Done

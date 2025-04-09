@@ -57,6 +57,7 @@ use warnings;
 use TTP::Constants qw( :all );
 use TTP::Message qw( :all );
 use TTP::Node;
+my $running = $ep->runner();
 
 my $defaults = {
 	help => 'no',

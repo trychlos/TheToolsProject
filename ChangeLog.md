@@ -7,6 +7,7 @@
     Release date: 2025- 4- 9
 
     - Update execution permision (git update-index --chmod=+x tools/bin/*)
+    - Setup missing $running variable in ttp/switch.do.ksh
 
 ### 4.1.0
 
