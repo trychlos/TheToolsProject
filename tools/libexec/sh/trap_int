@@ -35,7 +35,10 @@
 trap_int()
 {
 	[ "${TTP_DEBUG}" = "1" ] && echo "trap_int()" >&2
+
 	msgOut "exiting on keyboard interrupt"
+
 	[ ${ttp_code} -eq 0 ] && ttp_code=1
+
 	exit
 }
