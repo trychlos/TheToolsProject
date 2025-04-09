@@ -2,9 +2,15 @@
 
 ## ChangeLog
 
-### 4.1.2-rc.0
+### 4.1.3-rc.0
 
     Release date: 
+
+    - 
+
+### 4.1.2
+
+    Release date: 2025- 4- 9
 
     - Add back msgOut() and msgVerbose() shell functions from Tools-v2-Sh
 
