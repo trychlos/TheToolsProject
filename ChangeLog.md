@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.1.0-rc
+### 4.1.0
 
-    Release date: 
+    Release date: 2025- 4- 9
 
     - Change the semantic of 'alerts.xxx.enabled' introducing 'alerts.xxx.default'
     - Alerts now have a title and a message, each of them (but not both) being optional
@@ -32,4 +32,4 @@
 
 ---
 P. Wieser
-- Last updated on 2025, March 25th
+- Last updated on 2025, Apr. 9th
