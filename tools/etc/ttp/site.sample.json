@@ -31,7 +31,6 @@
 	},
 
 	"TTP": {
-
 		"alerts": {
 			"withFile": {
 				"enabled": true,
@@ -43,12 +42,13 @@
 			"withMqtt": {
 				"default": true,
 				"enabled": true,
-				"command": "mqtt.pl publish -topic [eval:$ep->node()->name()]/alert -payload \"<JSON>\" <OPTIONS>"
+				"command": "mqtt.pl publish -topic [eval:$ep->node()->name()]/alert -payload \"<JSON>\" <OPTIONS>",
+				"topic": "[eval:TTP::nodeName()]/alerts/[eval:Time::Moment->from_string( <STAMP> )->epoch()]"
 			},
 			"withSms" : {
 				"enabled": true,
 				"default": true,
-				"command": "smtp.pl send -to mail2sms@trychlos.org -subject \"SMSTO: +33234567890\" <OPTIONS>",
+				"command": "",
 				"prettyJson": true
 			},
 			"withSmtp" : {
