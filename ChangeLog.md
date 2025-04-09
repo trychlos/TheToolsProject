@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - Add back msgOut() and msgVerbose() shell functions from Tools-v2-Sh
 
 ### 4.1.1
 
