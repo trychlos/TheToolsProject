@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - Shell functions trap_int() and trap_exit() output to stderr
 
 ### 4.1.3
 
