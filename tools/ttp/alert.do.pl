@@ -37,6 +37,7 @@ use strict;
 use utf8;
 use warnings;
 
+#use DateTime::Format::Strptime;
 use File::Spec;
 use JSON;
 use Path::Tiny;
@@ -92,7 +93,8 @@ sub buildAlertData {
 	my $data = {
 		emitter => $opt_emitter,
 		level => $opt_level,
-		stamp => Time::Moment->now->strftime( '%Y-%m-%d %H:%M:%S.%5N' )
+		# ISO 8601 format
+		stamp => Time::Moment->now->strftime( '%Y-%m-%dT%H:%M:%S.%5N%Z' )
 	};
 	$data->{title} = $opt_title if $opt_title;
 	$data->{message} = $opt_message if $opt_message;
@@ -144,6 +146,7 @@ sub doFileAlert {
 		TITLE => $opt_title,
 		MESSAGE => $opt_message,
 		JSON => $json,
+		STAMP => $data->{stamp},
 		OPTIONS => $opt_options
 	};
 	execute( $command, $macros, "success", "alert by File NOT OK" );
@@ -155,12 +158,13 @@ sub doFileAlert {
 
 sub doMqttAlert {
 	msgOut( "publishing a '$opt_level' alert on MQTT bus..." );
+	my $data = buildAlertData();
+	my $topic = $ep->var([ 'alerts', 'withMqtt', 'topic' ]) || $ep->node()->name()."/alerts/".Time::Moment->from_string( $data->{stamp} )->epoch();
 	my $command = TTP::commandByOs([ 'alerts', 'withMqtt' ]);
 	if( !$command ){
 		my $verbose = $running->verbose() ? "-verbose" : "-noverbose";
-		$command = "mqtt.pl publish -nocolored $verbose -topic ".$ep->node()->name()."/alert -payload '<JSON>' <OPTIONS>";
+		$command = "mqtt.pl publish -nocolored $verbose -topic $topic -payload '<JSON>' <OPTIONS>";
 	}
-	my $data = buildAlertData();
 	my $json = JSON->new->encode( $data );
 	my $macros = {
 		EMITTER => $opt_emitter,
@@ -168,6 +172,7 @@ sub doMqttAlert {
 		TITLE => $opt_title,
 		MESSAGE => $opt_message,
 		JSON => $json,
+		STAMP => $data->{stamp},
 		OPTIONS => $opt_options
 	};
 	execute( $command, $macros, "success", "alert by MQTT NOT OK" );
@@ -197,6 +202,7 @@ sub doSmsAlert {
 			TITLE => $opt_title,
 			MESSAGE => $opt_message,
 			JSON => $json,
+			STAMP => $data->{stamp},
 			OPTIONS => $opt_options,
 			RECIPIENTS => join( ',', @{$recipients} )
 		};
@@ -235,6 +241,7 @@ sub doSmtpAlert {
 		TITLE => $title,
 		MESSAGE => $opt_message,
 		JSON => $json,
+		STAMP => $data->{stamp},
 		OPTIONS => $opt_options,
 		RECIPIENTS => join( ',', @{$recipients} )
 	};

@@ -27,8 +27,9 @@
 |   57 | 2025- 2-17 | daemon.pl status should have an option to publish to text too |
 |   59 | 2025- 2-18 | Daemon.pm: metrics for the daemon are windows-specific: re-code for unix'es |
 |   60 | 2025- 4- 6 | replace Time::Piece with Time::Moment |
-|   61 | 2025- 4- 8 | ttp.pl writejson should have a --pretty option -> update ttp.pl alert --file accordingly |
-|   62 |  |  |
+|   61 | 2025- 4- 8 | ttp.pl writejson should should actually be ttp.pl filewrite as the json is provided as a string on input - so this is not dedicated to json |
+|   62 | 2024- 4- 9 | MQTTGateway.broker should be deprecated in favor of MQTT.host for consistency reason |
+|   63 |  |  |
 
 ---
 ## Done

@@ -13,7 +13,10 @@
     - TTP::commandByOs() is renamed TTP::commandExec() as this is a command execution
     - TTP::commandByOs() is now the function which find a configured (maybe per-OS) command
     - Introduce TTP::nodeName() function
-    - Introduce 'alerts.xxx.prettyJson' property to display a pretty JSON data, defaulting to true
+    - Define new 'alerts.xxx.prettyJson' property to display a pretty JSON data, defaulting to true
+    - Define new 'alerts.withMqtt.topic' property
+    - Change the default alert topic name to <node>/alerts/<stamp>
+    - Change the alert stamp format to ISO 8601
 
 ### 4.0.1-rc.5
 
