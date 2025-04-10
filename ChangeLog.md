@@ -16,6 +16,7 @@
     - ttp.pl push makes internally use of ttp.pl copydirs
     - ttp.pl pull makes internally use of ttp.pl copydirs
     - Deduplicate makeDirExist() function (used to be both in TTP and in TTP::Path)
+    - ttp.pl copydirs now has an option --empty to empty the target tree before the copy
 
 ### 4.1.3
 

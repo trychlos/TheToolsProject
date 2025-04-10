@@ -30,9 +30,10 @@ use TTP::Message qw( :all );
 # - source path
 # - destination path
 # - an optional options hash ref with following keys:
-#   > 'exclude-dirs': a ref to a list of source dirs to exclude
-#   > 'exclude-files': a ref to a list of source files to exclude
+#   > 'excludeDirs': a ref to a list of source dir globs to exclude
+#   > 'excludeFiles': a ref to a list of source file globs to exclude
 #   > 'options': additional options to pass to the (external) command
+#   > 'emptyTree': whether to empty the target tree before the copy, defaulting to true
 # return true|false
 
 sub copyDir {
@@ -45,12 +46,12 @@ sub copyDir {
 		return false;
 	}
 	# remove the target tree before copying
-	my $emptyBefore = $ep->var([ 'copyDir', 'before', 'emptyTarget' ]);
-	$emptyBefore = true if !defined $emptyBefore;
-	if( $emptyBefore ){
+	my $emptyTree = $opts->{emptyTree};
+	$emptyTree = true if !defined $emptyTree;
+	if( $emptyTree ){
 		removeTree( $target );
 	} else {
-		TTP::Message::msgVerbose( "TTP::Path::copyDir() doesn't empty target tree before copying as emptyBefore is false" );
+		TTP::Message::msgVerbose( "TTP::Path::copyDir() doesn't empty target tree before copying as emptyTree is false" );
 	}
 	# have a command or use dircopy() or use fcopy()
 	my $command = TTP::commandByOs([ 'copyDir' ]);
@@ -61,8 +62,8 @@ sub copyDir {
 			macros => {
 				SOURCE => $source,
 				TARGET => $target,
-				EXCLUDEDIRS => $opts->{'exclude-dirs'},
-				EXCLUDEFILES => $opts->{'exclude-files'},
+				EXCLUDEDIRS => $opts->{excludeDirs},
+				EXCLUDEFILES => $opts->{excludeFiles},
 				OPTIONS => $opts->{options}
 			}
 		});
@@ -72,8 +73,8 @@ sub copyDir {
 		TTP::Message::msgDummy( "TTP::Path::copyDir( $source, $target )" );
 
 	} else {
-		if( $opts->{'exclude-dirs'} || $opts->{'exclude-files'} ){
-			TTP::Message::msgVerbose( "TTP::Path::copyDir() exclusions are specified, falling back to TTP::Path::copyFile()" );
+		if(( $opts->{excludeDirs} && scalar( @{$opts->{excludeDirs}} ) > 0 ) || ( $opts->{excludeFiles} && scalar( @{$opts->{excludeFiles}} ) > 0 )){
+			TTP::Message::msgVerbose( "TTP::Path::copyDir() somes exclusions are specified, falling back to TTP::Path::copyFile()" );
 			$opts->{work} = {};
 			$opts->{work}{source} = $source;
 			$opts->{work}{target} = $target;
@@ -83,7 +84,7 @@ sub copyDir {
 			$result = !$opts->{work}{errors_count};
 			$opts->{work} = undef;
 		} else {
-			TTP::Message::msgVerbose( "TTP::Path::copyDir() no exclusions are specified, falling back to dircopy()" );
+			TTP::Message::msgVerbose( "TTP::Path::copyDir() no exclusions are specified, using dircopy()" );
 			# https://metacpan.org/pod/File::Copy::Recursive
 			# This function returns true or false: for true in scalar context it returns the number of files and directories copied,
 			# whereas in list context it returns the number of files and directories, number of directories only, depth level traversed.
@@ -106,7 +107,7 @@ sub copyDir {
 sub _copy_to {
 	my ( $opts, $file ) = @_;
 	if( $file ne '.' ){
-		if( !_copy_match_dir( $File::Find::dir, $opts->{'exclude-dirs'} ) && !_copy_match_file( $file, $opts->{'exclude-files'} )){
+		if( !_copy_match_dir( $File::Find::dir, $opts->{excludeDirs} ) && !_copy_match_file( $file, $opts->{excludeFiles} )){
 			my $rel_path = File::Spec->abs2rel( $File::Find::name, $opts->{work}{source} );
 			my $dst_file = File::Spec->catfile( $opts->{work}{target}, $rel_path );
 			if( !copyFile( $File::Find::name, $dst_file, $opts->{work} )){
@@ -181,7 +182,7 @@ sub copyFile {
 	$opts //= {};
 	my $result = false;
 	TTP::Message::msgVerbose( "TTP::Path::copyFile() entering with source='$source' target='$target'" );
-	my $command = TTP::commandByOs([ 'copyFile' ], { withCommand => false });
+	my $command = TTP::commandByOs([ 'copyFile' ]);
 	if( $command ){
 		my $cmdres = TTP::commandExec({
 			command => $command,
