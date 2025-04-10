@@ -11,6 +11,7 @@
 # @(-) --exclude-dir=<dir>     exclude this source directory from the copy [${xdir}]
 # @(-) --exclude-file=<file>   exclude this file from the copy [${xfile}]
 # @(-) --options=<options>     additional options to be passed to the command [${options}]
+# @(-) --[no]empty             whether to empty the target tree before the copy [${empty}]
 #
 # @(@) Both --exclude-dir and --exclude-file can be specified several times, and/or as a comma-separated list of values, and/or as globs.
 #
@@ -61,9 +62,13 @@ my $opt_targetpath = $defaults->{targetpath};
 my $opt_targetcmd = $defaults->{targetcmd};
 my $opt_dirs = true;
 my $opt_dirs_set = false;
-my @opt_xdirs = ();
-my @opt_xfiles = ();
+my @opt_excludeDirs = ();
+my @opt_excludeFiles = ();
 my $opt_options = $defaults->{options};
+
+my $opt_empty = $ep->var([ 'copyDir', 'before', 'emptyTree' ]);
+$opt_empty = true if !defined $opt_empty;
+$defaults->{empty} = $opt_empty ? 'yes' : 'no';
 
 # -------------------------------------------------------------------------------------------------
 # Copy directories from source to target
@@ -74,9 +79,10 @@ sub doCopyDirs {
 	my $res = false;
 	if( -d $opt_sourcepath ){
 		$res = TTP::Path::copyDir( $opt_sourcepath, $opt_targetpath, {
-			'exclude-dirs' => \@opt_xdirs,
-			'exclude-files' => \@opt_xfiles,
-			'options' => $opt_options
+			excludeDirs => \@opt_excludeDirs,
+			excludeFiles => \@opt_excludeFiles,
+			options => $opt_options,
+			emptyTree => $opt_empty
 		});
 		$count += 1 if $res;
 	} else {
@@ -108,9 +114,10 @@ if( !GetOptions(
 		$opt_dirs = $value;
 		$opt_dirs_set = true;
 	},
-	"exclude-dir=s@"	=> \@opt_xdirs,
-	"exclude-file=s@"	=> \@opt_xfiles,
-	"options=s"			=> \$opt_options )){
+	"exclude-dir=s@"	=> \@opt_excludeDirs,
+	"exclude-file=s@"	=> \@opt_excludeFiles,
+	"options=s"			=> \$opt_options,
+	"empty!"			=> \$opt_empty )){
 
 		msgOut( "try '".$running->command()." ".$running->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
@@ -130,11 +137,12 @@ msgVerbose( "got targetpath='$opt_targetpath'" );
 msgVerbose( "got targetcmd='$opt_targetcmd'" );
 msgVerbose( "got dirs='".( $opt_dirs ? 'true':'false' )."'" );
 msgVerbose( "got dirs_set='".( $opt_dirs_set ? 'true':'false' )."'" );
-@opt_xdirs = split( /,/, join( ',', @opt_xdirs ));
-msgVerbose( "got exclude_dirs='".join( ',', @opt_xdirs )."'" );
-@opt_xfiles = split( /,/, join( ',', @opt_xfiles ));
-msgVerbose( "got exclude_files='".join( ',', @opt_xfiles )."'" );
+@opt_excludeDirs = split( /,/, join( ',', @opt_excludeDirs ));
+msgVerbose( "got exclude_dirs='".join( ',', @opt_excludeDirs )."'" );
+@opt_excludeFiles = split( /,/, join( ',', @opt_excludeFiles ));
+msgVerbose( "got exclude_files='".join( ',', @opt_excludeFiles )."'" );
 msgVerbose( "got options='$opt_options'" );
+msgVerbose( "got empty='".( $opt_empty ? 'true':'false' )."'" );
 
 # sourcecmd and sourcepath options are not compatible
 my $count = 0;

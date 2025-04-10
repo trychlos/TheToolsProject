@@ -38,7 +38,9 @@
 |   73 | 2024- 4-10 | remove TTP::Path::hostConfigurationPath() |
 |   74 | 2024- 4-10 | TTP::Path::fromCommand() option should be 'makeDirExist' for consistency|
 |   75 | 2024- 4-10 | remove TTP::Path::hostConfigurationPath() |
-|   76 |  |  |
+|   76 | 2024- 4-10 | nodeRoot() should be siteRoot(), shouldn'it ? and so be removed from TTP |
+|   77 | 2024- 4-10 | add a comment on how to get site variables |
+|   78 |  |  |
 
 ---
 ## Done
