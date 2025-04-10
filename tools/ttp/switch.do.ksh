@@ -54,8 +54,6 @@ use strict;
 use utf8;
 use warnings;
 
-use TTP::Constants qw( :all );
-use TTP::Message qw( :all );
 use TTP::Node;
 
 my $defaults = {

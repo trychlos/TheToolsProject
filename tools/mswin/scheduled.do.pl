@@ -31,9 +31,6 @@ use strict;
 use utf8;
 use warnings;
 
-use TTP;
-use TTP::Message qw( :all );
-
 my $defaults = {
 	help => 'no',
 	colored => 'no',
