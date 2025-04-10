@@ -9,7 +9,11 @@
 # @(-) --targetpath=s          the target path [${targetpath}]
 # @(-) --targetcmd=s           the command which will give the target path [${targetcmd}]
 # @(-) --[no]dirs              copy directories and their content [${dirs}]
-# @(-) --skip=<count>          skip count directories from source (ignored at the moment) [${skip}]
+# @(-) --exclude-dir=<dir>     exclude this source directory from the copy [${xdir}]
+# @(-) --exclude-file=<file>   exclude this file from the copy [${xfile}]
+# @(-) --options=<options>     additional options to be passed to the command [${options}]
+#
+# @(@) Both --exclude-dir and --exclude-file can be specified several times, and/or as a comma-separated list of values, and/or as globs.
 #
 # The Tools Project - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
@@ -34,6 +38,7 @@ use utf8;
 use warnings;
 
 use File::Spec;
+use TTP::Path;
 
 my $running = $ep->runner();
 
@@ -47,7 +52,9 @@ my $defaults = {
 	targetpath => '',
 	targetcmd => '',
 	dirs => 'no',
-	skip => 0
+	xdir => '',
+	xfile => '',
+	options => ''
 };
 
 my $opt_sourcepath = $defaults->{sourcepath};
@@ -55,7 +62,9 @@ my $opt_sourcecmd = $defaults->{sourcecmd};
 my $opt_targetpath = $defaults->{targetpath};
 my $opt_targetcmd = $defaults->{targetcmd};
 my $opt_dirs = false;
-my $opt_skip = $defaults->{skip};
+my @opt_xdirs = ();
+my @opt_xfiles = ();
+my $opt_options = $defaults->{options};
 
 # -------------------------------------------------------------------------------------------------
 # Copy directories from source to target
@@ -65,7 +74,11 @@ sub doCopyDirs {
 	my $count = 0;
 	my $res = false;
 	if( -d $opt_sourcepath ){
-		$res = TTP::copyDir( $opt_sourcepath, $opt_targetpath );
+		$res = TTP::Path::copyDir( $opt_sourcepath, $opt_targetpath, {
+			'exclude-dirs' => \@opt_xdirs,
+			'exclude-files' => \@opt_xfiles,
+			'options' => $opt_options
+		});
 		$count += 1 if $res;
 	} else {
 		msgOut( "'$opt_sourcepath' doesn't exist: nothing to copy" );
@@ -92,7 +105,9 @@ if( !GetOptions(
 	"targetpath=s"		=> \$opt_targetpath,
 	"targetcmd=s"		=> \$opt_targetcmd,
 	"dirs!"				=> \$opt_dirs,
-	"skip=i"			=> \$opt_skip )){
+	"exclude-dir=s@"	=> \@opt_xdirs,
+	"exclude-file=s@"	=> \@opt_xfiles,
+	"options=s"			=> \$opt_options )){
 
 		msgOut( "try '".$running->command()." ".$running->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
@@ -111,7 +126,11 @@ msgVerbose( "got sourcecmd='$opt_sourcecmd'" );
 msgVerbose( "got targetpath='$opt_targetpath'" );
 msgVerbose( "got targetcmd='$opt_targetcmd'" );
 msgVerbose( "got dirs='".( $opt_dirs ? 'true':'false' )."'" );
-msgVerbose( "got skip='$opt_skip'" );
+@opt_xdirs = split( /,/, join( ',', @opt_xdirs ));
+msgVerbose( "got exclude_dirs='".join( ',', @opt_xdirs )."'" );
+@opt_xfiles = split( /,/, join( ',', @opt_xfiles ));
+msgVerbose( "got exclude_files='".join( ',', @opt_xfiles )."'" );
+msgVerbose( "got options='$opt_options'" );
 
 # sourcecmd and sourcepath options are not compatible
 my $count = 0;

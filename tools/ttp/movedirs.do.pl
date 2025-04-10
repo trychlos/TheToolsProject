@@ -42,6 +42,8 @@ use warnings;
 use Config;
 use File::Spec;
 
+use TTP::Path;
+
 my $running = $ep->runner();
 
 my $defaults = {
@@ -159,7 +161,7 @@ sub _moveDir {
 		$result = $cmdres->{success};
 	} else {
 		# result is true or false
-		$result = TTP::copyDir( $source, $target ) && TTP::removeTree( $source );
+		$result = TTP::Path::copyDir( $source, $target ) && TTP::Path::removeTree( $source );
 	}
 	msgVerbose( "_moveDir() result=$result" );
 	return $result;

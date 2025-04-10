@@ -1,29 +1,6 @@
 # Copyright (@) 2023-2025 PWI Consulting
 #
 # Various paths management
-#
-# The integrator must configure:
-#
-# - as environment variables:
-#
-#   > TTP_CONFDIR: as the path to the tree which contains all configurations files, and specially 'toops.json'
-#     it is suggested that this configuration tree be outside of the TTP installation
-#     it is addressed by siteConfigurationsDir()
-#     the structure is fixed at the moment:
-#
-#       TTP_CONFDIR/
-#        |
-#        +- toops.json
-#            |
-#            +- daemons/
-#            |
-#            +- machines/
-#
-# - in toops.json:
-#
-#   > logsRoot: the root of the logs tree
-#     is is used by logsRootDir()
-#     this package takes care of creating it if it doesn't exist yet
 
 package TTP::Path;
 
@@ -33,14 +10,213 @@ use warnings;
 
 use Config;
 use Data::Dumper;
-use File::Path qw( make_path );
+use File::Copy::Recursive qw( dircopy fcopy );
+use File::Find;
+use File::Path qw( make_path remove_tree );
 use File::Spec;
+use Text::Glob qw( match_glob );
 use Time::Piece;
 use vars::global qw( $ep );
 
 use TTP;
 use TTP::Constants qw( :all );
 use TTP::Message qw( :all );
+
+# -------------------------------------------------------------------------------------------------
+# copy a directory and its content from a source to a target
+# TTP allows to provide a system-specific command in its configuration file, defaulting to dircopy()
+# or fcopy() if exclusions are specified.
+# (I):
+# - source path
+# - destination path
+# - an optional options hash ref with following keys:
+#   > 'exclude-dirs': a ref to a list of source dirs to exclude
+#   > 'exclude-files': a ref to a list of source files to exclude
+#   > 'options': additional options to pass to the (external) command
+# return true|false
+
+sub copyDir {
+	my ( $source, $target, $opts ) = @_;
+	$opts //= {};
+	my $result = false;
+	msgVerbose( "TTP::Path::copyDir() entering with source='$source' target='$target'" );
+	if( ! -d $source ){
+		msgErr( "$source: source directory doesn't exist" );
+		return false;
+	}
+	# remove the target tree before copying
+	my $emptyBefore = $ep->var([ 'copyDir', 'before', 'emptyTarget' ]);
+	$emptyBefore = true if !defined $emptyBefore;
+	if( $emptyBefore ){
+		removeTree( $target );
+	} else {
+		msgVerbose( "TTP::Path::copyDir() doesn't empty target tree before copying as emptyBefore is false" );
+	}
+	# have a command or use dircopy() or use fcopy()
+	my $command = TTP::commandByOs([ 'copyDir' ]);
+	if( $command ){
+		msgVerbose( "TTP::Path::copyDir() found command='$command', executing it" );
+		my $cmdres = TTP::commandExec({
+			command => $command,
+			macros => {
+				SOURCE => $source,
+				TARGET => $target,
+				EXCLUDEDIRS => $opts->{'exclude-dirs'},
+				EXCLUDEFILES => $opts->{'exclude-files'},
+				OPTIONS => $opts->{options}
+			}
+		});
+		$result = $cmdres->{success};
+
+	} elsif( $ep->runner()->dummy()){
+		msgDummy( "TTP::Path::copyDir( $source, $target )" );
+
+	} else {
+		if( $opts->{'exclude-dirs'} || $opts->{'exclude-files'} ){
+			msgVerbose( "TTP::Path::copyDir() exclusions are specified, falling back to TTP::Path::copyFile()" );
+			$opts->{work} = {};
+			$opts->{work}{source} = $source;
+			$opts->{work}{target} = $target;
+			$opts->{work}{errors_count} = 0;
+			$opts->{work}{makeDirExist} = true;
+			find( sub { _copy_to( $opts, $_ ); }, $source );
+			$result = !$opts->{work}{errors_count};
+			$opts->{work} = undef;
+		} else {
+			msgVerbose( "TTP::Path::copyDir() no exclusions are specified, falling back to dircopy()" );
+			# https://metacpan.org/pod/File::Copy::Recursive
+			# This function returns true or false: for true in scalar context it returns the number of files and directories copied,
+			# whereas in list context it returns the number of files and directories, number of directories only, depth level traversed.
+			my $res = dircopy( $source, $target );
+			$result = $res ? true : false;
+			msgVerbose( "TTP::Path::copyDir() dircopy() res=$res" );
+		}
+	}
+	msgVerbose( "TTP::Path::copyDir() returns result=".( $result ? 'true' : 'false' ));
+	return $result;
+}
+
+# a companion subroutine when searching for files to copy
+# (I):
+# - caller options
+# - current filename
+# (O):
+# - increment opts->{errors_count}
+
+sub _copy_to {
+	my ( $opts, $file ) = @_;
+	if( $file ne '.' ){
+		if( !_copy_match_dir( $File::Find::dir, $opts->{'exclude-dirs'} ) && !_copy_match_file( $file, $opts->{'exclude-files'} )){
+			my $rel_path = File::Spec->abs2rel( $File::Find::name, $opts->{work}{source} );
+			my $dst_file = File::Spec->catfile( $opts->{work}{target}, $rel_path );
+			if( !copyFile( $File::Find::name, $dst_file, $opts->{work} )){
+				$opts->{work}{errors_count} += 1;
+			}
+		}
+	}
+}
+
+# a companion subroutine which try to match dirname agaist excluded dirs
+# NB: have to try to match every single component of the provided dirname
+# (I):
+# - current dir
+# - excluded dirs as an array ref
+# (O):
+# - true if match (dir is excluded)
+
+sub _copy_match_dir {
+	my ( $dir, $excluded ) = @_;
+	my $match = false;
+	my ( $xvol, $xdir, $xfile ) = File::Spec->splitpath( $dir );
+	my @dirs = File::Spec->splitdir( $xdir );
+	push( @dirs, $xfile );
+	OUTER: foreach my $spec ( @{$excluded} ){
+		foreach my $component ( @dirs ){
+			if( $component ){
+				if( match_glob( $spec, $component )){
+					$match = true;
+					last OUTER;
+				}
+			}
+		}
+	}
+	return $match;
+}
+
+# a companion subroutine which try to match filename agaist excluded files
+# (I):
+# - caller options
+# - current file
+# (O):
+# - true if match (file is excluded)
+
+sub _copy_match_file {
+	my ( $file, $excluded ) = @_;
+	my $match = false;
+	foreach my $spec ( @{$excluded} ){
+		if( match_glob( $spec, $file )){
+			$match = true;
+			last;
+		}
+	}
+	return $match;
+}
+
+# -------------------------------------------------------------------------------------------------
+# copy a file from a source to a target
+# TTP allows to provide a system-specific command in its configuration file
+# (I):
+# - source: the source volume, directory and filename
+# - target :the target volume and directory
+# - an optional options hash ref with following keys:
+#   > 'options': additional options to pass to the (external) command
+#   > 'makeDirExist', when using fcopy(), whether a source directory must be created on the target, defaulting to false
+#      fcopy() default behavior is to refuse to copy just a directory (because it wants copy files!), and returns an error message
+#      this option let us reverse this behavior, e.g. when copying a directory tree with empty dirs
+# (O):
+# return true|false
+
+sub copyFile {
+	my ( $source, $target, $opts ) = @_;
+	$opts //= {};
+	my $result = false;
+	msgVerbose( "TTP::Path::copyFile() entering with source='$source' target='$target'" );
+	my $command = TTP::commandByOs([ 'copyFile' ], { withCommand => false });
+	if( $command ){
+		my $cmdres = TTP::commandExec({
+			command => $command,
+			macros => {
+				SOURCE => $source,
+				TARGET => $target,
+				OPTIONS => $opts->{options}
+			}
+		});
+		$result = $cmdres->{success};
+
+	} elsif( $ep->runner()->dummy()){
+		msgDummy( "TTP::Path::copyFile( $source, $target )" );
+
+	} else {
+		# https://metacpan.org/pod/File::Copy
+		# This function returns true or false
+		my $makeDirExist = $opts->{makeDirExist};
+		if( -d $source ){
+			if( $makeDirExist ){
+				$result = TTP::Path::makeDirExist( $source );
+			} else {
+				msgVerbose( "TTP::Path::copyFile() doesn't create directory as makeDirExist is not true" );
+				$result = true;
+			}
+		} else {
+			$result = fcopy( $source, $target );
+			if( !$result ){
+				msgErr( "TTP::Path::copyFile( $source, $target ) $!" );
+			}
+		}
+	}
+	msgVerbose( "TTP::Path::copyFile() returns result=".( $result ? 'true' : 'false' ));
+	return $result;
+}
 
 # ------------------------------------------------------------------------------------------------
 # (O):
@@ -211,6 +387,7 @@ sub hostsConfigurationsDir {
 #     when called from msgXxx()), defaulting to true
 # (O):
 # returns true|false
+
 sub makeDirExist {
 	my ( $dir, $opts ) = @_;
 	$opts //= {};
@@ -249,6 +426,12 @@ sub makeDirExist {
 
 # -------------------------------------------------------------------------------------------------
 # Remove the trailing character
+# (I):
+# - the string to work with
+# - the character to remove
+# (O):
+# - the same string without trailing character
+
 sub removeTrailingChar {
 	my $line = shift;
 	my $char = shift;
@@ -260,10 +443,47 @@ sub removeTrailingChar {
 
 # -------------------------------------------------------------------------------------------------
 # Remove the trailing path separator
+# (I):
+# - the path to work with
+# (O):
+# - the same path without any trailing path separator
+
 sub removeTrailingSeparator {
 	my $dir = shift;
 	my $sep = File::Spec->catdir( '' );
 	return removeTrailingChar( $dir, $sep );
+}
+
+# -------------------------------------------------------------------------------------------------
+# delete a directory and all its content
+# (I):
+# - the dir to be deleted
+# (O):
+# - true|false
+
+sub removeTree {
+	my ( $dir ) = @_;
+	my $result = true;
+	msgVerbose( "TTP::Path::removeTree() removing '$dir'" );
+	my $error;
+	remove_tree( $dir, {
+		verbose => $ep->{run}{verbose},
+		error => \$error
+	});
+	# https://perldoc.perl.org/File::Path#make_path%28-%24dir1%2C-%24dir2%2C-....-%29
+	if( $error && @$error ){
+		for my $diag ( @$error ){
+			my ( $file, $message ) = %$diag;
+			if( $file eq '' ){
+				msgErr( "TTP::Path::removeTree.remove_tree() $message" );
+			} else {
+				msgErr( "TTP::Path::removeTree.remove_tree() $file: $message" );
+			}
+		}
+		$result = false;
+	}
+	msgVerbose( "TTP::Path::removeTree() dir='$dir' result=$result" );
+	return $result;
 }
 
 # ------------------------------------------------------------------------------------------------
