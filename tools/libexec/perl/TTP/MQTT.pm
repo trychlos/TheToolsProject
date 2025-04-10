@@ -55,8 +55,16 @@ sub connect {
 	my $mqtt = undef;
 	$sockopts //= {};
 
-	my $broker = $ep->var([ 'MQTTGateway', 'broker' ]);
-	$broker = $args->{broker} if $args->{broker};
+	my $broker = $args->{broker};
+	if( !$broker ){
+		$broker = $ep->var([ 'MQTTGateway', 'host' ]);
+		if( !$broker ){
+			$broker = $ep->var([ 'MQTTGateway', 'broker' ]);
+			if( $broker ){
+				msgWarn( "'MQTTGateway.broker' property is deprecated in favor of 'MQTTGateway.host'. You should update your configurations." );
+			}
+		}
+	}
 	msgErr( "MQTT::connect() broker is not configured nor provided as an argument" ) if !$broker;
 
 	my $username = TTP::Credentials::get([ 'MQTTGateway', 'username' ]);
