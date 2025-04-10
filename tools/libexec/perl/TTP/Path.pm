@@ -39,9 +39,9 @@ sub copyDir {
 	my ( $source, $target, $opts ) = @_;
 	$opts //= {};
 	my $result = false;
-	msgVerbose( "TTP::Path::copyDir() entering with source='$source' target='$target'" );
+	TTP::Message::msgVerbose( "TTP::Path::copyDir() entering with source='$source' target='$target'" );
 	if( ! -d $source ){
-		msgErr( "$source: source directory doesn't exist" );
+		TTP::Message::msgErr( "$source: source directory doesn't exist" );
 		return false;
 	}
 	# remove the target tree before copying
@@ -50,12 +50,12 @@ sub copyDir {
 	if( $emptyBefore ){
 		removeTree( $target );
 	} else {
-		msgVerbose( "TTP::Path::copyDir() doesn't empty target tree before copying as emptyBefore is false" );
+		TTP::Message::msgVerbose( "TTP::Path::copyDir() doesn't empty target tree before copying as emptyBefore is false" );
 	}
 	# have a command or use dircopy() or use fcopy()
 	my $command = TTP::commandByOs([ 'copyDir' ]);
 	if( $command ){
-		msgVerbose( "TTP::Path::copyDir() found command='$command', executing it" );
+		TTP::Message::msgVerbose( "TTP::Path::copyDir() found command='$command', executing it" );
 		my $cmdres = TTP::commandExec({
 			command => $command,
 			macros => {
@@ -69,11 +69,11 @@ sub copyDir {
 		$result = $cmdres->{success};
 
 	} elsif( $ep->runner()->dummy()){
-		msgDummy( "TTP::Path::copyDir( $source, $target )" );
+		TTP::Message::msgDummy( "TTP::Path::copyDir( $source, $target )" );
 
 	} else {
 		if( $opts->{'exclude-dirs'} || $opts->{'exclude-files'} ){
-			msgVerbose( "TTP::Path::copyDir() exclusions are specified, falling back to TTP::Path::copyFile()" );
+			TTP::Message::msgVerbose( "TTP::Path::copyDir() exclusions are specified, falling back to TTP::Path::copyFile()" );
 			$opts->{work} = {};
 			$opts->{work}{source} = $source;
 			$opts->{work}{target} = $target;
@@ -83,16 +83,16 @@ sub copyDir {
 			$result = !$opts->{work}{errors_count};
 			$opts->{work} = undef;
 		} else {
-			msgVerbose( "TTP::Path::copyDir() no exclusions are specified, falling back to dircopy()" );
+			TTP::Message::msgVerbose( "TTP::Path::copyDir() no exclusions are specified, falling back to dircopy()" );
 			# https://metacpan.org/pod/File::Copy::Recursive
 			# This function returns true or false: for true in scalar context it returns the number of files and directories copied,
 			# whereas in list context it returns the number of files and directories, number of directories only, depth level traversed.
 			my $res = dircopy( $source, $target );
 			$result = $res ? true : false;
-			msgVerbose( "TTP::Path::copyDir() dircopy() res=$res" );
+			TTP::Message::msgVerbose( "TTP::Path::copyDir() dircopy() res=$res" );
 		}
 	}
-	msgVerbose( "TTP::Path::copyDir() returns result=".( $result ? 'true' : 'false' ));
+	TTP::Message::msgVerbose( "TTP::Path::copyDir() returns result=".( $result ? 'true' : 'false' ));
 	return $result;
 }
 
@@ -180,7 +180,7 @@ sub copyFile {
 	my ( $source, $target, $opts ) = @_;
 	$opts //= {};
 	my $result = false;
-	msgVerbose( "TTP::Path::copyFile() entering with source='$source' target='$target'" );
+	TTP::Message::msgVerbose( "TTP::Path::copyFile() entering with source='$source' target='$target'" );
 	my $command = TTP::commandByOs([ 'copyFile' ], { withCommand => false });
 	if( $command ){
 		my $cmdres = TTP::commandExec({
@@ -194,7 +194,7 @@ sub copyFile {
 		$result = $cmdres->{success};
 
 	} elsif( $ep->runner()->dummy()){
-		msgDummy( "TTP::Path::copyFile( $source, $target )" );
+		TTP::Message::msgDummy( "TTP::Path::copyFile( $source, $target )" );
 
 	} else {
 		# https://metacpan.org/pod/File::Copy
@@ -204,17 +204,17 @@ sub copyFile {
 			if( $makeDirExist ){
 				$result = TTP::Path::makeDirExist( $source );
 			} else {
-				msgVerbose( "TTP::Path::copyFile() doesn't create directory as makeDirExist is not true" );
+				TTP::Message::msgVerbose( "TTP::Path::copyFile() doesn't create directory as makeDirExist is not true" );
 				$result = true;
 			}
 		} else {
 			$result = fcopy( $source, $target );
 			if( !$result ){
-				msgErr( "TTP::Path::copyFile( $source, $target ) $!" );
+				TTP::Message::msgErr( "TTP::Path::copyFile( $source, $target ) $!" );
 			}
 		}
 	}
-	msgVerbose( "TTP::Path::copyFile() returns result=".( $result ? 'true' : 'false' ));
+	TTP::Message::msgVerbose( "TTP::Path::copyFile() returns result=".( $result ? 'true' : 'false' ));
 	return $result;
 }
 
@@ -226,7 +226,7 @@ sub credentialsDir {
 	$opts //= {};
 	my $dir = $ep->var([ 'credentialsDir' ], $opts );
 	if( !defined $dir || !length $dir ){
-		msgWarn( "'credentialsDir' is not defined in toops.json nor in host configuration" );
+		TTP::Message::msgWarn( "'credentialsDir' is not defined in toops.json nor in host configuration" );
 	}
 	return $dir;
 }
@@ -246,7 +246,7 @@ sub daemonsConfigurationsDir {
 sub dbmsArchivesDir {
 	my $dir = $ep->var([ 'DBMS', 'archivesDir' ]);
 	if( !defined $dir || !length $dir ){
-		msgWarn( "'archivesDir' is not defined in toops.json nor in host configuration" );
+		TTP::Message::msgWarn( "'archivesDir' is not defined in toops.json nor in host configuration" );
 	}
 	return $dir;
 }
@@ -258,7 +258,7 @@ sub dbmsArchivesDir {
 sub dbmsArchivesRoot {
 	my $dir = $ep->var([ 'DBMS', 'archivesRoot' ]);
 	if( !defined $dir || !length $dir ){
-		msgWarn( "'archivesRoot' is not defined in toops.json nor in host configuration" );
+		TTP::Message::msgWarn( "'archivesRoot' is not defined in toops.json nor in host configuration" );
 	}
 	return $dir;
 }
@@ -277,7 +277,7 @@ sub dbmsBackupsDir {
 	if( defined $dir && length $dir ){
 		makeDirExist( $dir );
 	} else {
-		msgWarn( "'backupsDir' is not defined in toops.json nor in host configuration" );
+		TTP::Message::msgWarn( "'backupsDir' is not defined in toops.json nor in host configuration" );
 	}
 	return $dir;
 }
@@ -291,7 +291,7 @@ sub dbmsBackupsRoot {
 	if( defined $dir && length $dir ){
 		makeDirExist( $dir );
 	} else {
-		msgWarn( "'backupsRoot' is not defined in toops.json nor in host configuration" );
+		TTP::Message::msgWarn( "'backupsRoot' is not defined in toops.json nor in host configuration" );
 	}
 	return $dir;
 }
@@ -312,7 +312,7 @@ sub execReportsDir {
 		$makeDirExist = $opts->{makeDirExist} if exists $opts->{makeDirExist};
 		makeDirExist( $dir ) if $makeDirExist;
 	} else {
-		msgWarn( "'executionReports/withFile/dropDir' is not defined in toops.json nor in host configuration" );
+		TTP::Message::msgWarn( "'executionReports/withFile/dropDir' is not defined in toops.json nor in host configuration" );
 	}
 	return $dir;
 }
@@ -329,19 +329,19 @@ sub execReportsDir {
 sub fromCommand {
 	my( $cmd, $opts ) = @_;
 	$opts //= {};
-	msgErr( "Path::fromCommand() command is not specified" ) if !$cmd;
+	TTP::Message::msgErr( "Path::fromCommand() command is not specified" ) if !$cmd;
 	my $path = undef;
 	if( !TTP::errs()){
 		$path = `$cmd`;
-		msgErr( "Path::fromCommand() command doesn't output anything" ) if !$path;
+		TTP::Message::msgErr( "Path::fromCommand() command doesn't output anything" ) if !$path;
 	}
 	if( !TTP::errs()){
 		my @words = split( /\s+/, $path );
 		if( scalar @words < 2 ){
-			msgErr( "Path::fromCommand() expect at least two words" );
+			TTP::Message::msgErr( "Path::fromCommand() expect at least two words" );
 		} else {
 			$path = $words[scalar @words - 1];
-			msgErr( "Path::fromCommand() found an empty path" ) if !$path;
+			TTP::Message::msgErr( "Path::fromCommand() found an empty path" ) if !$path;
 		}
 	}
 	if( !TTP::errs()){
@@ -400,7 +400,7 @@ sub makeDirExist {
 	$allowVerbose = false if !$ep || !$ep->runner() || !$ep->runner()->verbose();
 	my $result = false;
 	if( -d $dir ){
-		#msgVerbose( "TTP::Path::makeDirExist() dir='$dir' exists" );
+		#TTP::Message::msgVerbose( "TTP::Path::makeDirExist() dir='$dir' exists" );
 		$result = true;
 	} else {
 		# why is that needed in TTP::Path !?
@@ -416,9 +416,9 @@ sub makeDirExist {
 			for my $diag ( @$error ){
 				my ( $file, $message ) = %$diag;
 				if( $file eq '' ){
-					msgErr( $message );
+					TTP::Message::msgErr( $message );
 				} else {
-					msgErr( "$file: $message" );
+					TTP::Message::msgErr( "$file: $message" );
 				}
 			}
 			$result = false;
@@ -469,7 +469,7 @@ sub removeTrailingSeparator {
 sub removeTree {
 	my ( $dir ) = @_;
 	my $result = true;
-	msgVerbose( "TTP::Path::removeTree() removing '$dir'" );
+	TTP::Message::msgVerbose( "TTP::Path::removeTree() removing '$dir'" );
 	my $error;
 	remove_tree( $dir, {
 		verbose => $ep->{run}{verbose},
@@ -480,14 +480,14 @@ sub removeTree {
 		for my $diag ( @$error ){
 			my ( $file, $message ) = %$diag;
 			if( $file eq '' ){
-				msgErr( "TTP::Path::removeTree.remove_tree() $message" );
+				TTP::Message::msgErr( "TTP::Path::removeTree.remove_tree() $message" );
 			} else {
-				msgErr( "TTP::Path::removeTree.remove_tree() $file: $message" );
+				TTP::Message::msgErr( "TTP::Path::removeTree.remove_tree() $file: $message" );
 			}
 		}
 		$result = false;
 	}
-	msgVerbose( "TTP::Path::removeTree() dir='$dir' result=$result" );
+	TTP::Message::msgVerbose( "TTP::Path::removeTree() dir='$dir' result=$result" );
 	return $result;
 }
 
@@ -511,7 +511,7 @@ sub servicesConfigurationsDir {
 
 # ------------------------------------------------------------------------------------------------
 sub siteConfigurationsDir {
-	msgErr( "TTP_CONFDIR is not found in your environment, but is required" ) if !$ENV{TTP_CONFDIR};
+	TTP::Message::msgErr( "TTP_CONFDIR is not found in your environment, but is required" ) if !$ENV{TTP_CONFDIR};
 	return $ENV{TTP_CONFDIR};
 }
 
