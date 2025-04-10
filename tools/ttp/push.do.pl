@@ -39,8 +39,6 @@ use File::Copy::Recursive qw( dircopy pathrmdir );
 use File::Spec;
 use Time::Piece;
 
-my $running = $ep->runner();
-
 my $defaults = {
 	help => 'no',
 	colored => 'no',
@@ -51,10 +49,10 @@ my $defaults = {
 	options => ''
 };
 
-my $foo = $ep->var([ 'deployments', 'excludeDirs' ]);
-$defaults->{excludedirs} = defined $foo ? join( ',', @{$foo} ) : '';
-$foo = $ep->var([ 'deployments', 'excludeFiles' ]);
-$defaults->{excludefiles} = defined $foo ? join( ',', @{$foo} ) : '';
+my $value = $ep->var([ 'deployments', 'excludeDirs' ]);
+$defaults->{excludedirs} = defined $value ? join( ',', @{$value} ) : '';
+$value = $ep->var([ 'deployments', 'excludeFiles' ]);
+$defaults->{excludefiles} = defined $value ? join( ',', @{$value} ) : '';
 
 my $opt_check = true;
 my $opt_check_set = false;
@@ -203,9 +201,9 @@ sub doPush_gitTag {
 	if( $allowed ){
 		msgOut( "tagging '$tree->{source}' git repository" );
 		my $now = localtime->strftime( '%Y%m%d_%H%M%S' );
-		my $message = $running->command()." ".$running->verb();
+		my $message = $ep->runner()->command()." ".$ep->runner()->verb();
 		my $command = "git -C $tree->{source} tag -am \"$message\" $now";
-		if( $running->dummy()){
+		if( $ep->runner()->dummy()){
 			msgDummy( $command );
 		} else {
 			msgVerbose( $command );
@@ -239,18 +237,18 @@ if( !GetOptions(
 	"exclude-file=s@"	=> \@opt_excludeFiles,
 	"options=s"			=> \$opt_options )){
 
-		msgOut( "try '".$running->command()." ".$running->verb()." --help' to get full usage syntax" );
+		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
 }
 
-if( $running->help()){
-	$running->verbHelp( $defaults );
+if( $ep->runner()->help()){
+	$ep->runner()->verbHelp( $defaults );
 	TTP::exit();
 }
 
-msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got colored='".( $ep->runner()->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $ep->runner()->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got check='".( $opt_check ? 'true':'false' )."'" );
 msgVerbose( "got tag='".( $opt_tag ? 'true':'false' )."'" );
 @opt_excludeDirs = split( /,/, join( ',', @opt_excludeDirs ));

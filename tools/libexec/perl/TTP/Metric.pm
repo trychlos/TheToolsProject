@@ -343,11 +343,10 @@ sub _mqtt_publish {
 				$command =~ s/<TOPIC>/$topic/;
 				$command =~ s/<PAYLOAD>/$value/;
 				# and run the command
-				my $running = $ep->runner();
-				my $dummy = $running->dummy() ? "-dummy" : "-nodummy";
-				my $verbose = $running->verbose() ? "-verbose" : "-noverbose";
+				my $dummy = $ep->runner()->dummy() ? "-dummy" : "-nodummy";
+				my $verbose = $ep->runner()->verbose() ? "-verbose" : "-noverbose";
 				my $cmd = "$command -nocolored $dummy $verbose";
-				if( $running->dummy()){
+				if( $ep->runner()->dummy()){
 					msgDummy( $cmd );
 				} else {
 					my $stdout = `$cmd`;

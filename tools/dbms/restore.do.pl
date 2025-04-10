@@ -37,7 +37,6 @@ use utf8;
 use warnings;
 
 use TTP::DBMS;
-my $running = $ep->runner();
 
 my $defaults = {
 	help => 'no',
@@ -89,7 +88,7 @@ sub doRestore {
 			$data->{diff} = $opt_diff;
 		} else {
 			msgVerbose( "emptying '/diff' MQTT message as restored from a full backup" );
-			my $cmd = 'mqtt.pl publish -topic '.$ep->node()->name().'/executionReport/'.$running->command().'/'.$running->verb()."/$opt_instance/$opt_database/diff -payload \"\" -retain -nocolored";
+			my $cmd = 'mqtt.pl publish -topic '.$ep->node()->name().'/executionReport/'.$ep->runner()->command().'/'.$ep->runner()->verb()."/$opt_instance/$opt_database/diff -payload \"\" -retain -nocolored";
 			msgOut( "executing '$cmd'" );
 			`$cmd`;
 		}
@@ -99,7 +98,7 @@ sub doRestore {
 			},
 			mqtt => {
 				data => $data,
-				topic => $ep->node()->name().'/executionReport/'.$running->command().'/'.$running->verb()."/$opt_instance/$opt_database",
+				topic => $ep->node()->name().'/executionReport/'.$ep->runner()->command().'/'.$ep->runner()->verb()."/$opt_instance/$opt_database",
 				options => "-retain",
 				excludes => [
 					'instance',
@@ -138,18 +137,18 @@ if( !GetOptions(
 	"diff=s"			=> \$opt_diff,
 	"verifyonly!"		=> \$opt_verifyonly )){
 
-		msgOut( "try '".$running->command()." ".$running->verb()." --help' to get full usage syntax" );
+		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
 }
 
-if( $running->help()){
-	$running->verbHelp( $defaults );
+if( $ep->runner()->help()){
+	$ep->runner()->verbHelp( $defaults );
 	TTP::exit();
 }
 
-msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got colored='".( $ep->runner()->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $ep->runner()->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got instance='$opt_instance'" );
 msgVerbose( "got instance_set='".( $opt_instance_set ? 'true':'false' )."'" );
 msgVerbose( "got database='$opt_database'" );

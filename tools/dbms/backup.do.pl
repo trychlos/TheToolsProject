@@ -44,7 +44,6 @@ use Time::Piece;
 
 use TTP::DBMS;
 use TTP::Service;
-my $running = $ep->runner();
 
 my $defaults = {
 	help => 'no',
@@ -104,7 +103,7 @@ sub doBackup {
 				data => $data
 			},
 			mqtt => {
-				topic => $ep->node()->name()."/executionReport/".$running->command().'/'.$running->verb()."/$opt_instance/$db",
+				topic => $ep->node()->name()."/executionReport/".$ep->runner()->command().'/'.$ep->runner()->verb()."/$opt_instance/$db",
 				data => $data,
 				options => "-retain",
 				excludes => [
@@ -149,18 +148,18 @@ if( !GetOptions(
 	"compress!"			=> \$opt_compress,
 	"output=s"			=> \$opt_output )){
 
-		msgOut( "try '".$running->command()." ".$running->verb()." --help' to get full usage syntax" );
+		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
 }
 
-if( $running->help()){
-	$running->verbHelp( $defaults );
+if( $ep->runner()->help()){
+	$ep->runner()->verbHelp( $defaults );
 	TTP::exit();
 }
 
-msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got colored='".( $ep->runner()->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $ep->runner()->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got service='$opt_service'" );
 msgVerbose( "got instance='$opt_instance'" );
 msgVerbose( "got instance_set='".( $opt_instance_set ? 'true':'false' )."'" );

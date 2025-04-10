@@ -35,8 +35,6 @@ use HTTP::Request;
 use LWP::UserAgent;
 use URI::Split qw( uri_split uri_join );
 
-my $running = $ep->runner();
-
 my $defaults = {
 	help => 'no',
 	colored => 'no',
@@ -162,18 +160,18 @@ if( !GetOptions(
 	"push!"				=> \$opt_push,
 	"limit=i"			=> \$opt_limit )){
 
-		msgOut( "try '".$running->command()." ".$running->verb()." --help' to get full usage syntax" );
+		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
 }
 
-if( $running->help()){
-	$running->verbHelp( $defaults );
+if( $ep->runner()->help()){
+	$ep->runner()->verbHelp( $defaults );
 	TTP::exit();
 }
 
-msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got colored='".( $ep->runner()->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $ep->runner()->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got push='".( $opt_push ? 'true':'false' )."'" );
 msgVerbose( "got limit='$opt_limit'" );
 

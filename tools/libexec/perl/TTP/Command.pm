@@ -188,9 +188,8 @@ sub run {
 				$self->runnableSetQualifier( $verb );
 
 				# as verbs are written as Perl scripts, they are dynamically ran from here in the context of 'self'
-				# + have direct access to 'ttp' entry point
+				# + have direct access to '$ep' entry point
 				local @ARGV = @command_args;
-				our $running = $ep->runner();
 				unless( defined do $self->{_verb}{path} ){
 					msgErr( "do $self->{_verb}{path}: ".( $! || $@ ));
 				}

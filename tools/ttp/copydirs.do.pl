@@ -38,9 +38,8 @@ use utf8;
 use warnings;
 
 use File::Spec;
-use TTP::Path;
 
-my $running = $ep->runner();
+use TTP::Path;
 
 my $defaults = {
 	help => 'no',
@@ -119,18 +118,18 @@ if( !GetOptions(
 	"options=s"			=> \$opt_options,
 	"empty!"			=> \$opt_empty )){
 
-		msgOut( "try '".$running->command()." ".$running->verb()." --help' to get full usage syntax" );
+		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
 }
 
-if( $running->help()){
-	$running->verbHelp( $defaults );
+if( $ep->runner()->help()){
+	$ep->runner()->verbHelp( $defaults );
 	TTP::exit();
 }
 
-msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got colored='".( $ep->runner()->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $ep->runner()->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got sourcepath='$opt_sourcepath'" );
 msgVerbose( "got sourcecmd='$opt_sourcecmd'" );
 msgVerbose( "got targetpath='$opt_targetpath'" );

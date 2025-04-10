@@ -57,7 +57,6 @@ use warnings;
 use TTP::Constants qw( :all );
 use TTP::Message qw( :all );
 use TTP::Node;
-my $running = $ep->runner();
 
 my $defaults = {
 	help => 'no',
@@ -105,18 +104,18 @@ if( !GetOptions(
 	"default!"			=> \$opt_default,
 	"node=s"			=> \$opt_node )){
 
-		msgOut( "try '".$running->command()." ".$running->verb()." --help' to get full usage syntax" );
+		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
 }
 
-if( $running->help()){
-	$running->verbHelp( $defaults );
+if( $ep->runner()->help()){
+	$ep->runner()->verbHelp( $defaults );
 	TTP::exit();
 }
 
-msgVerbose( "found colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "found dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "found verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "found colored='".( $ep->runner()->colored() ? 'true':'false' )."'" );
+msgVerbose( "found dummy='".( $ep->runner()->dummy() ? 'true':'false' )."'" );
+msgVerbose( "found verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
 msgVerbose( "found default='".( $opt_default ? 'true':'false' )."'" );
 msgVerbose( "found node='$opt_node'" );
 

@@ -651,7 +651,7 @@ $daemon->messagingSub( \&mqttMessaging );
 $daemon->disconnectSub( \&mqttDisconnect );
 
 $daemon->declareSleepables( $commands );
-$daemon->sleepableDeclareFn( sub => \&works, interval => configScanInterval() );
+$daemon->sleepableDeclareFn( sub => \&works, interval => configScanInterval());
 $daemon->sleepableStart();
 
 $daemon->terminate();

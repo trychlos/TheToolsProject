@@ -554,7 +554,7 @@ sub declareSleepables {
 	my ( $self, $commands ) = @_;
 
 	# the listening function, each 'listeningInterval'
-	$self->sleepableDeclareFn( sub => sub { $self->listen( $commands ); }, interval => $self->listeningInterval() );
+	$self->sleepableDeclareFn( sub => sub { $self->listen( $commands ); }, interval => $self->listeningInterval());
 	# the mqtt status publication, each 'mqttInterval'
 	my $mqttInterval = $self->messagingInterval();
 	$self->sleepableDeclareFn( sub => sub { $self->_mqtt_advertise(); }, interval => $mqttInterval ) if $mqttInterval > 0;

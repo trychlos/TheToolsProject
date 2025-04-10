@@ -56,7 +56,6 @@ use Time::Piece;
 use URI::Escape;
 
 use TTP::Metric;
-my $running = $ep->runner();
 
 my $defaults = {
 	help => 'no',
@@ -108,7 +107,7 @@ sub doGet {
 	my $header = undef;
 	my $response = undef;
 	my $status = undef;
-	if( $running->dummy()){
+	if( $ep->runner()->dummy()){
 		msgDummy( "considering successful with status='200' sent from this node" );
 		$res = true;
 		$header = "DUMMY_".$ep->node()->name();
@@ -172,8 +171,8 @@ sub _telemetry {
 		my @labels = @opt_prepends;
 		push( @labels, "environment=".$ep->node()->environment());
 		push( @labels, "service=".$opt_service ) if $opt_service;
-		push( @labels, "command=".$running->command());
-		push( @labels, "verb=".$running->verb());
+		push( @labels, "command=".$ep->runner()->command());
+		push( @labels, "verb=".$ep->runner()->verb());
 		push( @labels, "proto=$proto" );
 		push( @labels, "path=$path" );
 		if( $opt_header && $header && $opt_publishHeader ){
@@ -228,18 +227,18 @@ if( !GetOptions(
 	"append=s@"			=> \@opt_appends,
 	"service=s"			=> \$opt_service )){
 
-		msgOut( "try '".$running->command()." ".$running->verb()." --help' to get full usage syntax" );
+		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
 }
 
-if( $running->help()){
-	$running->verbHelp( $defaults );
+if( $ep->runner()->help()){
+	$ep->runner()->verbHelp( $defaults );
 	TTP::exit();
 }
 
-msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got colored='".( $ep->runner()->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $ep->runner()->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got url='$opt_url'" );
 msgVerbose( "got header='$opt_header'" );
 msgVerbose( "got publishHeader='".( $opt_publishHeader ? 'true':'false' )."'" );

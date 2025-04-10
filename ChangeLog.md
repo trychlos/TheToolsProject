@@ -18,6 +18,7 @@
     - Deduplicate makeDirExist() function (used to be both in TTP and in TTP::Path)
     - ttp.pl copydirs has now an option --empty to empty the target tree before the copy
     - ttp.pl push has now options --exclude-dir and --exclude-files, defaulting to the site configuration
+    - Remove all instances of '$running' variable, using instead '$ep->runner()' (todo #63)
 
 ### 4.1.3
 

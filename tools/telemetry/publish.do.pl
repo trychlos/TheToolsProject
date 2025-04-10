@@ -43,7 +43,6 @@ use utf8;
 use warnings;
 
 use TTP::Metric;
-my $running = $ep->runner();
 
 my $defaults = {
 	help => 'no',
@@ -131,18 +130,18 @@ if( !GetOptions(
 	"prepend=s@"		=> \@opt_prepends,
 	"append=s@"			=> \@opt_appends )){
 
-		msgOut( "try '".$running->command()." ".$running->verb()." --help' to get full usage syntax" );
+		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
 }
 
-if( $running->help()){
-	$running->verbHelp( $defaults );
+if( $ep->runner()->help()){
+	$ep->runner()->verbHelp( $defaults );
 	TTP::exit();
 }
 
-msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got colored='".( $ep->runner()->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $ep->runner()->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got metric='$opt_metric'" );
 msgVerbose( "got value='".( defined $opt_value ? $opt_value : '(undef)' )."'" );
 msgVerbose( "got description='$opt_description'" );

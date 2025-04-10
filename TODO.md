@@ -11,17 +11,11 @@
 |   Id | Date       | Description and comment(s) |
 | ---: | :---       | :---                       |
 |    8 | 2024- 5- 2 | implements and honors text-based telemetry |
-|   15 | 2024- 1-29 | Toops::getOptions doesn't work as we do not know how to pass arguments to GetOptions() |
-|      | 2024- 5- 2 | these are called 'named options' and are got in the function through a hash though I don't know at the moment how to dintinguish between a hash and a hash ref |
-|	   | 2025- 1-17 | this is actually a list of values |
-|   25 | 2024- 5- 3 | ttp->var() and others should be able to return a composite data (not only a scalar) |
-|      |            | and ttp.pl vars and others should be able to display them |
-|	   | 2024- 5- 5 | they actually do return composite data - which just is not displayed by the verb |
-|	   |            | see daemon.pl dbms.pl services.pl ttp.pl |
 |   49 | 2024- 5-11 | all functions should check the type of their arguments and call TTP::stackTrace() on coding error |
-|   52 | 2024- 5-17 | replace IP addresses by dns aliases to make easier the switch between live and banckup productions (e.g. http gateway) |
+|   52 | 2024- 5-17 | replace IP addresses by dns aliases to make easier the switch between live and backup productions (e.g. http gateway) |
 |   53 | 2025- 1-17 | have a timeout on movedirs and purgedirs at least, maybe on all verbs which needs a network access + alert when this timeout is reached |
 |      | 2025- 1-20 | daemon.pl command done |
+|      | 2025- 4-10 | should build an inventory of what should be done, and what can be done |
 |   54 | 2025- 1-19 | verbs should have an internal telemetry for the memory they consume, the execution elapsed time |
 |   55 | 2025- 2-17 | daemon.pl status should have an option to publish to mqtt too |
 |   57 | 2025- 2-17 | daemon.pl status should have an option to publish to text too |
@@ -78,6 +72,10 @@
 |      | 2024- 5- 2 | done
 |   14 | 2024- 5- 2 | jsonRead should be only available through IJSONable (not in TTP)
 |      | 2024- 5- 2 | actually jsonRead is moved from IJSONable to TTP (like jsonWrite and jsonAppend) -> done
+|   15 | 2024- 1-29 | Toops::getOptions doesn't work as we do not know how to pass arguments to GetOptions() |
+|      | 2024- 5- 2 | these are called 'named options' and are got in the function through a hash though I don't know at the moment how to dintinguish between a hash and a hash ref |
+|	   | 2025- 1-17 | this is actually a list of values |
+|      | 2025- 4-10 | this point was initially raised to make the verbs less verbose (or lighter whatever you prefer) - but this appears now of very few interest - just cancel |
 |   16 | 2024- 5- 2 | on ws12dev1, startup doesn't send alerts
 |      | 2024- 5- 5 | same even after scheduled tasks path update
 |	   |            | "services.pl list -workload startup -commands -hidden" returns (wrong) "C:\Temp\Site\Commands\startup.cmd"
@@ -111,6 +109,11 @@
 |      |            | [services.pl list] displaying workload commands defined in 'NS3232346\daily.morning'...
 |      |            | [services.pl list] 0 found defined command(s)
 |	   | 2024- 5- 3 | fixed with #6
+|   25 | 2024- 5- 3 | ttp->var() and others should be able to return a composite data (not only a scalar) |
+|      |            | and ttp.pl vars and others should be able to display them |
+|	   | 2024- 5- 5 | they actually do return composite data - which just is not displayed by the verb |
+|	   |            | see daemon.pl dbms.pl services.pl ttp.pl |
+|	   | 2025- 4-10 | the guy who wants display these data must use Dumper() - cancel the point |
 |   26 | 2024- 5- 3 | upgrade Canal33 backups from every.5h to every.2h (like the Tom's)
 |      | 2024- 5-10 | done, installed on WS12...
 |   27 | 2024- 5- 3 | archivesBackups should be set when purging dailyBackups so that we keep for example 5 days in daily Backups and move the 6th to the archives
