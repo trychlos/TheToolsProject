@@ -2,11 +2,12 @@
 
 ## ChangeLog
 
-### 4.1.4-rc.0
+### 4.2.0-rc.0
 
     Release date: 
 
     - Shell functions trap_int() and trap_exit() output to stderr
+    - Deprecate 'Environment' property in favor of 'environment' (todo #65), thus bumping minor candidate version number
 
 ### 4.1.3
 

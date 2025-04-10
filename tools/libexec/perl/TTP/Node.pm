@@ -91,9 +91,19 @@ sub _hostname {
 sub environment {
 	my ( $self ) = @_;
 
-	my $env = $self->jsonData()->{Environment}{type};
+	my $envId;
+	my $envObject = $self->jsonData()->{environment};
+	if( defined( $envObject )){
+		$envId = $envObject->{type};
+	} else {
+		$envObject = $self->jsonData()->{Environment};
+		if( defined( $envObject )){
+			msgWarn( "'Environment' property is deprecated in favor of 'environment'. You should update your configurations." );
+			$envId = $envObject->{type};
+		}
+	}
 
-	return $env;
+	return $envId;
 }
 
 # ------------------------------------------------------------------------------------------------
