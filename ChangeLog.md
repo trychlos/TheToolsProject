@@ -10,6 +10,8 @@
     - Deprecate 'Environment' property in favor of 'environment' (todo #65), thus bumping minor candidate version number
     - Deprecate 'environment.type' property in favor of 'environment.id' (todo #66)
     - Deprecate 'MQTTGateway.broker' property in favor of 'MQTTGateway.host' (todo #62)
+    - ttp.pl copydirs: remove option --skip, add options --exclude-dir, --exclude-file and --options
+    - copyDir(), copyFile() and removeTree() functions are moved to TTP::Path module
 
 ### 4.1.3
 

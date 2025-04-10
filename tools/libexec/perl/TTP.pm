@@ -26,9 +26,7 @@ use Config;
 use Data::Dumper;
 use Data::UUID;
 use Devel::StackTrace;
-use File::Copy qw( copy move );
-use File::Copy::Recursive qw( dircopy );
-use File::Path qw( make_path remove_tree );
+use File::Path qw( make_path );
 use File::Spec;
 use JSON;
 use open qw( :std :encoding(UTF-8) );
@@ -98,14 +96,19 @@ sub alertsFileDropdir {
 # This command may be a simple string or an object 'command.byOS.<OSname>'.
 # (I):
 # - the list of keys before the 'command' as an array ref
+# - an optional options hash ref with following keys:
+#   > withCommand: whether to have a top 'command' property before 'byOS', defaulting to true
 # (O):
 # - the found command as a string, or undef
 
 sub commandByOs {
-	my ( $keys ) = @_;
+	my ( $keys, $opts ) = @_;
+	$opts //= {};
 	my $command = undef;
 	my @locals = @{$keys};
-	push( @locals, 'command' );
+	my $withCommand = $opts->{withCommand};
+	$withCommand = true if !defined $withCommand;
+	push( @locals, 'command' ) if $withCommand;
 	my $obj = $ep->var( \@locals );
 	if( defined( $obj )){
 		my $ref = ref( $obj );
@@ -183,6 +186,7 @@ sub commandExec {
 			my $res = $?;
 			$result->{exit} = $res;
 			$result->{success} = ( $res == 0 ) ? true : false;
+			msgVerbose( join( EOL, @out ));
 			msgVerbose( "TTP::commandExec() return_code=$res firstly interpreted as success=".( $result->{success} ? 'true' : 'false' ));
 			if( $args->{command} =~ /robocopy/i ){
 				$res = ( $res >> 8 );
@@ -193,89 +197,6 @@ sub commandExec {
 		}
 		msgVerbose( "TTP::commandExec() success=".( $result->{success} ? 'true' : 'false' ));
 	}
-	return $result;
-}
-
-# -------------------------------------------------------------------------------------------------
-# copy a directory and its content from a source to a target
-# this is a design decision to make this recursive copy file by file in order to have full logs
-# TTP allows to provide a system-specific command in its configuration file
-# well suited for example to move big files to network storage
-# return true|false
-
-sub copyDir {
-	my ( $source, $target ) = @_;
-	my $result = false;
-	msgVerbose( "TTP::copyDir() entering with source='$source' target='$target'" );
-	if( ! -d $source ){
-		msgErr( "$source: source directory doesn't exist" );
-		return false;
-	}
-	my $cmdres = commandExec({
-		command => $ep->var([ 'copyDir', 'byOS', $Config{osname}, 'command' ]),
-		macros => {
-			SOURCE => $source,
-			TARGET => $target
-		}
-	});
-	if( defined $cmdres->{evaluated} ){
-		$result = $cmdres->{success};
-		msgVerbose( "TTP::copyDir() commandExec() result=$result" );
-	} elsif( $ep->runner()->dummy()){
-		msgDummy( "dircopy( $source, $target )" );
-	} else {
-		# https://metacpan.org/pod/File::Copy::Recursive
-		# This function returns true or false: for true in scalar context it returns the number of files and directories copied,
-		# whereas in list context it returns the number of files and directories, number of directories only, depth level traversed.
-		my $res = dircopy( $source, $target );
-		$result = $res ? true : false;
-		msgVerbose( "TTP::copyDir() dircopy() res=$res result=$result" );
-	}
-	msgVerbose( "TTP::copyDir() returns result=$result" );
-	return $result;
-}
-
-# -------------------------------------------------------------------------------------------------
-# copy a file from a source to a target
-# TTP allows to provide a system-specific command in its configuration file
-# well suited for example to copy big files to network storage
-# (I):
-# - source: the source volume, directory and filename
-# - target :the target volume and directory
-# (O):
-# return true|false
-
-sub copyFile {
-	my ( $source, $target ) = @_;
-	my $result = false;
-	msgVerbose( "TTP::copyFile() entering with source='$source' target='$target'" );
-	# isolate the file from the source directory path
-	my ( $vol, $dirs, $file ) = File::Spec->splitpath( $source );
-	my $srcpath = File::Spec->catpath( $vol, $dirs );
-	my $cmdres = commandExec({
-		command => $ep->var([ 'copyFile', 'byOS', $Config{osname}, 'command' ]),
-		macros => {
-			SOURCE => $srcpath,
-			TARGET => $target,
-			FILE => $file
-		}
-	});
-	if( defined $cmdres->{evaluated} ){
-		$result = $cmdres->{success};
-		msgVerbose( "TTP::copyFile() commandExec() result=$result" );
-	} elsif( $ep->runner()->dummy()){
-		msgDummy( "copy( $source, $target )" );
-	} else {
-		# https://metacpan.org/pod/File::Copy
-		# This function returns true or false
-		$result = copy( $source, $target );
-		if( $result ){
-			msgVerbose( "TTP::copyFile() result=true" );
-		} else {
-			msgErr( "TTP::copyFile() $!" );
-		}
-	}
-	msgVerbose( "TTP::copyFile() returns result=$result" );
 	return $result;
 }
 
@@ -1021,38 +942,6 @@ sub random {
 	my $uuid = lc $ug->create_str();
 	$uuid =~ s/-//g;
 	return $uuid;
-}
-
-# -------------------------------------------------------------------------------------------------
-# delete a directory and all its content
-# (I):
-# - the dir to be deleted
-# (O):
-# - true|false
-
-sub removeTree {
-	my ( $dir ) = @_;
-	my $result = true;
-	msgVerbose( "TTP::removeTree() removing '$dir'" );
-	my $error;
-	remove_tree( $dir, {
-		verbose => $ep->{run}{verbose},
-		error => \$error
-	});
-	# https://perldoc.perl.org/File::Path#make_path%28-%24dir1%2C-%24dir2%2C-....-%29
-	if( $error && @$error ){
-		for my $diag ( @$error ){
-			my ( $file, $message ) = %$diag;
-			if( $file eq '' ){
-				msgErr( "remove_tree() $message" );
-			} else {
-				msgErr( "remove_tree() $file: $message" );
-			}
-		}
-		$result = false;
-	}
-	msgVerbose( "TTP::removeTree() dir='$dir' result=$result" );
-	return $result;
 }
 
 # -------------------------------------------------------------------------------------------------
