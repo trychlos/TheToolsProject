@@ -94,12 +94,24 @@ sub environment {
 	my $envId;
 	my $envObject = $self->jsonData()->{environment};
 	if( defined( $envObject )){
-		$envId = $envObject->{type};
+		$envId = $envObject->{id};
+		if( !defined( $envId )){
+			$envId = $envObject->{type};
+			if( defined( $envId )){
+				msgWarn( "'environment.type' property is deprecated in favor of 'environment.id'. You should update your configurations." );
+			}
+		}
 	} else {
 		$envObject = $self->jsonData()->{Environment};
 		if( defined( $envObject )){
 			msgWarn( "'Environment' property is deprecated in favor of 'environment'. You should update your configurations." );
-			$envId = $envObject->{type};
+			$envId = $envObject->{id};
+			if( !defined( $envId )){
+				$envId = $envObject->{type};
+				if( defined( $envId )){
+					msgWarn( "'environment.type' property is deprecated in favor of 'environment.id'. You should update your configurations." );
+				}
+			}
 		}
 	}
 
