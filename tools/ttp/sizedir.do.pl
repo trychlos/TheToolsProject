@@ -38,8 +38,6 @@ use Data::Dumper;
 use File::Path qw( remove_tree );
 use File::Find;
 
-use TTP::Constants qw( :all );
-use TTP::Message qw( :all );
 use TTP::Metric;
 
 my $defaults = {
