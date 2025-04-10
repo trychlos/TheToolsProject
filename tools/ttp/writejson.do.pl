@@ -36,6 +36,7 @@ use warnings;
 use File::Temp;
 use JSON;
 
+use TTP::Path;
 my $running = $ep->runner();
 
 my $defaults = {
@@ -71,7 +72,7 @@ sub doWriteJson {
 		my %parms = ();
 		if( $opt_dir ){
 			$parms{DIR} = $opt_dir;
-			TTP::makeDirExist( $opt_dir );
+			TTP::Path::makeDirExist( $opt_dir );
 		}
 		$parms{TEMPLATE} = $opt_template if $opt_template;
 		$parms{SUFFIX} = $opt_suffix if $opt_suffix;

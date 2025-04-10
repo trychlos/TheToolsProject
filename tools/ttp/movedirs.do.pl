@@ -43,7 +43,6 @@ use Config;
 use File::Spec;
 
 use TTP::Path;
-
 my $running = $ep->runner();
 
 my $defaults = {
@@ -113,7 +112,7 @@ sub doMoveDirs {
 			}
 			# and move the rest, making sure the initial path at least exists
 			if( scalar @list ){
-				TTP::makeDirExist( $opt_targetpath ) if $opt_makeDirExist;
+				TTP::Path::makeDirExist( $opt_targetpath ) if $opt_makeDirExist;
 				if( TTP::errs()){
 					msgOut( "operation is cancelled due to previous errors" );
 				} else {

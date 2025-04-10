@@ -43,6 +43,7 @@ use JSON;
 use Path::Tiny;
 
 use TTP::Message;
+use TTP::Path;
 use TTP::SMTP;
 my $running = $ep->runner();
 
@@ -135,7 +136,7 @@ sub doFileAlert {
 		my $verbose = $running->verbose() ? "-verbose" : "-noverbose";
 		$command = "ttp.pl writejson -nocolored $verbose -file $file -data '<JSON>' <OPTIONS>";
 	}
-	TTP::makeDirExist( $dir );
+	TTP::Path::makeDirExist( $dir );
 	my $prettyJson = $ep->var([ 'alerts', 'withFile', 'prettyJson' ]);
 	$prettyJson = true if !defined $prettyJson;
 	my $data = buildAlertData();

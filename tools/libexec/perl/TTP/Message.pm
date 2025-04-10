@@ -47,6 +47,7 @@ use if $Config{osname} eq "MSWin32", "Win32::Console::ANSI";
 
 use TTP;
 use TTP::Constants qw( :all );
+use TTP::Path;
 
 Sub::Exporter::setup_exporter({
 	exports => [ qw(
@@ -270,7 +271,7 @@ sub _msgLogAppend {
 		# make sure the directory exists
 		my ( $vol, $dir, $f ) = File::Spec->splitpath( $logFile );
 		my $logdir = File::Spec->catpath( $vol, $dir );
-		TTP::makeDirExist( $logdir, { allowVerbose => false });
+		TTP::Path::makeDirExist( $logdir, { allowVerbose => false });
 		path( $logFile )->append_utf8( $line.EOL );
 	}
 }

@@ -54,6 +54,7 @@ use TTP;
 use TTP::Constants qw( :all );
 use TTP::Daemon;
 use TTP::Message qw( :all );
+use TTP::Path;
 use TTP::Reporter;
 use TTP::Service;
 use vars::global qw( $ep );
@@ -491,7 +492,7 @@ sub syncedPath {
 	# local target
 	my $localTarget = configLocalDir();
 	msgVerbose( "localTarget='$localTarget'" );
-	TTP::makeDirExist( $localTarget );
+	TTP::Path::makeDirExist( $localTarget );
 	my $res = TTP::copyFile( $remoteSource, $localTarget );
 	if( $res ){
 		msgVerbose( "syncedPath() successfully copied '$remoteSource' to '$localTarget'" );

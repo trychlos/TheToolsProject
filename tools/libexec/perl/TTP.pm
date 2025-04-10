@@ -26,7 +26,6 @@ use Config;
 use Data::Dumper;
 use Data::UUID;
 use Devel::StackTrace;
-use File::Path qw( make_path );
 use File::Spec;
 use JSON;
 use open qw( :std :encoding(UTF-8) );
@@ -42,6 +41,7 @@ use TTP::EP;
 use TTP::Finder;
 use TTP::Message qw( :all );
 use TTP::Node;
+use TTP::Path;
 
 # autoflush STDOUT
 $| = 1;
@@ -524,7 +524,7 @@ sub fromCommand {
 		my $makeExist = false;
 		$makeExist = $opts->{makeExist} if exists $opts->{makeExist};
 		if( $makeExist ){
-			my $rc = makeDirExist( $path );
+			my $rc = TTP::Path::makeDirExist( $path );
 			$path = undef if !$rc;
 		}
 	}
@@ -630,7 +630,7 @@ sub jsonAppend {
 	my $json = JSON->new;
 	my $str = $json->encode( $hash );
 	my ( $vol, $dirs, $file ) = File::Spec->splitpath( $path );
-	TTP::makeDirExist( File::Spec->catdir( $vol, $dirs ));
+	TTP::Path::makeDirExist( File::Spec->catdir( $vol, $dirs ));
 	# some daemons may monitor this file in order to be informed of various executions - make sure each record has an EOL
 	my $res = path( $path )->append_utf8( $str.EOL );
 	msgVerbose( "jsonAppend() returns ".Dumper( $res ));
@@ -727,7 +727,7 @@ sub jsonWrite {
 	my $json = JSON->new;
 	my $str = $json->encode( $hash );
 	my ( $vol, $dirs, $file ) = File::Spec->splitpath( $path );
-	TTP::makeDirExist( File::Spec->catdir( $vol, $dirs ));
+	TTP::Path::makeDirExist( File::Spec->catdir( $vol, $dirs ));
 	# some daemons may monitor this file in order to be informed of various executions - make sure we end up with an EOL
 	# '$res' is an array with the original path and an interpreted one - may also return true
 	my $res = path( $path )->spew_utf8( $str.EOL );
@@ -780,56 +780,6 @@ sub logsMain {
 
 sub logsRoot {
 	my $result = $ep->node() ? ( $ep->var( 'logsRoot' ) || tempDir()) : undef;
-	return $result;
-}
-
-# -------------------------------------------------------------------------------------------------
-# make sure a directory exist
-# note that this does NOT honor the '-dummy' option as creating a directory is easy and a work may
-# be blocked without that
-# NB: pwi 2024- 6- 4
-#     creating a path like '\\ftpback-rbx2-207.ovh.net\ns3197235.ip-141-95-3.eu\WS12DEV2\SQLBackups' is OK and has been thoroughly tested
-#     even  if this operation is subject to the 'Insufficient system resources exist to complete the requested service' error
-#     (like all storage/network operations)
-# (I):
-# - the directory to be created if not exists
-# - an optional options hash with following keys:
-#   > allowVerbose whether you can call msgVerbose() function (false to not create infinite loop
-#     when called from msgXxx()), defaulting to true
-# (O):
-# returns true|false
-
-sub makeDirExist {
-	my ( $dir, $opts ) = @_;
-	$opts //= {};
-	my $allowVerbose = true;
-	$allowVerbose = $opts->{allowVerbose} if exists $opts->{allowVerbose};
-	$allowVerbose = false if !$ep || !$ep->runner();
-	my $result = false;
-	if( -d $dir ){
-		$result = true;
-	} else {
-		msgVerbose( "makeDirExist() make_path() dir='$dir'" ) if $allowVerbose;
-		my $error;
-		$result = true;
-		make_path( $dir, {
-			verbose => $allowVerbose && $ep->runner()->verbose(),
-			error => \$error
-		});
-		# https://perldoc.perl.org/File::Path#make_path%28-%24dir1%2C-%24dir2%2C-....-%29
-		if( $error && @$error ){
-			for my $diag ( @$error ){
-				my ( $file, $message ) = %$diag;
-				if( $file eq '' ){
-					msgErr( $message );
-				} else {
-					msgErr( "$file: $message" );
-				}
-			}
-			$result = false;
-		}
-		msgVerbose( "makeDirExist() dir='$dir' result=$result" ) if $allowVerbose;
-	}
 	return $result;
 }
 

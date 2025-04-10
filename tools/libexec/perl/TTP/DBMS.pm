@@ -38,6 +38,7 @@ use Time::Piece;
 use TTP;
 use TTP::Constants qw( :all );
 use TTP::Message qw( :all );
+use TTP::path;
 use TTP::SqlServer;
 
 ### Private methods
@@ -102,7 +103,7 @@ sub computeDefaultBackupFilename {
 	# compute the dir and make sure it exists
 	my $node = $self->ep()->node();
 	my $backupDir = $node->var([ 'DBMS', 'backupsDir' ]) || $node->var([ 'DBMS', 'backupsRoot' ]) || TTP::tempDir();;
-	TTP::makeDirExist( $backupDir );
+	TTP::Path::makeDirExist( $backupDir );
 	# compute the filename
 	my $fname = $node->name().'-'.$self->instance()."-$parms->{database}-".localtime->strftime( '%y%m%d' ).'-'.localtime->strftime( '%H%M%S' ).'-'.$mode.'.backup';
 	$output = File::Spec->catdir( $backupDir, $fname );

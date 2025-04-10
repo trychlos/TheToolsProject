@@ -15,6 +15,7 @@
     - ttp.pl copydirs: deprecate (though still honors) --dirs option
     - ttp.pl push makes internally use of ttp.pl copydirs
     - ttp.pl pull makes internally use of ttp.pl copydirs
+    - Deduplicate makeDirExist() function (used to be both in TTP and in TTP::Path)
 
 ### 4.1.3
 
