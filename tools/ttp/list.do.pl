@@ -34,7 +34,6 @@ use Config;
 use TTP::Command;
 use TTP::Node;
 use TTP::Service;
-my $running = $ep->runner();
 
 my $defaults = {
 	help => 'no',
@@ -60,7 +59,7 @@ sub listCommands {
 		dirs => [ $finder->{dirs} ],
 		glob => '*'.$finder->{sufix}
 	};
-	my $commands = $running->find( $findable );
+	my $commands = $ep->runner()->find( $findable );
 	# get only unique commands
 	my $uniqs = {};
 	foreach my $it ( @{$commands} ){
@@ -86,7 +85,7 @@ sub listNodes {
 		dirs => [ TTP::Node->dirs() ],
 		glob => '*'.TTP::Node->finder()->{sufix}
 	};
-	my $nodes = $running->find( $findable );
+	my $nodes = $ep->runner()->find( $findable );
 	# get only unique available nodes
 	my $uniqs = {};
 	foreach my $it ( @{$nodes} ){
@@ -116,18 +115,18 @@ if( !GetOptions(
 	"commands!"			=> \$opt_commands,
 	"nodes!"			=> \$opt_nodes )){
 
-		msgOut( "try '".$running->command()." ".$running->verb()." --help' to get full usage syntax" );
+		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
 }
 
-if( $running->help()){
-	$running->verbHelp( $defaults );
+if( $ep->runner()->help()){
+	$ep->runner()->verbHelp( $defaults );
 	TTP::exit();
 }
 
-msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got colored='".( $ep->runner()->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $ep->runner()->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got commands='".( $opt_commands ? 'true':'false' )."'" );
 msgVerbose( "got nodes='".( $opt_nodes ? 'true':'false' )."'" );
 

@@ -31,7 +31,8 @@ use strict;
 use utf8;
 use warnings;
 
-my $running = $ep->runner();
+use TTP;
+use TTP::Message qw( :all );
 
 my $defaults = {
 	help => 'no',
@@ -125,7 +126,7 @@ sub doTaskEnabled {
 		}
 	}
 	if( !$res ){
-		$running->runnableErrInc();
+		$ep->runner()->runnableErrInc();
 	}
 }
 
@@ -143,18 +144,18 @@ if( !GetOptions(
 	"status!"			=> \$opt_status,
 	"enabled!"			=> \$opt_enabled )){
 
-		msgOut( "try '".$running->command()." ".$running->verb()." --help' to get full usage syntax" );
+		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
 }
 
-if( $running->help()){
-	$running->verbHelp( $defaults );
+if( $ep->runner()->help()){
+	$ep->runner()->verbHelp( $defaults );
 	TTP::exit();
 }
 
-msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got colored='".( $ep->runner()->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $ep->runner()->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got list='".( $opt_list ? 'true':'false' )."'" );
 msgVerbose( "got task='$opt_task'" );
 msgVerbose( "got status='".( $opt_status ? 'true':'false' )."'" );

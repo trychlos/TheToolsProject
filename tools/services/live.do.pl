@@ -36,7 +36,6 @@ use utf8;
 use warnings;
 
 use TTP::Service;
-my $running = $ep->runner();
 
 my $defaults = {
 	help => 'no',
@@ -63,8 +62,8 @@ my $opt_http = false;
 
 sub getLive {
 	msgOut( "displaying live '$opt_environment' machine for '$opt_service' service..." );
-	my $dummy = $running->dummy() ? "-dummy" : "-nodummy";
-	my $verbose = $running->verbose() ? "-verbose" : "-noverbose";
+	my $dummy = $ep->runner()->dummy() ? "-dummy" : "-nodummy";
+	my $verbose = $ep->runner()->verbose() ? "-verbose" : "-noverbose";
 	my $service = TTP::Service->new( $ep, { service => $opt_service });
 	my $command;
 	if( $service ){
@@ -105,7 +104,7 @@ sub getLive {
 				}
 			}
 			# telemetry
-			my $labels = "-append environment=$opt_environment -append service=$opt_service -append command=".$running->command()." -append verb=".$running->verb();
+			my $labels = "-append environment=$opt_environment -append service=$opt_service -append command=".$ep->runner()->command()." -append verb=".$ep->runner()->verb();
 			my $next = join( ',', @nexts );
 			if( $opt_mqtt ){
 				# topic is HOST/telemetry/environment/<ENVIRONMENT>/service/<SERVICE>/command/<COMMAND>/verb/<VERB>/machine/live=live
@@ -127,8 +126,8 @@ sub getLive {
 				# we publish here one metric per host for the service and the environment with
 				# - either a 'live' label if the host if the live host
 				# - or a 'backup' label if the host is a backup host
-				my $running = TTP::host();
-				msgVerbose( "runningHost is '$running'" );
+				my $ep->runner() = TTP::host();
+				msgVerbose( "runningHost is '$ep->runner()'" );
 				foreach my $host ( @hosts ){
 					my $value = ( $live && $live eq $host ) ? "1" : "0";
 					my $httpLabels = $labels;
@@ -163,18 +162,18 @@ if( !GetOptions(
 	"mqtt!"				=> \$opt_mqtt,
 	"http!"				=> \$opt_http )){
 
-		msgOut( "try '".$running->command()." ".$running->verb()." --help' to get full usage syntax" );
+		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
 }
 
-if( $running->help()){
-	$running->verbHelp( $defaults );
+if( $ep->runner()->help()){
+	$ep->runner()->verbHelp( $defaults );
 	TTP::exit();
 }
 
-msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got colored='".( $ep->runner()->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $ep->runner()->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got service='$opt_service'" );
 msgVerbose( "got environment='$opt_environment'" );
 msgVerbose( "got next='".( $opt_next ? 'true':'false' )."'" );

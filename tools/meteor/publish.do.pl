@@ -58,7 +58,7 @@ sub doPublish {
 	msgOut( "publishing '$opt_topic [$opt_payload]'..." );
 	my $result = false;
 
-	if( $running->dummy()){
+	if( $ep->runner()->dummy()){
 		msgDummy( "considering publication successful" );
 		$result = true;
 	} else {
@@ -95,18 +95,18 @@ if( !GetOptions(
 	"create!"			=> \$opt_create,
 	"update!"			=> \$opt_update )){
 
-		msgOut( "try '".$running->command()." ".$running->verb()." --help' to get full usage syntax" );
+		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
 }
 
-if( $running->help()){
-	$running->verbHelp( $defaults );
+if( $ep->runner()->help()){
+	$ep->runner()->verbHelp( $defaults );
 	TTP::exit();
 }
 
-msgVerbose( "found colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "found dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "found verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "found colored='".( $ep->runner()->colored() ? 'true':'false' )."'" );
+msgVerbose( "found dummy='".( $ep->runner()->dummy() ? 'true':'false' )."'" );
+msgVerbose( "found verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
 msgVerbose( "found github='".( $opt_github ? 'true':'false' )."'" );
 msgVerbose( "found meteor='".( $opt_meteor ? 'true':'false' )."'" );
 msgVerbose( "found create='".( $opt_create ? 'true':'false' )."'" );

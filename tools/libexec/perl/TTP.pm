@@ -28,7 +28,7 @@ use Data::UUID;
 use Devel::StackTrace;
 use File::Spec;
 use JSON;
-use open qw( :std :encoding(UTF-8) );
+use open qw( :std :encoding(UTF-8));
 use Path::Tiny qw( path );
 use Scalar::Util qw( looks_like_number );
 use Test::Deep;
@@ -293,8 +293,7 @@ sub displayTabular {
 # Returns the current count of errors
 
 sub errs {
-	my $running = $ep->runner();
-	return $running->runnableErrs() if $running;
+	return $ep->runner()->runnableErrs() if $ep && $ep->runner();
 	return 0;
 }
 
@@ -343,15 +342,14 @@ sub executionReport {
 
 sub _executionReportCompleteData {
 	my ( $data ) = @_;
-	my $running = $ep->runner();
-	$data->{cmdline} = "$0 ".join( ' ', @{$running->runnableArgs()} );
-	$data->{command} = $running->command();
-	$data->{verb} = $running->verb();
+	$data->{cmdline} = "$0 ".join( ' ', @{$ep->runner()->runnableArgs()} );
+	$data->{command} = $ep->runner()->command();
+	$data->{verb} = $ep->runner()->verb();
 	$data->{host} = $ep->node()->name();
-	$data->{code} = $running->runnableErrs();
-	$data->{started} = $running->runnableStarted()->strftime( '%Y-%m-%d %H:%M:%S.%5N' );
+	$data->{code} = $ep->runner()->runnableErrs();
+	$data->{started} = $ep->runner()->runnableStarted()->strftime( '%Y-%m-%d %H:%M:%S.%5N' );
 	$data->{ended} = Time::Moment->now->strftime( '%Y-%m-%d %H:%M:%S.%5N' );
-	$data->{dummy} = $running->dummy();
+	$data->{dummy} = $ep->runner()->dummy();
 	return $data;
 }
 
@@ -374,14 +372,13 @@ sub _executionReportToFile {
 		$data = _executionReportCompleteData( $data );
 		my $command = $ep->var([ 'executionReports', 'withFile', 'command' ]);
 		if( $command ){
-			my $running = $ep->runner();
 			my $json = JSON->new;
 			my $str = $json->encode( $data );
 			# protect the double quotes against the CMD.EXE command-line
 			$str =~ s/"/\\"/g;
 			$command =~ s/<DATA>/$str/;
-			my $dummy = $running->dummy() ? "-dummy" : "-nodummy";
-			my $verbose = $running->verbose() ? "-verbose" : "-noverbose";
+			my $dummy = $ep->runner()->dummy() ? "-dummy" : "-nodummy";
+			my $verbose = $ep->runner()->verbose() ? "-verbose" : "-noverbose";
 			my $cmd = "$command -nocolored $dummy $verbose";
 			msgOut( "executing '$cmd'" );
 			`$cmd`;
@@ -420,9 +417,8 @@ sub _executionReportToMqtt {
 		my $excludes = [];
 		$excludes = $args->{excludes} if exists $args->{excludes} && ref $args->{excludes} eq 'ARRAY' && scalar $args->{excludes} > 0;
 		if( $topic ){
-			my $running = $ep->runner();
-			my $dummy = $running->dummy() ? "-dummy" : "-nodummy";
-			my $verbose = $running->verbose() ? "-verbose" : "-noverbose";
+			my $dummy = $ep->runner()->dummy() ? "-dummy" : "-nodummy";
+			my $verbose = $ep->runner()->verbose() ? "-verbose" : "-noverbose";
 			my $command = $ep->var([ 'executionReports', 'withMqtt', 'command' ]);
 			if( $command ){
 				foreach my $key ( keys %{$data} ){

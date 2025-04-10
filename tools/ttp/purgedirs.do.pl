@@ -33,8 +33,6 @@ use warnings;
 use File::Path qw( remove_tree );
 use File::Spec;
 
-my $running = $ep->runner();
-
 my $defaults = {
 	help => 'no',
 	colored => 'no',
@@ -137,18 +135,18 @@ if( !GetOptions(
 	"dircmd=s"			=> \$opt_dircmd,
 	"keep=s"			=> \$opt_keep )){
 
-		msgOut( "try '".$running->command()." ".$running->verb()." --help' to get full usage syntax" );
+		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
 }
 
-if( $running->help()){
-	$running->verbHelp( $defaults );
+if( $ep->runner()->help()){
+	$ep->runner()->verbHelp( $defaults );
 	TTP::exit();
 }
 
-msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got colored='".( $ep->runner()->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $ep->runner()->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got dirpath='$opt_dirpath'" );
 msgVerbose( "got dircmd='$opt_dircmd'" );
 msgVerbose( "got keep='$opt_keep'" );

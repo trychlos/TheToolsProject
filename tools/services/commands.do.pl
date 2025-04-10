@@ -32,7 +32,6 @@ use utf8;
 use warnings;
 
 use TTP::Service;
-my $running = $ep->runner();
 
 my $defaults = {
 	help => 'no',
@@ -82,7 +81,7 @@ sub _execute {
 			_execute( $service, $it );
 		}
 	} elsif( !$ref ){
-		if( $running->dummy() ){
+		if( $ep->runner()->dummy()){
 			msgDummy( $value );
 		} else {
 			msgOut( " $value" );
@@ -109,18 +108,18 @@ if( !GetOptions(
 	"service=s"			=> \$opt_service,
 	"key=s@"			=> \@opt_keys )){
 
-		msgOut( "try '".$running->command()." ".$running->verb()." --help' to get full usage syntax" );
+		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
 }
 
-if( $running->help()){
-	$running->verbHelp( $defaults );
+if( $ep->runner()->help()){
+	$ep->runner()->verbHelp( $defaults );
 	TTP::exit();
 }
 
-msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got colored='".( $ep->runner()->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $ep->runner()->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got service='$opt_service'" );
 @opt_keys = split( /,/, join( ',', @opt_keys ));
 msgVerbose( "got keys='".join( ',', @opt_keys )."'" );

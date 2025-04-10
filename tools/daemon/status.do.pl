@@ -40,7 +40,6 @@ use File::Spec;
 use TTP::Daemon;
 use TTP::Finder;
 use TTP::Metric;
-my $running = $ep->runner();
 
 my $defaults = {
 	help => 'no',
@@ -71,8 +70,8 @@ my $daemon = undef;
 
 sub doStatus {
 	msgOut( "requesting the daemon for its status..." );
-	my $dummy = $running->dummy() ? "-dummy" : "-nodummy";
-	my $verbose = $running->verbose() ? "-verbose" : "-noverbose";
+	my $dummy = $ep->runner()->dummy() ? "-dummy" : "-nodummy";
+	my $verbose = $ep->runner()->verbose() ? "-verbose" : "-noverbose";
 	my $cmd = "daemon.pl command -nocolored $dummy $verbose -command status -port $opt_port";
 	msgVerbose( $cmd );
 	my $res = `$cmd`;
@@ -120,18 +119,18 @@ if( !GetOptions(
 	"metric=s"			=> \$opt_metric,
 	"label=s@"			=> \@opt_labels )){
 
-		msgOut( "try '".$running->command()." ".$running->verb()." --help' to get full usage syntax" );
+		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
 }
 
-if( $running->help()){
-	$running->verbHelp( $defaults );
+if( $ep->runner()->help()){
+	$ep->runner()->verbHelp( $defaults );
 	TTP::exit();
 }
 
-msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got colored='".( $ep->runner()->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $ep->runner()->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got json='$opt_json'" );
 msgVerbose( "got name='$opt_name'" );
 msgVerbose( "got port='$opt_port'" );

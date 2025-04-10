@@ -37,15 +37,12 @@ use strict;
 use utf8;
 use warnings;
 
-#use DateTime::Format::Strptime;
 use File::Spec;
 use JSON;
 use Path::Tiny;
 
-use TTP::Message;
 use TTP::Path;
 use TTP::SMTP;
-my $running = $ep->runner();
 
 my $defaults = {
 	help => 'no',
@@ -133,7 +130,7 @@ sub doFileAlert {
 	my $dir = TTP::alertsFileDropdir();
 	if( !$command ){
 		my $file = File::Spec->catfile( $dir, 'alert-'.Time::Moment->now->strftime( '%Y%m%d%H%M%S%6N' ).'.json' );
-		my $verbose = $running->verbose() ? "-verbose" : "-noverbose";
+		my $verbose = $ep->runner()->verbose() ? "-verbose" : "-noverbose";
 		$command = "ttp.pl writejson -nocolored $verbose -file $file -data '<JSON>' <OPTIONS>";
 	}
 	TTP::Path::makeDirExist( $dir );
@@ -163,7 +160,7 @@ sub doMqttAlert {
 	my $topic = $ep->var([ 'alerts', 'withMqtt', 'topic' ]) || $ep->node()->name()."/alerts/".Time::Moment->from_string( $data->{stamp} )->epoch();
 	my $command = TTP::commandByOs([ 'alerts', 'withMqtt' ]);
 	if( !$command ){
-		my $verbose = $running->verbose() ? "-verbose" : "-noverbose";
+		my $verbose = $ep->runner()->verbose() ? "-verbose" : "-noverbose";
 		$command = "mqtt.pl publish -nocolored $verbose -topic $topic -payload '<JSON>' <OPTIONS>";
 	}
 	my $json = JSON->new->encode( $data );
@@ -188,7 +185,7 @@ sub doSmsAlert {
 	msgOut( "sending a '$opt_level' alert by SMS..." );
 	my $command = TTP::commandByOs([ 'alerts', 'withSms' ]);
 	if( !$command ){
-		my $verbose = $running->verbose() ? "-verbose" : "-noverbose";
+		my $verbose = $ep->runner()->verbose() ? "-verbose" : "-noverbose";
 		#$command = "smtp.pl send -nocolored $verbose -to <RECIPIENTS> -subject <TITLE> -text <MESSAGE> <OPTIONS>";
 	}
 	my $recipients = $ep->var([ 'alerts', 'withSms', 'recipients' ]) || [];
@@ -219,7 +216,7 @@ sub doSmtpAlert {
 	msgOut( "publishing a '$opt_level' alert by SMTP..." );
 	my $command = TTP::commandByOs([ 'alerts', 'withSmtp' ]);
 	if( !$command ){
-		my $verbose = $running->verbose() ? "-verbose" : "-noverbose";
+		my $verbose = $ep->runner()->verbose() ? "-verbose" : "-noverbose";
 		$command = "smtp.pl send -nocolored $verbose -to <RECIPIENTS> -subject <TITLE> -text '<MESSAGE>' <OPTIONS>";
 	}
 	my $recipients = $ep->var([ 'alerts', 'withSmtp', 'recipients' ]) || [ 'root@localhost' ];
@@ -305,18 +302,18 @@ if( !GetOptions(
 	},
 	"list-levels!"		=> \$opt_listLevels,
 	"options=s"			=> \$opt_options )){
-		msgOut( "try '".$running->command()." ".$running->verb()." --help' to get full usage syntax" );
+		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
 }
 
-if( $running->help()){
-	$running->verbHelp( $defaults );
+if( $ep->runner()->help()){
+	$ep->runner()->verbHelp( $defaults );
 	TTP::exit();
 }
 
-msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got colored='".( $ep->runner()->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $ep->runner()->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got emitter='$opt_emitter'" );
 msgVerbose( "got level='$opt_level'" );
 msgVerbose( "got title='$opt_title'" );

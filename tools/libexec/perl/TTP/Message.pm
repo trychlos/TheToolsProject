@@ -186,8 +186,7 @@ sub knownLevels {
 # - the message to be printed (usually the command to be run in dummy mode)
 
 sub msgDummy {
-	my $running = $ep->runner();
-	if( $running && $running->dummy()){
+	if( $ep && $ep->runner() && $ep->runner()->dummy()){
 		_printMsg({
 			msg => shift,
 			level => DUMMY,
@@ -218,10 +217,9 @@ sub msgErr {
 			level => ERR,
 			handle => \*STDERR
 		});
-		my $running = $ep->runner();
 		my $increment = true;
 		$increment = $opts->{incErr} if exists $opts->{incErr};
-		$running->runnableErrInc() if $running and $increment;
+		$ep->runner()->runnableErrInc() if $ep->runner() and $increment;
 	}
 }
 
@@ -292,11 +290,10 @@ sub msgOut {
 
 sub _msgPrefix {
 	my $prefix = '';
-	my $running = $ep->runner();
-	if( $running ){
-		my $command = $running->runnableBNameFull();
+	if( $ep && $ep->runner()){
+		my $command = $ep->runner()->runnableBNameFull();
 		if( $command ){
-			my $qualifier = $running->runnableQualifier() || '';
+			my $qualifier = $ep->runner()->runnableQualifier() || '';
 			$prefix = "[$command";
 			$prefix .= " $qualifier" if $qualifier;
 			$prefix.= '] ';
@@ -314,8 +311,7 @@ sub msgVerbose {
 	my $msg = shift;
 	# be verbose to console ?
 	my $verbose = false;
-	my $running = $ep->runner();
-	$verbose = $running->verbose() if $running;
+	$verbose = $ep->runner()->verbose() if $ep && $ep->runner();
 	_printMsg({
 		msg => $msg,
 		level => VERBOSE,
@@ -351,7 +347,6 @@ sub _printMsg {
 		$args //= {};
 		my $line = '';
 		my $configured = undef;
-		my $running = $ep->runner();
 		# have a prefix ?
 		my $withPrefix = true;
 		$withPrefix = $args->{withPrefix} if exists $args->{withPrefix};
@@ -383,7 +378,7 @@ sub _printMsg {
 			$configured = $ep->var([ 'Message',  $Const->{$level}{key}, 'withColor' ]) if exists $Const->{$level}{key};
 			#print __PACKAGE__."::_printMsg() configured='".( defined $configured ? $configured : '(undef)' )."'".EOL if $level eq "VERBOSE";
 			$withColor = $configured if defined $configured;
-			$withColor = $running->colored() if $running && $running->coloredSet();
+			$withColor = $ep->runner()->colored() if $ep->runner() && $ep->runner()->coloredSet();
 			my $colorstart = '';
 			my $colorend = '';
 			if( $withColor ){

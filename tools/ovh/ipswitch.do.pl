@@ -39,7 +39,6 @@ use Time::Piece;
 
 use TTP::Ovh;
 use TTP::Service;
-my $running = $ep->runner();
 
 my $defaults = {
 	help => 'no',
@@ -70,8 +69,8 @@ my $opt_timeout = $defaults->{timeout};
 sub doSwitchIP {
 	msgOut( "switching '$opt_ipfo' FO IP to '$opt_to' host..." );
 	my $res = false;
-	my $dummy = $running->dummy() ? "-dummy" : "-nodummy";
-	my $verbose = $running->verbose() ? "-verbose" : "-noverbose";
+	my $dummy = $ep->runner()->dummy() ? "-dummy" : "-nodummy";
+	my $verbose = $ep->runner()->verbose() ? "-verbose" : "-noverbose";
 
 	# check that the requested desired server is not already the routed one
 	my $command = "ovh.pl ipget -ipfo $opt_ipfo -routed -nocolored $dummy $verbose";
@@ -97,7 +96,7 @@ sub doSwitchIP {
 			# ask for the move
 			if( $answer->status() == 200 && !$answer->content()){
 				$url = "/dedicated/server/$opt_to/ipMove";
-				if( $running->dummy()){
+				if( $ep->runner()->dummy()){
 					msgDummy( "considering '$url' done and successful" );
 					$res = true;
 				} else {
@@ -123,8 +122,8 @@ sub _switchAndWait {
 	my ( $api, $url, $ip ) = @_;
 	my $res = false;
 	my $answer = TTP::Ovh::postByPath( $api, $url, { ip => $ip });
-	my $dummy = $running->dummy() ? "-dummy" : "-nodummy";
-	my $verbose = $running->verbose() ? "-verbose" : "-noverbose";
+	my $dummy = $ep->runner()->dummy() ? "-dummy" : "-nodummy";
+	my $verbose = $ep->runner()->verbose() ? "-verbose" : "-noverbose";
 	if( $answer->status() == 200 ){
 		if( $opt_wait ){
 			my $start = localtime->epoch;
@@ -203,18 +202,18 @@ if( !GetOptions(
 	"sender=s"			=> \$opt_sender,
 	"timeout=i"			=> \$opt_timeout )){
 
-		msgOut( "try '".$running->command()." ".$running->verb()." --help' to get full usage syntax" );
+		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
 }
 
-if( $running->help()){
-	$running->verbHelp( $defaults );
+if( $ep->runner()->help()){
+	$ep->runner()->verbHelp( $defaults );
 	TTP::exit();
 }
 
-msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got colored='".( $ep->runner()->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $ep->runner()->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got service='$opt_service'" );
 msgVerbose( "got ipfo='$opt_ipfo'" );
 msgVerbose( "got to='$opt_to'" );

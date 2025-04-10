@@ -42,7 +42,6 @@ use URI::Escape;
 use TTP::DBMS;
 use TTP::Metric;
 use TTP::Service;
-my $running = $ep->runner();
 
 my $defaults = {
 	help => 'no',
@@ -107,13 +106,13 @@ sub doState {
 	}
 	my $list = [];
 	my $code = 0;
-	my $dummy = $running->dummy() ? "-dummy" : "-nodummy";
-	my $verbose = $running->verbose() ? "-verbose" : "-noverbose";
+	my $dummy = $ep->runner()->dummy() ? "-dummy" : "-nodummy";
+	my $verbose = $ep->runner()->verbose() ? "-verbose" : "-noverbose";
 	my $result = undef;
 	foreach my $db ( @{$databases} ){
 		msgOut( "database '$db'" );
 		my $sql = "select state, state_desc from sys.databases where name='$db'";
-		if( $running->dummy()){
+		if( $ep->runner()->dummy()){
 			msgDummy( $sql );
 			$result = {
 				state => 0,
@@ -132,7 +131,7 @@ sub doState {
 		#    e.g. state: online
 		my @labels = ( @opt_prepends, "environment=".$ep->node()->environment());
 		push( @labels, "service=".$opt_service ) if $opt_service;
-		@labels = ( @labels, "command=".$running->command(), "verb=".$running->verb(),
+		@labels = ( @labels, "command=".$ep->runner()->command(), "verb=".$ep->runner()->verb(),
 			"instance=$opt_instance", "database=$db",
 			@opt_appends );
 		TTP::Metric->new( $ep, {
@@ -147,7 +146,7 @@ sub doState {
 		foreach my $key ( keys( %{$sqlStates} )){
 			my @labels = ( @opt_prepends, "environment=".$ep->node()->environment());
 			push( @labels, "service=".$opt_service ) if $opt_service;
-			@labels = ( @labels, "command=".$running->command(), "verb=".$running->verb(),
+			@labels = ( @labels, "command=".$ep->runner()->command(), "verb=".$ep->runner()->verb(),
 				"instance=$opt_instance", "database=$db", "state=$sqlStates->{$key}",
 				@opt_appends );
 			TTP::Metric->new( $ep, {
@@ -192,18 +191,18 @@ if( !GetOptions(
 	"prepend=s@"		=> \@opt_prepends,
 	"append=s@"			=> \@opt_appends )){
 
-		msgOut( "try '".$running->command()." ".$running->verb()." --help' to get full usage syntax" );
+		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
 }
 
-if( $running->help()){
-	$running->verbHelp( $defaults );
+if( $ep->runner()->help()){
+	$ep->runner()->verbHelp( $defaults );
 	TTP::exit();
 }
 
-msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got colored='".( $ep->runner()->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $ep->runner()->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got service='$opt_service'" );
 msgVerbose( "got instance='$opt_instance'" );
 msgVerbose( "got instance_set='".( $opt_instance_set ? 'true':'false' )."'" );

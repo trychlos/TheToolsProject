@@ -39,7 +39,6 @@ use utf8;
 use warnings;
 
 use TTP::Metric;
-my $running = $ep->runner();
 
 my $defaults = {
 	help => 'no',
@@ -154,7 +153,7 @@ sub doServiceState {
 	# publish the result in all cases, and notably even if there was an error
 	if( $opt_mqtt || $opt_http || $opt_text ){
 		my @labels = ( @opt_prepends,
-			"environment=".$ep->node()->environment(), "command=".$running->command(), "verb=".$running->verb(), "role=$opt_name",
+			"environment=".$ep->node()->environment(), "command=".$ep->runner()->command(), "verb=".$ep->runner()->verb(), "role=$opt_name",
 			@opt_appends );
 		TTP::Metric->new( $ep, {
 			name => 'state',
@@ -166,7 +165,7 @@ sub doServiceState {
 		});
 		foreach my $key ( keys( %{$serviceStates} )){
 			my @labels = ( @opt_prepends,
-				"environment=".$ep->node()->environment(), "command=".$running->command(), "verb=".$running->verb(), 
+				"environment=".$ep->node()->environment(), "command=".$ep->runner()->command(), "verb=".$ep->runner()->verb(), 
 				"role=$opt_name", "state=$serviceStates->{$key}",
 				@opt_appends );
 			TTP::Metric->new( $ep, {
@@ -211,18 +210,18 @@ if( !GetOptions(
 	"prepend=s@"		=> \@opt_prepends,
 	"append=s@"			=> \@opt_appends )){
 
-		msgOut( "try '".$running->command()." ".$running->verb()." --help' to get full usage syntax" );
+		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
 }
 
-if( $running->help()){
-	$running->verbHelp( $defaults );
+if( $ep->runner()->help()){
+	$ep->runner()->verbHelp( $defaults );
 	TTP::exit();
 }
 
-msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got colored='".( $ep->runner()->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $ep->runner()->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got list='".( $opt_list ? 'true':'false' )."'" );
 msgVerbose( "got name='$opt_name'" );
 msgVerbose( "got state='".( $opt_state ? 'true':'false' )."'" );

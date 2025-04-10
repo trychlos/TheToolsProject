@@ -44,7 +44,6 @@ use warnings;
 use TTP::DBMS;
 use TTP::Metric;
 use TTP::Service;
-my $running = $ep->runner();
 
 my $defaults = {
 	help => 'no',
@@ -131,8 +130,8 @@ sub _interpretDbResultSet {
 sub doDbSize {
 	msgOut( "publishing databases size on '$opt_instance'..." );
 	my $count = 0;
-	my $dummy = $running->dummy() ? "-dummy" : "-nodummy";
-	my $verbose = $running->verbose() ? "-verbose" : "-noverbose";
+	my $dummy = $ep->runner()->dummy() ? "-dummy" : "-nodummy";
+	my $verbose = $ep->runner()->verbose() ? "-verbose" : "-noverbose";
 	foreach my $db ( @{$databases} ){
 		last if $count >= $opt_limit && $opt_limit >= 0;
 		msgOut( "database '$db'" );
@@ -142,7 +141,7 @@ sub doDbSize {
 		# we got so six metrics for each database
 		# that we publish separately as mqtt-based names are slightly different from Prometheus ones
 		my @labels = ( @opt_prepends,
-			"environment=".$ep->node()->environment(), "service=".$opt_service, "command=".$running->command(), "verb=".$running->verb(),
+			"environment=".$ep->node()->environment(), "service=".$opt_service, "command=".$ep->runner()->command(), "verb=".$ep->runner()->verb(),
 			"instance=$opt_instance", "database=$db",
 			@opt_appends );
 		foreach my $key ( keys %{$set} ){
@@ -174,8 +173,8 @@ sub doDbSize {
 
 sub doTablesCount {
 	my $count = 0;
-	my $dummy = $running->dummy() ? "-dummy" : "-nodummy";
-	my $verbose = $running->verbose() ? "-verbose" : "-noverbose";
+	my $dummy = $ep->runner()->dummy() ? "-dummy" : "-nodummy";
+	my $verbose = $ep->runner()->verbose() ? "-verbose" : "-noverbose";
 	foreach my $db ( @{$databases} ){
 		msgOut( "publishing tables rows count on '$opt_instance\\$db'..." );
 		last if $count >= $opt_limit && $opt_limit >= 0;
@@ -191,7 +190,7 @@ sub doTablesCount {
 				# mqtt value: <table_rows_count>
 				if( $opt_mqtt ){
 					my @labels = ( @opt_prepends,
-						"environment=".$ep->node()->environment(), "service=".$opt_service, "command=".$running->command(), "verb=".$running->verb(),
+						"environment=".$ep->node()->environment(), "service=".$opt_service, "command=".$ep->runner()->command(), "verb=".$ep->runner()->verb(),
 						"instance=$opt_instance", "database=$db",
 						@opt_appends );
 					TTP::Metric->new( $ep, {
@@ -207,7 +206,7 @@ sub doTablesCount {
 				# http value: <table_rows_count>
 				if( $opt_http || $opt_text ){
 					my @labels = ( @opt_prepends,
-						"environment=".$ep->node()->environment(), "service=".$opt_service, "command=".$running->command(), "verb=".$running->verb(),
+						"environment=".$ep->node()->environment(), "service=".$opt_service, "command=".$ep->runner()->command(), "verb=".$ep->runner()->verb(),
 						"instance=$opt_instance", "database=$db", "table=$tab",
 						@opt_appends );
 					TTP::Metric->new( $ep, {
@@ -256,18 +255,18 @@ if( !GetOptions(
 	"prepend=s@"		=> \@opt_prepends,
 	"append=s@"			=> \@opt_appends )){
 
-		msgOut( "try '".$running->command()." ".$running->verb()." --help' to get full usage syntax" );
+		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
 }
 
-if( $running->help()){
-	$running->verbHelp( $defaults );
+if( $ep->runner()->help()){
+	$ep->runner()->verbHelp( $defaults );
 	TTP::exit();
 }
 
-msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
-msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
-msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got colored='".( $ep->runner()->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $ep->runner()->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got service='$opt_service'" );
 msgVerbose( "got instance='$opt_instance'" );
 msgVerbose( "got database='$opt_database'" );
