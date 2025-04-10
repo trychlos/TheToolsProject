@@ -5,6 +5,7 @@
 # @(-) --[no]dummy             dummy run [${dummy}]
 # @(-) --[no]verbose           run verbosely [${verbose}]
 # @(-) --fromhost=<name>       pull from this host [${fromhost}]
+# @(-) --options=<options>     additional options to be passed to the command [${options}]
 #
 # @(@) When pulling from the default host, you should take care of specifying at least one of '--nohelp' or '--noverbose' (or '--verbose').
 # @(@) Also be warned that this script deletes the destination before installing the refreshed version, and will not be able of that if
@@ -44,10 +45,12 @@ my $defaults = {
 	colored => 'no',
 	dummy => 'no',
 	verbose => 'no',
-	fromhost => $ep->var([ 'deployments', 'reference' ]) || ''
+	fromhost => $ep->var([ 'deployments', 'reference' ]) || '',
+	options => ''
 };
 
 my $opt_fromhost = $defaults->{fromhost};
+my $opt_options = $defaults->{options};
 my $fromNode = undef;
 
 # -------------------------------------------------------------------------------------------------
@@ -64,9 +67,7 @@ sub doPull {
 	$pullShare = $fromData->{remoteShare} if exists $fromData->{remoteShare};
 	if( $pullShare ){
 		my ( $pull_vol, $pull_dirs, $pull_file ) = File::Spec->splitpath( $pullShare );
-		# if a byOS command is specified, then use it
-		my $command = $ep->var([ 'deployments', 'command', 'byOS', $Config{osname} ]);
-		msgVerbose( "found command='$command'" );
+		my $command = 'ttp.pl copydirs --sourcepath <SOURCE> --targetpath <TARGET> --exclude-dir \'.git\' --exclude-file \'.git*\' <OPTIONS>';
 		# may have several source dirs: will iterate on each
 		my $trees = $ep->var([ 'deployments', 'trees' ]);
 		foreach my $tree ( @{$trees} ){
@@ -97,47 +98,17 @@ sub doPull_byTree {
 	msgVerbose( "pulling '$tree->{target}'" );
 	my ( $dir_vol, $dir_dirs, $dir_file ) = File::Spec->splitpath( $tree->{target} );
 	my $srcPath = File::Spec->catpath( $pullVol, $dir_dirs, $dir_file );
-	if( $command ){
-		$result->{asked} += 1;
-		msgVerbose( "source='$srcPath' target='$tree->{target}'" );
-		my $cmdres = TTP::commandExec({
-			command => $command,
-			macros => {
-				SOURCE => $srcPath,
-				TARGET => $tree->{target}
-			}
-		});
-		$result->{done} += 1 if $cmdres->{success};
-	} else {
-		opendir( FD, "$srcPath" ) or msgErr( "unable to open directory $srcPath: $!" );
-		if( !TTP::errs()){
-			$result = true;
-			while( my $it = readdir( FD )){
-				next if $it eq "." or $it eq "..";
-				$result->{asked} += 1;
-				my $pull_path = File::Spec->catdir( $srcPath, $it );
-				my $dst_path = File::Spec->catdir( $tree->{target}, $it );
-				msgOut( "  resetting from '$pull_path' into '$dst_path'" );
-				msgDummy( "TTP::removeTree( $dst_path )" );
-				if( !$running->dummy()){
-					$result = TTP::removeTree( $dst_path );
-				}
-				if( $result ){
-					msgDummy( "dircopy( $pull_path, $dst_path )" );
-					if( !$running->dummy()){
-						$result = dircopy( $pull_path, $dst_path );
-						msgVerbose( "dircopy() result=$result" );
-					}
-				}
-				if( $result ){
-					$result->{done} += 1;
-				} else {
-					msgWarn( "error when copying from '$pull_path' to '$dst_path'" );
-				}
-			}
-			closedir( FD );
+	$result->{asked} += 1;
+	msgVerbose( "source='$srcPath' target='$tree->{target}'" );
+	my $cmdres = TTP::commandExec({
+		command => $command,
+		macros => {
+			SOURCE => $srcPath,
+			TARGET => $tree->{target},
+			OPTIONS => $opt_options
 		}
-	}
+	});
+	$result->{done} += 1 if $cmdres->{success};
 	return $result;
 }
 
@@ -150,7 +121,8 @@ if( !GetOptions(
 	"colored!"			=> \$ep->{run}{colored},
 	"dummy!"			=> \$ep->{run}{dummy},
 	"verbose!"			=> \$ep->{run}{verbose},
-	"fromhost=s"		=> \$opt_fromhost )){
+	"fromhost=s"		=> \$opt_fromhost,
+	"options=s"			=> \$opt_options )){
 
 		msgOut( "try '".$running->command()." ".$running->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
@@ -165,6 +137,7 @@ msgVerbose( "got colored='".( $running->colored() ? 'true':'false' )."'" );
 msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
 msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got fromhost='$opt_fromhost'" );
+msgVerbose( "got options='$opt_options'" );
 
 # a pull host must be defined in command-line and have a json configuration file
 # must not be the reference host
