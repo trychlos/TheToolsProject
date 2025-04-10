@@ -380,6 +380,10 @@ sub hostsConfigurationsDir {
 # make sure a directory exist
 # note that this does NOT honor the '-dummy' option as creating a directory is easy and a work may
 # be blocked without that
+# NB: pwi 2024- 6- 4
+#     creating a path like '\\ftpback-rbx2-207.ovh.net\ns3197235.ip-141-95-3.eu\WS12DEV2\SQLBackups' is OK and has been thoroughly tested
+#     even  if this operation is subject to the 'Insufficient system resources exist to complete the requested service' error
+#     (like all storage/network operations)
 # (I):
 # - the directory to be created if not exists
 # - an optional options hash with following keys:
@@ -392,18 +396,19 @@ sub makeDirExist {
 	my ( $dir, $opts ) = @_;
 	$opts //= {};
 	my $allowVerbose = true;
-	$allowVerbose = $opts->{allowVerbose} if exists $opts->{allowVerbose};
+	$allowVerbose = $opts->{allowVerbose} if defined $opts->{allowVerbose};
+	$allowVerbose = false if !$ep || !$ep->runner() || !$ep->runner()->verbose();
 	my $result = false;
 	if( -d $dir ){
-		#msgVerbose( "Path::makeDirExist() dir='$dir' exists" );
+		#msgVerbose( "TTP::Path::makeDirExist() dir='$dir' exists" );
 		$result = true;
 	} else {
 		# why is that needed in TTP::Path !?
-		TTP::Message::msgVerbose( "Path::makeDirExist() make_path() dir='$dir'" ) if $allowVerbose;
+		TTP::Message::msgVerbose( "TTP::Path::makeDirExist() make_path() dir='$dir'" ) if $allowVerbose;
 		my $error;
 		$result = true;
 		make_path( $dir, {
-			verbose => $ep->runner()->verbose(),
+			verbose => $allowVerbose,
 			error => \$error
 		});
 		# https://perldoc.perl.org/File::Path#make_path%28-%24dir1%2C-%24dir2%2C-....-%29
@@ -419,7 +424,7 @@ sub makeDirExist {
 			$result = false;
 		}
 		# why is that needed in TTP::Path !?
-		TTP::Message::msgVerbose( "Path::makeDirExist() dir='$dir' result=$result" ) if $allowVerbose;
+		TTP::Message::msgVerbose( "TTP::Path::makeDirExist() dir='$dir' result=$result" ) if $allowVerbose;
 	}
 	return $result;
 }
