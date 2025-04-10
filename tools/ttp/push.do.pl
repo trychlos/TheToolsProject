@@ -6,6 +6,7 @@
 # @(-) --[no]verbose           run verbosely [${verbose}]
 # @(-) --[no]check             whether to check for cleanity [${check}]
 # @(-) --[no]tag               tag the git repository [${tag}]
+# @(-) --options=<options>     additional options to be passed to the command [${options}]
 #
 # The Tools Project - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
@@ -42,13 +43,15 @@ my $defaults = {
 	dummy => 'no',
 	verbose => 'no',
 	check => 'yes',
-	tag => 'yes'
+	tag => 'yes',
+	options => ''
 };
 
 my $opt_check = true;
 my $opt_check_set = false;
 my $opt_tag = true;
 my $opt_tag_set = false;
+my $opt_options = $defaults->{options};
 
 # -------------------------------------------------------------------------------------------------
 # publish the development trees to the pull target
@@ -57,9 +60,7 @@ sub doPush {
 	my $result = false;
 	my $asked = 0;
 	my $done = 0;
-	# if a byOS command is specified, then use it
-	my $command = $ep->var([ 'deployments', 'command', 'byOS', $Config{osname} ]);
-	msgVerbose( "found command='$command'" );
+	my $command = 'ttp.pl copydirs --sourcepath <SOURCE> --targetpath <TARGET> --exclude-dir \'.git*\' --exclude-file \'.git*\' <OPTIONS>';
 	# may have several source trees: will iterate on each
 	my $trees = $ep->var([ 'deployments', 'trees' ]) || [];
 	my $count = scalar( @{$trees} );
@@ -108,37 +109,15 @@ sub doPush_byTree {
 	};
 	msgOut( "pushing source='$tree->{source}' to target='$tree->{target}'" );
 	$result->{asked} += 1;
-	if( $command ){
-		my $cmdres = TTP::commandExec({
-			command => $command,
-			macros => {
-				SOURCE => $tree->{source},
-				TARGET => $tree->{target}
-			}
-		});
-		$result->{done} += 1 if $cmdres->{success};
-	} else {
-		my $rc = pathrmdir( $tree->{target} );
-		if( defined $rc ){
-			msgVerbose( "doPush.pathrmdir() got rc=$rc" );
-		} else {
-			msgErr( "error detected in pathrmdir(): $!" );
+	my $cmdres = TTP::commandExec({
+		command => $command,
+		macros => {
+			SOURCE => $tree->{source},
+			TARGET => $tree->{target},
+			OPTIONS => $opt_options
 		}
-		# may happen:
-		# (ERR) error detected in dircopy(): Permission denied
-		# (ERR) error detected in dircopy(): Not a directory
-		my( $num_of_files_and_dirs, $num_of_dirs, $depth_traversed ) = dircopy( $tree->{source}, $tree->{target} );
-		if( defined $num_of_files_and_dirs ){
-			msgVerbose( "num_of_files_and_dirs='$num_of_files_and_dirs'" );
-			msgVerbose( "num_of_dirs='$num_of_dirs'" );
-			msgVerbose( "depth_traversed='$depth_traversed'" );
-		} else {
-			msgErr( "error detected in dircopy(): $!" );
-		}
-		if( !TTP::errs()){
-			$result->{done} += 1;
-		}
-	}
+	});
+	$result->{done} += 1 if $cmdres->{success};
 	return $result;
 }
 
@@ -237,12 +216,12 @@ if( !GetOptions(
 		$opt_check = $value;
 		$opt_check_set = true;
 	},
-	"check!"			=> \$opt_check,
 	"tag!"				=> sub {
 		my( $name, $value ) = @_;
 		$opt_tag = $value;
 		$opt_tag_set = true;
-	})){
+	},
+	"options=s"			=> \$opt_options )){
 
 		msgOut( "try '".$running->command()." ".$running->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
@@ -258,6 +237,7 @@ msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
 msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got check='".( $opt_check ? 'true':'false' )."'" );
 msgVerbose( "got tag='".( $opt_tag ? 'true':'false' )."'" );
+msgVerbose( "got options='$opt_options'" );
 
 # check that we are pushing only on the pull reference host
 my $ref_host = $ep->var([ 'deployments', 'reference' ]);

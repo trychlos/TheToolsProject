@@ -13,6 +13,7 @@
     - ttp.pl copydirs: remove option --skip, add options --exclude-dir, --exclude-file and --options
     - copyDir(), copyFile() and removeTree() functions are moved to TTP::Path module
     - ttp.pl copydirs: deprecate (though still honors) --dirs option
+    - ttp.pl push makes internally use of ttp.pl copydirs
 
 ### 4.1.3
 
