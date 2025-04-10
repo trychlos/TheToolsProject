@@ -36,13 +36,13 @@
 				"enabled": true,
 				"default": true,
 				"dropDir": "[eval:File::Spec->catdir( TTP::logsRoot(), localtime->strftime( '%y%m%d' ), 'Alerts' )]",
-				"command": "ttp.pl writejson -file [eval:File::Spec->catfile( TTP::alertsDir({ makeDirExist => false }), Time::Moment->now->strftime( '%Y%m%d%H%M%S%6N' ).'.json' )] -data \"<JSON>\" <OPTIONS>",
+				"command": "ttp.pl writejson -file [eval:File::Spec->catfile( TTP::alertsFileDropdir(), Time::Moment->now->strftime( '%Y%m%d%H%M%S%6N' ).'.json' )] -data \"<JSON>\" <OPTIONS>",
 				"prettyJson": true
 			},
 			"withMqtt": {
 				"default": true,
 				"enabled": true,
-				"command": "mqtt.pl publish -topic [eval:$ep->node()->name()]/alert -payload \"<JSON>\" <OPTIONS>",
+				"command": "mqtt.pl publish -topic $topic -payload \"<JSON>\" <OPTIONS>",
 				"topic": "[eval:TTP::nodeName()]/alerts/[eval:Time::Moment->from_string( <STAMP> )->epoch()]"
 			},
 			"withSms" : {

@@ -154,7 +154,7 @@
 			}
 		}
 	},
-	"Environment": {
+	"environment": {
 		"type_comments": [
 			"Define here the environment to which this machine is attached. A machine is attached to at most only one environment.",
 			"If this is not what you are searching for, maybe you could take a glance at the logical machine paradigm, unless you could be more interested by roles"
