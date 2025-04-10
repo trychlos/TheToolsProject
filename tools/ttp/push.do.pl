@@ -6,7 +6,11 @@
 # @(-) --[no]verbose           run verbosely [${verbose}]
 # @(-) --[no]check             whether to check for cleanity [${check}]
 # @(-) --[no]tag               tag the git repository [${tag}]
+# @(-) --exclude-dir=<dir>     exclude this source directory from the copy [${excludedirs}]
+# @(-) --exclude-file=<file>   exclude this file from the copy [${excludefiles}]
 # @(-) --options=<options>     additional options to be passed to the command [${options}]
+#
+# @(@) When specified, the '--exclude-dir' and '--exclude-file' options override the corresponding values from the site configuration.
 #
 # The Tools Project - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
@@ -47,10 +51,17 @@ my $defaults = {
 	options => ''
 };
 
+my $foo = $ep->var([ 'deployments', 'excludeDirs' ]);
+$defaults->{excludedirs} = defined $foo ? join( ',', @{$foo} ) : '';
+$foo = $ep->var([ 'deployments', 'excludeFiles' ]);
+$defaults->{excludefiles} = defined $foo ? join( ',', @{$foo} ) : '';
+
 my $opt_check = true;
 my $opt_check_set = false;
 my $opt_tag = true;
 my $opt_tag_set = false;
+my @opt_excludeDirs = split( /,/, $defaults->{excludedirs });
+my @opt_excludeFiles = split( /,/, $defaults->{excludefiles });
 my $opt_options = $defaults->{options};
 
 # -------------------------------------------------------------------------------------------------
@@ -60,7 +71,10 @@ sub doPush {
 	my $result = false;
 	my $asked = 0;
 	my $done = 0;
-	my $command = 'ttp.pl copydirs --sourcepath <SOURCE> --targetpath <TARGET> --exclude-dir \'.git*\' --exclude-file \'.git*\' <OPTIONS>';
+	my $command = "ttp.pl copydirs --sourcepath <SOURCE> --targetpath <TARGET>";
+	$command .= " --exclude-dirs '".( join( ',', @opt_excludeDirs ))."'" if scalar @opt_excludeDirs;
+	$command .= " --exclude-files '".( join( ',', @opt_excludeFiles ))."'" if scalar @opt_excludeFiles;
+	$command .= " <OPTIONS>";
 	# may have several source trees: will iterate on each
 	my $trees = $ep->var([ 'deployments', 'trees' ]) || [];
 	my $count = scalar( @{$trees} );
@@ -221,6 +235,8 @@ if( !GetOptions(
 		$opt_tag = $value;
 		$opt_tag_set = true;
 	},
+	"exclude-dir=s@"	=> \@opt_excludeDirs,
+	"exclude-file=s@"	=> \@opt_excludeFiles,
 	"options=s"			=> \$opt_options )){
 
 		msgOut( "try '".$running->command()." ".$running->verb()." --help' to get full usage syntax" );
@@ -237,6 +253,10 @@ msgVerbose( "got dummy='".( $running->dummy() ? 'true':'false' )."'" );
 msgVerbose( "got verbose='".( $running->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got check='".( $opt_check ? 'true':'false' )."'" );
 msgVerbose( "got tag='".( $opt_tag ? 'true':'false' )."'" );
+@opt_excludeDirs = split( /,/, join( ',', @opt_excludeDirs ));
+msgVerbose( "got exclude_dirs='".join( ',', @opt_excludeDirs )."'" );
+@opt_excludeFiles = split( /,/, join( ',', @opt_excludeFiles ));
+msgVerbose( "got exclude_files='".join( ',', @opt_excludeFiles )."'" );
 msgVerbose( "got options='$opt_options'" );
 
 # check that we are pushing only on the pull reference host
