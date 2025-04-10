@@ -31,7 +31,6 @@
 |   62 | 2024- 4- 9 | 'MQTTGateway.broker' should be deprecated in favor of 'MQTTGateway.host' for consistency reason |
 |   63 | 2024- 4- 9 | replace all $running with $ep->runner() (a specific variable seems useless) |
 |   64 | 2024- 4- 9 | when there is no execution node, trap_exit doesn't trigger sh/msgVerbose() on slim14 while triggering it in node93 - why ? |
-|   66 | 2024- 4- 9 | 'environment.type' property should be renamed 'environment.id' |
 |   67 | 2024- 4-10 | TheToolsProject/tools already includes an etc/ tree with samples - does we have also a site.samples/ tree ? |
 |   68 |  |  |
 
@@ -175,6 +174,8 @@
 |   58 | 2025- 2-17 | all verbs: on arguments verbose, use 'got' instead of 'found'
 |      | 2025- 2-18 | done
 |   65 | 2024- 4- 9 | 'Environment' node property should be renamed 'environment |
+|      | 2024- 4-10 | done |
+|   66 | 2024- 4- 9 | 'environment.type' property should be renamed 'environment.id' |
 |      | 2024- 4-10 | done |
 
 ---

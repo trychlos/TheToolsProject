@@ -8,6 +8,7 @@
 
     - Shell functions trap_int() and trap_exit() output to stderr
     - Deprecate 'Environment' property in favor of 'environment' (todo #65), thus bumping minor candidate version number
+    - Deprecate 'environment.type' property in favor of 'environment.id' (todo #66)
 
 ### 4.1.3
 
