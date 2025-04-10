@@ -8,7 +8,6 @@
 # @(-) --sourcecmd=s           the command which will give the source path [${sourcecmd}]
 # @(-) --targetpath=s          the target path [${targetpath}]
 # @(-) --targetcmd=s           the command which will give the target path [${targetcmd}]
-# @(-) --[no]dirs              copy directories and their content [${dirs}]
 # @(-) --exclude-dir=<dir>     exclude this source directory from the copy [${xdir}]
 # @(-) --exclude-file=<file>   exclude this file from the copy [${xfile}]
 # @(-) --options=<options>     additional options to be passed to the command [${options}]
@@ -51,7 +50,6 @@ my $defaults = {
 	sourcecmd => '',
 	targetpath => '',
 	targetcmd => '',
-	dirs => 'no',
 	xdir => '',
 	xfile => '',
 	options => ''
@@ -61,7 +59,8 @@ my $opt_sourcepath = $defaults->{sourcepath};
 my $opt_sourcecmd = $defaults->{sourcecmd};
 my $opt_targetpath = $defaults->{targetpath};
 my $opt_targetcmd = $defaults->{targetcmd};
-my $opt_dirs = false;
+my $opt_dirs = true;
+my $opt_dirs_set = false;
 my @opt_xdirs = ();
 my @opt_xfiles = ();
 my $opt_options = $defaults->{options};
@@ -104,7 +103,11 @@ if( !GetOptions(
 	"sourcecmd=s"		=> \$opt_sourcecmd,
 	"targetpath=s"		=> \$opt_targetpath,
 	"targetcmd=s"		=> \$opt_targetcmd,
-	"dirs!"				=> \$opt_dirs,
+	"dirs!"				=> sub {
+		my( $name, $value ) = @_;
+		$opt_dirs = $value;
+		$opt_dirs_set = true;
+	},
 	"exclude-dir=s@"	=> \@opt_xdirs,
 	"exclude-file=s@"	=> \@opt_xfiles,
 	"options=s"			=> \$opt_options )){
@@ -126,6 +129,7 @@ msgVerbose( "got sourcecmd='$opt_sourcecmd'" );
 msgVerbose( "got targetpath='$opt_targetpath'" );
 msgVerbose( "got targetcmd='$opt_targetcmd'" );
 msgVerbose( "got dirs='".( $opt_dirs ? 'true':'false' )."'" );
+msgVerbose( "got dirs_set='".( $opt_dirs_set ? 'true':'false' )."'" );
 @opt_xdirs = split( /,/, join( ',', @opt_xdirs ));
 msgVerbose( "got exclude_dirs='".join( ',', @opt_xdirs )."'" );
 @opt_xfiles = split( /,/, join( ',', @opt_xfiles ));
@@ -151,11 +155,13 @@ $opt_sourcepath = TTP::fromCommand( $opt_sourcecmd ) if $opt_sourcecmd;
 # if we have a target cmd, get the path
 $opt_targetpath = TTP::fromCommand( $opt_targetcmd ) if $opt_targetcmd;
 
-# --dirs option must be specified at the moment
-msgErr( "--dirs' option must be specified (at the moment)" ) if !$opt_dirs;
+# --dirs option is deprecated as of v4.2
+if( $opt_dirs_set ){
+	msgWarn( "'--dirs' option is deprecated since v4.2. You should update your code." );
+}
 
 if( !TTP::errs()){
-	doCopyDirs();
+	doCopyDirs() if $opt_dirs;
 }
 
 TTP::exit();
