@@ -13,11 +13,11 @@
 |    8 | 2024- 5- 2 | implements and honors text-based telemetry |
 |   15 | 2024- 1-29 | Toops::getOptions doesn't work as we do not know how to pass arguments to GetOptions() |
 |      | 2024- 5- 2 | these are called 'named options' and are got in the function through a hash though I don't know at the moment how to dintinguish between a hash and a hash ref |
-|	    | 2025- 1-17 | this is actually a list of values |
+|	   | 2025- 1-17 | this is actually a list of values |
 |   25 | 2024- 5- 3 | ttp->var() and others should be able to return a composite data (not only a scalar) |
 |      |            | and ttp.pl vars and others should be able to display them |
-|	    | 2024- 5- 5 | they actually do return composite data - which just is not displayed by the verb |
-|	    |            | see daemon.pl dbms.pl services.pl ttp.pl |
+|	   | 2024- 5- 5 | they actually do return composite data - which just is not displayed by the verb |
+|	   |            | see daemon.pl dbms.pl services.pl ttp.pl |
 |   49 | 2024- 5-11 | all functions should check the type of their arguments and call TTP::stackTrace() on coding error |
 |   52 | 2024- 5-17 | replace IP addresses by dns aliases to make easier the switch between live and banckup productions (e.g. http gateway) |
 |   53 | 2025- 1-17 | have a timeout on movedirs and purgedirs at least, maybe on all verbs which needs a network access + alert when this timeout is reached |
@@ -28,9 +28,7 @@
 |   59 | 2025- 2-18 | Daemon.pm: metrics for the daemon are windows-specific: re-code for unix'es |
 |   60 | 2025- 4- 6 | replace Time::Piece with Time::Moment |
 |   61 | 2025- 4- 8 | ttp.pl writejson should should actually be ttp.pl filewrite as the json is provided as a string on input - so this is not dedicated to json |
-|   62 | 2024- 4- 9 | 'MQTTGateway.broker' should be deprecated in favor of 'MQTTGateway.host' for consistency reason |
 |   63 | 2024- 4- 9 | replace all $running with $ep->runner() (a specific variable seems useless) |
-|   64 | 2024- 4- 9 | when there is no execution node, trap_exit doesn't trigger sh/msgVerbose() on slim14 while triggering it in node93 - why ? |
 |   67 | 2024- 4-10 | TheToolsProject/tools already includes an etc/ tree with samples - does we have also a site.samples/ tree ? |
 |   68 |  |  |
 
@@ -173,6 +171,10 @@
 |      | 2025- 2-17 | done
 |   58 | 2025- 2-17 | all verbs: on arguments verbose, use 'got' instead of 'found'
 |      | 2025- 2-18 | done
+|   62 | 2024- 4- 9 | 'MQTTGateway.broker' should be deprecated in favor of 'MQTTGateway.host' for consistency reason |
+|      | 2025- 2-18 | done
+|   64 | 2024- 4- 9 | when there is no execution node, trap_exit doesn't trigger sh/msgVerbose() on slim14 while triggering it in node93 - why ? |
+|      | 2024- 4-10 | msgOut/msgVerbose have been added back to the libexec/sh path - so cancelled |
 |   65 | 2024- 4- 9 | 'Environment' node property should be renamed 'environment |
 |      | 2024- 4-10 | done |
 |   66 | 2024- 4- 9 | 'environment.type' property should be renamed 'environment.id' |
