@@ -25,9 +25,8 @@
 |   69 | 2024- 4-10 | remove TTP::Path::siteConfigurationsDir() |
 |   70 | 2024- 4-10 | remove TTP::Path::servicesConfigurationsDir() |
 |   72 | 2024- 4-10 | remove TTP::Path::hostsConfigurationsDir() |
-|   73 | 2024- 4-10 | remove TTP::Path::hostConfigurationPath() |
 |   74 | 2024- 4-10 | TTP::Path::fromCommand() option should be 'makeDirExist' for consistency|
-|   75 | 2024- 4-10 | remove TTP::Path::hostConfigurationPath() |
+|   75 |  |  |
 |   76 | 2024- 4-10 | nodeRoot() should be siteRoot(), shouldn'it ? and so be removed from TTP |
 |   77 | 2024- 4-10 | add a comment on how to get site variables |
 |   78 |  |  |
@@ -195,6 +194,8 @@
 |   68 | 2024- 4-10 | remove TTP::Path::toopsConfigurationPath() |
 |      | 2024- 4-11 | done |
 |   71 | 2024- 4-10 | remove TTP::Path::serviceConfigurationPath() |
+|      | 2024- 4-11 | done |
+|   73 | 2024- 4-10 | remove TTP::Path::hostConfigurationPath() |
 |      | 2024- 4-11 | done |
 
 ---

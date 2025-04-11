@@ -23,6 +23,7 @@
     - Homogenize strftime() formats when displaying date and time to the user - notably changes the log format to '2012-12-24 15:30:45.500 +01:00' adding the time zone
     - Remove TTP::Path::toopsConfigurationPath() obsolete function (todo #68)
     - Remove TTP::Path::serviceConfigurationPath() obsolete function (todo #71)
+    - Remove TTP::Path::hostConfigurationPath() obsolete function (todo #73)
 
 ### 4.1.3
 
