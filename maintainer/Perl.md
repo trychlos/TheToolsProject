@@ -68,7 +68,6 @@ No match for argument: perl-Win32-SqlServer
     Test::Deep
     Time::HiRes
     Time::Moment
-    Time::Piece
     Try::Tiny
     URI::Escape
     URI::Split

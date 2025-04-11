@@ -35,7 +35,7 @@ use utf8;
 use warnings;
 
 use URI::Escape;
-use Time::Piece;
+use Time::Moment;
 
 use TTP::Ovh;
 use TTP::Service;
@@ -126,7 +126,7 @@ sub _switchAndWait {
 	my $verbose = $ep->runner()->verbose() ? "-verbose" : "-noverbose";
 	if( $answer->status() == 200 ){
 		if( $opt_wait ){
-			my $start = localtime->epoch;
+			my $start = Time::Moment->now->epoch;
 			my $end = false;
 			my $timeout = false;
 			print "waiting for IP move";
@@ -140,13 +140,13 @@ sub _switchAndWait {
 				my $current = $words[1];
 				if( $current eq $opt_to ){
 					$end = true;
-				} elsif( localtime->epoch - $start > $opt_timeout ){
+				} elsif( Time::Moment->now->epoch - $start > $opt_timeout ){
 					$timeout = true;
 				}
 			} while( !$end && !$timeout );
 			print EOL;
 			if( $end ){
-				msgOut( "OVH API says that IP is switched after ".( localtime->epoch - $start )." sec." );
+				msgOut( "OVH API says that IP is switched after ".( Time::Moment->now->epoch - $start )." sec." );
 				if( $opt_url ){
 					print "waiting for target machine answer";
 					$end = false;
@@ -160,13 +160,13 @@ sub _switchAndWait {
 						my $line = $words[1];
 						if( $line eq $opt_sender ){
 							$end = true;
-						} elsif( localtime->epoch - $start > $opt_timeout ){
+						} elsif( Time::Moment->now->epoch - $start > $opt_timeout ){
 							$timeout = true;
 						}
 					} while( !$end && !$timeout );
 					print EOL;
 					if( $end ){
-						msgOut( "URL is actually switched after ".( localtime->epoch - $start )." sec." );
+						msgOut( "URL is actually switched after ".( Time::Moment->now->epoch - $start )." sec." );
 					}
 				}
 				$res = true;

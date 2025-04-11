@@ -39,7 +39,8 @@ use warnings;
 
 use File::Spec;
 use JSON;
-use Path::Tiny;
+use Path::Tiny
+use Time::Moment;
 
 use TTP::Path;
 use TTP::SMTP;
@@ -92,7 +93,7 @@ sub buildAlertData {
 		emitter => $opt_emitter,
 		level => $opt_level,
 		# ISO 8601 format
-		stamp => Time::Moment->now->strftime( '%Y-%m-%dT%H:%M:%S.%5N%Z' )
+		stamp => Time::Moment->now->strftime( '%Y-%m-%d %H:%M:%S.%6N %:z' )
 	};
 	$data->{title} = $opt_title if $opt_title;
 	$data->{message} = $opt_message if $opt_message;

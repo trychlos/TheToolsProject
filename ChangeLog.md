@@ -19,6 +19,7 @@
     - ttp.pl copydirs has now an option --empty to empty the target tree before the copy
     - ttp.pl push has now options --exclude-dir and --exclude-files, defaulting to the site configuration
     - Remove all instances of '$running' variable, using instead '$ep->runner()' (todo #63)
+    - Remove Time::Piece dependency only using time::Moment which says it gives us a nanosecond precision, even if we are plainly satisfied with microseconds (todo #60)
 
 ### 4.1.3
 

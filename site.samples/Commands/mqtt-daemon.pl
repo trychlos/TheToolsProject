@@ -31,7 +31,7 @@ use warnings;
 use Data::Dumper;
 use File::Spec;
 use Getopt::Long;
-use Time::Piece;
+use Time::Moment;
 
 use TTP;
 use TTP::Constants qw( :all );
@@ -106,7 +106,7 @@ sub doMatched {
 	$toStdout = $config->{toStdout} if exists $config->{toStdout};
 	$toStdout = $opt_stdout if defined $opt_stdout && !$isSYS;
 	$toStdout = $opt_sys if defined $opt_sys && $isSYS;
-	print localtime->strftime( "%Y-%m-%d %H:%M:%S:" )." $topic $payload".EOL if $toStdout;
+	print Time::Moment->now->strftime( '%Y-%m-%d %H:%M:%S.%6N %:z' )." $topic $payload".EOL if $toStdout;
 	# do we want keep and answer with the received data ?
 	my $command = undef;
 	$command = $config->{command} if exists $config->{command};

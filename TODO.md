@@ -20,7 +20,6 @@
 |   55 | 2025- 2-17 | daemon.pl status should have an option to publish to mqtt too |
 |   57 | 2025- 2-17 | daemon.pl status should have an option to publish to text too |
 |   59 | 2025- 2-18 | Daemon.pm: metrics for the daemon are windows-specific: re-code for unix'es |
-|   60 | 2025- 4- 6 | replace Time::Piece with Time::Moment |
 |   61 | 2025- 4- 8 | ttp.pl writejson should should actually be ttp.pl filewrite as the json is provided as a string on input - so this is not dedicated to json |
 |   67 | 2024- 4-10 | TheToolsProject/tools already includes an etc/ tree with samples - does we have also a site.samples/ tree ? |
 |   68 | 2024- 4-10 | remove TTP::Path::toopsConfigurationPath() |
@@ -183,6 +182,8 @@
 |      | 2025- 2-17 | done
 |   58 | 2025- 2-17 | all verbs: on arguments verbose, use 'got' instead of 'found'
 |      | 2025- 2-18 | done
+|   60 | 2025- 4- 6 | replace Time::Piece with Time::Moment |
+|      | 2024- 4-11 | also homogeneize the date and time displays to the user to '2012-12-24 15:30:45.500 +01:00' - done |
 |   62 | 2024- 4- 9 | 'MQTTGateway.broker' should be deprecated in favor of 'MQTTGateway.host' for consistency reason |
 |      | 2025- 2-18 | done
 |   63 | 2024- 4- 9 | replace all $running with $ep->runner() (a specific variable seems useless) |

@@ -28,7 +28,7 @@ use Capture::Tiny qw( :all );
 use Data::Dumper;
 use File::Spec;
 use Path::Tiny;
-use Time::Piece;
+use Time::Moment;
 use Win32::SqlServer qw( :DEFAULT :consts );
 
 use TTP;
@@ -73,7 +73,7 @@ sub apiBackupDatabase {
 	msgErr( __PACKAGE__."::apiBackupDatabase() output is mandatory, but is not specified" ) if !$parms->{output};
 	if( !TTP::errs()){
 		msgVerbose( __PACKAGE__."::apiBackupDatabase() entering with instance='".$dbms->instance()."' database='$parms->{database}' mode='$parms->{mode}'..." );
-		my $tstring = localtime->strftime( '%Y-%m-%d %H:%M:%S' );
+		my $tstring = Time::Moment->now->strftime( '%Y-%m-%d %H:%M:%S.%6N %:z' );
 		# if full
 		my $options = "NOFORMAT, NOINIT, MEDIANAME='SQLServerBackups'";
 		my $label = "Full";

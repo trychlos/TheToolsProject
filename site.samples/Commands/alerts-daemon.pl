@@ -29,7 +29,6 @@ use warnings;
 use Data::Dumper;
 use File::Find;
 use Getopt::Long;
-use Time::Piece;
 
 use TTP;
 use TTP::Constants qw( :all );

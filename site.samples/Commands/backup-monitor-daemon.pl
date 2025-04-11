@@ -48,7 +48,6 @@ use File::Find;
 use File::Spec;
 use File::stat;
 use Getopt::Long;
-use Time::Piece;
 
 use TTP;
 use TTP::Constants qw( :all );
