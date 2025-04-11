@@ -22,7 +22,6 @@
 |   59 | 2025- 2-18 | Daemon.pm: metrics for the daemon are windows-specific: re-code for unix'es |
 |   61 | 2025- 4- 8 | ttp.pl writejson should should actually be ttp.pl filewrite as the json is provided as a string on input - so this is not dedicated to json |
 |   67 | 2024- 4-10 | TheToolsProject/tools already includes an etc/ tree with samples - does we have also to have a site.samples/ tree ? |
-|   69 | 2024- 4-10 | remove TTP::Path::siteConfigurationsDir() |
 |   74 | 2024- 4-10 | TTP::Path::fromCommand() option should be 'makeDirExist' for consistency |
 |   75 |  |  |
 |   76 | 2024- 4-10 | nodeRoot() should be siteRoot(), shouldn'it ? and so be removed from TTP |
@@ -190,6 +189,8 @@
 |   66 | 2024- 4- 9 | 'environment.type' property should be renamed 'environment.id' |
 |      | 2024- 4-10 | done |
 |   68 | 2024- 4-10 | remove TTP::Path::toopsConfigurationPath() |
+|      | 2024- 4-11 | done |
+|   69 | 2024- 4-10 | remove TTP::Path::siteConfigurationsDir() |
 |      | 2024- 4-11 | done |
 |   70 | 2024- 4-10 | remove TTP::Path::servicesConfigurationsDir() |
 |      | 2024- 4-11 | done |

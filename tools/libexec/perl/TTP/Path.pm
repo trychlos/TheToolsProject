@@ -464,12 +464,6 @@ sub removeTree {
 }
 
 # ------------------------------------------------------------------------------------------------
-sub siteConfigurationsDir {
-	TTP::Message::msgErr( "TTP_CONFDIR is not found in your environment, but is required" ) if !$ENV{TTP_CONFDIR};
-	return $ENV{TTP_CONFDIR};
-}
-
-# ------------------------------------------------------------------------------------------------
 sub siteRoot {
 	return $ep->var([ 'siteRoot' ]);
 }
