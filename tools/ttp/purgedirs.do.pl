@@ -33,6 +33,8 @@ use warnings;
 use File::Path qw( remove_tree );
 use File::Spec;
 
+use TTP::Path;
+
 my $defaults = {
 	help => 'no',
 	colored => 'no',
@@ -159,7 +161,7 @@ msgErr( "one of '--dirpath' and '--dircmd' options must be specified" ) if $coun
 
 # if we have a source cmd, get the path
 # no need to make it exist: if not exist, there is just nothing to purge
-$opt_dirpath = TTP::fromCommand( $opt_dircmd ) if $opt_dircmd;
+$opt_dirpath = TTP::Path::fromCommand( $opt_dircmd ) if $opt_dircmd;
 
 if( !TTP::errs()){
 	doPurgeDirs();

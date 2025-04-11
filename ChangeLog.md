@@ -28,6 +28,7 @@
     - Remove TTP::Path::hostsConfigurationsDir() obsolete function (todo #72)
     - Remove TTP::Path::daemonsConfigurationsDir() obsolete function
     - Remove TTP::Path::siteConfigurationsDir() obsolete function (todo #69)
+    - Deduplicate fromCommand() to TTP::Path (todo #75)
 
 ### 4.1.3
 
