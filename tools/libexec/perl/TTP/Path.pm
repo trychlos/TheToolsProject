@@ -233,14 +233,6 @@ sub credentialsDir {
 
 # ------------------------------------------------------------------------------------------------
 # (O):
-# returns the directory which contains the daemons configurations
-# at the moment, a non-configurable subdirectory of TTP_CONFDIR
-sub daemonsConfigurationsDir {
-	return File::Spec->catdir( siteConfigurationsDir(), "daemons" );
-}
-
-# ------------------------------------------------------------------------------------------------
-# (O):
 # the current DBMS archives directory, making sure the dir exists
 # the dir can be defined in toops.json, or overriden in host configuration
 sub dbmsArchivesDir {

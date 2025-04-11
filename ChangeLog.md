@@ -26,6 +26,7 @@
     - Remove TTP::Path::hostConfigurationPath() obsolete function (todo #73)
     - Remove TTP::Path::servicesConfigurationsDir() obsolete function (todo #70)
     - Remove TTP::Path::hostsConfigurationsDir() obsolete function (todo #72)
+    - Remove TTP::Path::daemonsConfigurationsDir() obsolete function
 
 ### 4.1.3
 
