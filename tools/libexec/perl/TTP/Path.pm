@@ -356,14 +356,6 @@ sub fromCommand {
 	return $path;
 }
 
-# ------------------------------------------------------------------------------------------------
-# (O):
-# returns the dir which contains hosts configuration files
-# at the moment, a non-configurable subdirectory of TTP_CONFDIR
-sub hostsConfigurationsDir {
-	return File::Spec->catdir( siteConfigurationsDir(), "machines" );
-}
-
 # -------------------------------------------------------------------------------------------------
 # make sure a directory exist
 # note that this does NOT honor the '-dummy' option as creating a directory is easy and a work may
