@@ -489,45 +489,6 @@ sub filter {
 }
 
 # -------------------------------------------------------------------------------------------------
-# returns the path requested by the given command
-# (I):
-# - the command to be executed
-# - an optional options hash with following keys:
-#   > makeExist, defaulting to false
-# ((O):
-# - returns a path of undef if an error has occured
-
-sub fromCommand {
-	my( $cmd, $opts ) = @_;
-	$opts //= {};
-	msgErr( "fromCommand() command is not specified" ) if !$cmd;
-	my $path = undef;
-	if( !TTP::errs()){
-		$path = `$cmd`;
-		msgErr( "fromCommand() command doesn't output anything" ) if !$path;
-	}
-	if( !TTP::errs()){
-		my @words = split( /\s+/, $path );
-		if( scalar @words < 2 ){
-			msgErr( "fromCommand() expect at least two words" );
-		} else {
-			$path = $words[scalar @words - 1];
-			msgErr( "fromCommand() found an empty path" ) if !$path;
-		}
-	}
-	if( !TTP::errs()){
-		my $makeExist = false;
-		$makeExist = $opts->{makeExist} if exists $opts->{makeExist};
-		if( $makeExist ){
-			my $rc = TTP::Path::makeDirExist( $path );
-			$path = undef if !$rc;
-		}
-	}
-	$path = undef if TTP::errs();
-	return $path;
-}
-
-# -------------------------------------------------------------------------------------------------
 # returns a new unique temp filename
 
 sub getTempFileName {
