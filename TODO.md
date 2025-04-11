@@ -24,7 +24,6 @@
 |   67 | 2024- 4-10 | TheToolsProject/tools already includes an etc/ tree with samples - does we have also to have a site.samples/ tree ? |
 |   69 | 2024- 4-10 | remove TTP::Path::siteConfigurationsDir() |
 |   70 | 2024- 4-10 | remove TTP::Path::servicesConfigurationsDir() |
-|   71 | 2024- 4-10 | remove TTP::Path::serviceConfigurationPath() |
 |   72 | 2024- 4-10 | remove TTP::Path::hostsConfigurationsDir() |
 |   73 | 2024- 4-10 | remove TTP::Path::hostConfigurationPath() |
 |   74 | 2024- 4-10 | TTP::Path::fromCommand() option should be 'makeDirExist' for consistency|
@@ -194,6 +193,8 @@
 |   66 | 2024- 4- 9 | 'environment.type' property should be renamed 'environment.id' |
 |      | 2024- 4-10 | done |
 |   68 | 2024- 4-10 | remove TTP::Path::toopsConfigurationPath() |
+|      | 2024- 4-11 | done |
+|   71 | 2024- 4-10 | remove TTP::Path::serviceConfigurationPath() |
 |      | 2024- 4-11 | done |
 
 ---
