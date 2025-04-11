@@ -357,18 +357,6 @@ sub fromCommand {
 }
 
 # ------------------------------------------------------------------------------------------------
-# (I):
-# - optionally a hostname, defaulting to the current host
-#   remind that Unix has case sensitive filesystems, while Windows has not - we do not modify here the case
-# (O):
-# returns the full path of the host configuration file
-sub hostConfigurationPath {
-	my ( $host ) = @_;
-	$host = TTP::host() if !$host;
-	return File::Spec->catfile( hostsConfigurationsDir(), "$host.json" );
-}
-
-# ------------------------------------------------------------------------------------------------
 # (O):
 # returns the dir which contains hosts configuration files
 # at the moment, a non-configurable subdirectory of TTP_CONFDIR
