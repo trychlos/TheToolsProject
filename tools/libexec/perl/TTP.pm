@@ -33,7 +33,6 @@ use Path::Tiny qw( path );
 use Scalar::Util qw( looks_like_number );
 use Test::Deep;
 use Time::Moment;
-use Time::Piece;
 use vars::global create => qw( $ep );
 
 use TTP::Constants qw( :all );
@@ -347,8 +346,8 @@ sub _executionReportCompleteData {
 	$data->{verb} = $ep->runner()->verb();
 	$data->{host} = $ep->node()->name();
 	$data->{code} = $ep->runner()->runnableErrs();
-	$data->{started} = $ep->runner()->runnableStarted()->strftime( '%Y-%m-%d %H:%M:%S.%5N' );
-	$data->{ended} = Time::Moment->now->strftime( '%Y-%m-%d %H:%M:%S.%5N' );
+	$data->{started} = $ep->runner()->runnableStarted()->strftime( '%Y-%m-%d %H:%M:%S.%6N %:z' );
+	$data->{ended} = Time::Moment->now->strftime( '%Y-%m-%d %H:%M:%S.%6N %:z' );
 	$data->{dummy} = $ep->runner()->dummy();
 	return $data;
 }

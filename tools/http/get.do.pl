@@ -52,7 +52,7 @@ use warnings;
 
 use HTTP::Request;
 use LWP::UserAgent;
-use Time::Piece;
+use Time::Moment;
 use URI::Escape;
 
 use TTP::Metric;
@@ -148,7 +148,7 @@ sub doGet {
 	#$res = false;
 	# and send the telemetry if opt-ed in
 	_telemetry( $res ? 1 : 0, $header, 'gauge' ) if $opt_status;
-	_telemetry( $res ? localtime->epoch : 0, $header, 'counter', '_epoch' ) if $opt_epoch;
+	_telemetry( $res ? Time::Moment->now->epoch : 0, $header, 'counter', '_epoch' ) if $opt_epoch;
 	if( $res ){
 		if( $opt_response ){
 			print Dumper( $response );

@@ -34,7 +34,7 @@ use utf8;
 use warnings;
 
 use File::Spec;
-use Time::Piece;
+use Time::Moment;
 
 use TTP::Daemon;
 
@@ -108,14 +108,14 @@ sub doWait {
 		my @w = split( /\s+/, $answer->[0] );
 		my $pid = $w[0];
 		msgLog( "waiting for '$pid' termination" );
-		my $start = localtime;
+		my $start = Time::Moment->now;
 		my $timedout = false;
 		while( $alive && !$timedout ){
 			$alive = kill( 0, $pid );
 			if( $alive ){
 				sleep( 1 );
-				my $now = localtime;
-				$timedout = ( $now - $start > $opt_timeout );
+				my $now = Time::Moment->now;
+				$timedout = ( $now->epoch - $start->epoch > $opt_timeout );
 			}
 		}
 	}

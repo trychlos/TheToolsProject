@@ -62,7 +62,7 @@ use IO::Socket::INET;
 use Proc::Background;
 use Proc::ProcessTable;
 use Role::Tiny::With;
-use Time::Piece;
+use Time::Moment;
 use vars::global qw( $ep );
 use if $Config{osname} eq 'MSWin32', 'Win32::OLE';
 
@@ -488,7 +488,7 @@ sub _mqtt_timeout {
 sub _running {
 	my ( $self ) = @_;
 
-	return "running since ".$self->runnableStarted()->strftime( '%Y-%m-%d %H:%M:%S.%5N' );
+	return "running since ".$self->runnableStarted()->strftime( '%Y-%m-%d %H:%M:%S.%6N %:z' );
 }
 
 # ------------------------------------------------------------------------------------------------

@@ -29,7 +29,7 @@ use strict;
 use utf8;
 use warnings;
 
-use Time::Piece;
+use Time::Moment;
 
 use TTP::MQTT;
 
@@ -62,7 +62,7 @@ sub doGetRetained {
 		$mqtt->subscribe( '#' => \&doWork );
 		while( $loop ){
 			$mqtt->tick( 1 );
-			my $now = localtime->epoch;
+			my $now = Time::Moment->now->epoch;
 			if( $last && $now - $last > $opt_wait ){
 				$loop = false;
 			} else {
@@ -87,7 +87,7 @@ sub doWork {
 	if( $retain ){
 		print "$topic $payload".EOL;
 		msgLog( "$topic $payload" );
-		$last = localtime->epoch;
+		$last = Time::Moment->now->epoch;
 		$count += 1;
 	}
 }

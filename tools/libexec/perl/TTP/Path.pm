@@ -15,7 +15,6 @@ use File::Find;
 use File::Path qw( make_path remove_tree );
 use File::Spec;
 use Text::Glob qw( match_glob );
-use Time::Piece;
 use vars::global qw( $ep );
 
 use TTP;

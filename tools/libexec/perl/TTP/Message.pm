@@ -265,7 +265,7 @@ sub _msgLogAppend {
 	if( $logFile ){
 		my $host = TTP::host() || '-';
 		my $username = $ENV{LOGNAME} || $ENV{USER} || $ENV{USERNAME} || 'unknown'; #getpwuid( $< );
-		my $line = Time::Moment->now->strftime( '%Y-%m-%d %H:%M:%S.%5N' )." $host $$ $username $msg";
+		my $line = Time::Moment->now->strftime( '%Y-%m-%d %H:%M:%S.%6N %:z' )." $host $$ $username $msg";
 		# make sure the directory exists
 		my ( $vol, $dir, $f ) = File::Spec->splitpath( $logFile );
 		my $logdir = File::Spec->catpath( $vol, $dir );

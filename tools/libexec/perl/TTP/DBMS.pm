@@ -33,7 +33,7 @@ use File::Path;
 use File::Spec;
 use Module::Load;
 use Path::Tiny qw( path );
-use Time::Piece;
+use Time::Moment;
 
 use TTP;
 use TTP::Constants qw( :all );
@@ -105,7 +105,7 @@ sub computeDefaultBackupFilename {
 	my $backupDir = $node->var([ 'DBMS', 'backupsDir' ]) || $node->var([ 'DBMS', 'backupsRoot' ]) || TTP::tempDir();;
 	TTP::Path::makeDirExist( $backupDir );
 	# compute the filename
-	my $fname = $node->name().'-'.$self->instance()."-$parms->{database}-".localtime->strftime( '%y%m%d' ).'-'.localtime->strftime( '%H%M%S' ).'-'.$mode.'.backup';
+	my $fname = $node->name().'-'.$self->instance()."-$parms->{database}-".( Time::Moment->now->strftime( '%y%m%d-%H%M%S' ))."-$mode.backup";
 	$output = File::Spec->catdir( $backupDir, $fname );
 	msgVerbose( __PACKAGE__."::computeDefaultBackupFilename() computing output default as '$output'" );
 	return $output;

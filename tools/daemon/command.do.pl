@@ -35,7 +35,7 @@ use utf8;
 use warnings;
 
 use IO::Socket::INET;
-use Time::Piece;
+use Time::Moment;
 
 # auto-flush on socket
 $| = 1;
@@ -87,13 +87,13 @@ sub doSend {
 			$socket->shutdown( SHUT_WR );
 			# receive a response of up to 4096 characters from server
 			# print the received (non-empty) lines until got OK
-			my $start = localtime;
+			my $start = Time::Moment->now;
 			my $timedout = false;
 			my $ok = getAnswerOk( $socket );
 			while( !$ok && !$timedout ){
 				sleep( 1 );
-				my $now = localtime;
-				$timedout = ( $now - $start > $opt_timeout );
+				my $now = Time::Moment->now;
+				$timedout = ( $now->epoch - $start->epoch > $opt_timeout );
 				if( !$timedout ){
 					$ok = getAnswerOk( $socket );
 				}

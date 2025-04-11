@@ -40,7 +40,6 @@ use utf8;
 use warnings;
 
 use File::Spec;
-use Time::Piece;
 
 use TTP::DBMS;
 use TTP::Service;

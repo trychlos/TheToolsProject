@@ -43,7 +43,6 @@ use Data::Dumper;
 use File::Spec;
 use JSON;
 use Test::Deep;
-use Time::Piece;
 
 use TTP::Constants qw( :all );
 use TTP::Message qw( :all );

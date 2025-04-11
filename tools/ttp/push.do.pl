@@ -37,7 +37,7 @@ use warnings;
 use Config;
 use File::Copy::Recursive qw( dircopy pathrmdir );
 use File::Spec;
-use Time::Piece;
+use Time::Moment;
 
 my $defaults = {
 	help => 'no',
@@ -200,7 +200,7 @@ sub doPush_gitTag {
 	$allowed = $tree->{'git-tag'} if defined $tree->{'git-tag'};
 	if( $allowed ){
 		msgOut( "tagging '$tree->{source}' git repository" );
-		my $now = localtime->strftime( '%Y%m%d_%H%M%S' );
+		my $now = Time::Moment->now->strftime( '%Y%m%d_%H%M%S' );
 		my $message = $ep->runner()->command()." ".$ep->runner()->verb();
 		my $command = "git -C $tree->{source} tag -am \"$message\" $now";
 		if( $ep->runner()->dummy()){
