@@ -5,7 +5,7 @@
 # @(-) --[no]dummy             dummy run (ignored here) [${dummy}]
 # @(-) --[no]verbose           run verbosely [${verbose}]
 # @(-) --[no]commands          list the available commands [${commands}]
-# @(-) --[no]nodes             list the available nodes [${nodes}]
+# @(-) --[no]nodes             list the known (defined) nodes [${nodes}]
 #
 # The Tools Project - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
@@ -75,7 +75,7 @@ sub listCommands {
 }
 
 # -------------------------------------------------------------------------------------------------
-# list the available nodes
+# list the available (defined) nodes
 
 sub listNodes {
 	msgOut( "displaying available nodes..." );
