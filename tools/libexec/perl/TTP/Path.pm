@@ -480,14 +480,6 @@ sub removeTree {
 }
 
 # ------------------------------------------------------------------------------------------------
-# (O):
-# returns the dir which contains services configuration files
-# at the moment, a non-configurable subdirectory of TTP_CONFDIR
-sub servicesConfigurationsDir {
-	return File::Spec->catdir( siteConfigurationsDir(), "services" );
-}
-
-# ------------------------------------------------------------------------------------------------
 sub siteConfigurationsDir {
 	TTP::Message::msgErr( "TTP_CONFDIR is not found in your environment, but is required" ) if !$ENV{TTP_CONFDIR};
 	return $ENV{TTP_CONFDIR};
