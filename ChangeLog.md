@@ -24,6 +24,7 @@
     - Remove TTP::Path::toopsConfigurationPath() obsolete function (todo #68)
     - Remove TTP::Path::serviceConfigurationPath() obsolete function (todo #71)
     - Remove TTP::Path::hostConfigurationPath() obsolete function (todo #73)
+    - Remove TTP::Path::servicesConfigurationsDir() obsolete function (todo #70)
 
 ### 4.1.3
 
