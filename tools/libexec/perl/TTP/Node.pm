@@ -235,11 +235,12 @@ sub dirs {
 }
 
 # ------------------------------------------------------------------------------------------------
-# Returns the list of available nodes
+# Returns the list of nodes available on the current host
+# This is used at startup by 'ttp.sh switch -default'
 # (I):
 # - none
 # (O):
-# - the list of available nodes as an array ref
+# - the list of nodes as an array ref
 
 sub enum {
 	my ( $class ) = @_;
