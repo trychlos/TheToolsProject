@@ -314,7 +314,7 @@ sub execReportsDir {
 # (I):
 # - the command to be executed
 # - an optional options hash with following keys:
-#   > makeExist, defaulting to false
+#   > makeDirExist, defaulting to false
 # ((O):
 # - returns a path of undef if an error has occured
 
@@ -337,9 +337,9 @@ sub fromCommand {
 		}
 	}
 	if( !TTP::errs()){
-		my $makeExist = false;
-		$makeExist = $opts->{makeExist} if exists $opts->{makeExist};
-		if( $makeExist ){
+		my $makeDirExist = false;
+		$makeDirExist = $opts->{makeDirExist} if exists $opts->{makeDirExist};
+		if( $makeDirExist ){
 			my $rc = makeDirExist( $path );
 			$path = undef if !$rc;
 		}
