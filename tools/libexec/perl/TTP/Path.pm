@@ -492,16 +492,6 @@ sub removeTree {
 }
 
 # ------------------------------------------------------------------------------------------------
-# (I):
-# - the service name
-# (O):
-# returns the full pathname of the service JSON configuration file
-sub serviceConfigurationPath {
-	my ( $service ) = @_;
-	return File::Spec->catfile( servicesConfigurationsDir(), "$service.json" );
-}
-
-# ------------------------------------------------------------------------------------------------
 # (O):
 # returns the dir which contains services configuration files
 # at the moment, a non-configurable subdirectory of TTP_CONFDIR
