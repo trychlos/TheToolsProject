@@ -381,7 +381,7 @@ sub new {
 	$ENV{TTP_DEBUG} && print STDERR __PACKAGE__."::new() candidate='".( $args->{node} || '' )."' abortOnError=".( $args->{abortOnError} ? 'true' : 'false' ).EOL;
 
 	# of which node are we talking about ?
-	my $node = $args->{node} || $self->_hostname();
+	my $node = $args->{node} || $ENV{TTP_NODE} || $self->_hostname();
 
 	# allowed nodesDirs can be configured at site-level
 	my $dirs = $class->dirs();
