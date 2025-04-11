@@ -520,11 +520,6 @@ sub siteRoot {
 	return $ep->var([ 'siteRoot' ]);
 }
 
-# ------------------------------------------------------------------------------------------------
-sub toopsConfigurationPath {
-	return File::Spec->catfile( siteConfigurationsDir(), "toops.json" );
-}
-
 # -------------------------------------------------------------------------------------------------
 # Make sure we returns a path with a trailing separator
 sub withTrailingSeparator {
