@@ -220,19 +220,6 @@ sub copyFile {
 
 # ------------------------------------------------------------------------------------------------
 # (O):
-# - the credentials directory
-sub credentialsDir {
-	my ( $opts ) = @_;
-	$opts //= {};
-	my $dir = $ep->var([ 'credentialsDir' ], $opts );
-	if( !defined $dir || !length $dir ){
-		TTP::Message::msgWarn( "'credentialsDir' is not defined in toops.json nor in host configuration" );
-	}
-	return $dir;
-}
-
-# ------------------------------------------------------------------------------------------------
-# (O):
 # the current DBMS archives directory, making sure the dir exists
 # the dir can be defined in toops.json, or overriden in host configuration
 sub dbmsArchivesDir {
