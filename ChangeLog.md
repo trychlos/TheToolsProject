@@ -31,6 +31,7 @@
     - Deduplicate fromCommand() to TTP::Path (todo #75)
     - Rename 'makeExist' option to 'makeDirExist' for consistency (todo #74)
     - Remove TTP::Path::credentialsDir() obsolete function
+    - Let an administrator define its own credentials subdirectories
 
 ### 4.1.3
 
