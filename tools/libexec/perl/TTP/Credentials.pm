@@ -34,7 +34,7 @@ use TTP::Finder;
 use TTP::Message qw( :all );
 
 my $Const = {
-	# hardcoded subpaths to find the <service>.json files
+	# default subpaths to find the credentials files
 	# even if this not too sexy in Win32, this is a standard and a common usage on Unix/Darwin platforms
 	finder => {
 		dirs => [
@@ -61,7 +61,8 @@ my $Const = {
 sub find {
 	my ( $file ) = @_;
 	my $finder = TTP::Finder->new( $ep );
-	my $res = $finder->find({ dirs => [ $Const->{finder}{dirs}, $file ]});
+	my $credentialsDirs = $ep->var([ 'credentialsDirs' ]) || $Const->{finder}{dirs};
+	my $res = $finder->find({ dirs => [ $credentialsDirs, $file ]});
 	return $res && ref( $res ) eq 'ARRAY' ? $res->[0] : undef;
 }
 
