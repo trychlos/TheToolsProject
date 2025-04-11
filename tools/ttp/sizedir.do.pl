@@ -194,7 +194,7 @@ $count += 1 if $opt_dircmd;
 msgErr( "one of '--dirpath' and '--dircmd' options must be specified" ) if $count != 1;
 
 # if we have a source cmd, get the path and make it exist to be sure to have something to publish
-$opt_dirpath = TTP::Path::( $opt_dircmd, { makeExist => true }) if $opt_dircmd;
+$opt_dirpath = TTP::Path::( $opt_dircmd, { makeDirExist => true }) if $opt_dircmd;
 
 if( !TTP::errs()){
 	doComputeSize();

@@ -226,7 +226,7 @@ msgErr( "one of '--targetpath' and '--targetcmd' options must be specified" ) if
 
 # if we have a source cmd, get the path and check it exists
 # no need to make the dir exist: if not exist, then there is just nothing to move
-$opt_sourcepath = TTP::Path::( $opt_sourcecmd ) if $opt_sourcecmd;
+$opt_sourcepath = TTP::Path::fromCommand( $opt_sourcecmd ) if $opt_sourcecmd;
 
 # if we have a target cmd, get the path
 $opt_targetpath = TTP::Path::fromCommand( $opt_targetcmd ) if $opt_targetcmd;

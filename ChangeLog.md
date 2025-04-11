@@ -29,6 +29,7 @@
     - Remove TTP::Path::daemonsConfigurationsDir() obsolete function
     - Remove TTP::Path::siteConfigurationsDir() obsolete function (todo #69)
     - Deduplicate fromCommand() to TTP::Path (todo #75)
+    - Rename 'makeExist' option to 'makeDirExist' for consistency (todo #74)
 
 ### 4.1.3
 

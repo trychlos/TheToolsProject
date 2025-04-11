@@ -22,7 +22,6 @@
 |   59 | 2025- 2-18 | Daemon.pm: metrics for the daemon are windows-specific: re-code for unix'es |
 |   61 | 2025- 4- 8 | ttp.pl writejson should should actually be ttp.pl filewrite as the json is provided as a string on input - so this is not dedicated to json |
 |   67 | 2024- 4-10 | TheToolsProject/tools already includes an etc/ tree with samples - does we have also to have a site.samples/ tree ? |
-|   74 | 2024- 4-10 | TTP::Path::fromCommand() option should be 'makeDirExist' for consistency |
 |   76 | 2024- 4-10 | nodeRoot() should be siteRoot(), shouldn'it ? and so be removed from TTP |
 |   77 | 2024- 4-10 | add a comment on how to get site variables |
 |   78 |  |  |
@@ -198,6 +197,8 @@
 |   72 | 2024- 4-10 | remove TTP::Path::hostsConfigurationsDir() |
 |      | 2024- 4-11 | done |
 |   73 | 2024- 4-10 | remove TTP::Path::hostConfigurationPath() |
+|      | 2024- 4-11 | done |
+|   74 | 2024- 4-10 | TTP::Path::fromCommand() option should be 'makeDirExist' for consistency |
 |      | 2024- 4-11 | done |
 |   75 | 2024- 4-11 | fromCommand() appears both in TTP and in TTP::Path |
 |      | 2024- 4-11 | deduplicated to TTP::Path |
