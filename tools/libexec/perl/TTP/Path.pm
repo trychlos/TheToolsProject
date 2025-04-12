@@ -79,6 +79,7 @@ sub copyDir {
 			$opts->{work}{target} = $target;
 			$opts->{work}{errors_count} = 0;
 			$opts->{work}{makeDirExist} = true;
+			$opts->{work}{command} = TTP::commandByOs([ 'copyFile' ]);
 			find( sub { _copy_to( $opts, $_ ); }, $source );
 			$result = !$opts->{work}{errors_count};
 			$opts->{work} = undef;
@@ -127,11 +128,11 @@ sub _copy_to {
 sub _copy_match_dir {
 	my ( $dir, $excluded ) = @_;
 	my $match = false;
-	my ( $xvol, $xdir, $xfile ) = File::Spec->splitpath( $dir );
-	my @dirs = File::Spec->splitdir( $xdir );
-	push( @dirs, $xfile );
+	my ( $srcvol, $srcdir, $srcfile ) = File::Spec->splitpath( $dir );
+	my @dirs = File::Spec->splitdir( $srcdir );
+	push( @srcdirs, $srcfile );
 	OUTER: foreach my $spec ( @{$excluded} ){
-		foreach my $component ( @dirs ){
+		foreach my $component ( @srcdirs ){
 			if( $component ){
 				if( match_glob( $spec, $component )){
 					$match = true;
@@ -140,6 +141,7 @@ sub _copy_match_dir {
 			}
 		}
 	}
+	TTP::Message::msgVerbose( __PACKAGE__."::_copy_match_dir() dir='$dir' excluded=[ ".( join( ', ', @${excluded} ))." ] match=".( $match ? 'true' : 'false' ));
 	return $match;
 }
 
@@ -159,6 +161,7 @@ sub _copy_match_file {
 			last;
 		}
 	}
+	TTP::Message::msgVerbose( __PACKAGE__."::_copy_match_file() file='$file' excluded=[ ".( join( ', ', @${excluded} ))." ] match=".( $match ? 'true' : 'false' ));
 	return $match;
 }
 
@@ -173,6 +176,7 @@ sub _copy_match_file {
 #   > 'makeDirExist', when using fcopy(), whether a source directory must be created on the target, defaulting to false
 #      fcopy() default behavior is to refuse to copy just a directory (because it wants copy files!), and returns an error message
 #      this option let us reverse this behavior, e.g. when copying a directory tree with empty dirs
+#   > 'command': the to-be-used command
 # (O):
 # return true|false
 
@@ -181,7 +185,7 @@ sub copyFile {
 	$opts //= {};
 	my $result = false;
 	TTP::Message::msgVerbose( __PACKAGE__."::copyFile() entering with source='$source' target='$target'" );
-	my $command = TTP::commandByOs([ 'copyFile' ]);
+	my $command = $opts->{command} || TTP::commandByOs([ 'copyFile' ]);
 	if( $command ){
 		my $cmdres = TTP::commandExec({
 			command => $command,
@@ -446,7 +450,7 @@ sub removeTree {
 		}
 		$result = false;
 	}
-	TTP::Message::msgVerbose( __PACKAGE__."::removeTree() dir='$dir' result=$result" );
+	TTP::Message::msgVerbose( __PACKAGE__."::removeTree() dir='$dir' result=".( $result ? 'true' : 'false' ));
 	return $result;
 }
 
