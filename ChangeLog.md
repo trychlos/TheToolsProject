@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - Reorganize tools/etc vs. site.example/ files (todo #67)
 
 ### 4.2.3
 
