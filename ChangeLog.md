@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.2.3-rc.0
+### 4.2.3
 
-    Release date: 
+    Release date: 2025- 4-12
 
     - Fix TTP::Path::_copy_match_dir()
 
