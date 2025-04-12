@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - ttp.pl push no more quotes defined exclusions
 
 ### 4.2.1
 
