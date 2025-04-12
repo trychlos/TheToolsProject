@@ -2,6 +2,12 @@
 
 ## ChangeLog
 
+### 4.2.5
+
+    Release date: 2025- 4-12
+
+    - Merge the pending changes
+
 ### 4.2.4
 
     Release date: 2025- 4-12
