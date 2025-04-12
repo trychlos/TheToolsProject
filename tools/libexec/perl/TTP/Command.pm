@@ -21,6 +21,9 @@
 # - a 'verb' the second word, here 'vars'.
 #
 # Verbs are executed in this Command context.
+#
+# Please note that Commands are both IRunnable, as they are the main runners of TTP,
+# and IOptionable, which means they accept and manage options.
 
 package TTP::Command;
 
