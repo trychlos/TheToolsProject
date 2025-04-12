@@ -7,6 +7,7 @@
     Release date: 
 
     - ttp.pl push no more quotes defined exclusions
+    - TTP::Path::copyFile() accepts a command be specified as an option
 
 ### 4.2.1
 
