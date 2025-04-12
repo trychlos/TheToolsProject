@@ -1,0 +1,489 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "org.trychlos.TheToolsProject/schemas/site.schema.json",
+    "title": "Site",
+    "description_array": [
+		"The 'site.json' configuration file is the global TTP configuration file for your site, and the first loaded by each command. It defines global TTP behavior.",
+		"It is searched for among (hardcoded) 'etc/ttp/site.json', 'etc/site.json', 'etc/ttp/toops.json' or 'etc/toops.json' in each path of TTP_ROOTS environment variable.",
+		"The first found wins.",
+		"",
+		"Windows notes:",
+		"- Take care of doubling your backslashes",
+		"",
+		"Dynamic values:",
+		" May make use - in values only - of parameters between square brackets as [eval:...]",
+		" 'eval' may be prefixed with an underscore in order to delay the eval (e.g. if it refers to another dynamic variable which needs to be resolved first).",
+		"",
+		"Site variables:",
+		" The site integrator may use this same configuration file (and is encouraged to) to set his own site-level variables.",
+		" These variables are free to the site integrator and NOT considered by TheToolsProject, though they can be used when evaluating dynamic values.",
+		" Variables values can be accessed though TTP::var([ 'site', 'my', 'other', 'key' ]) the same way than TTP configuration variables.",
+		" See below 'site' object.",
+        "",
+        "Unless otherwise specified, below values are overridable on a per-bode basis."
+    ],
+    "type": "object",
+    "properties": {
+        "enabled": {
+            "description": "Whether this JSON configuration must be considered. Not per-node overridable.",
+            "type": "boolean",
+            "default": true
+        },
+        "site": {
+            "description": "Site-specific variables. Structure and properties are free to the site integrator.",
+            "type": "object"
+        },
+        "toops": {
+            "description": "General configuration of the TTP behavior. Deprecated in favor of 'TTP' in v4.0.",
+            "deprecated": true
+        },
+        "TTP": {
+            "description": "General configuration of the TTP behavior",
+            "type": "object",
+            "properties": {
+                "alerts": {
+                    "description_array": [
+                        "Configure here each medium which can be used to send alerts via 'ttp.pl alert'. All properties can be overriden on a per-node basis.",
+                        "An alert has following properties:",
+                        "- emitter: defaulting to the running node name",
+                        "- level: defaulting to 'INFO'",
+                        "- title: a single descriptive line",
+                        "- message: a more complete alert content",
+                        "- stamp: automatically added by the 'ttp.pl alert' command as an ISO 8601 date and time.",
+                        "Media have common properties:",
+                        "- enabled: whether this medium is enabled; will be fully ignored when disabled; defaulting to true (enabled).",
+                        "- default: whether this medium is a default for 'ttp.pl alert' command; defaulting to true (default).",
+                        "- command: either a single string, or an object 'command.byOS.<osname>; defaulting dependant of the exact used medium.",
+                        "  Provided commands have access to <EMITTER>, <LEVEL>, <TITLE>, <MESSAGE>, <STAMP>, <OPTIONS> and <JSON> macros.",
+                        "  The <JSON> macro is resolved with a stringified version of the alert JSON data.",
+                        "When specifying a command, either a simple string or as a 'byOS' object, you should take care that the specified command will not",
+                        "inherit of '--dummy' or '--verbose' options of the parent command. Be cautious about what you exactly want."
+                    ],
+                    "type": "object",
+                    "properties": {
+                        "withFile": {
+                            "description": "Whether and how to create a JSON alert file.",
+                            "type": "object",
+                            "properties": {
+                                "default": {
+                                    "description": "Whether creating an alert file is a default of the 'ttp.pl alert' command.",
+                                    "type": "boolean",
+                                    "default": true
+                                },
+                                "enabled": {
+                                    "description": "Whether creating an alert file is an enabled capability of the site.",
+                                    "type": "boolean",
+                                    "default": true
+                                },
+                                "command": {
+                                    "description_array": [
+                                        "The command to be used to create the JSON alert file.",
+                                        "The default command creates an 'alert-yyyymmddhhmisscccccc.json' file in the drop directory."
+                                    ],
+                                    "type": [
+                                        "string",
+                                        "object"
+                                    ],
+                                    "default": "ttp.pl writejson into below dropDir"
+                                },
+                                "prettyJson": {
+                                    "description": "Whether the JSON string should be prettified.",
+                                    "type": "boolean",
+                                    "default": true
+                                },
+                                "dropDir": {
+                                    "description": "The directory where alert files must be created",
+                                    "type": "string",
+                                    "default": "[eval:TTP::tempDir()]"
+                                }
+                            }
+                        },
+                        "withMqtt": {
+                            "description": "Whether and how publish the alert on the MQTT bus.",
+                            "type": "object",
+                            "properties": {
+                                "default": {
+                                    "description": "Whether publishing alerts to MQTT is a default of the 'ttp.pl alert' command.",
+                                    "type": "boolean",
+                                    "default": true
+                                },
+                                "enabled": {
+                                    "description": "Whether publishing alerts to MQTT is an enabled capability of the site.",
+                                    "type": "boolean",
+                                    "default": true
+                                },
+                                "command": {
+                                    "description": "The command to be used to publish to the MQTT bus.",
+                                    "type": [
+                                        "string",
+                                        "object"
+                                    ],
+                                    "default": "mqtt.pl publish -topic [eval:TTP::nodeName()]/alert -payload \"<JSON>\" <OPTIONS>"
+                                },
+                                "topic": {
+                                    "description": "A command which echoes the topic on stdout.",
+                                    "type": "string",
+                                    "default": "[eval:TTP::nodeName()]/alerts/[eval:Time::Moment->from_string( <STAMP> )->epoch()]"
+                                }
+                            }
+                        },
+                        "withSms": {
+                            "description": "Whether and how send the alert by SMS.",
+                            "type": "object",
+                            "properties": {
+                                "default": {
+                                    "description": "Whether publishing alerts by SMS is a default of the 'ttp.pl alert' command.",
+                                    "type": "boolean",
+                                    "default": true
+                                },
+                                "enabled": {
+                                    "description": "Whether publishing alerts by SMS is an enabled capability of the site.",
+                                    "type": "boolean",
+                                    "default": true
+                                },
+                                "command": {
+                                    "description_array": [
+                                        "The command to be used to send the alert by SMS.",
+                                        "The command has access to additional <RECIPIENTS> macro which is resolved with a comma-separated list of the recipients.",
+                                        "No default command is provided as of v4.1"
+                                    ],
+                                    "type": [
+                                        "string",
+                                        "object"
+                                    ]
+                                },
+                                "prettyJson": {
+                                    "description": "Whether the JSON string should be prettified.",
+                                    "type": "boolean",
+                                    "default": true
+                                },
+                                "recipients": {
+                                    "description": "The list of the recipients of the alert by SMS",
+                                    "type": "array",
+                                    "items": "string",
+                                    "default": [
+                                    ]
+                                }
+                            }
+                        },
+                        "withSmtp": {
+                            "description": "Whether and how send the alert by email.",
+                            "type": "object",
+                            "properties": {
+                                "default": {
+                                    "description": "Whether publishing alerts by email is a default of the 'ttp.pl alert' command.",
+                                    "type": "boolean",
+                                    "default": true
+                                },
+                                "enabled": {
+                                    "description": "Whether publishing alerts by email is an enabled capability of the site.",
+                                    "type": "boolean",
+                                    "default": true
+                                },
+                                "command": {
+                                    "description_array": [
+                                        "The command to be used to send the alert by email.",
+                                        "The command has access to additional <RECIPIENTS> macro which is resolved with a comma-separated list of the recipients."
+                                    ],
+                                    "type": [
+                                        "string",
+                                        "object"
+                                    ],
+                                    "default": "smtp.pl send -to <RECIPIENTS> -subject \"<TITLE>\" -text \"<MESSAGE>\" <OPTIONS>"
+                                },
+                                "prefixTitle": {
+                                    "description": "Whether to build the email subject as '[<LEVEL>] Alert - <TITLE>'.",
+                                    "type": "boolean",
+                                    "default": true
+                                },
+                                "prettyJson": {
+                                    "description": "Whether the JSON string should be prettified.",
+                                    "type": "boolean",
+                                    "default": true
+                                },
+                                "recipients": {
+                                    "description": "The list of the recipients of the alert email",
+                                    "type": "array",
+                                    "items": "string",
+                                    "default": [
+                                        "root@localhost"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "copyDir": {
+                    "description_array": [
+                        "The command used by TheToolsProject each time a tree of directories must be copied from a source to a target.",
+                        "This can be either a simple command string or a byOS command.",
+                        "Please note that, as the default 'File::Copy::Recursive::dircopy()' is less than efficient when manageing exclusions,",
+                        "all directory copies requiring some exclusions will make use of File::Copy::Recursive::fcopy().",
+                        "We strongly suggest to use 'ttp.pl copydirs' each time you can as the command manages both full logs and these properties."
+                    ],
+                    "type": "object",
+                    "properties": {
+                        "command": {
+                            "description": "",
+                            "type": [
+                                "object",
+                                "string"
+                            ],
+                            "properties": {
+                                "byOS": {
+                                    "description": "Let a command be specific to the running OS.",
+                                    "type": "object",
+                                    "patternProperties": {
+                                        "^.*$": {
+                                            "description_array": [
+                                                "The OS name as reported by Perl-Config, the value being the command to be applied for this OS.",
+                                                "The value (the command) honors <SOURCE>, <TARGET> <EXCLUDEDIRS>>, <EXCLUDEFILES> and <OPTIONS> macros."
+                                            ],
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            },
+                            "default": "File::Copy::Recursive::dircopy()"
+                        },
+                        "before": {
+                            "description": "Whether 'ttp.pl copydirs' default to empty the target tree before the copy.",
+                            "type": "object",
+                            "properties": {
+                                "emptyTarget": {
+                                    "description": "Default value of 'ttp.pl copydirs' command.",
+                                    "type": "boolean",
+                                    "default": true
+                                }
+                            }
+                        }
+                    }
+                },
+                "copyFile": {
+                    "description_array": [
+                        "The command used by TheToolsProject each time a file must be copied from a source to a target.",
+                        "This can be either a simple command string or a byOS command."
+                    ],
+                    "type": "object",
+                    "properties": {
+                        "command": {
+                            "description": "The command to be used.",
+                            "type": [
+                                "object",
+                                "string"
+                            ],
+                            "properties": {
+                                "byOS": {
+                                    "description": "Let a command be specific to the running OS.",
+                                    "type": "object",
+                                    "patternProperties": {
+                                        "^.*$": {
+                                            "description_array": [
+                                                "The OS name as reported by Perl-Config, the value being the command to be applied for this OS.",
+                                                "The value (the command) honors <SOURCE>, <TARGET> and <OPTIONS> macros."
+                                            ],
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            },
+                            "default": "File::Copy::copy()"
+                        }
+                    }
+                },
+                "credentialsDirs": {
+                    "description": "The list of subdirectories of TTP_ROOTS trees where we search for credentials.",
+                    "type": "array",
+                    "items": "string",
+                    "default": [
+                        "etc/credentials",
+                        "credentials",
+                        "etc/private",
+                        "private"
+                    ]
+                },
+                "deployments": {
+                    "description_array": [
+                        "When deploying from a development TTP layer to a pull reference, and from this pull reference to other machines of the parc.",
+                        "The commands 'ttp.pl push' and 'ttp.pl pull' internally make use of 'ttp.pl copydirs' excluding .git files and directory."
+                    ],
+                    "type": "object",
+                    "properties": {
+                        "trees": {
+                            "description": "The list of involved trees to be deployed everywhere on the parc.",
+                            "type": "array",
+                            "items": "object",
+                            "properties": {
+                                "source": {
+                                    "description": "The path of the source tree.",
+                                    "type": "string"
+                                },
+                                "target": {
+                                    "description": "The path of the target tree.",
+                                    "type": "string"
+                                },
+                                "git-check": {
+                                    "description": "Whether this source tree is a git repository to be checked before trying to push it.",
+                                    "type": "boolean",
+                                    "default": false
+                                },
+                                "git-tag": {
+                                    "description": "Whether this source tree is a git repository to be tagged after having pushed it.",
+                                    "type": "boolean",
+                                    "default": false
+                                }
+                            }
+                        },
+                        "reference": {
+                            "description": "The name of the node which acts as the pull reference",
+                            "type": "string"
+                        },
+                        "excludeDirs": {
+                            "description": "The default list of directory globs to exclude from the deployment, can be overriden in 'ttp.pl push' command.",
+                            "type": "array",
+                            "items": "string",
+                            "default": []
+                        },
+                        "excludeFiles": {
+                            "description": "The default list of file globs to exclude from the deployment, can be overriden in 'ttp.pl push' command.",
+                            "type": "array",
+                            "items": "string",
+                            "default": []
+                        }
+                    }
+                },
+                "MQTTGateway": {
+                    "description_array": [
+                        "Address the MQTT gateway (aka the MQTT broker) to be able to publish our topics.",
+                        "If needed, username and password are managed through the credentials usual way."
+                    ],
+                    "type": "object",
+                    "properties": {
+                        "broker": {
+                            "description": "The name or the IP address of the broker. Deprecated in favor of 'host' in v4.2.",
+                            "deprecated": true
+                        },
+                        "host": {
+                            "description": "The name or the IP address of the broker.",
+                            "type": "string",
+                            "default": "localhost"
+                        },
+                        "port": {
+                            "description": "The broker port number to connect to.",
+                            "type": "integer",
+                            "default": 1883
+                        }
+                    }
+                },
+                "nodes": {
+                    "description": "General configuration of the nodes.",
+                    "type": "object",
+                    "properties": {
+                        "dirs": {
+                            "description": "List of subdirectories of TTP_ROOTS where we can find nodes JSON configuration files. Not per-node overidable.",
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            },
+                            "default": [
+                                "etc/nodes",
+                                "etc/machines"
+                            ]
+                        },
+                        "hostname": {
+                            "description": "How to get the hostname of a machine.",
+                            "type": "object",
+                            "properties": {
+                                "short": {
+                                    "description": "Whether we want a short hostname, defaulting to keep the machine hostname as set by the administrator.",
+                                    "type": "boolean",
+                                    "default": false
+                                }
+                            }
+                        },
+                        "logicals": {
+                            "description": "The properties needed to manage the logical machines. Not per-node overidable.",
+                            "type": "object",
+                            "properties": {
+                                "regexp": {
+                                    "description_array": [
+                                        "A regular expression or a list of the regular expressions the mounted filesystems must match to identify a logical machine.",
+                                        "Regular expressions should be anchored and identify the first mount point.",
+                                        "",
+                                        "Example:",
+                                        "   \"regexp\": [",
+                                                "^/(ne.*)$",
+                                                "^/(bo.*)$",
+                                        "   ]"
+                                    ],
+                                    "anyOf": [
+                                        {
+                                            "type": "array",
+                                            "items": "string"
+                                        },
+                                        {
+                                            "type": "string"
+                                        }
+                                    ],
+                                    "default": []
+                                }
+                            }
+                        }
+                    }
+                },
+                "nodesDirs": {
+                    "descriptions": "List of subdirectories of TTP_ROOTS where we can find nodes JSON configuration files. Deprecated in favor of 'nodes.dirs' in v4.1.",
+                    "deprecated": true
+                },
+                "SMTPGateway": {
+                    "description_array": [
+                        "'smtp.pl send' command needs a MTA to proceed to emails sending.",
+                        "Default is to rely on a local MTA.",
+                        "In the case of the lack of a local MTA, you have to configure the SMTP gateway here.",
+                        "If needed, username and password are managed through the credentials usual way."
+                    ],
+                    "type": "object",
+                    "properties": {
+                        "host": {
+                            "description": "The MTA, defaulting to localhost.",
+                            "type": "string",
+                            "default": "localhost"
+                        },
+                        "port": {
+                            "description_array": [
+                                "The remote port.",
+                                "Please note that our code tries to use suitable defaults depending of the used protocol, or tries to choose the better protocol depending of the specified port."
+                            ],
+                            "type": "integer",
+                            "default": 22
+                        },
+                        "debug": {
+                            "description": "Whether to have debug traces from the perl Email module.",
+                            "type": "boolean",
+                            "default": false
+                        },
+                        "security": {
+                            "description": "The preferred security protocol. May be 'ssl' or 'starttls'. Most often a suitable default can be computed from the port number.",
+                            "type": "string"
+                        },
+                        "timeout": {
+                            "description": "The timeout (in sec.) of the connection to the MTA.",
+                            "type": "integer",
+                            "default": 60
+                        },
+                        "helo": {
+                            "description": "The HELO message.",
+                            "type": "string",
+                            "default": "current execution node"
+                        },
+                        "mailfrom": {
+                            "description": "Default email emitter.",
+                            "type": "string",
+                            "default": "No Reply <no-reply@localhost>"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
