@@ -232,10 +232,10 @@ sub _obsoleteCode {
 # =================================================================================================
 
 if( !GetOptions(
-	"help!"				=> \$ep->{run}{help},
-	"colored!"			=> \$ep->{run}{colored},
-	"dummy!"			=> \$ep->{run}{dummy},
-	"verbose!"			=> \$ep->{run}{verbose},
+	"help!"				=> sub { $ep->runner()->help( @_ ); },
+	"colored!"			=> sub { $ep->runner()->colored( @_ ); },
+	"dummy!"			=> sub { $ep->runner()->dummy( @_ ); },
+	"verbose!"			=> sub { $ep->runner()->verbose( @_ ); },
 	"service=s"			=> \$opt_service,
 	"to=s"				=> \$opt_to,
 	"live!"				=> \$opt_live,

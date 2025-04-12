@@ -39,7 +39,7 @@ use warnings;
 
 use File::Spec;
 use JSON;
-use Path::Tiny
+use Path::Tiny;
 use Time::Moment;
 
 use TTP::Path;
@@ -273,10 +273,10 @@ sub execute {
 # =================================================================================================
 
 if( !GetOptions(
-	"help!"				=> \$ep->{run}{help},
-	"colored!"			=> \$ep->{run}{colored},
-	"dummy!"			=> \$ep->{run}{dummy},
-	"verbose!"			=> \$ep->{run}{verbose},
+	"help!"				=> sub { $ep->runner()->help( @_ ); },
+	"colored!"			=> sub { $ep->runner()->colored( @_ ); },
+	"dummy!"			=> sub { $ep->runner()->dummy( @_ ); },
+	"verbose!"			=> sub { $ep->runner()->verbose( @_ ); },
 	"emitter=s"			=> \$opt_emitter,
 	"level=s"			=> \$opt_level,
 	"title=s"			=> \$opt_title,
