@@ -19,9 +19,8 @@
 #
 # Copyright (©) 2023-2025 PWI Consulting for Inlingua
 #
-# This script is mostly written like a TTP verb but is not. This is an example of how to take advantage of TTP
-# to write your own (rather pretty and efficient) daemon.
-# Just to be sure: this makes use of TTP, but is not part itself of TTP (though a not so bad example of application).
+# This script is mostly written like a TTP verb but is not. This is an example of how to take advantage of TTP to write your own (rather pretty and efficient) code.
+# Just to make it sure and obvious: this makes use of TTP, but is not part itself of TTP (though a not so bad example of application).
 
 use utf8;
 use strict;
