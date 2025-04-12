@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.2.4-rc.0
+### 4.2.4
 
-    Release date: 
+    Release date: 2025- 4-12
 
     - Reorganize tools/etc vs. site.example/ files (todo #67)
     - Add a comment on how to get site variables (todo #77)
