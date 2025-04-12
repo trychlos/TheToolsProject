@@ -65,7 +65,7 @@ sub bootstrap {
 	$site->evaluate({ warnOnUninitialized => false });
 	print STDERR __PACKAGE__."::bootstrap() site set and evaluated".EOL if $bootstrapDebugEvaluation || $ENV{TTP_DEBUG};
 
-	# identify current host (remind that there is no logical node in this Perl version) and load its configuration
+	# identify current host and load its configuration
 	my $node = TTP::Node->new( $self );
 	print STDERR __PACKAGE__."::bootstrap() node instanciated".EOL if $bootstrapDebugInstanciation || $ENV{TTP_DEBUG};
 	$self->{_node} = $node;
@@ -118,7 +118,15 @@ sub runCommand {
 sub runner {
 	my ( $self, $runner ) = @_;
 
-	$self->{_running} = $runner if defined $runner;
+	if( defined( $runner )){
+		if( $runner->does( 'TTP::IRunnable' ) && $runner->does( 'TTP::IOptionable' )){
+			print STDERR __PACKAGE__."::runner() setting runner=".ref( $runner ).EOL if $ENV{TTP_DEBUG};
+			$self->{_running} = $runner;
+		} else {
+			msgErr( __PACKAGE__."::runner() expects both TTP::IRunnable and TTP::IOptionable" );
+			TTP::stackTrace();
+		}
+	}
 
 	return $self->{_running};
 }
