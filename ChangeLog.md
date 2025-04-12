@@ -8,6 +8,7 @@
 
     - Reorganize tools/etc vs. site.example/ files (todo #67)
     - Add a comment on how to get site variables (todo #77)
+    - ttp.pl purgedirs now makes use of TTP::Path::removeTree(), this one increasing its verbosity
 
 ### 4.2.3
 

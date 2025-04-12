@@ -434,9 +434,11 @@ sub removeTree {
 	my $result = true;
 	TTP::Message::msgVerbose( __PACKAGE__."::removeTree() removing '$dir'" );
 	my $error;
-	remove_tree( $dir, {
+	my $removed;
+	my $rtres = remove_tree( $dir, {
 		verbose => $ep->{run}{verbose},
-		error => \$error
+		error => \$error,
+		result => \$removed
 	});
 	# https://perldoc.perl.org/File::Path#make_path%28-%24dir1%2C-%24dir2%2C-....-%29
 	if( $error && @$error ){
@@ -450,7 +452,10 @@ sub removeTree {
 		}
 		$result = false;
 	}
-	TTP::Message::msgVerbose( __PACKAGE__."::removeTree() dir='$dir' result=".( $result ? 'true' : 'false' ));
+	if( $removed && ref( $removed ) eq 'ARRAY' ){
+		TTP::Message::msgVerbose( __PACKAGE__."::removeTree() removed=[ ".join( ', ', @{$removed} )." ]" );
+	}
+	TTP::Message::msgVerbose( __PACKAGE__."::removeTree() dir='$dir' remove_tree result='$rtres' function result=".( $result ? 'true' : 'false' ));
 	return $result;
 }
 
