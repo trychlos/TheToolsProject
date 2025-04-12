@@ -8,8 +8,8 @@
 # @(-) --sourcecmd=s           the command which will give the source path [${sourcecmd}]
 # @(-) --targetpath=s          the target path [${targetpath}]
 # @(-) --targetcmd=s           the command which will give the target path [${targetcmd}]
-# @(-) --exclude-dir=<dir>     exclude this source directory from the copy [${xdir}]
-# @(-) --exclude-file=<file>   exclude this file from the copy [${xfile}]
+# @(-) --exclude-dirs=<dir>    exclude these source directories from the copy [${excludedirs}]
+# @(-) --exclude-files=<file>  exclude these files from the copy [${excludefiles}]
 # @(-) --options=<options>     additional options to be passed to the command [${options}]
 # @(-) --[no]empty             whether to empty the target tree before the copy [${empty}]
 #
@@ -50,8 +50,8 @@ my $defaults = {
 	sourcecmd => '',
 	targetpath => '',
 	targetcmd => '',
-	xdir => '',
-	xfile => '',
+	excludedirs => '',
+	excludefiles => '',
 	options => ''
 };
 
@@ -113,8 +113,8 @@ if( !GetOptions(
 		$opt_dirs = $value;
 		$opt_dirs_set = true;
 	},
-	"exclude-dir=s@"	=> \@opt_excludeDirs,
-	"exclude-file=s@"	=> \@opt_excludeFiles,
+	"exclude-dirs=s@"	=> \@opt_excludeDirs,
+	"exclude-files=s@"	=> \@opt_excludeFiles,
 	"options=s"			=> \$opt_options,
 	"empty!"			=> \$opt_empty )){
 
