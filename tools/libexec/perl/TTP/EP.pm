@@ -138,11 +138,11 @@ sub site {
 # -------------------------------------------------------------------------------------------------
 # returns the content of a var, read from the provided base
 # (I):
-# - a reference to an array of keys to be read from (e.g. [ 'moveDir', 'byOS', 'MSWin32' ])
+# - either a single string or a reference to an array of keys to be read from (e.g. [ 'moveDir', 'byOS', 'MSWin32' ])
 #   each key can be itself an array ref of potential candidates for this level
 # - an optional options hash with following keys:
 #   > jsonable: a JSONable object to be searched for
-#     defaulting for current execution node, itself defaulting to site
+#     defaulting to current execution node, itself defaulting to site
 # (O):
 # - the evaluated value of this variable, which may be undef
 
@@ -151,6 +151,7 @@ my $varDebug = false;
 sub var {
 	my ( $self, $keys, $opts ) = @_;
 	$opts //= {};
+	print STDERR __PACKAGE__."::var() keys=".( ref( $keys ) eq 'ARRAY' ? ( "[ ".join( ', ', @{$keys} )." ]" ) : "'$keys'" ).", opts=".Dumper( $opts ) if $ENV{TTP_DEBUG};
 	my $value = undef;
 	# we may not have yet a current execution node, so accept that jsonable be undef
 	my $jsonable = $opts->{jsonable} || $self->node();

@@ -243,7 +243,7 @@ sub msgLog {
 	} elsif( !$ref ){
 		_msgLogAppend( _msgPrefix().$msg, $opts );
 	} else {
-		msgWarn( "Message::msgLog() unmanaged type '$ref' for '$msg'" );
+		msgWarn( __PACKAGE__."::msgLog() unmanaged type '$ref' for '$msg'" );
 		TTP::stackTrace();
 	}
 }
@@ -262,6 +262,7 @@ sub _msgLogAppend {
 	my ( $msg, $opts ) = @_;
 	$opts //= {};
 	my $logFile = $opts->{logFile} || TTP::logsMain();
+	print STDERR __PACKAGE__."::_msgLogAppend() msg='$msg' opts=".Dumper( $opts )." logFile='".( $logFile ? $logFile : '(undef)' )."'".EOL if $ENV{TTP_DEBUG};
 	if( $logFile ){
 		my $host = TTP::host() || '-';
 		my $username = $ENV{LOGNAME} || $ENV{USER} || $ENV{USERNAME} || 'unknown'; #getpwuid( $< );

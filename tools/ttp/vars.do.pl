@@ -76,7 +76,7 @@ sub listAlertsDir {
 
 sub listByKeys {
 	my $value = $ep->var( \@opt_keys );
-	print "  [".join( ',', @opt_keys )."]: $value".EOL;
+	print "  [".join( ',', @opt_keys )."]: ".(( defined( $value ) && !ref( $value )) ? $value.EOL : Dumper( $value ));
 }
 
 # -------------------------------------------------------------------------------------------------

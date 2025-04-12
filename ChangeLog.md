@@ -20,6 +20,7 @@
     - ttp.pl push has now options --exclude-dir and --exclude-files, defaulting to the site configuration
     - Remove all instances of '$running' variable, using instead '$ep->runner()' (todo #63)
     - Remove Time::Piece dependency only using time::Moment which says it gives us a nanosecond precision, even if we are plainly satisfied with microseconds (todo #60)
+      This notably means that all calls to 'localtime->strftime()' have to be replaced with 'Time::Moment->now->strftime()'
     - Homogenize strftime() formats when displaying date and time to the user - notably changes the log format to '2012-12-24 15:30:45.500 +01:00' adding the time zone
     - Remove TTP::Path::toopsConfigurationPath() obsolete function (todo #68)
     - Remove TTP::Path::serviceConfigurationPath() obsolete function (todo #71)
