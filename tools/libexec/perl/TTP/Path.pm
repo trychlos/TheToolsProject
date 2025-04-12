@@ -129,7 +129,7 @@ sub _copy_match_dir {
 	my ( $dir, $excluded ) = @_;
 	my $match = false;
 	my ( $srcvol, $srcdir, $srcfile ) = File::Spec->splitpath( $dir );
-	my @dirs = File::Spec->splitdir( $srcdir );
+	my @srcdirs = File::Spec->splitdir( $srcdir );
 	push( @srcdirs, $srcfile );
 	OUTER: foreach my $spec ( @{$excluded} ){
 		foreach my $component ( @srcdirs ){
