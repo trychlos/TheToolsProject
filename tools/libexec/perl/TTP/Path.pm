@@ -436,7 +436,7 @@ sub removeTree {
 	my $error;
 	my $removed;
 	my $rtres = remove_tree( $dir, {
-		verbose => $ep->{run}{verbose},
+		verbose => $ep->runner()->verbose(),
 		error => \$error,
 		result => \$removed
 	});

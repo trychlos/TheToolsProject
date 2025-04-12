@@ -58,61 +58,89 @@ requires qw( _newBase run );
 # - whether the output should be colored: true|false
 
 sub colored {
-	my ( $self ) = @_;
+	my ( $self, $name, $value ) = @_;
 
-	return $ep->{run}{colored} > 0;
+	if( scalar( @_ ) > 1 ){
+		$ep->{_ioptionable}{$name} = $value;
+		$ep->{_ioptionable}{$name.'_set'} = true;
+	}
+
+	return $ep->{_ioptionable}{colored};
 };
 
 # -------------------------------------------------------------------------------------------------
 # Getter
 # (I):
-# - none
+# - the TTP::Command (self)
+# - when called by GetOptions(), the option name
+# - when called by GetOptions(), the option value
 # (O):
 # - whether the --colored option has been specified in the command-line
 
 sub coloredSet {
 	my ( $self ) = @_;
 
-	return $ep->{run}{colored} != -1;
+	return $ep->{_ioptionable}{colored_set};
 };
 
 # -------------------------------------------------------------------------------------------------
 # Getter
 # (I):
-# - none
+# - the TTP::Command (self)
+# - when called by GetOptions(), the option name
+# - when called by GetOptions(), the option value
 # (O):
 # - whether the run is dummy: true|false
 
 sub dummy {
-	my ( $self ) = @_;
+	my ( $self, $name, $value ) = @_;
 
-	return $ep->{run}{dummy};
+	if( scalar( @_ ) > 1 ){
+		$ep->{_ioptionable}{$name} = $value;
+		$ep->{_ioptionable}{$name.'_set'} = true;
+	}
+
+	return $ep->{_ioptionable}{dummy};
 };
 
 # -------------------------------------------------------------------------------------------------
 # Getter
 # (I):
-# - none
+# - the TTP::Command (self)
+# - when called by GetOptions(), the option name
+# - when called by GetOptions(), the option value
 # (O):
 # - whether the help should be displayed: true|false
 
 sub help {
-	my ( $self ) = @_;
+	my ( $self, $name, $value ) = @_;
 
-	return $ep->{run}{help};
+	if( scalar( @_ ) > 1 ){
+		$ep->{_ioptionable}{$name} = $value;
+		$ep->{_ioptionable}{$name.'_set'} = true;
+	}
+
+	return $ep->{_ioptionable}{help};
 };
 
 # -------------------------------------------------------------------------------------------------
 # Getter
 # (I):
-# - none
+# - the TTP::Command (self)
+# - when called by GetOptions(), the option name
+# - when called by GetOptions(), the option value
 # (O):
 # - whether the run is verbose: true|false
 
 sub verbose {
-	my ( $self ) = @_;
+	my ( $self, $name, $value ) = @_;
 
-	return $ep->{run}{verbose};
+	if( scalar( @_ ) > 1 ){
+		$ep->{_ioptionable}{$name} = $value;
+		$ep->{_ioptionable}{$name.'_set'} = true;
+	}
+
+	return $ep->{_ioptionable}{verbose};
 };
 
 # -------------------------------------------------------------------------------------------------
@@ -130,13 +158,17 @@ after _newBase => sub {
 
 	$self->{_ioptionable} //= {};
 
-	# set these standard options in ttp->{run} both for historical reasons and for easier handlings
+	# initialize the standard options
 	if( !$ep->runner()){
-		$ep->{run} //= {};
-		$ep->{run}{help} = false;
-		$ep->{run}{colored} = -1;
-		$ep->{run}{dummy} = false;
-		$ep->{run}{verbose} = false;
+		$ep->{_ioptionable} //= {};
+		$ep->{_ioptionable}{help} = false;
+		$ep->{_ioptionable}{help_set} = false;
+		$ep->{_ioptionable}{colored} = false;
+		$ep->{_ioptionable}{colored_set} = false;
+		$ep->{_ioptionable}{dummy} = false;
+		$ep->{_ioptionable}{dummy_set} = false;
+		$ep->{_ioptionable}{verbose} = false;
+		$ep->{_ioptionable}{verbose_set} = false;
 	}
 };
 
@@ -150,7 +182,7 @@ after _newBase => sub {
 before run => sub {
 	my ( $self ) = @_;
 
-	$ep->{run}{help} = true if scalar @ARGV <= 1;
+	$ep->{_ioptionable}{help} = true if scalar @ARGV <= 1;
 };
 
 ### Global functions
