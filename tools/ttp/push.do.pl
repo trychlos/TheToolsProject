@@ -70,8 +70,8 @@ sub doPush {
 	my $asked = 0;
 	my $done = 0;
 	my $command = "ttp.pl copydirs --sourcepath <SOURCE> --targetpath <TARGET>";
-	$command .= " --exclude-dirs '".( join( ',', @opt_excludeDirs ))."'" if scalar @opt_excludeDirs;
-	$command .= " --exclude-files '".( join( ',', @opt_excludeFiles ))."'" if scalar @opt_excludeFiles;
+	$command .= " --exclude-dirs ".( join( ',', @opt_excludeDirs )) if scalar @opt_excludeDirs;
+	$command .= " --exclude-files ".( join( ',', @opt_excludeFiles )) if scalar @opt_excludeFiles;
 	$command .= " <OPTIONS>";
 	# may have several source trees: will iterate on each
 	my $trees = $ep->var([ 'deployments', 'trees' ]) || [];
@@ -82,8 +82,6 @@ sub doPush {
 			foreach my $tree ( @{$trees} ){
 				doPush_gitCheck( $tree );
 			}
-		} else {
-			msgWarn( "no check is made as '--check' option has been set to false" );
 		}
 		# only copy if checks have no error at all
 		if( !TTP::errs()){
@@ -269,6 +267,15 @@ if( $ref_host ){
 } else {
 	msgWarn( "'deployements.reference' node name expected, not found. Terminating..." );
 	TTP::exit();
+}
+
+# have a warning on checks before any message on tags
+if( !$opt_check ){
+	if( $opt_check_set ){
+		msgWarn( "no check is made as '--check' option has been set to false" );
+	} else {
+		msgVerbose( "git-checking defaults to be disabled" );
+	}
 }
 
 # cannot git-tag if not previously git-checked
