@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.2.2-rc.0
+### 4.2.2
 
-    Release date: 
+    Release date: 2025- 4-12
 
     - ttp.pl push no more quotes defined exclusions
     - TTP::Path::copyFile() accepts a command be specified as an option
