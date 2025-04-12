@@ -16,8 +16,7 @@
 		}
 	},
 	"environment": {
-		"type_comments": [],
-		"type": "X"
+		"id": "AnyStringIdentifier"
 	},
 	"logsRoot": "[eval:File::Spec->catdir( '/tmp', 'Myself' )]"
 }
