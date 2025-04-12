@@ -35,7 +35,7 @@
 			"withFile": {
 				"enabled": true,
 				"default": true,
-				"dropDir": "[eval:File::Spec->catdir( TTP::logsRoot(), localtime->strftime( '%y%m%d' ), 'Alerts' )]",
+				"dropDir": "[eval:File::Spec->catdir( TTP::logsRoot(), Time::Moment->now->strftime( '%y%m%d' ), 'Alerts' )]",
 				"command": "ttp.pl writejson -file [eval:File::Spec->catfile( TTP::alertsFileDropdir(), Time::Moment->now->strftime( '%Y%m%d%H%M%S%6N' ).'.json' )] -data \"<JSON>\" <OPTIONS>",
 				"prettyJson": true
 			},
@@ -100,7 +100,7 @@
 		],
 
 		"DBMS": {
-			"backupsDir": "[eval:File::Spec->catdir( TTP::var([ 'DBMS', 'backupsRoot' ]), localtime->strftime( '%y%m%d' ), TTP::host())]",
+			"backupsDir": "[eval:File::Spec->catdir( TTP::var([ 'DBMS', 'backupsRoot' ]), Time::Moment->now->strftime( '%y%m%d' ), TTP::host())]",
 			"backupsRoot": "[eval:File::Spec->catdir( TTP::nodeRoot(), 'dailySQLBackups' )]",
 			"instance": "MSSQLSERVER",
 			"byInstance": {
@@ -138,7 +138,7 @@
 			],
 			"withFile": {
 				"enabled": true,
-				"dropDir": "[eval:File::Spec->catdir( TTP::logsRoot(), localtime->strftime( '%y%m%d' ), 'execReports' )]",
+				"dropDir": "[eval:File::Spec->catdir( TTP::logsRoot(), Time::Moment->now->strftime( '%y%m%d' ), 'execReports' )]",
 				"command": "ttp.pl writejson -file [eval:File::Spec->catfile( TTP::var([ 'executionReports', 'withFile', 'dropDir' ]), Time::Moment->now->strftime( '%Y%m%d%H%M%S%6N' ).'.json' )] -data \"<DATA>\""
 			},
 			"withMqtt_comments": [
@@ -163,7 +163,7 @@
 			"This is not mandatory at all, and the default is to stick to the 'logsRoot' value",
 			"The 'logsDaily' directory can be got by the user via the 'ttp.pl vars --logsDaily' command"
 		],
-		"logsDaily": "[eval:File::Spec->catdir( TTP::logsRoot(), localtime->strftime( '%y%m%d' ))]",
+		"logsDaily": "[eval:File::Spec->catdir( TTP::logsRoot(), Time::Moment->now->strftime( '%y%m%d' ))]",
 
 		"logsCommands_comments": [
 			"The daily directory where TTP writes commands and verbs logs",

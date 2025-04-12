@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - Remove previous calls to localtime->strftime(), replacing them to Time::Moment->now->strftime() - See todo #60
 
 ### 4.2.0
 
