@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - Fix TTP::Path::_copy_match_dir()
 
 ### 4.2.2
 
