@@ -85,7 +85,7 @@ sub new {
 	if( defined( $ep )){
 		$self->{_ep} = $ep;
 	} else {
-		print "(ERR) ".__PACKAGE__."::new() 'ttp' is not defined but is mandatory".EOL;
+		print STDERR "(ERR) ".__PACKAGE__."::new() 'ttp' is not defined but is mandatory".EOL;
 		TTP::stackTrace();
 	}
 
