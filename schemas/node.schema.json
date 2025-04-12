@@ -1,0 +1,49 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "org.trychlos.TheToolsProject/schemas/node.schema.json",
+    "title": "Node",
+    "description_array": [
+		"The '<node>.json' configuration file is the per-node configuration file for TheToolsProject. Each involved node must have its own <node>.json configuration file.",
+		"It is searched for among (hardcoded) 'etc/nodes/<node.json' and 'etc/machines/<node>.json' in each path of TTP_ROOTS environment variable.",
+		"The first found wins.",
+		"",
+		"Windows notes:",
+		"- Take care of doubling your backslashes",
+		"",
+		"Dynamic values:",
+		" May make use - in values only - of parameters between square brackets as [eval:...]",
+		" 'eval' may be prefixed with an underscore in order to delay the eval (e.g. if it refers to another dynamic variable which needs to be resolved first).",
+       "",
+        "Unless otherwise specified, below values take their default value from global site.json."
+    ],
+    "type": "object",
+    "properties": {
+        "enabled": {
+            "description": "Whether this JSON configuration must be considered.",
+            "type": "boolean",
+            "default": true
+        },
+        "Environment": {
+            "description": "The environment to which this machine is attached. Deprecated in favor of 'environment' in v4.2.",
+            "deprecated": true
+        },
+        "environment": {
+            "description_array": [
+                "The environment to which this machine is attached.",
+                "A machine is attached to at most one environment which, for example, determines the level of expected service quality.",
+			    "If this is not what you are searching for, maybe you could take a glance at the logical machine paradigm, unless you could be more interested by roles."
+            ],
+            "type": "object",
+            "properties": {
+                "type": {
+                    "description": "The identifier of the environment. Deprecated in favor of 'id' in v4.2.",
+                    "deprecated": true
+                },
+                "id": {
+                    "description": "The identifier of the environment.",
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

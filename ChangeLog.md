@@ -7,6 +7,7 @@
     Release date: 
 
     - Reorganize tools/etc vs. site.example/ files (todo #67)
+    - Add a comment on how to get site variables (todo #77)
 
 ### 4.2.3
 
