@@ -54,6 +54,7 @@ my $fromNode = undef;
 
 # -------------------------------------------------------------------------------------------------
 # pull the reference tree from the specified machine
+# doesn't try to exclude anything: we pull what has been pushed
 
 sub doPull {
 	my $result = false;
@@ -66,7 +67,7 @@ sub doPull {
 	$pullShare = $fromData->{remoteShare} if exists $fromData->{remoteShare};
 	if( $pullShare ){
 		my ( $pull_vol, $pull_dirs, $pull_file ) = File::Spec->splitpath( $pullShare );
-		my $command = 'ttp.pl copydirs --sourcepath <SOURCE> --targetpath <TARGET> --exclude-dir \'.git\' --exclude-file \'.git*\' <OPTIONS>';
+		my $command = 'ttp.pl copydirs --sourcepath <SOURCE> --targetpath <TARGET> <OPTIONS>';
 		# may have several source dirs: will iterate on each
 		my $trees = $ep->var([ 'deployments', 'trees' ]);
 		foreach my $tree ( @{$trees} ){

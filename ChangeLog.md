@@ -8,6 +8,7 @@
 
     - Remove previous calls to localtime->strftime(), replacing them to Time::Moment->now->strftime() - See todo #60
     - ttp.pl copydirs and ttp.pl push use plural options i.e. --exclude-dirs and --exclude-files
+    - ttp.pl pull doesn't try to exclude anything: it pulls all what has been pushed
 
 ### 4.2.0
 
