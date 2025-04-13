@@ -74,5 +74,6 @@ No match for argument: perl-Win32-SqlServer
     vars::global
 
     MSWin32
+        Win32::OLE
         Win32::SqlServer
 ```

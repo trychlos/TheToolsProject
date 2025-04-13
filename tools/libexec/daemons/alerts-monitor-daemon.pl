@@ -56,6 +56,7 @@ my $opt_json = $defaults->{json};
 my $opt_ignoreInt = false;
 
 my $commands = {
+	# we do not have here any specific command
 	#help => \&help,
 };
 
@@ -63,6 +64,21 @@ my $commands = {
 my $first = true;
 my @previousScan = ();
 my @runningScan = ();
+
+# keep a count of found alerts per level and per emitter
+my $stats = {
+	byLevel => {},
+	byEmitter => {}
+};
+
+# -------------------------------------------------------------------------------------------------
+# Returns the configured 'do': the list of actions
+
+sub configDo {
+	my $config = $daemon->jsonData();
+	my $do = $config->{do} || [];
+	return $do;
+}
 
 # -------------------------------------------------------------------------------------------------
 # Returns the configured 'monitoredDir' defaulting to alertsDir
@@ -91,15 +107,66 @@ sub configScanInterval {
 
 # -------------------------------------------------------------------------------------------------
 # new alert
-# should never arrive as all alerts should also be sent through MQTT bus which is the preferred way
-# of dealing with these alerts
 
 sub doWithNew {
 	my ( @newFiles ) = @_;
+	my $actions = $daemon->configDo();
+
 	foreach my $file ( @newFiles ){
 		msgVerbose( "new alert '$file'" );
 		my $data = TTP::jsonRead( $file );
-		# and what ?
+		# incremente our stats
+		$stats->{byLevel}{$data->{level}} = 0 if !defined $stats->{byLevel}{$data->{level}};
+		$stats->{byLevel}{$data->{level}} += 1;
+		$stats->{byEmitter}{$data->{emitter}} = 0 if !defined $stats->{byEmitter}{$data->{emitter}};
+		$stats->{byEmitter}{$data->{emitter}} += 1;
+		# tries to execute all defined actions
+		foreach my $do ( @{$actions} ){
+			my $command = TTP::commandByOs([], { json => $do });
+			if( $command ){
+				my $levelMatch = true;
+				if( $do->{levelRe} ){
+					$levelMatch = ( $data->{level} =~ m/$do->{levelRe}/ );
+					msgVerbose( "level='$data->{level}' RE='$do->{levelRe}' match=".( $levelMatch ? 'true' : 'false' ));
+				} else {
+					msgVerbose( "no 'levelRe' regular expression");
+				}
+				my $emitterMatch = true;
+				if( $do->{emitterRe} ){
+					$emitterMatch = ( $data->{emitter} =~ m/$do->{emitterRe}/ );
+					msgVerbose( "emitter='$data->{emitter}' RE='$do->{emitterRe}' match=".( $emitterMatch ? 'true' : 'false' ));
+				} else {
+					msgVerbose( "no 'emitterRe' regular expression");
+				}
+				my $titleMatch = true;
+				if( $do->{titleRe} ){
+					$titleMatch = ( $data->{title} =~ m/$do->{titleRe}/ );
+					msgVerbose( "title='$data->{title}' RE='$do->{titleRe}' match=".( $titleMatch ? 'true' : 'false' ));
+				} else {
+					msgVerbose( "no 'titleRe' regular expression");
+				}
+				my $messageMatch = true;
+				if( $do->{messageRe} ){
+					$messageMatch = ( $data->{message} =~ m/$do->{messageRe}/ );
+					msgVerbose( "message='$data->{message}' RE='$do->{messageRe}' match=".( $messageMatch ? 'true' : 'false' ));
+				} else {
+					msgVerbose( "no 'messageRe' regular expression");
+				}
+				if( $levelMatch && $emitterMatch && $titleMatch && $messageMatch ){
+					my $res = TTP::commandExec({
+						command => $command,
+						macros => {
+							LEVEL => $data->{level},
+							EMITTER => $data->{emitter},
+							TITLE => $data->{title},
+							MESSAGE => $data->{message},
+							STAMP => $data->{stamp},
+							JSON => json_encode( $data )
+						}
+					});
+				}
+			}
+		}
 	}
 }
 
@@ -151,8 +218,8 @@ sub mqttMessaging {
 }
 
 # -------------------------------------------------------------------------------------------------
-# we find less files in this iteration than in the previous - maybe some files have been purged, deleted
-# moved, or we have a new directory, or another reason - just reset and restart over
+# we find less files in this iteration than in the previous - maybe some files have been purged,
+# deleted, moved, or we have a new directory, or another reason - just reset and restart over
 
 sub varReset {
 	msgVerbose( "varReset()" );
@@ -213,11 +280,11 @@ if( $daemon->help()){
 	TTP::exit();
 }
 
-msgVerbose( "found colored='".( $daemon->colored() ? 'true':'false' )."'" );
-msgVerbose( "found dummy='".( $daemon->dummy() ? 'true':'false' )."'" );
-msgVerbose( "found verbose='".( $daemon->verbose() ? 'true':'false' )."'" );
-msgVerbose( "found json='$opt_json'" );
-msgVerbose( "found ignoreInt='".( $opt_ignoreInt ? 'true':'false' )."'" );
+msgVerbose( "got colored='".( $daemon->colored() ? 'true':'false' )."'" );
+msgVerbose( "got dummy='".( $daemon->dummy() ? 'true':'false' )."'" );
+msgVerbose( "got verbose='".( $daemon->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got json='$opt_json'" );
+msgVerbose( "got ignoreInt='".( $opt_ignoreInt ? 'true':'false' )."'" );
 
 msgErr( "'--json' option is mandatory, not specified" ) if !$opt_json;
 
@@ -228,8 +295,10 @@ if( TTP::errs()){
 	TTP::exit();
 }
 
-$daemon->messagingSub( \&mqttMessaging );
-$daemon->disconnectSub( \&mqttDisconnect );
+if( $daemon->messagingEnabled()){
+	$daemon->messagingSub( \&mqttMessaging );
+	$daemon->disconnectSub( \&mqttDisconnect );
+}
 
 $daemon->declareSleepables( $commands );
 $daemon->sleepableDeclareFn( sub => \&works, interval => configScanInterval());

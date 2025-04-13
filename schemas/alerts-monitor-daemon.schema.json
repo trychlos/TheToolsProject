@@ -1,0 +1,121 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "org.trychlos.TheToolsProject/schemas/alerts-monitor-daemon.schema.json",
+    "title": "Alerts Monitor Daemon",
+    "description_array": [
+		"Monitor the json alert files dropped in the alerts directory.",
+        "",
+        "Rationale:",
+        " You, as a site administrator, can choose to prefer alerts by file. In this mode, each alert is materialized by the JSON data of the alert being written in a dedicated file, somewhere in a dedicated directory.",
+        " This daemon is right here to monitor these alert files, and do something with them.",
+        "",
+        "Daemons provided by TheToolsProject all share some common characteristics:",
+        "- the daemon is started, stopped and more generally fully managed through 'daemon.pl' verbs.",
+        "- the daemon is addressed by the path its JSON configuration file ('--json' option),",
+        "- the daemon can also be addressed by its name, which is computed as the basename of its JSON configuration file ('--name' option), which means that this name must be unique among all managed daemons,",
+        "- the daemon can also be addressed directly by its listening port when it is running,",
+        "- the code initializes itself by executing 'my $daemon = TTP::Daemon->init();' which makes it a derivative of the TTP::Daemon class,",
+        "- the TTP::Daemon class implements the ISleepable role, which means that each daemon is able to define several intervals, and several subroutines which will be triggered at these intervals,",
+        "- the daemon manages following intervals:",
+        "  > listeningInterval: this is the period between listening for external commands as sent by 'daemon.pl command',",
+        "  > messagingInterval: this is the period between between advertising the daemon's status to the MQTT bus,",
+        "  > httpingInterval: this is the period between publishing to the HTTP-based telemetry system,",
+        "  > textingInterval: this is the period between publishing to the text-based telemetry system."
+    ],
+    "type": "object",
+    "properties": {
+        "enabled": {
+            "description": "Whether this JSON configuration must be considered.",
+            "type": "boolean",
+            "default": true
+        },
+        "listeningPort": {
+            "description": "The port this daemon is listening to. No default is provided. Mandatory.",
+            "type": "integer"
+        },
+        "listeningInterval": {
+            "description": "The listening interval. The minimum accepted is 500 ms.",
+            "type": "integer",
+            "default": 1000
+        },
+        "messagingInterval": {
+            "description": "The interval which commands the publication of the daemon's status on the MQTT bus. The minimum accepted is 5000 ms. Set to zero or less to disable this publication.",
+            "type": "integer",
+            "default": 60000
+        },
+        "messagingTimeout": {
+            "description": "The timeout when publishing to the MQTT bus. The minimum accepted is 5 sec.",
+            "type": "integer",
+            "default": 60
+        },
+        "httpingInterval": {
+            "description": "The interval which commands the publication to the HTTP-based telemetry system. The minimum accepted is 5000 ms. Set to zero or less to disable this publication.",
+            "type": "integer",
+            "default": 60000
+        },
+        "textingInterval": {
+            "description": "The interval which commands the publication to the text-based telemetry system. The minimum accepted is 5000 ms. Set to zero or less to disable this publication.",
+            "type": "integer",
+            "default": 60000
+        },
+        "execPath": {
+            "description": "Either the full path to the executable or just a filename. In this later case, the executable is searched for in TTP_ROOTS/libexec/daemons.",
+            "type": "string"
+        },
+        "monitoredDir": {
+            "description": "The path of the directory to be monitored for new alerts files.",
+            "type": "string",
+            "default": "[eval:TTP::alertsFileDropdir()]"
+        },
+        "scanInterval": {
+            "description": "The interval between each monitored directory scan.",
+            "type": "integer",
+            "default": 10000
+        },
+        "do": {
+            "description": "The actions to be done when a new alert is found.",
+            "type": "array",
+            "items": "object",
+            "properties": {
+                "command": {
+                    "description_array": [
+                        "The command to be executed when a new alert has been identified, either as a single string or as a 'byOS' object.",
+                        "The provided command can take advantage of <EMITTER>, <LEVEL>, <TITLE>, <MESSAGE>, <STAMP> and <JSON> macros, the <JSON> macro being resolved with a stringified version of the alert JSON data."
+                    ],
+                    "type": [
+                        "object",
+                        "string"
+                    ],
+                    "properties": {
+                        "byOS": {
+                            "description": "Let a command be specific to the running OS.",
+                            "type": "object",
+                            "patternProperties": {
+                                "^.*$": {
+                                    "description": "The OS name as reported by Perl-Config, the value being the command to be applied for this OS.",
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                },
+                "emitterRe": {
+                    "description": "When specified, a regular expression the emitter must match for the command be executed.",
+                    "type": "string"
+                },
+                "levelRe": {
+                    "description": "When specified, a regular expression the level must match for the command be executed.",
+                    "type": "string"
+                },
+                "messageRe": {
+                    "description": "When specified, a regular expression the message must match for the command be executed.",
+                    "type": "string"
+                },
+                "titleRe": {
+                    "description": "When specified, a regular expression the title must match for the command be executed.",
+                    "type": "string"
+                }
+            }
+        }
+    }
+}
