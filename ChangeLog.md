@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.2.6-rc.0
+### 4.2.6
 
-    Release date: 
+    Release date: 2025- 4-13
 
     - Fix ttp.pl sizedir regression (todo #84)
     - Fix services.pl live regression (todo #85)
