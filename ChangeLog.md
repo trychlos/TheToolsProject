@@ -2,11 +2,13 @@
 
 ## ChangeLog
 
-### 4.2.7-rc.0
+### 4.3.0-rc.0
 
     Release date: 
 
-    - 
+    - TTP::Daemon define new httpingEnabled(), messagingEnabled() and textingEnabled() methods, thus bumping minor candidate version number
+    - TTP::commandByOs() accepts now a 'json' option to search data in
+    - Define libexec/daemons/alerts-monitor-daemon.pl
 
 ### 4.2.6
 
@@ -14,8 +16,6 @@
 
     - Fix ttp.pl sizedir regression (todo #84)
     - Fix services.pl live regression (todo #85)
-    - TTP::Daemon define new httpingEnabled(), messagingEnabled() and textingEnabled() methods
-    - TTP::commandByOs() accepts now a 'json' option to search data in
 
 ### 4.2.5
 
