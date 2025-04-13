@@ -92,7 +92,11 @@
                                     "default": true
                                 },
                                 "dropDir": {
-                                    "description": "The directory where alert files must be created",
+                                    "description_array": [
+                                        "The directory where alert files must be created.",
+                                        "Though the default is just the OS temporary directory, you, as a site administrator, should rather define a dedicated directory,",
+                                        "so that you will be able to use the alerts-monitor-daemon to monitor the alerts."
+                                    ],
                                     "type": "string",
                                     "default": "[eval:TTP::tempDir()]"
                                 }
@@ -224,7 +228,7 @@
                     "type": "object",
                     "properties": {
                         "command": {
-                            "description": "",
+                            "description": "The command to be used to copy a directory, either as a string or a 'byOS' object.",
                             "type": [
                                 "object",
                                 "string"
@@ -416,16 +420,11 @@
                                                 "^/(bo.*)$",
                                         "   ]"
                                     ],
-                                    "anyOf": [
-                                        {
-                                            "type": "array",
-                                            "items": "string"
-                                        },
-                                        {
-                                            "type": "string"
-                                        }
+                                    "type": [
+                                        "array",
+                                        "string"
                                     ],
-                                    "default": []
+                                    "items": "string"
                                 }
                             }
                         }
