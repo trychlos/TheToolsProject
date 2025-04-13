@@ -15,6 +15,7 @@
     - Fix ttp.pl sizedir regression (todo #84)
     - Fix services.pl live regression (todo #85)
     - TTP::Daemon define new httpingEnabled(), messagingEnabled() and textingEnabled() methods
+    - TTP::commandByOs() accepts now a 'json' option to search data in
 
 ### 4.2.5
 
