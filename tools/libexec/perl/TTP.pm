@@ -97,6 +97,7 @@ sub alertsFileDropdir {
 # - the list of keys before the 'command' as an array ref
 # - an optional options hash ref with following keys:
 #   > withCommand: whether to have a top 'command' property before 'byOS', defaulting to true
+#   > json: the JSON data to be searched for for the provided keys, defaulting to node/site data
 # (O):
 # - the found command as a string, or undef
 
@@ -108,12 +109,12 @@ sub commandByOs {
 	my $withCommand = $opts->{withCommand};
 	$withCommand = true if !defined $withCommand;
 	push( @locals, 'command' ) if $withCommand;
-	my $obj = $ep->var( \@locals );
+	my $obj = $opts->{json} || $ep->var( \@locals );
 	if( defined( $obj )){
 		my $ref = ref( $obj );
 		if( $ref eq 'HASH' ){
 			push( @locals, 'byOS', $Config{osname} );
-			my $obj = $ep->var( \@locals );
+			my $obj = $opts->{json} ||$ep->var( \@locals );
 			if( defined( $obj )){
 				$ref = ref( $obj );
 				if( !$ref ){
