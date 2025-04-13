@@ -14,6 +14,7 @@
 
     - Fix ttp.pl sizedir regression (todo #84)
     - Fix services.pl live regression (todo #85)
+    - TTP::Daemon define new httpingEnabled(), messagingEnabled() and textingEnabled() methods
 
 ### 4.2.5
 

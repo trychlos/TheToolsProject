@@ -557,13 +557,13 @@ sub declareSleepables {
 	$self->sleepableDeclareFn( sub => sub { $self->listen( $commands ); }, interval => $self->listeningInterval());
 	# the mqtt status publication, each 'mqttInterval'
 	my $mqttInterval = $self->messagingInterval();
-	$self->sleepableDeclareFn( sub => sub { $self->_mqtt_advertise(); }, interval => $mqttInterval ) if $mqttInterval > 0;
+	$self->sleepableDeclareFn( sub => sub { $self->_mqtt_advertise(); }, interval => $mqttInterval ) if $self->messagingEnabled();
 	# the http telemetry publication, each 'httpInterval'
 	my $httpInterval = $self->httpingInterval();
-	$self->sleepableDeclareFn( sub => sub { $self->_http_advertise(); }, interval => $httpInterval ) if $httpInterval > 0;
+	$self->sleepableDeclareFn( sub => sub { $self->_http_advertise(); }, interval => $httpInterval ) if $self->httpingEnabled();
 	# the text telemetry publication, each 'textInterval'
 	my $textInterval = $self->textingInterval();
-	$self->sleepableDeclareFn( sub => sub { $self->_text_advertise(); }, interval => $textInterval ) if $textInterval > 0;
+	$self->sleepableDeclareFn( sub => sub { $self->_text_advertise(); }, interval => $textInterval ) if $self->textingEnabled();
 
 	$self->sleepableDeclareStop( sub => sub { return $self->terminating(); });
 
@@ -662,6 +662,21 @@ sub execPath {
 	my ( $self ) = @_;
 
 	return $self->jsonData()->{execPath};
+}
+
+# ------------------------------------------------------------------------------------------------
+# Whether publishing to http-based telemetry system is an enabled feature
+# this is true when the httpingInterval is greater or equal to the mminimum allowed.
+# (I):
+# - none
+# (O):
+# - returns true if this daemon is willing to publish to http-based telemetry system
+
+sub httpingEnabled {
+	my ( $self ) = @_;
+
+	my $interval = $self->httpingInterval();
+	return $interval >= MIN_HTTPING_INTERVAL;
 }
 
 # ------------------------------------------------------------------------------------------------
@@ -778,6 +793,21 @@ sub loaded {
 	my ( $self ) = @_;
 
 	return $self->jsonLoaded();
+}
+
+# ------------------------------------------------------------------------------------------------
+# Whether publishing to MQTT bus is an enabled feature
+# this is true when the messagingInterval is greater or equal to the mminimum allowed.
+# (I):
+# - none
+# (O):
+# - returns true if this daemon is willing to publish to MQTT
+
+sub messagingEnabled {
+	my ( $self ) = @_;
+
+	my $interval = $self->messagingInterval();
+	return $interval >= MIN_MESSAGING_INTERVAL;
 }
 
 # ------------------------------------------------------------------------------------------------
@@ -1068,6 +1098,21 @@ sub terminating {
 	my ( $self ) = @_;
 
 	return $self->{_terminating};
+}
+
+# ------------------------------------------------------------------------------------------------
+# Whether publishing to text-based telemetry system is an enabled feature
+# this is true when the textingInterval is greater or equal to the mminimum allowed.
+# (I):
+# - none
+# (O):
+# - returns true if this daemon is willing to publish to text-based telemetry system
+
+sub textingEnabled {
+	my ( $self ) = @_;
+
+	my $interval = $self->textingInterval();
+	return $interval >= MIN_TEXTING_INTERVAL;
 }
 
 # ------------------------------------------------------------------------------------------------
