@@ -29,7 +29,6 @@
 |   81 | 2024- 4-13 | TTP::Daemon should check that listeningPort is OK |
 |   82 | 2024- 4-13 | TTP::Daemon should check that listeningInterval is OK |
 |   83 | 2024- 4-13 | alerts-monitor-daemon.pl: mqtt_timeout() and messagingTimeout() are same function |
-|   85 | 2024- 4-13 |  |
 |   86 | 2024- 4-13 |  |
 |   87 |  |  |
 
@@ -216,6 +215,9 @@
 |      | 2024- 4-12 | done |
 |   84 | 2024- 4-13 | [ttp.pl sizedir] (ERR) do C:\INLINGUA\TheToolsProject\tools\ttp\sizedir.do.pl: |
 |      |            |  ... syntax error at C:\INLINGUA\TheToolsProject\tools\ttp\sizedir.do.pl line 197, near "TTP::Path::( " |
+|      | 2024- 4-13 | fixed |
+|   85 | 2024- 4-13 | [services.pl live] (ERR) do /mnt/ws12dev1/INLINGUA/dev/scripts/TheToolsProject/tools/services/live.do.pl: |
+|      |            | ... Can't call method "runner" on an undefined value at /mnt/ws12dev1/INLINGUA/dev/scripts/TheToolsProject/tools/services/live.do.pl line 129. |
 |      | 2024- 4-13 | fixed |
 
 ---

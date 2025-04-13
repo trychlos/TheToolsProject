@@ -6,7 +6,8 @@
 
     Release date: 
 
-    - Fix ttp.pl sizedir (todo #84)
+    - Fix ttp.pl sizedir regression (todo #84)
+    - Fix services.pl live regression (todo #85)
 
 ### 4.2.5
 
