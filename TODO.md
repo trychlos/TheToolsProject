@@ -29,7 +29,7 @@
 |   81 | 2024- 4-13 | TTP::Daemon should check that listeningPort is OK |
 |   82 | 2024- 4-13 | TTP::Daemon should check that listeningInterval is OK |
 |   83 | 2024- 4-13 | alerts-monitor-daemon.pl: mqtt_timeout() and messagingTimeout() are same function |
-|   86 | 2024- 4-13 |  |
+|   86 | 2024- 4-13 | TTP::commandExec should have ( $command, { macros => {}} ) definition |
 |   87 |  |  |
 
 ---
