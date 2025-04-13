@@ -25,6 +25,13 @@
 |   78 | 2024- 4-12 | some daemons should be moveable to libexec/daemons |
 |   79 | 2024- 4-12 | let a node override a site variable |
 |   80 |  |  |
+|   80 | 2024- 4-13 | sufix should be renamed suffix |
+|   81 | 2024- 4-13 | TTP::Daemon should check that listeningPort is OK |
+|   82 | 2024- 4-13 | TTP::Daemon should check that listeningInterval is OK |
+|   83 | 2024- 4-13 | alerts-monitor-daemon.pl: mqtt_timeout() and messagingTimeout() are same function |
+|   85 | 2024- 4-13 |  |
+|   86 | 2024- 4-13 |  |
+|   87 |  |  |
 
 ---
 ## Done
@@ -207,6 +214,9 @@
 |      | 2024- 4-11 | deduplicated to TTP::Path |
 |   77 | 2024- 4-10 | add a comment on how to get site variables |
 |      | 2024- 4-12 | done |
+|   84 | 2024- 4-13 | [ttp.pl sizedir] (ERR) do C:\INLINGUA\TheToolsProject\tools\ttp\sizedir.do.pl: |
+|      |            |  ... syntax error at C:\INLINGUA\TheToolsProject\tools\ttp\sizedir.do.pl line 197, near "TTP::Path::( " |
+|      | 2024- 4-13 | fixed |
 
 ---
 P. Wieser

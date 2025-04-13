@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - Fix ttp.pl sizedir (todo #84)
 
 ### 4.2.5
 
