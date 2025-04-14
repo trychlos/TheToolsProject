@@ -1055,7 +1055,7 @@ sub start {
 	my $command = "perl $program -json ".$self->jsonPath()." -ignoreInt ".join( ' ', @ARGV );
 	my $res = undef;
 
-	if( $ep()->runner()->dummy()){
+	if( $ep->runner()->dummy()){
 		msgDummy( $command );
 		msgDummy( "considering startup as 'true'" );
 		$res = true;
