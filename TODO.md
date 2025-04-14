@@ -32,6 +32,7 @@
 |   86 | 2024- 4-13 | TTP::commandExec should have ( $command, { macros => {}} ) definition |
 |   87 | 2024- 4-13 | logicals regular expression should be a single string as this is simpler and can still embed several re's |
 |   88 | 2024- 4-14 | review classes hierarchy which should be something like Base -> Command -> Extern -> Daemon |
+|      |            |  XXXXXXXXXXXXXXXXXXXXXXXXX    will also rename Base::_newBase() -> Base::_baseForRole |
 |   89 |  |  |
 
 ---

@@ -20,14 +20,11 @@
 # - a 'command' the first executed word, here: 'ttp.pl'
 # - a 'verb' the second word, here 'vars'.
 #
-# Verbs are executed in this Command context.
-#
-# Please note that Commands are both IRunnable, as they are the main runners of TTP,
-# and IOptionable, which means they accept and manage options.
+# Verbs are executed in this RunnerCommand context.
 
-package TTP::Command;
+package TTP::RunnerCommand;
 
-use base qw( TTP::Base );
+use base qw( TTP::Runner );
 our $VERSION = '1.00';
 
 use strict;
@@ -42,13 +39,15 @@ use Role::Tiny::With;
 use Try::Tiny;
 use vars::global qw( $ep );
 
-with 'TTP::IFindable', 'TTP::IHelpable', 'TTP::IOptionable', 'TTP::IRunnable';
+with 'TTP::IFindable';
 
 use TTP;
 use TTP::Constants qw( :all );
 use TTP::Message qw( :all );
 
 my $Const = {
+	# the minimal count of arguments to trigger the help display
+	minArgsCount => 2,
 	# reserved words: the commands must be named outside of this array
 	#  because they are current or historic folders of the TTP installation tree
 	reservedWords => [
@@ -102,26 +101,6 @@ sub _getVerbs {
 	return @verbs;
 }
 
-# -------------------------------------------------------------------------------------------------
-# command initialization
-# (I):
-# - none
-# (O):
-# - this object
-
-sub _init {
-	my ( $self ) = @_;
-
-	# make sure the command is not a reserved word
-	my $command = $self->runnableBNameShort();
-	if( grep( /^$command$/, @{$Const->{reservedWords}} )){
-		msgErr( "command '$command' is a TTP reserved word. Aborting." );
-		TTP::exit();
-	}
-
-	return $self;
-}
-
 ### Public methods
 
 # -------------------------------------------------------------------------------------------------
@@ -162,6 +141,20 @@ sub commandHelp {
 }
 
 # -------------------------------------------------------------------------------------------------
+# Returns the minimal count of arguments needed by the running executable
+# Below this minimal count, we automatically display the runner's help
+# (I):
+# - the TTP EP entry point
+# (O):
+# - this object
+
+sub minArgsCount {
+	my ( $self ) = @_;
+
+	return $Const->{minArgsCount};
+}
+
+# -------------------------------------------------------------------------------------------------
 # run the command
 # (I):
 # - none
@@ -170,6 +163,7 @@ sub commandHelp {
 
 sub run {
 	my ( $self ) = @_;
+	print SRDERR __PACKAGE__."::run() self=".ref( $self ).EOL if $ENV{TTP_DEBUG};
 
 	try {
 		# first argument is supposed to be the verb
@@ -188,7 +182,7 @@ sub run {
 
 			# if found, then execute it with our global variables
 			if( $self->{_verb}{path} ){
-				$self->runnableSetQualifier( $verb );
+				$self->runnableQualifier( $verb );
 
 				# as verbs are written as Perl scripts, they are dynamically ran from here in the context of 'self'
 				# + have direct access to '$ep' entry point
@@ -299,8 +293,12 @@ sub new {
 	my $self = $class->SUPER::new( $ep );
 	bless $self, $class;
 
-	# command initialization
-	$self->_init();
+	# make sure the command is not a reserved word
+	my $command = $self->runnableBNameShort();
+	if( grep( /^$command$/, @{$Const->{reservedWords}} )){
+		msgErr( "command '$command' is a TTP reserved word. Aborting." );
+		TTP::exit();
+	}
 
 	return $self;
 }
@@ -321,6 +319,21 @@ sub DESTROY {
 ### Note for the developer: while a global function doesn't take any argument, it can be called both
 ### as a class method 'TTP::Package->method()' or as a global function 'TTP::Package::method()',
 ### the former being preferred (hence the writing inside of the 'Class methods' block).
+
+# -------------------------------------------------------------------------------------------------
+# instanciates and run the command
+# (I):
+# - the TTP EntryPoint
+# (O):
+# - the newly instanciated RunnerCommand
+
+sub runCommand {
+	my ( $ep ) = @_;
+	print SRDERR __PACKAGE__."::run() ep=".ref( $ep ).EOL if $ENV{TTP_DEBUG};
+
+	my $command = TTP::RunnerCommand->new( $ep );
+	$command->run();
+}
 
 1;
 

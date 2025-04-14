@@ -37,10 +37,10 @@ use strict;
 use utf8;
 use warnings;
 
-use Carp;
 use Data::Dumper;
 use vars::global qw( $ep );
 
+use TTP;
 use TTP::Constants qw( :all );
 use TTP::Message qw( :all );
 
@@ -48,12 +48,14 @@ use TTP::Message qw( :all );
 ### All subs created after importing Role::Tiny will be considered methods to be composed.
 use Role::Tiny;
 
-requires qw( _newBase run );
+requires qw( _newBase );
 
 # -------------------------------------------------------------------------------------------------
-# Getter
+# Getter/Setter
 # (I):
-# - none
+# - this TTP::IOptionable (self)
+# - when called by GetOptions(), the option name
+# - when called by GetOptions(), the option value
 # (O):
 # - whether the output should be colored: true|false
 
@@ -61,32 +63,30 @@ sub colored {
 	my ( $self, $name, $value ) = @_;
 
 	if( scalar( @_ ) > 1 ){
-		$ep->{_ioptionable}{$name} = $value;
-		$ep->{_ioptionable}{$name.'_set'} = true;
+		$self->{_ioptionable}{$name} = $value;
+		$self->{_ioptionable}{$name.'_set'} = true;
 	}
 
-	return $ep->{_ioptionable}{colored};
+	return $self->{_ioptionable}{colored};
 };
 
 # -------------------------------------------------------------------------------------------------
 # Getter
 # (I):
-# - the TTP::Command (self)
-# - when called by GetOptions(), the option name
-# - when called by GetOptions(), the option value
+# - this TTP::IOptionable (self)
 # (O):
 # - whether the --colored option has been specified in the command-line
 
 sub coloredSet {
 	my ( $self ) = @_;
 
-	return $ep->{_ioptionable}{colored_set};
+	return $self->{_ioptionable}{colored_set};
 };
 
 # -------------------------------------------------------------------------------------------------
-# Getter
+# Getter/Setter
 # (I):
-# - the TTP::Command (self)
+# - this TTP::IOptionable (self)
 # - when called by GetOptions(), the option name
 # - when called by GetOptions(), the option value
 # (O):
@@ -96,17 +96,17 @@ sub dummy {
 	my ( $self, $name, $value ) = @_;
 
 	if( scalar( @_ ) > 1 ){
-		$ep->{_ioptionable}{$name} = $value;
-		$ep->{_ioptionable}{$name.'_set'} = true;
+		$self->{_ioptionable}{$name} = $value;
+		$self->{_ioptionable}{$name.'_set'} = true;
 	}
 
-	return $ep->{_ioptionable}{dummy};
+	return $self->{_ioptionable}{dummy};
 };
 
 # -------------------------------------------------------------------------------------------------
-# Getter
+# Getter/Setter
 # (I):
-# - the TTP::Command (self)
+# - this TTP::IOptionable (self)
 # - when called by GetOptions(), the option name
 # - when called by GetOptions(), the option value
 # (O):
@@ -116,17 +116,17 @@ sub help {
 	my ( $self, $name, $value ) = @_;
 
 	if( scalar( @_ ) > 1 ){
-		$ep->{_ioptionable}{$name} = $value;
-		$ep->{_ioptionable}{$name.'_set'} = true;
+		$self->{_ioptionable}{$name} = $value;
+		$self->{_ioptionable}{$name.'_set'} = true;
 	}
 
-	return $ep->{_ioptionable}{help};
+	return $self->{_ioptionable}{help};
 };
 
 # -------------------------------------------------------------------------------------------------
-# Getter
+# Getter/Setter
 # (I):
-# - the TTP::Command (self)
+# - this TTP::IOptionable (self)
 # - when called by GetOptions(), the option name
 # - when called by GetOptions(), the option value
 # (O):
@@ -136,65 +136,60 @@ sub verbose {
 	my ( $self, $name, $value ) = @_;
 
 	if( scalar( @_ ) > 1 ){
-		$ep->{_ioptionable}{$name} = $value;
-		$ep->{_ioptionable}{$name.'_set'} = true;
+		$self->{_ioptionable}{$name} = $value;
+		$self->{_ioptionable}{$name.'_set'} = true;
 	}
 
-	return $ep->{_ioptionable}{verbose};
+	return $self->{_ioptionable}{verbose};
 };
 
 # -------------------------------------------------------------------------------------------------
 # IOptionable initialization
 # Initialization of a command or of an external script
 # (I):
-# - none
+# - this TTP::IOptionable (self)
+# - the TTP EntryPoint
+# - other args as provided to the constructor
 # (O):
 # -none
 
 after _newBase => sub {
 	my ( $self, $ep, $args ) = @_;
 	$args //= {};
-	 #print __PACKAGE__."::new()".EOL;
 
 	$self->{_ioptionable} //= {};
 
 	# initialize the standard options
-	if( !$ep->runner()){
-		$ep->{_ioptionable} //= {};
-		$ep->{_ioptionable}{help} = false;
-		$ep->{_ioptionable}{help_set} = false;
-		$ep->{_ioptionable}{colored} = false;
-		$ep->{_ioptionable}{colored_set} = false;
-		$ep->{_ioptionable}{dummy} = false;
-		$ep->{_ioptionable}{dummy_set} = false;
-		$ep->{_ioptionable}{verbose} = false;
-		$ep->{_ioptionable}{verbose_set} = false;
-		print STDERR __PACKAGE__."::var() self=".ref( $self )." initialize IOptionable options to false".EOL if $ENV{TTP_DEBUG};
+	if( $ep->runner()){
+		msgErr( "unexpected runner alreay set when instanciating IOptionable self=".ref( $self ));
+		TTP::stackTrace();
+	} else {
+		$self->{_ioptionable}{help} = false;
+		$self->{_ioptionable}{help_set} = false;
+		$self->{_ioptionable}{colored} = false;
+		$self->{_ioptionable}{colored_set} = false;
+		$self->{_ioptionable}{dummy} = false;
+		$self->{_ioptionable}{dummy_set} = false;
+		$self->{_ioptionable}{verbose} = false;
+		$self->{_ioptionable}{verbose_set} = false;
+		print STDERR __PACKAGE__."::after_newBase() self=".ref( $self )." initialize IOptionable options to false".EOL if $ENV{TTP_DEBUG};
 	}
-};
 
-# -------------------------------------------------------------------------------------------------
-# Set the help flag to true if there is not enough arguments in the command-line
-# (I):
-# - none
-# (O):
-# -none
-
-before run => sub {
-	my ( $self ) = @_;
-
-	print STDERR __PACKAGE__."::before_run() self=".ref( $self )." scalar \@ARGV=".( scalar( @ARGV )) if $ENV{TTP_DEBUG};
-
-	if( scalar( @ARGV ) <= 1 ){
-		$ep->{_ioptionable}{help} = true;
+	# Set the help flag to true if there are not enough arguments in the command-line
+	# the minimum count of arguments MUST be defined by the implementation class
+	print STDERR __PACKAGE__."::after_newBase() self=".ref( $self )." scalar \@ARGV=".( scalar( @ARGV )) if $ENV{TTP_DEBUG};
+	if( scalar( @ARGV ) < $self->minArgsCount()){
+		$self->{_ioptionable}{help} = true;
 		print STDERR " set help=true" if $ENV{TTP_DEBUG};
 	}
-
 	print STDERR EOL if $ENV{TTP_DEBUG};
-
 };
 
 ### Global functions
+### Note for the developer: while a global function doesn't take any argument, it can be called both
+### as a class method 'TTP::Package->method()' or as a global function 'TTP::Package::method()',
+### the former being preferred (hence the writing inside of the 'Class methods' block which brings
+### the class as first argument).
 
 1;
 

@@ -41,6 +41,7 @@ use TTP::Finder;
 use TTP::Message qw( :all );
 use TTP::Node;
 use TTP::Path;
+use TTP::RunnerCommand;
 
 # autoflush STDOUT
 $| = 1;
@@ -861,7 +862,7 @@ sub run {
 	print STDERR Dumper( @ARGV ) if $ENV{TTP_DEBUG};
 	$ep = TTP::EP->new();
 	$ep->bootstrap();
-	$ep->runCommand();
+	TTP::RunnerCommand::runCommand( $ep );
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -871,7 +872,8 @@ sub run {
 
 sub stackTrace {
 	my $trace = Devel::StackTrace->new;
-	print $trace->as_string; # like carp
+	print $trace->as_string;
+	TTP::exit( 1 );
 }
 
 # ------------------------------------------------------------------------------------------------

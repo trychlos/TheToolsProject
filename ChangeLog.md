@@ -7,6 +7,9 @@
     Release date: 
 
     - TTP, TTP::EP: remove no more used debug variables
+    - TTP::stackTrace() now ends the running program with exit code 1
+    - Introduce TTP::Runner base class for all executables
+    - Rename TTP::Command class to TTP::RunnerCommand making it a derived class of TTP::Runner
 
 ### 4.3.0
 
