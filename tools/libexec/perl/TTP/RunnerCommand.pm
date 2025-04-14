@@ -317,7 +317,8 @@ sub DESTROY {
 ### Global functions
 ### Note for the developer: while a global function doesn't take any argument, it can be called both
 ### as a class method 'TTP::Package->method()' or as a global function 'TTP::Package::method()',
-### the former being preferred (hence the writing inside of the 'Class methods' block).
+### the former being preferred (hence the writing inside of the 'Class methods' block which brings
+### the class as first argument).
 
 # -------------------------------------------------------------------------------------------------
 # instanciates and run the command

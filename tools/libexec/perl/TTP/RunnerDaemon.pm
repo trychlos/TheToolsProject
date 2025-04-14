@@ -34,7 +34,7 @@
 # - textingInterval: either <=0 (do not advertise to text-based telemetry system), or the advertising interval in ms,
 #   defaulting to 60000 ms (1 mn)
 #
-# Also the daemon writer must be conscious of the dynamic character of TheToolsProject.
+# Also the daemon author must be conscious of the dynamic character of TheToolsProject.
 # In particular and at least, many output directories (logs, temp files and so on) may be built on a daily basis.
 # So your configuration files must be periodically re-evaluated.
 # This 'Daemon' class takes care of reevaluating both the host and the daemon configurations
@@ -46,9 +46,9 @@
 # - Win32::Daemon 20200728 (as of 2024- 2- 3) defines a service, and is too specialized toward win32 plaforms.
 # - Proc::Background seems OK.
 
-package TTP::Daemon;
+package TTP::RunnerDaemon;
 
-use base qw( TTP::Base );
+use base qw( TTP::RunnerExtern );
 our $VERSION = '1.00';
 
 use strict;
@@ -66,7 +66,7 @@ use Time::Moment;
 use vars::global qw( $ep );
 use if $Config{osname} eq 'MSWin32', 'Win32::OLE';
 
-with 'TTP::IEnableable', 'TTP::IAcceptable', 'TTP::IFindable', 'TTP::IHelpable', 'TTP::IJSONable', 'TTP::IOptionable', 'TTP::ISleepable', 'TTP::IRunnable';
+with 'TTP::IEnableable', 'TTP::IAcceptable', 'TTP::IFindable', 'TTP::IJSONable', 'TTP::ISleepable';
 
 use TTP;
 use TTP::Constants qw( :all );
@@ -1055,7 +1055,7 @@ sub start {
 	my $command = "perl $program -json ".$self->jsonPath()." -ignoreInt ".join( ' ', @ARGV );
 	my $res = undef;
 
-	if( $self->ep()->runner()->dummy()){
+	if( $ep()->runner()->dummy()){
 		msgDummy( $command );
 		msgDummy( "considering startup as 'true'" );
 		$res = true;
@@ -1245,26 +1245,6 @@ sub finder {
 }
 
 # -------------------------------------------------------------------------------------------------
-# Run by the daemon program
-# Initialize the TTP environment as soon as possible
-# Instanciating the Daemon also initialize the underlying IRunnable
-
-sub init {
-	my ( $class ) = @_;
-	$class = ref( $class ) || $class;
-	print STDERR __PACKAGE__."::init()".EOL if $ENV{TTP_DEBUG};
-
-	$ep = TTP::EP->new();
-	$ep->bootstrap();
-
-	my $daemon = $class->new( $ep );
-	$daemon->{_initialized} = true;
-	$daemon->run();
-
-	return $daemon;
-}
-
-# -------------------------------------------------------------------------------------------------
 # Constructor
 # We never abort if we cannot find or load the daemon configuration file. We rely instead on the
 # 'jsonable-loaded' flag that the caller MUST test.
@@ -1310,6 +1290,24 @@ sub DESTROY {
 ### Global functions
 ### Note for the developer: while a global function doesn't take any argument, it can be called both
 ### as a class method 'TTP::Package->method()' or as a global function 'TTP::Package::method()',
-### the former being preferred (hence the writing inside of the 'Class methods' block).
+### the former being preferred (hence the writing inside of the 'Class methods' block which brings
+### the class as first argument).
+
+# -------------------------------------------------------------------------------------------------
+# instanciates and run the external command
+# (I):
+# - the TTP EntryPoint
+# (O):
+# - the newly instanciated RunnerExtern
+
+sub runCommand {
+	my ( $ep ) = @_;
+	print STDERR __PACKAGE__."::run() ep=".ref( $ep ).EOL if $ENV{TTP_DEBUG};
+
+	my $command = TTP::RunnerDaemon->new( $ep );
+	$command->run();
+
+	return $command;
+}
 
 1;

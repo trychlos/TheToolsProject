@@ -14,6 +14,7 @@
       Extern commands must now run my $command = TTP::runExtern();
     - Commands verbHelp() is renamed displayHelp()
     - External helpExtern() is renamed displayHelp()
+    - Rename TTP::Daemon class to TTP::RunnerDaemon making it a derived class of TTP::Runner (todo #88)
 
 ### 4.3.0
 
