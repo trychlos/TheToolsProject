@@ -44,6 +44,41 @@
                     "type": "string"
                 }
             }
+        },
+        "status": {
+            "description": "?",
+            "type": "object",
+            "properties": {
+                "monitor": {
+                    "description": "A list of commands to be executed to get the full status of the node.",
+                    "type": "object",
+                    "properties": {
+                        "commands": {
+                            "description": "The list of commands to be executed.",
+                            "type": "array",
+                            "items": [
+                                "string",
+                                "object"
+                            ],
+                            "properties": {
+                                "byOS": {
+                                    "description": "Let a command be specific to the running OS.",
+                                    "type": "object",
+                                    "patternProperties": {
+                                        "^.*$": {
+                                            "description_array": [
+                                                "The OS name as reported by Perl-Config, the value being the command to be applied for this OS.",
+                                                "The value (the command) honors <SOURCE>, <TARGET> and <OPTIONS> macros."
+                                            ],
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

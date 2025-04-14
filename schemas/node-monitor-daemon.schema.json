@@ -68,7 +68,20 @@
             "default": 300000
         },
         "keys": {
-            "description": "The keys to be read in the node and services configurations to get the commands to be executed.",
+            "description_array": [
+                "The keys to be read in the node and services configurations to get the commands to be executed.",
+                "These keys must address a list of commands, maybe per OS, to be executed, i.e.:",
+                "    \"status\": {",
+                "        \"monitor\": {",
+                "            \"commands\": [",
+                "                \"echo 'Status is OK'\",",
+                "                \"byOS\": {",
+                "                    \"linux\": \"/path/to/a/command\",",
+                "                    \"MSWin32\": \"C:\\dir\\command.exe\",",
+                "                }",
+                "            ]",
+                "This same [ 'status', 'monitor' ] list of keys can be defined at the node level or at any service level for this node."
+            ],
             "type": "array",
             "items": "string",
             "default": [
