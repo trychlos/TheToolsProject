@@ -2,6 +2,12 @@
 
 ## ChangeLog
 
+### 4.4.2-rc.0
+
+    Release date: 
+
+    - TTP::commandExec() no more adds an EOL to stdout
+
 ### 4.4.1
 
     Release date: 2025- 4-14
