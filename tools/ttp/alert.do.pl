@@ -85,6 +85,8 @@ $opt_sms = true if !defined $opt_sms;
 $defaults->{sms} = $opt_sms ? 'yes' : 'no';
 my $opt_sms_set = false;
 
+my $alertStamp = Time::Moment->now;
+
 # -------------------------------------------------------------------------------------------------
 # build the alert data object
 
@@ -93,7 +95,7 @@ sub buildAlertData {
 		emitter => $opt_emitter,
 		level => $opt_level,
 		# ISO 8601 format
-		stamp => Time::Moment->now->strftime( '%Y-%m-%d %H:%M:%S.%6N %:z' )
+		stamp => $alertStamp->strftime( '%Y-%m-%d %H:%M:%S.%6N %:z' )
 	};
 	$data->{title} = $opt_title if $opt_title;
 	$data->{message} = $opt_message if $opt_message;
@@ -130,15 +132,18 @@ sub doFileAlert {
 	my $command = TTP::commandByOs([ 'alerts', 'withFile' ]);
 	my $dir = TTP::alertsFileDropdir();
 	if( !$command ){
-		my $file = File::Spec->catfile( $dir, 'alert-'.Time::Moment->now->strftime( '%Y%m%d%H%M%S%6N' ).'.json' );
+		my $file = File::Spec->catfile( $dir, 'alert-'.$alertStamp->strftime( '%Y%m%d%H%M%S%6N' ).'.json' );
 		my $verbose = $ep->runner()->verbose() ? "-verbose" : "-noverbose";
-		$command = "ttp.pl writejson -nocolored $verbose -file $file -data '<JSON>' <OPTIONS>";
+		$command = "ttp.pl writejson -nocolored $verbose -file $file -data \"<JSON>\" <OPTIONS>";
 	}
 	TTP::Path::makeDirExist( $dir );
 	my $prettyJson = $ep->var([ 'alerts', 'withFile', 'prettyJson' ]);
 	$prettyJson = true if !defined $prettyJson;
+	$prettyJson = false;
 	my $data = buildAlertData();
 	my $json = $prettyJson ? JSON->new->pretty->encode( $data ) : JSON->new->encode( $data );
+	# protect the double quotes against the CMD.EXE command-line
+	$json =~ s/"/\\"/g;
 	my $macros = {
 		EMITTER => $opt_emitter,
 		LEVEL => $opt_level,
@@ -158,13 +163,15 @@ sub doFileAlert {
 sub doMqttAlert {
 	msgOut( "publishing a '$opt_level' alert on MQTT bus..." );
 	my $data = buildAlertData();
-	my $topic = $ep->var([ 'alerts', 'withMqtt', 'topic' ]) || $ep->node()->name()."/alerts/".Time::Moment->from_string( $data->{stamp} )->epoch();
+	my $topic = $ep->var([ 'alerts', 'withMqtt', 'topic' ]) || $ep->node()->name()."/alerts/".$alertStamp->strftime( '%Y%m%d%H%M%S%6N' );
 	my $command = TTP::commandByOs([ 'alerts', 'withMqtt' ]);
 	if( !$command ){
 		my $verbose = $ep->runner()->verbose() ? "-verbose" : "-noverbose";
-		$command = "mqtt.pl publish -nocolored $verbose -topic $topic -payload '<JSON>' <OPTIONS>";
+		$command = "mqtt.pl publish -nocolored $verbose -topic $topic -payload \"<JSON>\" <OPTIONS>";
 	}
 	my $json = JSON->new->encode( $data );
+	# protect the double quotes against the CMD.EXE command-line
+	$json =~ s/"/\\"/g;
 	my $macros = {
 		EMITTER => $opt_emitter,
 		LEVEL => $opt_level,
@@ -187,25 +194,36 @@ sub doSmsAlert {
 	my $command = TTP::commandByOs([ 'alerts', 'withSms' ]);
 	if( !$command ){
 		my $verbose = $ep->runner()->verbose() ? "-verbose" : "-noverbose";
+		# it is up to the site to know if and how send SMS
 		#$command = "smtp.pl send -nocolored $verbose -to <RECIPIENTS> -subject <TITLE> -text <MESSAGE> <OPTIONS>";
 	}
-	my $recipients = $ep->var([ 'alerts', 'withSms', 'recipients' ]) || [];
-	if( $command && scalar( @{$recipients} )){
-		my $prettyJson = $ep->var([ 'alerts', 'withSms', 'prettyJson' ]);
-		$prettyJson = true if !defined $prettyJson;
-		my $data = buildAlertData();
-		my $json = $prettyJson ? JSON->new->pretty->encode( $data ) : JSON->new->encode( $data );
-		my $macros = {
-			EMITTER => $opt_emitter,
-			LEVEL => $opt_level,
-			TITLE => $opt_title,
-			MESSAGE => $opt_message,
-			JSON => $json,
-			STAMP => $data->{stamp},
-			OPTIONS => $opt_options,
-			RECIPIENTS => join( ',', @{$recipients} )
-		};
-		execute( $command, $macros, "success", "alert by SMS NOT OK" );
+	if( $command ){
+		my $recipients = $ep->var([ 'alerts', 'withSms', 'recipients' ]) || [];
+		if( scalar( @{$recipients} )){
+			my $prettyJson = $ep->var([ 'alerts', 'withSms', 'prettyJson' ]);
+			$prettyJson = true if !defined $prettyJson;
+			my $data = buildAlertData();
+			my $json = $prettyJson ? JSON->new->pretty->encode( $data ) : JSON->new->encode( $data );
+			my $textfname = TTP::getTempFileName();
+			my $fh = path( $textfname );
+			$fh->spew( $json );
+			my $macros = {
+				EMITTER => $opt_emitter,
+				LEVEL => $opt_level,
+				TITLE => $opt_title,
+				MESSAGE => $opt_message,
+				JSON => $json,
+				STAMP => $data->{stamp},
+				OPTIONS => $opt_options,
+				RECIPIENTS => join( ',', @{$recipients} ),
+				CONTENTFNAME => $textfname
+			};
+			execute( $command, $macros, "success", "alert by SMS NOT OK" );
+		} else {
+			msgWarn( "no recipients is provided by the site: it is not possible to send SMS" );
+		}
+	} else {
+		msgWarn( "no command is provided by the site: it is not possible to send SMS" );
 	}
 }
 
@@ -218,7 +236,7 @@ sub doSmtpAlert {
 	my $command = TTP::commandByOs([ 'alerts', 'withSmtp' ]);
 	if( !$command ){
 		my $verbose = $ep->runner()->verbose() ? "-verbose" : "-noverbose";
-		$command = "smtp.pl send -nocolored $verbose -to <RECIPIENTS> -subject <TITLE> -text '<MESSAGE>' <OPTIONS>";
+		$command = "smtp.pl send -nocolored $verbose -to <RECIPIENTS> -subject \"<TITLE>\" -textfname <CONTENTFNAME> <OPTIONS>";
 	}
 	my $recipients = $ep->var([ 'alerts', 'withSmtp', 'recipients' ]) || [ 'root@localhost' ];
 	my $prefixTitle = $ep->var([ 'alerts', 'withSmtp', 'prefixTitle' ]);
@@ -226,14 +244,29 @@ sub doSmtpAlert {
 	my $title;
 	if( $prefixTitle ){
 		$title = "[$opt_level] Alert";
-		$title .= " - $opt_title" if $opt_title;
+		if( $opt_title ){
+			$title .= " - $opt_title";
+		} else {
+			$title .= " from $opt_emitter";
+		}
 	} else {
-		$title = $opt_title || "[$opt_level] Alert";
+		$title = $opt_title || "[$opt_level] Alert from $opt_emitter";
 	}
 	my $prettyJson = $ep->var([ 'alerts', 'withSmtp', 'prettyJson' ]);
 	$prettyJson = true if !defined $prettyJson;
 	my $data = buildAlertData();
 	my $json = $prettyJson ? JSON->new->pretty->encode( $data ) : JSON->new->encode( $data );
+	# put the mail into a temp file
+	my $mailfrom = $ep->var([ 'SMTPGateway', 'mailfrom' ]);
+	my $text = "Hi,\n
+An alert has been raised:
+$json
+Best regards.
+$mailfrom
+";
+	my $textfname = TTP::getTempFileName();
+	my $fh = path( $textfname );
+	$fh->spew( $text );
 	my $macros = {
 		EMITTER => $opt_emitter,
 		LEVEL => $opt_level,
@@ -242,7 +275,8 @@ sub doSmtpAlert {
 		JSON => $json,
 		STAMP => $data->{stamp},
 		OPTIONS => $opt_options,
-		RECIPIENTS => join( ',', @{$recipients} )
+		RECIPIENTS => join( ',', @{$recipients} ),
+		CONTENTFNAME => $textfname
 	};
 	execute( $command, $macros, "success", "alert by SMTP NOT OK" );
 }

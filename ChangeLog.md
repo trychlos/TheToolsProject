@@ -7,6 +7,7 @@
     Release date: 
 
     - TTP::commandExec() no more adds an EOL to stdout
+	- ttp.pl alert: fix cmd vs. sh execution and quotings
 
 ### 4.4.1
 
