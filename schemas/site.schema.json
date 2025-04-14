@@ -148,7 +148,9 @@
                                 "command": {
                                     "description_array": [
                                         "The command to be used to send the alert by SMS.",
-                                        "The command has access to additional <RECIPIENTS> macro which is resolved with a comma-separated list of the recipients.",
+                                        "The command has access to additional macros:",
+                                        "- <RECIPIENTS> is resolved with a comma-separated list of the recipients,",
+                                        "- <CONTENTFNAME> is the filename of a text file which contains the full message.",
                                         "No default command is provided as of v4.1"
                                     ],
                                     "type": [
@@ -187,7 +189,9 @@
                                 "command": {
                                     "description_array": [
                                         "The command to be used to send the alert by email.",
-                                        "The command has access to additional <RECIPIENTS> macro which is resolved with a comma-separated list of the recipients."
+                                        "The command has access to additional macros:",
+                                        "- <RECIPIENTS> is resolved with a comma-separated list of the recipients,",
+                                        "- <CONTENTFNAME> is the filename of a text file which contains the full message."
                                     ],
                                     "type": [
                                         "string",
