@@ -10,10 +10,10 @@
 
 ### 4.3.0
 
-    Release date: 
+    Release date: 2025- 4-14
 
     - TTP::Daemon define new httpingEnabled(), messagingEnabled() and textingEnabled() methods, thus bumping minor candidate version number
-    - TTP::commandByOs() accepts now a 'json' option to search data in
+    - TTP::commandByOs() accepts now a 'jsonable' option to search data in
     - Define libexec/daemons/alerts-monitor-daemon.pl
 
 ### 4.2.6
