@@ -100,6 +100,8 @@ sub alertsFileDropdir {
 # - the list of keys before the 'command' as an array ref
 # - an optional options hash ref with following keys:
 #   > withCommand: whether to have a top 'command' property before 'byOS', defaulting to true
+#   > withCommands: whether to have a top 'commands' property before 'byOS', defaulting to false
+#	  NB: should not have both withCommand and withCommands!
 #   > jsonable: a IJSONable to be searched for for the provided keys, defaulting to node/site data
 # (O):
 # - the found command as a string, or undef
@@ -109,9 +111,15 @@ sub commandByOs {
 	$opts //= {};
 	my $command = undef;
 	my @locals = @{$keys};
+	# have withCommand ?
 	my $withCommand = $opts->{withCommand};
 	$withCommand = true if !defined $withCommand;
 	push( @locals, 'command' ) if $withCommand;
+	# have withCommands ?
+	my $withCommands = $opts->{withCommands};
+	$withCommands = false if !defined( $withCommands );
+	push( @locals, 'commands' ) if $withCommands;
+	# search...
 	my $obj = $ep->var( \@locals, $opts );
 	if( defined( $obj )){
 		my $ref = ref( $obj );
