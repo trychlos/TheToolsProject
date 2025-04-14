@@ -58,7 +58,7 @@ requires qw( _newBase );
 # (O):
 # always returns an array, maybe empty
 
-sub grepFileByRegex {
+sub _grepFileByRegex {
 	my ( $self, $filename, $regex, $opts ) = @_;
 	$opts //= {};
 	local $/ = "\n";
@@ -95,52 +95,19 @@ sub grepFileByRegex {
 }
 
 # -------------------------------------------------------------------------------------------------
-# Display an external command help
-# This is a one-shot help: all the help content is printed here
-# (I):
-# - a hash which contains default values
-
-sub helpExtern {
-	my ( $self, $defaults ) = @_;
-
-	# pre-usage
-	my @help = $self->helpPre( $self->runnablePath(), { warnIfSeveral => false });
-	foreach my $it ( @help ){
-		print " $it".EOL;
-	}
-
-	# usage
-	@help = $self->helpUsage( $self->runnablePath(), { warnIfSeveral => false });
-	if( scalar @help ){
-		print "   Usage: ".$self->runnableBNameFull()." [options]".EOL;
-		print "   where available options are:".EOL;
-		foreach my $it ( @help ){
-			$it =~ s/\$\{?(\w+)}?/$defaults->{$1}/e;
-			print "     $it".EOL;
-		}
-	}
-
-	# post-usage
-	@help = $self->helpPost( $self->runnablePath(), { warnIfNone => false, warnIfSeveral => false });
-	foreach my $it ( @help ){
-		print " $it".EOL;
-	}
-}
-
-# -------------------------------------------------------------------------------------------------
 # Display the command one-liner help
 # (I):
 # - the full path to the command
 # - an optional options hash with following keys:
 #   > prefix: the line prefix, defaulting to ''
 
-sub helpOneline {
+sub helpableOneLine {
 	my ( $self, $command_path, $opts ) = @_;
 	$opts //= {};
 	my $prefix = '';
 	$prefix = $opts->{prefix} if exists( $opts->{prefix} );
 	my ( $vol, $dirs, $bname ) = File::Spec->splitpath( $command_path );
-	my @help = $self->grepFileByRegex( $command_path, $Const->{commentPre} );
+	my @help = $self->_grepFileByRegex( $command_path, $Const->{commentPre} );
 	print "$prefix$bname: $help[0]".EOL;
 }
 
@@ -148,39 +115,39 @@ sub helpOneline {
 # Returns the post-usage lines of the specified file
 # (I):
 # - the full path to the command
-# - an optional options hash to be passed to grepFileByRegex() method
+# - an optional options hash to be passed to _grepFileByRegex() method
 
-sub helpPost {
+sub helpablePost {
 	my ( $self, $path, $opts ) = @_;
 	$opts //= {};
 
-	return $self->grepFileByRegex( $path, $Const->{commentPost}, $opts );
+	return $self->_grepFileByRegex( $path, $Const->{commentPost}, $opts );
 }
 
 # -------------------------------------------------------------------------------------------------
 # Returns the pre-usage lines of the specified file
 # (I):
 # - the full path to the command
-# - an optional options hash to be passed to grepFileByRegex() method
+# - an optional options hash to be passed to _grepFileByRegex() method
 
-sub helpPre {
+sub helpablePre {
 	my ( $self, $path, $opts ) = @_;
 	$opts //= {};
 
-	return $self->grepFileByRegex( $path, $Const->{commentPre}, $opts );
+	return $self->_grepFileByRegex( $path, $Const->{commentPre}, $opts );
 }
 
 # -------------------------------------------------------------------------------------------------
 # Returns the usage lines of the specified file
 # (I):
 # - the full path to the command
-# - an optional options hash to be passed to grepFileByRegex() method
+# - an optional options hash to be passed to _grepFileByRegex() method
 
-sub helpUsage {
+sub helpableUsage {
 	my ( $self, $path, $opts ) = @_;
 	$opts //= {};
 
-	return $self->grepFileByRegex( $path, $Const->{commentUsage}, $opts );
+	return $self->_grepFileByRegex( $path, $Const->{commentUsage}, $opts );
 }
 
 # -------------------------------------------------------------------------------------------------

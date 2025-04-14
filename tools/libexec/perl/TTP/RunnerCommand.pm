@@ -74,6 +74,42 @@ my $Const = {
 ### Private methods
 
 # -------------------------------------------------------------------------------------------------
+# Command help
+# Display the command help as:
+# - a one-liner from the command itself
+# - and the one-liner help of each available verb
+# Verbs are displayed as an ASCII-sorted (i.e. in [0-9A-Za-z] order) list
+# (I):
+# - none
+# (O):
+# - this object
+
+sub _commandHelp {
+	my ( $self ) = @_;
+
+	# display the command one-line help
+	$self->helpableOneLine( $self->runnablePath());
+
+	# display each verb one-line help
+	my @verbs = $self->_getVerbs();
+	my $verbsHelp = {};
+	foreach my $it ( @verbs ){
+		my @fullHelp = $self->helpablePre( $it, { warnIfSeveral => false });
+		my ( $volume, $directories, $file ) = File::Spec->splitpath( $it );
+		my $verb = $file;
+		$verb =~ s/$Const->{verbSed}$//;
+		$verbsHelp->{$verb} = $fullHelp[0];
+	}
+
+	# verbs are displayed alpha sorted
+	foreach my $it ( sort keys %{$verbsHelp} ){
+		print "  $it: $verbsHelp->{$it}".EOL;
+	}
+
+	return $self;
+}
+
+# -------------------------------------------------------------------------------------------------
 # returns the available verbs for the current command
 # (O):
 # - a ref to an array of full paths of available verbs for the current command
@@ -104,43 +140,6 @@ sub _getVerbs {
 ### Public methods
 
 # -------------------------------------------------------------------------------------------------
-# Command help
-# Display the command help as:
-# - a one-liner from the command itself
-# - and the one-liner help of each available verb
-# Verbs are displayed as an ASCII-sorted (i.e. in [0-9A-Za-z] order) list
-# (I):
-# - none
-# (O):
-# - this object
-
-sub commandHelp {
-	my ( $self ) = @_;
-	msgVerbose( __PACKAGE__."::commandHelp()" );
-
-	# display the command one-line help
-	$self->helpOneline( $self->runnablePath());
-
-	# display each verb one-line help
-	my @verbs = $self->_getVerbs();
-	my $verbsHelp = {};
-	foreach my $it ( @verbs ){
-		my @fullHelp = $self->helpPre( $it, { warnIfSeveral => false });
-		my ( $volume, $directories, $file ) = File::Spec->splitpath( $it );
-		my $verb = $file;
-		$verb =~ s/$Const->{verbSed}$//;
-		$verbsHelp->{$verb} = $fullHelp[0];
-	}
-
-	# verbs are displayed alpha sorted
-	foreach my $it ( sort keys %{$verbsHelp} ){
-		print "  $it: $verbsHelp->{$it}".EOL;
-	}
-
-	return $self;
-}
-
-# -------------------------------------------------------------------------------------------------
 # Returns the minimal count of arguments needed by the running executable
 # Below this minimal count, we automatically display the runner's help
 # (I):
@@ -163,7 +162,7 @@ sub minArgsCount {
 
 sub run {
 	my ( $self ) = @_;
-	print SRDERR __PACKAGE__."::run() self=".ref( $self ).EOL if $ENV{TTP_DEBUG};
+	print STDERR __PACKAGE__."::run() self=".ref( $self ).EOL if $ENV{TTP_DEBUG};
 
 	try {
 		# first argument is supposed to be the verb
@@ -195,7 +194,7 @@ sub run {
 				msgErr( "is it possible that '$verb' be not a valid verb ?" );
 			}
 		} else {
-			$self->commandHelp();
+			$self->_commandHelp();
 			TTP::exit();
 		}
 	} catch {
@@ -238,10 +237,10 @@ sub verbHelp {
 	my ( $self, $defaults ) = @_;
 
 	# display the command one-line help
-	$self->helpOneline( $self->runnablePath());
+	$self->helpableOneLine( $self->runnablePath());
 
 	# verb pre-usage
-	my @verbHelp = $self->helpPre( $self->{_verb}{path}, { warnIfSeveral => false });
+	my @verbHelp = $self->helpablePre( $self->{_verb}{path}, { warnIfSeveral => false });
 	my $verbInline = '';
 	if( scalar @verbHelp ){
 		$verbInline = shift @verbHelp;
@@ -252,7 +251,7 @@ sub verbHelp {
 	}
 
 	# verb usage
-	@verbHelp = $self->helpUsage( $self->{_verb}{path}, { warnIfSeveral => false });
+	@verbHelp = $self->helpableUsage( $self->{_verb}{path}, { warnIfSeveral => false });
 	if( scalar @verbHelp ){
 		print "    Usage: ".$self->command()." ".$self->verb()." [options]".EOL;
 		print "    where available options are:".EOL;
@@ -263,7 +262,7 @@ sub verbHelp {
 	}
 
 	# verb post-usage
-	@verbHelp = $self->helpPost( $self->{_verb}{path}, { warnIfNone => false, warnIfSeveral => false });
+	@verbHelp = $self->helpablePost( $self->{_verb}{path}, { warnIfNone => false, warnIfSeveral => false });
 	foreach my $line ( @verbHelp ){
 		print "    $line".EOL;
 	}
@@ -329,7 +328,7 @@ sub DESTROY {
 
 sub runCommand {
 	my ( $ep ) = @_;
-	print SRDERR __PACKAGE__."::run() ep=".ref( $ep ).EOL if $ENV{TTP_DEBUG};
+	print STDERR __PACKAGE__."::run() ep=".ref( $ep ).EOL if $ENV{TTP_DEBUG};
 
 	my $command = TTP::RunnerCommand->new( $ep );
 	$command->run();
