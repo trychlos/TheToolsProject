@@ -27,7 +27,6 @@
 |      | 2024- 4-14 | alerts-monitor-daemon.pl is moved to libexec/daemons |
 |      | 2024- 4-14 | node-monitor-daemon.pl is moved to libexec/daemons |
 |   79 | 2024- 4-12 | let a node override a site variable |
-|   89 | 2024- 4-14 | daemonsDirs should be renamed to daemonsConfigDir and configurable in site.json |
 |   90 | 2024- 4-14 | also have daemonsExecDir and configurable in site.json |
 |   91 |  |  |
 
@@ -232,6 +231,8 @@
 |      | 2024- 4-14 | done |
 |   88 | 2024- 4-14 | review classes hierarchy which should be something like Base -> Command -> Extern -> Daemon |
 |      | 2024- 4-14 | done |
+|   89 | 2024- 4-14 | daemonsDirs should be renamed to daemonsConfigDir and configurable in site.json |
+|      | 2024- 4-14 | renamed as daemonsConfDirs and described in site.schema.json |
 
 ---
 P. Wieser

@@ -1218,7 +1218,7 @@ sub dirs {
 	my ( $class ) = @_;
 	$class = ref( $class ) || $class;
 
-	my $dirs = $ep->var( 'daemonsDirs' ) || $class->finder()->{dirs};
+	my $dirs = $ep->var( 'daemonsConfDirs' ) || $class->finder()->{dirs};
 
 	return $dirs;
 }

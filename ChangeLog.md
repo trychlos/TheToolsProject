@@ -15,6 +15,7 @@
     - RunnerDaemon better check listeningPort (todo #81) and listeningInterval (todo #82)
     - sufix is renamed suffix (todo #80)
     - TTP::commandByOs() now accepts 'withCommands' option
+    - Define daemonsConfDirs site property (todo #89)
 
 ### 4.4.1
 
