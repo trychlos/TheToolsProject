@@ -8,6 +8,7 @@
 
     - TTP::commandExec() no more adds an EOL to stdout
 	- ttp.pl alert: fix cmd vs. sh execution and quotings
+    - logicals regular expression is no more an array as it can satisfies itself with a single string (todo #87)
 
 ### 4.4.1
 

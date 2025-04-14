@@ -415,16 +415,9 @@
                                         "Regular expressions should be anchored and identify the first mount point.",
                                         "",
                                         "Example:",
-                                        "   \"regexp\": [",
-                                                "^/(ne.*)$",
-                                                "^/(bo.*)$",
-                                        "   ]"
+                                        "   \"regexp\": \"^/(ne.*)$|^/(bo.*)$\""
                                     ],
-                                    "type": [
-                                        "array",
-                                        "string"
-                                    ],
-                                    "items": "string"
+                                    "type": "string"
                                 }
                             }
                         }

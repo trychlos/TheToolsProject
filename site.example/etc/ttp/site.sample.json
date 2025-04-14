@@ -236,8 +236,7 @@
 				"short": false
 			},
 			"logicals": {
-				"regexp": [
-				]
+				"regexp": ""
 			}
 		},
 

@@ -251,13 +251,12 @@ sub enum {
 
 	# start with available logical machines if implemented in this site
 	my $logicalRe = $ep->site()->var([ 'nodes', 'logicals', 'regexp' ]);
-	my $ref = ref( $logicalRe );
-	$ENV{TTP_DEBUG} && print STDERR __PACKAGE__."::enum() logicalRe='".( $logicalRe || '' )."' ref='".( $ref ? $ref : '(undef)' )."'".EOL;
+	$ENV{TTP_DEBUG} && print STDERR __PACKAGE__."::enum() logicalRe='".( $logicalRe || '' )."'".EOL;
 	if( $logicalRe ){
 		my $mounteds = TTP::Ports::rootMountPoints();
 		$ENV{TTP_DEBUG} && print STDERR __PACKAGE__."::enum() mounteds ".Dumper( $mounteds );
 		foreach my $mount( @${mounteds} ){
-			my $candidate = $class->_enumTestForRe( $mount, $logicalRe, $ref );
+			my $candidate = $class->_enumTestForRe( $mount, $logicalRe );
 			if( $candidate ){
 				$ENV{TTP_DEBUG} && print STDERR __PACKAGE__."::enum() candidate '".$candidate."'".EOL;
 				my $node = TTP::Node->new( $ep, { node => $candidate, abortOnError => false });
@@ -283,29 +282,17 @@ sub enum {
 # (I):
 # - mount point
 # - the regexp or the list of regexps
-# - the ref of the logicalRe variable
 # (O):
 # - either the candidate name if a match is found, or a falsy value
 
 sub _enumTestForRe {
-	my ( $class, $mount, $res, $ref ) = @_;
+	my ( $class, $mount, $res ) = @_;
 	$class = ref( $class ) || $class;
-	$ENV{TTP_DEBUG} && print STDERR __PACKAGE__."::_enumTestForRe() mount='".$mount."' res='".( $res || '' )."' ref='".( $ref ? $ref : '(undef)' )."'".EOL;
+	$ENV{TTP_DEBUG} && print STDERR __PACKAGE__."::_enumTestForRe() mount='".$mount."' res='".( $res || '' )."'".EOL;
 
 	my $candidate = undef;
-
-	if( $ref eq 'ARRAY' ){
-		foreach my $re ( @{$res} ){
-			$candidate = $class->_enumTestSingle( $mount, $re );
-			if( $candidate ){
-				return $candidate;
-			}
-		}
-	} else {
-		return $class->_enumTestSingle( $mount, $res );
-	}
-
-	return undef;
+	$candidate = $class->_enumTestSingle( $mount, $res );
+	return $candidate;
 }
 
 # ------------------------------------------------------------------------------------------------
