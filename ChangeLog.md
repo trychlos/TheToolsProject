@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.4.0-rc.0
+### 4.4.0
 
-    Release date: 
+    Release date: 2025- 4-14
 
     - TTP, TTP::EP: remove no more used debug variables
     - TTP::stackTrace() now ends the running program with exit code 1
@@ -148,4 +148,4 @@
 
 ---
 P. Wieser
-- Last updated on 2025, Apr. 12th
+- Last updated on 2025, Apr. 14th
