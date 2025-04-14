@@ -7,11 +7,24 @@
 	"httpingInterval": 300000,
 	"textingInterval": -1,
 	"monitoredDir": "[eval:TTP::alertsFileDropdir()]",
-	"scanInterval" : 10000,
-	"do": [
+	"monitoredFiles": "^alert-",
+	"scanInterval" : 1000,
+	"actions": [
 		{
-			"command": "/some/bin -level <LEVEL> -emitter <EMITTER> -title <TITLE> -message <MESSAGE> -stamp <STAMP>",
-			"levelRe": "NOTICE|INFO"
+			"command": "cat <FILEPATH> 1>&2",
+			"levelRe": "I*"
+		},
+		{
+			"command": "echo title=\"<TITLE>\" message=\"<MESSAGE>\" 1>&2",
+			"emitterRe": "box43-*"
+		},
+		{
+			"command": {
+				"byOS": {
+					"linux": "echo stamp='<STAMP>' level='<LEVEL>' 1>&2"
+				}
+			},
+			"titleRe": "NOTMATCH"
 		}
 	]
 }

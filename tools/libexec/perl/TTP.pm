@@ -97,7 +97,7 @@ sub alertsFileDropdir {
 # - the list of keys before the 'command' as an array ref
 # - an optional options hash ref with following keys:
 #   > withCommand: whether to have a top 'command' property before 'byOS', defaulting to true
-#   > json: the JSON data to be searched for for the provided keys, defaulting to node/site data
+#   > jsonable: a IJSONable to be searched for for the provided keys, defaulting to node/site data
 # (O):
 # - the found command as a string, or undef
 
@@ -109,12 +109,12 @@ sub commandByOs {
 	my $withCommand = $opts->{withCommand};
 	$withCommand = true if !defined $withCommand;
 	push( @locals, 'command' ) if $withCommand;
-	my $obj = $opts->{json} || $ep->var( \@locals );
+	my $obj = $ep->var( \@locals, $opts );
 	if( defined( $obj )){
 		my $ref = ref( $obj );
 		if( $ref eq 'HASH' ){
 			push( @locals, 'byOS', $Config{osname} );
-			my $obj = $opts->{json} ||$ep->var( \@locals );
+			my $obj = $ep->var( \@locals, $opts );
 			if( defined( $obj )){
 				$ref = ref( $obj );
 				if( !$ref ){
@@ -186,7 +186,7 @@ sub commandExec {
 			my $res = $?;
 			$result->{exit} = $res;
 			$result->{success} = ( $res == 0 ) ? true : false;
-			msgVerbose( join( EOL, @out ));
+			msgVerbose( scalar( @out ) ? join( EOL, @out ) : '<empty stdout>' );
 			msgVerbose( "TTP::commandExec() return_code=$res firstly interpreted as success=".( $result->{success} ? 'true' : 'false' ));
 			if( $args->{command} =~ /robocopy/i ){
 				$res = ( $res >> 8 );
@@ -458,6 +458,7 @@ sub _executionReportToMqtt {
 
 sub exit {
 	my $rc = shift || $ep->runner()->runnableErrs();
+	print STDERR __PACKAGE__."::exit() rc=$rc".EOL if $ENV{TTP_DEBUG};
 	if( $rc ){
 		msgErr( "exiting with code $rc" );
 	} else {

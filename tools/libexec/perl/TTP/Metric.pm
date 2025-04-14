@@ -128,7 +128,7 @@ sub labels {
 		my $errs = 0;
 		foreach my $it ( @{$arg} ){
 			my @words = split( /=/, $it );
-			if( $words[0] =~ m/$Const->{labelNameRE}/ && $words[1] =~ m/$Const->{labelValueRE}/ ){
+			if( scalar( @words ) == 2 && $words[0] =~ m/$Const->{labelNameRE}/ && $words[1] =~ m/$Const->{labelValueRE}/ ){
 				push( @{$labels}, "$words[0]=$words[1]" );
 			} else {
 				$errs += 1;

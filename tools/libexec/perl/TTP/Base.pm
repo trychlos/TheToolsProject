@@ -70,7 +70,7 @@ sub ep {
 # -------------------------------------------------------------------------------------------------
 # Constructor
 # (I):
-# - ttp: the current TheToolsProject EntryPoint ref
+# - the current TheToolsProject EntryPoint ref
 # (O):
 # - this object
 

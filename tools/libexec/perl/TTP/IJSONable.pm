@@ -317,7 +317,8 @@ my $varDebug = false;
 
 sub var {
 	my ( $self, $keys, $base ) = @_;
-	print STDERR __PACKAGE__."::var() self=".ref( $self )." keys=".Dumper( $keys )." searching in ".Dumper( $base ) if $ENV{TTP_DEBUG};
+	#print STDERR __PACKAGE__."::var() self=".ref( $self )." keys=".Dumper( $keys )." searching in ".Dumper( $base ) if $ENV{TTP_DEBUG};
+	print STDERR __PACKAGE__."::var() self=".ref( $self )." keys=".Dumper( $keys ) if $ENV{TTP_DEBUG};
 	my $jsonData = undef;
 	my $value = undef;
 	if( $base ){
