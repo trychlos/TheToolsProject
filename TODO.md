@@ -30,7 +30,6 @@
 |   82 | 2024- 4-13 | TTP::Daemon should check that listeningInterval is OK |
 |   83 | 2024- 4-13 | TTP::Daemon mqtt_timeout() and messagingTimeout() are same function |
 |   86 | 2024- 4-13 | TTP::commandExec should have ( $command, { macros => {}} ) definition |
-|   87 | 2024- 4-13 | logicals regular expression should be a single string as this is simpler and can still embed several re's |
 |   89 |  |  |
 
 ---
@@ -220,6 +219,8 @@
 |   85 | 2024- 4-13 | [services.pl live] (ERR) do /mnt/ws12dev1/INLINGUA/dev/scripts/TheToolsProject/tools/services/live.do.pl: |
 |      |            | ... Can't call method "runner" on an undefined value at /mnt/ws12dev1/INLINGUA/dev/scripts/TheToolsProject/tools/services/live.do.pl line 129. |
 |      | 2024- 4-13 | fixed |
+|   87 | 2024- 4-13 | logicals regular expression should be a single string as this is simpler and can still embed several re's |
+|      | 2024- 4-14 | done |
 |   88 | 2024- 4-14 | review classes hierarchy which should be something like Base -> Command -> Extern -> Daemon |
 |      | 2024- 4-14 | done |
 
