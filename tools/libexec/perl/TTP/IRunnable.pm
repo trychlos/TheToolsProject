@@ -28,12 +28,12 @@ use strict;
 use utf8;
 use warnings;
 
-use Carp;
 use Data::Dumper;
 use File::Spec;
 use Time::Moment;
 use vars::global qw( $ep );
 
+use TTP;
 use TTP::Constants qw( :all );
 use TTP::Message qw( :all );
 
@@ -56,17 +56,6 @@ sub command {
 
 	return $self->runnableBNameFull();
 }
-
-# -------------------------------------------------------------------------------------------------
-# A placeholder run() method which does nothing but may be called even if the implementation doesn't
-# need it - Let IRunnable auto-initialize
-# (I):
-# - none
-# (O):
-# - nothing
-
-sub run {
-};
 
 # -------------------------------------------------------------------------------------------------
 # Getter
@@ -141,7 +130,7 @@ sub runnableErrInc {
 # (I):
 # - none
 # (O):
-# -returns the full path of the runnable
+# - returns the full path of the runnable
 
 sub runnablePath {
 	my ( $self ) = @_;
@@ -150,14 +139,18 @@ sub runnablePath {
 };
 
 # -------------------------------------------------------------------------------------------------
-# Getter
+# Getter/Setter
 # (I):
-# - none
+# - may be a qualifier when acting as a setter
 # (O):
 # - returns the qualifier
 
 sub runnableQualifier {
-	my ( $self ) = @_;
+	my ( $self, $qualifier ) = @_;
+
+	if( $qualifier ){
+		$self->{_irunnable}{qualifier} = $qualifier;
+	}
 
 	return $self->{_irunnable}{qualifier};
 };
@@ -191,25 +184,12 @@ sub runnableStarted {
 };
 
 # -------------------------------------------------------------------------------------------------
-# Setter
-# (I):
-# - the qualifier, which is the verb for a command
-# (O):
-# -this same object
-
-sub runnableSetQualifier {
-	my ( $self, $qualifier ) = @_;
-
-	$self->{_irunnable}{qualifier} = $qualifier;
-
-	return $self;
-};
-
-# -------------------------------------------------------------------------------------------------
 # IRunnable initialization
 # Initialization of a command or of an external script
 # (I):
-# - the TTP EntryPoint ref
+# - this TTP::IRunnable (self)
+# - the TTP EntryPoint
+# - other args as provided to the constructor
 # (O):
 # -none
 
@@ -245,7 +225,10 @@ after _newBase => sub {
 	$file =~ s/\.[^\.]+$//;
 	$self->{_irunnable}{namewoext} = $file;
 
-	if( !$ep->runner()){
+	if( $ep->runner()){
+		msgErr( "unexpected runner alreay set when instanciating IRunnable self=".ref( $self ));
+		TTP::stackTrace();
+	} else {
 		msgLog( "[] executing $0 ".join( ' ', @ARGV ));
 		$ep->runner( $self );
 		$SIG{INT} = sub {
@@ -256,7 +239,10 @@ after _newBase => sub {
 };
 
 ### Global functions
-### These can be used as such from the verbs and extern scripts
+### Note for the developer: while a global function doesn't take any argument, it can be called both
+### as a class method 'TTP::Package->method()' or as a global function 'TTP::Package::method()',
+### the former being preferred (hence the writing inside of the 'Class methods' block which brings
+### the class as first argument).
 
 1;
 

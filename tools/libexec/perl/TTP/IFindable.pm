@@ -29,6 +29,7 @@ use Config;
 use Data::Dumper;
 use File::Spec;
 
+use TTP;
 use TTP::Constants qw( :all );
 use TTP::Message qw( :all );
 

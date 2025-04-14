@@ -16,14 +16,12 @@
 # along with TheToolsProject; see the file COPYING. If not,
 # see <http://www.gnu.org/licenses/>.
 #
-# The base class for all TTP classes.
-#
-# The TTP EntryPoint ref is available both:
-# - as a global variable created in TTP.pm and available everywhere via 'vars::global' package
-# - and stored as a reference in this base class, so available through $object->ep().
+# The base class of all executables either in TTP (like commands and verbs) or based on TTP (like daemons and extern, site-specific, programs).
+# All these executables share some common features provided by the roles below.
 
-package TTP::Base;
+package TTP::Runner;
 
+use base qw( TTP::Base );
 our $VERSION = '1.00';
 
 use strict;
@@ -31,38 +29,40 @@ use utf8;
 use warnings;
 
 use Carp;
+use Config;
 use Data::Dumper;
+use Getopt::Long;
+use Role::Tiny::With;
+use Try::Tiny;
+use vars::global qw( $ep );
 
+with 'TTP::IHelpable', 'TTP::IOptionable', 'TTP::IRunnable';
+
+use TTP;
 use TTP::Constants qw( :all );
+use TTP::Message qw( :all );
+
+my $Const = {
+	# the minimal count of arguments to trigger the help display
+	minArgsCount => 1
+};
 
 ### Private methods
-
-# -------------------------------------------------------------------------------------------------
-# A placeholder so that roles can come after or before this function which is called at instanciation time
-# EntryPoint is already set, so that the roles not only get the '$ep' in the arguments list, but can also
-# call $self->ep() 
-# (I):
-# - the TTP EntryPoint ref
-# (O):
-# - this same object
-
-sub _newBase {
-	my ( $self, $ep, $args ) = @_;
-	return $self;
-}
 
 ### Public methods
 
 # -------------------------------------------------------------------------------------------------
-# Getter
+# Returns the minimal count of arguments needed by the running executable
+# Below this minimal count, we automatically display the runner's help
 # (I):
-# - none 
+# - the TTP EP entry point
 # (O):
-# - the TheToolsProject EntryPoint ref recorded at instanciation time
+# - this object
 
-sub ep {
+sub minArgsCount {
 	my ( $self ) = @_;
-	return $self->{_ep};
+
+	return $Const->{minArgsCount};
 }
 
 ### Class methods
@@ -70,29 +70,15 @@ sub ep {
 # -------------------------------------------------------------------------------------------------
 # Constructor
 # (I):
-# - the current TheToolsProject EntryPoint ref
-# - other arguments to be passed to the derived class
+# - the TTP EP entry point
 # (O):
 # - this object
 
 sub new {
-	my ( $class, $ep, $args ) = @_;
+	my ( $class, $ep ) = @_;
 	$class = ref( $class ) || $class;
-	$args //= {};
-	my $self = {};
+	my $self = $class->SUPER::new( $ep );
 	bless $self, $class;
-
-	# keep the TTP EP ref
-	if( defined( $ep ) && ref( $ep ) eq 'TTP::EP' ){
-		$self->{_ep} = $ep;
-	} else {
-		print STDERR "(ERR) ".__PACKAGE__."::new() 'ep' EntryPoint is not defined but is mandatory".EOL;
-		TTP::stackTrace();
-		print "after stackTrace".EOL;
-	}
-
-	# let the roles insert their own code at that time
-	$self->_newBase( $ep, $args );
 
 	return $self;
 }
@@ -105,6 +91,7 @@ sub new {
 
 sub DESTROY {
 	my $self = shift;
+	$self->SUPER::DESTROY();
 	return;
 }
 

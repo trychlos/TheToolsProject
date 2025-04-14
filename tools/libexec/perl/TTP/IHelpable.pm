@@ -27,7 +27,9 @@ use warnings;
 
 use Data::Dumper;
 use Path::Tiny qw( path );
+use vars::global qw( $ep );
 
+use TTP;
 use TTP::Constants qw( :all );
 use TTP::Message qw( :all );
 
@@ -182,17 +184,25 @@ sub helpUsage {
 }
 
 # -------------------------------------------------------------------------------------------------
-# Helpable initialization
+# IHelpable initialization
 # (I):
-# - none
+# - this TTP::IHelpable (self)
+# - the TTP EntryPoint
+# - other args as provided to the constructor
 # (O):
 # -none
 
 after _newBase => sub {
-	my ( $self ) = @_;
+	my ( $self, $ep, $args ) = @_;
 
 	$self->{_ihelpable} //= {};
 };
+
+### Global functions
+### Note for the developer: while a global function doesn't take any argument, it can be called both
+### as a class method 'TTP::Package->method()' or as a global function 'TTP::Package::method()',
+### the former being preferred (hence the writing inside of the 'Class methods' block which brings
+### the class as first argument).
 
 1;
 

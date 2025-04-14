@@ -95,22 +95,6 @@ sub node {
 }
 
 # -------------------------------------------------------------------------------------------------
-# Run the current command+verb
-# (I):
-# - none
-# (O):
-# - returns this same object
-
-sub runCommand {
-	my ( $self ) = @_;
-
-	my $command = TTP::Command->new( $self );
-	$command->run();
-
-	return $self;
-}
-
-# -------------------------------------------------------------------------------------------------
 # Getter/Setter
 # (I):
 # - optional object to be set as the current IRunnable
@@ -183,6 +167,7 @@ sub new {
 	$class = ref( $class ) || $class;
 	my $self = {};
 	bless $self, $class;
+
 	return $self;
 }
 
@@ -201,7 +186,8 @@ sub DESTROY {
 ### Global functions
 ### Note for the developer: while a global function doesn't take any argument, it can be called both
 ### as a class method 'TTP::Package->method()' or as a global function 'TTP::Package::method()',
-### the former being preferred (hence the writing inside of the 'Class methods' block).
+### the former being preferred (hence the writing inside of the 'Class methods' block which brings
+### the class as first argument).
 
 1;
 
