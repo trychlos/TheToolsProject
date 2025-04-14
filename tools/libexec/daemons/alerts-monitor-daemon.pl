@@ -48,12 +48,12 @@ use JSON;
 
 use TTP;
 use TTP::Constants qw( :all );
-use TTP::Daemon;
 use TTP::JSONable;
 use TTP::Message qw( :all );
+use TTP::RunnerDaemon;
 use vars::global qw( $ep );
 
-my $daemon = TTP::Daemon->init();
+my $daemon = TTP::runDaemon();
 
 use constant {
 	MIN_SCAN_INTERVAL => 1000,
@@ -344,7 +344,7 @@ if( !GetOptions(
 }
 
 if( $daemon->help()){
-	$daemon->helpExtern( $defaults );
+	$daemon->displayHelp( $defaults );
 	TTP::exit();
 }
 

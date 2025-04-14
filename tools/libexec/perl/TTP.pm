@@ -42,6 +42,8 @@ use TTP::Message qw( :all );
 use TTP::Node;
 use TTP::Path;
 use TTP::RunnerCommand;
+use TTP::RunnerDaemon;
+use TTP::RunnerExtern;
 
 # autoflush STDOUT
 $| = 1;
@@ -863,6 +865,19 @@ sub run {
 	$ep = TTP::EP->new();
 	$ep->bootstrap();
 	my $command = TTP::RunnerCommand::runCommand( $ep );
+	return $command;
+}
+
+# -------------------------------------------------------------------------------------------------
+# Run by an external daemon to initialize a TTP context
+# Expects $0 be the full path name to the command script (this is the case in Windows+Strawberry)
+# and @ARGV the command-line arguments
+
+sub runDaemon {
+	print STDERR Dumper( @ARGV ) if $ENV{TTP_DEBUG};
+	$ep = TTP::EP->new();
+	$ep->bootstrap();
+	my $command = TTP::RunnerDaemon::runCommand( $ep );
 	return $command;
 }
 
