@@ -56,7 +56,7 @@ sub listCommands {
 	my $finder = TTP::RunnerCommand->finder();
 	my $findable = {
 		dirs => [ $finder->{dirs} ],
-		glob => '*'.$finder->{sufix}
+		glob => '*'.$finder->{suffix}
 	};
 	my $commands = $ep->runner()->find( $findable );
 	# get only unique commands
@@ -82,7 +82,7 @@ sub listNodes {
 	# list all nodes in all TTP_ROOTS trees
 	my $findable = {
 		dirs => [ TTP::Node->dirs() ],
-		glob => '*'.TTP::Node->finder()->{sufix}
+		glob => '*'.TTP::Node->finder()->{suffix}
 	};
 	my $nodes = $ep->runner()->find( $findable );
 	# get only unique available nodes

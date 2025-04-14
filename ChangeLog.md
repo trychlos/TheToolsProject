@@ -13,6 +13,7 @@
     - Deduplicate TTP::runnerDaemon::_mqtt_timeout() and TTP::runnerDaemon::messagingTimeout() (todo #83)
     - Bump minor candidate version number due to site.json change
     - RunnerDaemon better check listeningPort (todo #81) and listeningInterval (todo #82)
+    - sufix is renamed suffix (todo #80)
 
 ### 4.4.1
 

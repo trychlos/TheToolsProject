@@ -48,7 +48,7 @@ my $Const = {
 			'etc/nodes',
 			'etc/machines'
 		],
-		sufix => '.json'
+		suffix => '.json'
 	}
 };
 
@@ -373,7 +373,7 @@ sub new {
 	# allowed nodesDirs can be configured at site-level
 	my $dirs = $class->dirs();
 	my $findable = {
-		dirs => [ $dirs, $node.$class->finder()->{sufix} ],
+		dirs => [ $dirs, $node.$class->finder()->{suffix} ],
 		wantsAll => false
 	};
 	my $acceptable = {

@@ -21,7 +21,7 @@
 #
 # (I): 1. line to be written
 #      2. (opt.) line prefix (default to '[command.sh verb] ')
-#      3. (opt.) line sufix (defaults to '\n')
+#      3. (opt.) line suffix (defaults to '\n')
 #
 # (O): stdout: formated message
 #
