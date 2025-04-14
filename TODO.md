@@ -28,8 +28,6 @@
 |   80 | 2024- 4-13 | sufix should be renamed suffix |
 |   81 | 2024- 4-13 | TTP::Daemon should check that listeningPort is OK |
 |   82 | 2024- 4-13 | TTP::Daemon should check that listeningInterval is OK |
-|   83 | 2024- 4-13 | TTP::Daemon mqtt_timeout() and messagingTimeout() are same function |
-|   86 | 2024- 4-13 | TTP::commandExec should have ( $command, { macros => {}} ) definition |
 |   89 |  |  |
 
 ---
@@ -213,12 +211,16 @@
 |      | 2024- 4-11 | deduplicated to TTP::Path |
 |   77 | 2024- 4-10 | add a comment on how to get site variables |
 |      | 2024- 4-12 | done |
+|   83 | 2024- 4-13 | TTP::Daemon mqtt_timeout() and messagingTimeout() are same function |
+|      | 2024- 4-14 | fixed |
 |   84 | 2024- 4-13 | [ttp.pl sizedir] (ERR) do C:\INLINGUA\TheToolsProject\tools\ttp\sizedir.do.pl: |
 |      |            |  ... syntax error at C:\INLINGUA\TheToolsProject\tools\ttp\sizedir.do.pl line 197, near "TTP::Path::( " |
 |      | 2024- 4-13 | fixed |
 |   85 | 2024- 4-13 | [services.pl live] (ERR) do /mnt/ws12dev1/INLINGUA/dev/scripts/TheToolsProject/tools/services/live.do.pl: |
 |      |            | ... Can't call method "runner" on an undefined value at /mnt/ws12dev1/INLINGUA/dev/scripts/TheToolsProject/tools/services/live.do.pl line 129. |
 |      | 2024- 4-13 | fixed |
+|   86 | 2024- 4-13 | TTP::commandExec should have ( $command, { macros => {}} ) definition |
+|      | 2024- 4-14 | done |
 |   87 | 2024- 4-13 | logicals regular expression should be a single string as this is simpler and can still embed several re's |
 |      | 2024- 4-14 | done |
 |   88 | 2024- 4-14 | review classes hierarchy which should be something like Base -> Command -> Extern -> Daemon |

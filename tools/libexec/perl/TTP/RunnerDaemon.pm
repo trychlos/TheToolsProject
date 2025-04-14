@@ -247,7 +247,7 @@ sub _initListener {
 		$self->{_mqtt} = TTP::MQTT::connect({
 			will => $self->_lastwill()
 		});
-		TTP::MQTT::keepalive( $self->{_mqtt}, $self->_mqtt_timeout());
+		TTP::MQTT::keepalive( $self->{_mqtt}, $self->messagingTimeout());
 	}
 
 	# Ctrl+C handling
@@ -519,22 +519,6 @@ sub _mqtt_publish {
 	} else {
 		msgLog( __PACKAGE__."::_mqtt_publish() not publishing as passed arguments are not valid" );
 	}
-}
-
-# ------------------------------------------------------------------------------------------------
-# returns the to-be-applied mqtt timeout
-
-sub _mqtt_timeout {
-	my ( $self ) = @_;
-
-	my $timeout = $self->jsonData()->{messagingTimeout};
-	$timeout = DEFAULT_MQTT_TIMEOUT if !defined $timeout;
-	if( $timeout && $timeout < MIN_MQTT_TIMEOUT ){
-		msgVerbose( "defined messagingTimeout=$timeout less than minimum accepted ".MIN_MQTT_TIMEOUT.", ignored" );
-		$timeout = DEFAULT_MQTT_TIMEOUT;
-	}
-
-	return $timeout;
 }
 
 # ------------------------------------------------------------------------------------------------
