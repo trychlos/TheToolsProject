@@ -148,8 +148,7 @@ sub _moveDir {
 		msgWarn( "$source: directory doesn't exist" );
 		return true;
 	}
-	my $cmdres = TTP::commandExec({
-		command => $ep->var([ 'moveDir', 'byOS', $Config{osname}, 'command' ]),
+	my $cmdres = TTP::commandExec( $ep->var([ 'moveDir', 'byOS', $Config{osname}, 'command' ]), {
 		macros => {
 			SOURCE => $source,
 			TARGET => $target

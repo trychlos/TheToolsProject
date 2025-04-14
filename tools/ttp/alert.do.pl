@@ -291,8 +291,7 @@ $mailfrom
 
 sub execute {
 	my ( $command, $macros, $msgok, $msgerr ) = @_;
-	my $result = TTP::commandExec({
-		command => $command,
+	my $result = TTP::commandExec( $command, {
 		macros => $macros
 	});
 	if( $result->{success} ){
