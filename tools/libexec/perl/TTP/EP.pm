@@ -17,7 +17,12 @@
 # see <http://www.gnu.org/licenses/>.
 #
 # The TTP global Entry Point, notably usable in configuration files to get up-to-date data
-# The global '$ep' let the caller access TTP mmodules, functions and variables.
+# The global '$ep' let the caller access TTP modules, functions and variables.
+# Through its defined methods, '$ep' let the caller access:
+# - the current execution node with $ep->node()
+# - the site instance with $ep->site()
+# - the current runner with $ep->runner()
+# - any var defined in the underlying JSON configurations with $ep->var().
 
 package TTP::EP;
 
@@ -50,9 +55,6 @@ use TTP::Site;
 # (O):
 # - returns this same object
 
-my $bootstrapDebugInstanciation = false;
-my $bootstrapDebugEvaluation = false;
-
 sub bootstrap {
 	my ( $self, $args ) = @_;
 
@@ -60,17 +62,17 @@ sub bootstrap {
 	# when first evaluating the site json, disable warnings so that we do not get flooded with
 	# 'use of uninitialized value' message when evaluating the json (because there is no host yet)
 	my $site = TTP::Site->new( $self );
-	print STDERR __PACKAGE__."::bootstrap() site instanciated".EOL if $bootstrapDebugInstanciation || $ENV{TTP_DEBUG};
+	print STDERR __PACKAGE__."::bootstrap() site instanciated".EOL if $ENV{TTP_DEBUG};
 	$self->{_site} = $site;
 	$site->evaluate({ warnOnUninitialized => false });
-	print STDERR __PACKAGE__."::bootstrap() site set and evaluated".EOL if $bootstrapDebugEvaluation || $ENV{TTP_DEBUG};
+	print STDERR __PACKAGE__."::bootstrap() site set and evaluated".EOL if $ENV{TTP_DEBUG};
 
 	# identify current host and load its configuration
 	my $node = TTP::Node->new( $self );
-	print STDERR __PACKAGE__."::bootstrap() node instanciated".EOL if $bootstrapDebugInstanciation || $ENV{TTP_DEBUG};
+	print STDERR __PACKAGE__."::bootstrap() node instanciated".EOL if $ENV{TTP_DEBUG};
 	$self->{_node} = $node;
 	$node->evaluate();
-	print STDERR __PACKAGE__."::bootstrap() node set and evaluated".EOL if $bootstrapDebugEvaluation || $ENV{TTP_DEBUG};
+	print STDERR __PACKAGE__."::bootstrap() node set and evaluated".EOL if $ENV{TTP_DEBUG};
 
 	# reevaluate the site when the node is set
 	$site->evaluate();
@@ -85,7 +87,7 @@ sub bootstrap {
 # (I):
 # - none
 # (O):
-# - returns the execution node context
+# - returns the execution node instance
 
 sub node {
 	my ( $self ) = @_;
@@ -136,7 +138,7 @@ sub runner {
 # (I):
 # - none
 # (O):
-# - returns the site context, always defined
+# - returns the site instance, always defined
 
 sub site {
 	my ( $self ) = @_;
@@ -153,8 +155,6 @@ sub site {
 #     defaulting to current execution node, itself defaulting to site
 # (O):
 # - the evaluated value of this variable, which may be undef
-
-my $varDebug = false;
 
 sub var {
 	my ( $self, $keys, $opts ) = @_;

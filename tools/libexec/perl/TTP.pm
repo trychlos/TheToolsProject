@@ -858,7 +858,7 @@ sub random {
 # and @ARGV the command-line arguments
 
 sub run {
-	$ENV{TTP_DEBUG} && print STDERR Dumper( @ARGV );
+	print STDERR Dumper( @ARGV ) if $ENV{TTP_DEBUG};
 	$ep = TTP::EP->new();
 	$ep->bootstrap();
 	$ep->runCommand();
