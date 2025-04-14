@@ -2,6 +2,13 @@
 
 ## ChangeLog
 
+### 4.4.1
+
+    Release date: 2025- 4-14
+
+    - TTP::EP: remove useless TTP::Command
+    - TTP::RunnerDaemon: fix $ep usage
+
 ### 4.4.0
 
     Release date: 2025- 4-14
