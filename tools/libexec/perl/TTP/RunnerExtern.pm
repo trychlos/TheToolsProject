@@ -52,7 +52,7 @@ my $Const = {
 # (I):
 # - a hash which contains default values
 
-sub help {
+sub displayHelp {
 	my ( $self, $defaults ) = @_;
 
 	# pre-usage
