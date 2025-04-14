@@ -317,7 +317,15 @@
                     "default": [
                         "etc/daemons",
                         "daemons"
-                                ]
+                    ]
+                },
+                "daemonsExecDirs": {
+                    "description": "The list of subdirectories of TTP_ROOTS trees where we search for daemons executables.",
+                    "type": "array",
+                    "items": "string",
+                    "default": [
+                        "libexec/daemons"
+                    ]
                 },
                 "deployments": {
                     "description_array": [
