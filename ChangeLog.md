@@ -16,6 +16,7 @@
     - sufix is renamed suffix (todo #80)
     - TTP::commandByOs() now accepts 'withCommands' option
     - Define daemonsConfDirs site property (todo #89)
+    - Define daemonsConfDirs site property and corresponding TTP::RunnerDaemon::execDirs() method (todo #90)
 
 ### 4.4.1
 

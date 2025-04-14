@@ -705,7 +705,7 @@ sub execPath {
 
 	if( !File::Spec->file_name_is_absolute( $path )){
 		my $finder = TTP::Finder->new( $ep );
-		$path = $finder->find({ dirs => [ $Const->{exeFinder}{dirs}, $path ], wantsAll => false });
+		$path = $finder->find({ dirs => [ TTP::RunnerDaemon::execDirs(), $path ], wantsAll => false });
 	}
 
 	return $path;
@@ -1221,6 +1221,33 @@ sub dirs {
 	my $dirs = $ep->var( 'daemonsConfDirs' ) || $class->finder()->{dirs};
 
 	return $dirs;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns the list of subdirectories of TTP_ROOTS in which we may find daemons executable files
+# (I):
+# - none
+# (O):
+# - returns the list of subdirectories which may contain the daemons executables as an array ref
+
+sub execDirs {
+	my ( $class ) = @_;
+	$class = ref( $class ) || $class;
+
+	my $dirs = $ep->var( 'daemonsExecDirs' ) || $class->execFinder()->{dirs};
+
+	return $dirs;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns the (hardcoded) specifications to find the daemons configuration files
+# (I):
+# - none
+# (O):
+# - returns the list of directories which may contain the daemons executables as an array ref
+
+sub execFinder {
+	return $Const->{exeFinder};
 }
 
 # ------------------------------------------------------------------------------------------------
