@@ -67,7 +67,7 @@ my $Const = {
 		dirs => [
 			'bin'
 		],
-		sufix => '.pl'
+		suffix => '.pl'
 	}
 };
 

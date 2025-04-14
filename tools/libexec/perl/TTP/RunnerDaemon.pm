@@ -105,7 +105,7 @@ my $Const = {
 			'etc/daemons',
 			'daemons'
 		],
-		sufix => '.json'
+		suffix => '.json'
 	},
 	# how to find executable
 	exeFinder => {

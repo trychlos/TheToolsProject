@@ -164,8 +164,8 @@ sub doGet {
 # publish the telemetry, either with a status value, or with the epoch
 
 sub _telemetry {
-	my ( $value, $header, $type, $sufix ) = @_;
-	$sufix //= '';
+	my ( $value, $header, $type, $suffix ) = @_;
+	$suffix //= '';
 	if( $opt_mqtt || $opt_http || $opt_text ){
 		my ( $proto, $path ) = split( /:\/\//, $opt_url );
 		my @labels = @opt_prepends;
@@ -184,7 +184,7 @@ sub _telemetry {
 		msgVerbose( "added labels [".join( ',', @labels )."]" );
 
 		TTP::Metric->new( $ep, {
-			name => "url_status$sufix",
+			name => "url_status$suffix",
 			value => $value,
 			type => $type,
 			help => 'The last time the url has been seen alive',

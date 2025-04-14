@@ -54,7 +54,7 @@ my $Const = {
 			'etc/services',
 			'services'
 		],
-		sufix => '.json'
+		suffix => '.json'
 	}
 };
 
@@ -275,7 +275,7 @@ sub new {
 
 		# allowed servicesDirs are configured at site-level
 		my $findable = {
-			dirs => [ $class->dirs(), $args->{service}.$class->finder()->{sufix} ],
+			dirs => [ $class->dirs(), $args->{service}.$class->finder()->{suffix} ],
 			wantsAll => false
 		};
 		my $acceptable = {

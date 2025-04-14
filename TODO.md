@@ -25,7 +25,6 @@
 |   76 | 2024- 4-10 | nodeRoot() should be siteRoot(), shouldn'it ? and so be removed from TTP |
 |   78 | 2024- 4-12 | some daemons should be moveable to libexec/daemons |
 |   79 | 2024- 4-12 | let a node override a site variable |
-|   80 | 2024- 4-13 | sufix should be renamed suffix |
 |   89 |  |  |
 
 ---
@@ -209,6 +208,8 @@
 |      | 2024- 4-11 | deduplicated to TTP::Path |
 |   77 | 2024- 4-10 | add a comment on how to get site variables |
 |      | 2024- 4-12 | done |
+|   80 | 2024- 4-13 | sufix should be renamed suffix |
+|      | 2024- 4-14 | done |
 |   81 | 2024- 4-13 | TTP::Daemon should check that listeningPort is OK |
 |      | 2024- 4-14 | done |
 |   82 | 2024- 4-13 | TTP::Daemon should check that listeningInterval is OK |

@@ -56,7 +56,7 @@ sub doListJSON {
 	my $count = 0;
 	my $findable = {
 		dirs => [ TTP::Daemon->dirs() ],
-		glob => '*'.TTP::Daemon->finder()->{sufix}
+		glob => '*'.TTP::Daemon->finder()->{suffix}
 	};
 	my $finder = TTP::Finder->new( $ep );
 	my $jsons = $finder->find( $findable );
