@@ -994,9 +994,12 @@ sub setConfig {
 			$checkConfig = $args->{checkConfig} if exists $args->{checkConfig};
 			if( $checkConfig ){
 				my $msgRef = $self->ep()->runner()->dummy() ? \&msgWarn : \&msgErr;
+				# must have a valid listening interval
+				my $value = $self->listeningInterval();
+				$msgRef->( "$args->{json}: daemon configuration doesn't define a valid 'listeningInterval' value, found '".( value ? $value : '(undef)' )."'" ) if !$value || $value < MIN_LISTEN_INTERVAL;
 				# must have a listening port
-				my $listeningPort = $self->listeningPort();
-				$msgRef->( "$args->{jsonPath}: daemon configuration must define a 'listeningPort' value, not found" ) if !$listeningPort || $listeningPort < 0;
+				$value = $self->listeningPort();
+				$msgRef->( "$args->{json}: daemon configuration doesn't define a valid 'listeningPort' value, found '".( value ? $value : '(undef)' )."'" ) if !$value || $value < 1;
 				# must have an exec path
 				my $execPath = $self->execPath();
 				$msgRef->( "$args->{jsonPath}: daemon configuration must define an 'execPath' value, not found" ) if !$execPath;
