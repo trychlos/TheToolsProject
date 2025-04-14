@@ -31,7 +31,6 @@ use warnings;
 
 use Config;
 
-use TTP::RunnerCommand;
 use TTP::Node;
 use TTP::Service;
 
@@ -68,7 +67,7 @@ sub listCommands {
 	}
 	# and display them in ascii order
 	foreach my $it ( sort keys %{$uniqs} ){
-		TTP::Command->helpableOneLine( $uniqs->{$it}, { prefix => ' ' });
+		$ep->runner()->helpableOneLine( $uniqs->{$it}, { prefix => ' ' });
 		$count += 1;
 	}
 	msgOut( "$count found command(s)" );

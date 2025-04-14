@@ -8,6 +8,7 @@
 
     - TTP::EP: remove useless TTP::Command
     - TTP::RunnerDaemon: fix $ep usage
+    - ttp.pl list no more uses TTP::RunnerCommand
 
 ### 4.4.0
 
