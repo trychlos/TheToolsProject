@@ -31,7 +31,7 @@ use warnings;
 
 use Config;
 
-use TTP::Command;
+use TTP::RunnerCommand;
 use TTP::Node;
 use TTP::Service;
 
@@ -54,7 +54,7 @@ sub listCommands {
 	msgOut( "displaying available commands..." );
 	my $count = 0;
 	# list all commands in all TTP_ROOTS trees
-	my $finder = TTP::Command->finder();
+	my $finder = TTP::RunnerCommand->finder();
 	my $findable = {
 		dirs => [ $finder->{dirs} ],
 		glob => '*'.$finder->{sufix}
@@ -68,7 +68,7 @@ sub listCommands {
 	}
 	# and display them in ascii order
 	foreach my $it ( sort keys %{$uniqs} ){
-		TTP::Command->helpOneline( $uniqs->{$it}, { prefix => ' ' });
+		TTP::Command->helpableOneLine( $uniqs->{$it}, { prefix => ' ' });
 		$count += 1;
 	}
 	msgOut( "$count found command(s)" );

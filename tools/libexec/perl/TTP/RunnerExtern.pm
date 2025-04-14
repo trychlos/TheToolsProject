@@ -18,9 +18,9 @@
 #
 # Commands which are extern to TheToolsProject.
 
-package TTP::Extern;
+package TTP::RunnerExtern;
 
-use base qw( TTP::Base );
+use base qw( TTP::Runner );
 our $VERSION = '1.00';
 
 use strict;
@@ -31,11 +31,8 @@ use Carp;
 use Config;
 use Data::Dumper;
 use Getopt::Long;
-use Role::Tiny::With;
 use Try::Tiny;
 use vars::global qw( $ep );
-
-with 'TTP::IHelpable', 'TTP::IOptionable', 'TTP::IRunnable';
 
 use TTP;
 use TTP::Constants qw( :all );
@@ -47,23 +44,40 @@ my $Const = {
 
 ### Private methods
 
-# -------------------------------------------------------------------------------------------------
-# command initialization
-# (I):
-# - none
-# (O):
-# - this object
-
-sub _init {
-	my ( $self ) = @_;
-
-	# bootstrap TTP
-	$ep->bootstrap();
-
-	return $self;
-}
-
 ### Public methods
+
+# -------------------------------------------------------------------------------------------------
+# Display an external command help
+# This is a one-shot help: all the help content is printed here
+# (I):
+# - a hash which contains default values
+
+sub help {
+	my ( $self, $defaults ) = @_;
+
+	# pre-usage
+	my @help = $self->helpablePre( $self->runnablePath(), { warnIfSeveral => false });
+	foreach my $it ( @help ){
+		print " $it".EOL;
+	}
+
+	# usage
+	@help = $self->helpableUsage( $self->runnablePath(), { warnIfSeveral => false });
+	if( scalar @help ){
+		print "   Usage: ".$self->runnableBNameFull()." [options]".EOL;
+		print "   where available options are:".EOL;
+		foreach my $it ( @help ){
+			$it =~ s/\$\{?(\w+)}?/$defaults->{$1}/e;
+			print "     $it".EOL;
+		}
+	}
+
+	# post-usage
+	@help = $self->helpablePost( $self->runnablePath(), { warnIfNone => false, warnIfSeveral => false });
+	foreach my $it ( @help ){
+		print " $it".EOL;
+	}
+}
 
 ### Class methods
 
@@ -71,20 +85,15 @@ sub _init {
 # Constructor
 # To be called at the very early run of an external program.
 # (I):
-# - none
+# - the TTP EntryPoint
 # (O):
 # - this object, or undef
 
 sub new {
-	my ( $class ) = @_;
+	my ( $class, $ep ) = @_;
 	$class = ref( $class ) || $class;
-	$ep = TTP::EP->new();
 	my $self = $class->SUPER::new( $ep );
 	bless $self, $class;
-
-	# command initialization
-	$self->_init();
-	$self->run();
 
 	return $self;
 }
@@ -105,6 +114,23 @@ sub DESTROY {
 ### Note for the developer: while a global function doesn't take any argument, it can be called both
 ### as a class method 'TTP::Package->method()' or as a global function 'TTP::Package::method()',
 ### the former being preferred (hence the writing inside of the 'Class methods' block).
+
+# -------------------------------------------------------------------------------------------------
+# instanciates and run the external command
+# (I):
+# - the TTP EntryPoint
+# (O):
+# - the newly instanciated RunnerExtern
+
+sub runCommand {
+	my ( $ep ) = @_;
+	print STDERR __PACKAGE__."::run() ep=".ref( $ep ).EOL if $ENV{TTP_DEBUG};
+
+	my $command = TTP::RunnerExtern->new( $ep );
+	$command->run();
+
+	return $command;
+}
 
 1;
 

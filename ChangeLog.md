@@ -10,6 +10,8 @@
     - TTP::stackTrace() now ends the running program with exit code 1
     - Introduce TTP::Runner base class for all executables
     - Rename TTP::Command class to TTP::RunnerCommand making it a derived class of TTP::Runner
+    - Rename TTP::Extern class to TTP::RunnerExtern making it a derived class of TTP::Runner
+      Extern commands must now run my $command = TTP::runExtern();
 
 ### 4.3.0
 
