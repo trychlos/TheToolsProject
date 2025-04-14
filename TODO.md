@@ -24,8 +24,12 @@
 |   61 | 2025- 4- 8 | ttp.pl writejson should should actually be ttp.pl filewrite as the json is provided as a string on input - so this is not dedicated to json |
 |   76 | 2024- 4-10 | nodeRoot() should be siteRoot(), shouldn'it ? and so be removed from TTP |
 |   78 | 2024- 4-12 | some daemons should be moveable to libexec/daemons |
+|      | 2024- 4-14 | alerts-monitor-daemon.pl is moved to libexec/daemons |
+|      | 2024- 4-14 | node-monitor-daemon.pl is moved to libexec/daemons |
 |   79 | 2024- 4-12 | let a node override a site variable |
-|   89 |  |  |
+|   89 | 2024- 4-14 | daemonsDirs should be renamed to daemonsConfigDir and configurable in site.json |
+|   90 | 2024- 4-14 | also have daemonsExecDir and configurable in site.json |
+|   91 |  |  |
 
 ---
 ## Done
