@@ -2,7 +2,7 @@
 
 ## ChangeLog
 
-### 4.3.0-rc.0
+### 4.3.0
 
     Release date: 
 
