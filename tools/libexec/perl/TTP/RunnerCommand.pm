@@ -140,6 +140,56 @@ sub _getVerbs {
 ### Public methods
 
 # -------------------------------------------------------------------------------------------------
+# Verb help
+# Display the full verb help
+# - the one-liner help of the command
+# - the full help of the verb as:
+#   > a pre-usage help
+#   > the usage of the verb
+#   > a post-usage help
+# (I):
+# - a hash which contains default values
+# (O):
+# - this object
+
+sub displayHelp {
+	my ( $self, $defaults ) = @_;
+
+	# display the command one-line help
+	$self->helpableOneLine( $self->runnablePath());
+
+	# verb pre-usage
+	my @displayHelp = $self->helpablePre( $self->{_verb}{path}, { warnIfSeveral => false });
+	my $verbInline = '';
+	if( scalar @displayHelp ){
+		$verbInline = shift @displayHelp;
+	}
+	print "  ".$self->verb().": $verbInline".EOL;
+	foreach my $line ( @displayHelp ){
+		print "    $line".EOL;
+	}
+
+	# verb usage
+	@displayHelp = $self->helpableUsage( $self->{_verb}{path}, { warnIfSeveral => false });
+	if( scalar @displayHelp ){
+		print "    Usage: ".$self->command()." ".$self->verb()." [options]".EOL;
+		print "    where available options are:".EOL;
+		foreach my $line ( @displayHelp ){
+			$line =~ s/\$\{?(\w+)}?/$defaults->{$1}/e;
+			print "      $line".EOL;
+		}
+	}
+
+	# verb post-usage
+	@displayHelp = $self->helpablePost( $self->{_verb}{path}, { warnIfNone => false, warnIfSeveral => false });
+	foreach my $line ( @displayHelp ){
+		print "    $line".EOL;
+	}
+
+	return $self;
+}
+
+# -------------------------------------------------------------------------------------------------
 # Returns the minimal count of arguments needed by the running executable
 # Below this minimal count, we automatically display the runner's help
 # (I):
@@ -218,56 +268,6 @@ sub verb {
 	my ( $self ) = @_;
 
 	return $self->runnableQualifier();
-}
-
-# -------------------------------------------------------------------------------------------------
-# Verb help
-# Display the full verb help
-# - the one-liner help of the command
-# - the full help of the verb as:
-#   > a pre-usage help
-#   > the usage of the verb
-#   > a post-usage help
-# (I):
-# - a hash which contains default values
-# (O):
-# - this object
-
-sub verbHelp {
-	my ( $self, $defaults ) = @_;
-
-	# display the command one-line help
-	$self->helpableOneLine( $self->runnablePath());
-
-	# verb pre-usage
-	my @verbHelp = $self->helpablePre( $self->{_verb}{path}, { warnIfSeveral => false });
-	my $verbInline = '';
-	if( scalar @verbHelp ){
-		$verbInline = shift @verbHelp;
-	}
-	print "  ".$self->verb().": $verbInline".EOL;
-	foreach my $line ( @verbHelp ){
-		print "    $line".EOL;
-	}
-
-	# verb usage
-	@verbHelp = $self->helpableUsage( $self->{_verb}{path}, { warnIfSeveral => false });
-	if( scalar @verbHelp ){
-		print "    Usage: ".$self->command()." ".$self->verb()." [options]".EOL;
-		print "    where available options are:".EOL;
-		foreach my $line ( @verbHelp ){
-			$line =~ s/\$\{?(\w+)}?/$defaults->{$1}/e;
-			print "      $line".EOL;
-		}
-	}
-
-	# verb post-usage
-	@verbHelp = $self->helpablePost( $self->{_verb}{path}, { warnIfNone => false, warnIfSeveral => false });
-	foreach my $line ( @verbHelp ){
-		print "    $line".EOL;
-	}
-
-	return $self;
 }
 
 ### Class methods
