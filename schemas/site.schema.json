@@ -310,6 +310,15 @@
                         "private"
                     ]
                 },
+                "daemonsConfDirs": {
+                    "description": "The list of subdirectories of TTP_ROOTS trees where we search for daemons JSON configurations.",
+                    "type": "array",
+                    "items": "string",
+                    "default": [
+                        "etc/daemons",
+                        "daemons"
+                                ]
+                },
                 "deployments": {
                     "description_array": [
                         "When deploying from a development TTP layer to a pull reference, and from this pull reference to other machines of the parc.",
