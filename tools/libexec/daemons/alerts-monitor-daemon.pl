@@ -184,8 +184,7 @@ sub doWithNew {
 					msgVerbose( "no 'messageRe' regular expression");
 				}
 				if( $levelMatch && $emitterMatch && $titleMatch && $messageMatch ){
-					my $res = TTP::commandExec({
-						command => $command,
+					my $res = TTP::commandExec( $command, {
 						macros => {
 							LEVEL => $data->{level},
 							EMITTER => $data->{emitter},

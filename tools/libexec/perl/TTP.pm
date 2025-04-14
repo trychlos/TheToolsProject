@@ -140,11 +140,11 @@ sub commandByOs {
 # The provided command is not modified at all. If it should support say --verbose or --[no]colored,
 # then these options should be specified by the caller.
 # (I):
-# argument is a hash with following keys:
-# - command: the command to be evaluated and executed
-# - macros: a hash of the macros to be replaced where:
-#   > key is the macro name, must be labeled in the toops.json as '<macro>' (i.e. between angle brackets)
-#   > value is the replacement value
+# - the command to be evaluated and executed
+# - an optional options hash with following keys:
+#   > macros: a hash of the macros to be replaced where:
+#     - key is the macro name, must be labeled in the toops.json as '<macro>' (i.e. between angle brackets)
+#     - value is the replacement value
 # (O):
 # return a hash with following keys:
 # - evaluated: the evaluated command after macros replacements
@@ -153,25 +153,24 @@ sub commandByOs {
 # - success: true|false
 
 sub commandExec {
-	my ( $args ) = @_;
+	my ( $command, $opts ) = @_;
+	$opts //= {};
 	my $result = {
 		stdout => [],
 		exit => -1,
 		success => false
 	};
-	if( !$args->{command} ){
+	if( !$command ){
 		msgErr( "TTP::commandExec() undefined command" );
 		stackTrace();
 	} else {
-		msgVerbose( "TTP::commandExec() got command='".( $args->{command} )."'" );
-		$result->{evaluated} = $args->{command};
-		foreach my $key ( sort keys %{$args->{macros}} ){
-			$result->{evaluated} =~ s/<$key>/$args->{macros}{$key}/;
-			#print "key='$key' value='$args->{macros}{$key}'".EOL;
+		msgVerbose( "TTP::commandExec() got command='".( $command )."'" );
+		$result->{evaluated} = $command;
+		if( $opts->{macros} ){
+			foreach my $key ( sort keys %{$opts->{macros}} ){
+				$result->{evaluated} =~ s/<$key>/$opts->{macros}{$key}/;
+			}
 		}
-		# protect double quotes against shell/cmd interpretation - NOT HERE
-		# configured strings should be single-quoted
-		#$result->{evaluated} =~ s/"/\\"/g;
 		msgVerbose( "TTP::commandExec() evaluated to '$result->{evaluated}'" );
 		if( $ep->runner()->dummy()){
 			msgDummy( $result->{evaluated} );
@@ -187,7 +186,7 @@ sub commandExec {
 			$result->{success} = ( $res == 0 ) ? true : false;
 			msgVerbose( scalar( @out ) ? join( '', @out ) : '<empty stdout>' );
 			msgVerbose( "TTP::commandExec() return_code=$res firstly interpreted as success=".( $result->{success} ? 'true' : 'false' ));
-			if( $args->{command} =~ /robocopy/i ){
+			if( $command =~ /robocopy/i ){
 				$res = ( $res >> 8 );
 				$result->{success} = ( $res <= 7 ) ? true : false;
 				msgVerbose( "TTP::commandExec() robocopy specific interpretation res=$res success=".( $result->{success} ? 'true' : 'false' ));
