@@ -3,11 +3,7 @@
     "$id": "org.trychlos.TheToolsProject/schemas/alerts-monitor-daemon.schema.json",
     "title": "Alerts Monitor Daemon",
     "description_array": [
-		"Monitor the json alert files dropped in the alerts directory.",
-        "",
-        "Rationale:",
-        " You, as a site administrator, can choose to prefer alerts by file. In this mode, each alert is materialized by the JSON data of the alert being written in a dedicated file, somewhere in a dedicated directory.",
-        " This daemon is right here to monitor these alert files, and do something with them.",
+		"Monitor for new alert files.",
         "",
         "Daemons provided by TheToolsProject all share some common characteristics:",
         "- the daemon is started, stopped and more generally fully managed through 'daemon.pl' verbs.",
@@ -20,7 +16,13 @@
         "  > listeningInterval: this is the period between listening for external commands as sent by 'daemon.pl command',",
         "  > messagingInterval: this is the period between between advertising the daemon's status to the MQTT bus,",
         "  > httpingInterval: this is the period between publishing to the HTTP-based telemetry system,",
-        "  > textingInterval: this is the period between publishing to the text-based telemetry system."
+        "  > textingInterval: this is the period between publishing to the text-based telemetry system.",
+        "",
+        "This daemon defines additional following properties:",
+        "- monitoredDir: the directory to be monitored,",
+        "- monitoredFiles: a regular expression to match searched for filenames,",
+        "- scanInterval: the scanning period,",
+        "- actions: what to do with the found files."
     ],
     "type": "object",
     "properties": {
@@ -63,24 +65,32 @@
             "type": "string"
         },
         "monitoredDir": {
-            "description": "The path of the directory to be monitored for new alerts files.",
+            "description": "The path of the directory to be monitored for new alert files.",
             "type": "string",
             "default": "[eval:TTP::alertsFileDropdir()]"
+        },
+        "monitoredFiles": {
+            "description": "A regular expression which is expected to match the filenames, defaulting to all.",
+            "type": "string",
+            "default": "^.*$"
         },
         "scanInterval": {
             "description": "The interval between each monitored directory scan.",
             "type": "integer",
             "default": 10000
         },
-        "do": {
-            "description": "The actions to be done when a new alert is found.",
+        "actions": {
+            "description": "The actions to be done when a new file is found.",
             "type": "array",
             "items": "object",
             "properties": {
                 "command": {
                     "description_array": [
                         "The command to be executed when a new alert has been identified, either as a single string or as a 'byOS' object.",
-                        "The provided command can take advantage of <EMITTER>, <LEVEL>, <TITLE>, <MESSAGE>, <STAMP> and <JSON> macros, the <JSON> macro being resolved with a stringified version of the alert JSON data."
+                        "The provided command can take advantage of following macros:",
+                        "- the individual alert items: <EMITTER>, <LEVEL>, <TITLE>, <MESSAGE>, <STAMP>,",
+                        "- a stringified version of the alert data: <JSON>,",
+                        "- the full filename: <FILEPATH>."
                     ],
                     "type": [
                         "object",

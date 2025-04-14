@@ -100,12 +100,26 @@ my $Const = {
 		terminate => \&_do_terminate
 	},
 	# how to find the daemons configuration files
-	finder => {
+	jsonFinder => {
 		dirs => [
 			'etc/daemons',
 			'daemons'
 		],
 		sufix => '.json'
+	},
+	# how to find executable
+	exeFinder => {
+		dirs => [
+			'libexec/daemons'
+		]
+	},
+	# the metrics sub by OS
+	metrics => {
+		MSWin32 => [
+			\&_metrics_mswin32_memory,
+			\&_metrics_mswin32_page_faults,
+			\&_metrics_mswin32_page_file_usage
+		]
 	}
 };
 
@@ -179,6 +193,20 @@ sub _do_terminate {
 ### Private methods
 
 # ------------------------------------------------------------------------------------------------
+# the daemon advertise of its status every 'httpingInterval' seconds (defaults to 60)
+# the metric advertises the last time we have seen the daemon alive
+# (I):
+# - none
+
+sub _http_advertise {
+	my ( $self ) = @_;
+	$self->_metrics({ http => true });
+	if( $self->{_telemetry_sub} ){
+		$self->{_telemetry_sub}->( $self );
+	}
+}
+
+# ------------------------------------------------------------------------------------------------
 # initialize the TTP daemon
 # when entering here, the JSON config has been successfully read, evaluated and checked
 # (I):
@@ -186,7 +214,7 @@ sub _do_terminate {
 # (O):
 # - returns this same object
 
-sub _daemonize {
+sub _initListener {
 	my ( $self, $args ) = @_;
 
 	my $listeningPort = $self->listeningPort();
@@ -213,8 +241,8 @@ sub _daemonize {
 		) or msgErr( "unable to create a listening socket: $!" );
 	}
 
-	# connect to MQTT communication bus if the host is configured for
-	if( !TTP::errs() && $messagingInterval > 0 ){
+	# connect to MQTT communication bus if the host is configured for and messaging is enabled
+	if( !TTP::errs() && $self->messagingEnabled()){
 		$self->{_mqtt} = TTP::MQTT::connect({
 			will => $self->_lastwill()
 		});
@@ -236,20 +264,6 @@ sub _daemonize {
 	}
 
 	return $self;
-}
-
-# ------------------------------------------------------------------------------------------------
-# the daemon advertise of its status every 'httpingInterval' seconds (defaults to 60)
-# the metric advertises the last time we have seen the daemon alive
-# (I):
-# - none
-
-sub _http_advertise {
-	my ( $self ) = @_;
-	$self->_metrics({ http => true });
-	if( $self->{_telemetry_sub} ){
-		$self->{_telemetry_sub}->( $self );
-	}
 }
 
 # ------------------------------------------------------------------------------------------------
@@ -287,68 +301,107 @@ sub _metrics {
 		msgVerbose( __PACKAGE__."::_metrics() got rc->{$it}='$rc->{$it}'" );
 	}
 
-	# used memory
-	$rc = TTP::Metric->new( $ep, {
-		name => 'ttp_daemon_memory_KB',
-		value => sprintf( "%.1f", $self->_metrics_memory()),
-		type => 'gauge',
-		help => 'Daemon used memory',
-		labels => $labels
-	})->publish( $publish );
-	foreach my $it ( sort keys %{$rc} ){
-		msgVerbose( __PACKAGE__."::_metrics() got rc->{$it}='$rc->{$it}'" );
-	}
-
-	# page faults
-	$rc = TTP::Metric->new( $ep, {
-		name => 'ttp_daemon_page_faults_count',
-		value => $self->_metrics_page_faults(),
-		type => 'gauge',
-		help => 'Daemon page faults count',
-		labels => $labels
-	})->publish( $publish );
-	foreach my $it ( sort keys %{$rc} ){
-		msgVerbose( __PACKAGE__."::_metrics() got rc->{$it}='$rc->{$it}'" );
-	}
-
-	# page file usage
-	$rc = TTP::Metric->new( $ep, {
-		name => 'ttp_daemon_page_file_usage_KB',
-		value => sprintf( "%.1f", $self->_metrics_page_file_usage()),
-		type => 'gauge',
-		help => 'Daemon page file usage',
-		labels => $labels
-	})->publish( $publish );
-	foreach my $it ( sort keys %{$rc} ){
-		msgVerbose( __PACKAGE__."::_metrics() got rc->{$it}='$rc->{$it}'" );
+	# have metrics specific to the running OS
+	foreach my $sub ( @{$Const->{metrics}{$Config{osname}}} ){
+		$sub->( $self, $labels, $publish );
 	}
 }
 
 # https://stackoverflow.com/questions/1115743/how-can-i-programmatically-determine-my-perl-programs-memory-usage-under-window
 # https://learn.microsoft.com/en-us/windows/win32/cimwin32prov/win32-process?redirectedfrom=MSDN
 
-sub _metrics_memory {
+# used memory
+sub _metrics_mswin32_memory {
+	my ( $self, $labels, $publish ) = @_;
+
 	my $objWMI = Win32::OLE->GetObject( 'winmgmts:\\\\.\\root\\cimv2' );
     my $processes = $objWMI->ExecQuery( "select * from Win32_Process where ProcessId=$$" );
-    foreach my $proc ( Win32::OLE::in( $processes )){
-        return $proc->{WorkingSetSize} / 1024;
-    }
+	my $proc = get_first_item_of_ole_collection( $processes );
+	my $metric = $proc->{WorkingSetSize} / 1024;
+
+	my $rc = TTP::Metric->new( $ep, {
+		name => 'ttp_daemon_memory_KB',
+		value => sprintf( "%.1f", $metric ),
+		type => 'gauge',
+		help => 'Daemon used memory',
+		labels => $labels
+	})->publish( $publish );
+
+	foreach my $it ( sort keys %{$rc} ){
+		msgVerbose( __PACKAGE__."::_metrics() got rc->{$it}='$rc->{$it}'" );
+	}
+
 }
 
-sub _metrics_page_faults {
+# page faults
+sub _metrics_mswin32_page_faults {
+	my ( $self, $labels, $publish ) = @_;
+
 	my $objWMI = Win32::OLE->GetObject( 'winmgmts:\\\\.\\root\\cimv2' );
     my $processes = $objWMI->ExecQuery( "select * from Win32_Process where ProcessId=$$" );
-    foreach my $proc ( Win32::OLE::in( $processes )){
-       return $proc->{PageFaults};
-    }
+	my $proc = get_first_item_of_ole_collection( $processes );
+	my $metric = $proc->{PageFaults};
+
+	my $rc = TTP::Metric->new( $ep, {
+		name => 'ttp_daemon_page_faults_count',
+		value => $metric,
+		type => 'gauge',
+		help => 'Daemon page faults count',
+		labels => $labels
+	})->publish( $publish );
+
+	foreach my $it ( sort keys %{$rc} ){
+		msgVerbose( __PACKAGE__."::_metrics() got rc->{$it}='$rc->{$it}'" );
+	}
 }
 
-sub _metrics_page_file_usage {
+# page file usage
+sub _metrics_mswin32_page_file_usage {
+	my ( $self, $labels, $publish ) = @_;
+
 	my $objWMI = Win32::OLE->GetObject( 'winmgmts:\\\\.\\root\\cimv2' );
     my $processes = $objWMI->ExecQuery( "select * from Win32_Process where ProcessId=$$" );
-    foreach my $proc ( Win32::OLE::in( $processes )){
-        return $proc->{PageFileUsage};
+	my $proc = get_first_item_of_ole_collection( $processes );
+	my $metric = $proc->{PageFileUsage};
+
+	my $rc = TTP::Metric->new( $ep, {
+		name => 'ttp_daemon_page_file_usage_KB',
+		value => sprintf( "%.1f", $self->_metrics_page_file_usage()),
+		type => 'gauge',
+		help => 'Daemon page file usage',
+		labels => $labels
+	})->publish( $publish );
+
+	foreach my $it ( sort keys %{$rc} ){
+		msgVerbose( __PACKAGE__."::_metrics() got rc->{$it}='$rc->{$it}'" );
+	}
+}
+
+# wrapper by ChatGPT
+sub get_first_item_of_ole_collection {
+    my ( $collection ) = @_;
+
+    # try using an enumerator
+    my $enum = Win32::OLE::Enum->new( $collection );
+    if ($enum) {
+        my $item = $enum->Next;
+        return $item if $item;
     }
+
+    # try Item(0)
+    my $item = eval { $collection->Item(0) };
+    return $item if defined $item;
+
+    # try Item(1)
+    $item = eval { $collection->Item(1) };
+    return $item if defined $item;
+
+    # try foreach loop
+    foreach my $obj (in $collection) {
+        return $obj;
+    }
+
+    return undef;  # nothing found
 }
 
 # ------------------------------------------------------------------------------------------------
@@ -653,15 +706,24 @@ sub doCommand {
 # ------------------------------------------------------------------------------------------------
 # Returns the execPath of the daemon
 # This is a mandatory configuration item.
+# Can be specified either as a full path or as a relative one.
+# In this later case, the executable is searched for in TTP_ROOTS/libexec/daemons.
 # (I):
 # - none
 # (O):
-# - returns the execPath
+# - returns the full execPath
 
 sub execPath {
 	my ( $self ) = @_;
 
-	return $self->jsonData()->{execPath};
+	my $path = $self->jsonData()->{execPath};
+
+	if( !File::Spec->file_name_is_absolute( $path )){
+		my $finder = TTP::Finder->new( $ep );
+		$path = $finder->find({ dirs => [ $Const->{exeFinder}{dirs}, $path ], wantsAll => false });
+	}
+
+	return $path;
 }
 
 # ------------------------------------------------------------------------------------------------
@@ -962,18 +1024,15 @@ sub setConfig {
 				$self->jsonLoaded( false );
 
 			# else initialize the daemon (socket+messaging) unless otherwise specified
+			# note that we open the listening socket even if we are not going to daemon mode
 			} else {
 				my ( $vol, $dirs, $bname ) = File::Spec->splitpath( $self->jsonPath());
 				$bname =~ s/\.[^\.]*$//;
 				$self->{_name} = $bname;
-				my $daemonize = true;
-				$daemonize = $args->{daemonize} if exists $args->{daemonize};
-				if( $daemonize ){
-					# set a runnable qualifier as soon as we can
-					$self->runnableSetQualifier( $bname );
-					# and initialize listening socket and messaging connection
-					$self->_daemonize( $args );
-				}
+				# set a runnable qualifier as soon as we can
+				$self->runnableSetQualifier( $bname );
+				# and initialize listening socket and messaging connection
+				$self->_initListener( $args );
 			}
 		}
 	}
@@ -1018,7 +1077,8 @@ sub telemetryLabels {
 	my ( $self ) = @_;
 
 	my $labels = [ "daemon=".$self->name() ];
-	push( @{$labels}, "environment=".$ep->node()->environment());
+	my $env = $ep->node()->environment();
+	push( @{$labels}, "environment=$env" ) if $env;
 	push( @{$labels}, "command=".$self->command());
 	push( @{$labels}, "qualifier=".$self->runnableQualifier());
 	push( @{$labels}, @{$self->{_labels}} ) if exists $self->{_labels};
@@ -1181,7 +1241,7 @@ sub dirs {
 #   an array ref
 
 sub finder {
-	return $Const->{finder};
+	return $Const->{jsonFinder};
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -1192,7 +1252,7 @@ sub finder {
 sub init {
 	my ( $class ) = @_;
 	$class = ref( $class ) || $class;
-	#print __PACKAGE__."::init()".EOL;
+	print STDERR __PACKAGE__."::init()".EOL if $ENV{TTP_DEBUG};
 
 	$ep = TTP::EP->new();
 	$ep->bootstrap();

@@ -1,4 +1,3 @@
-#!perl
 #!/usr/bin/perl
 # @(#) Monitor the json alert files dropped in the alerts directory.
 #
@@ -11,15 +10,31 @@
 #
 # @(@) This script is expected to be run as a daemon, started via a 'daemon.pl start -json <filename.json>' command.
 #
-# Copyright (©) 2023-2025 PWI Consulting for Inlingua
+# The Tools Project - Tools System and Working Paradigm for IT Production
+# Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
+# Copyright (©) 2023-2025 PWI Consulting
 #
-# This script is mostly written like a TTP verb but is not. This is an example of how to take advantage of TTP
-# to write your own (rather pretty and efficient) daemon.
-# Just to be sure: this makes use of TTP, but is not part itself of TTP (though a not so bad example of application).
+# TheToolsProject is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation; either version 2 of the
+# License, or (at your option) any later version.
 #
-# JSON configuration:
+# TheToolsProject is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with TheToolsProject; see the file COPYING. If not,
+# see <http://www.gnu.org/licenses/>.
+#
+# This script is mostly written like a TTP verb but is not.
+# This is an example of how to take advantage of TTP to write your own (rather pretty and efficient) daemon.
+#
+# JSON specific configuration:
 #
 # - monitoredDir: the directory to be monitored for alerts files, defaulting to alertsDir
+# - monitoredFile: a regular expression to match the alert files, defaulting to '^.*$'
 # - scanInterval, the scan interval, defaulting to 10000 ms (10 sec.)
 
 use utf8;
@@ -29,10 +44,12 @@ use warnings;
 use Data::Dumper;
 use File::Find;
 use Getopt::Long;
+use JSON;
 
 use TTP;
 use TTP::Constants qw( :all );
 use TTP::Daemon;
+use TTP::JSONable;
 use TTP::Message qw( :all );
 use vars::global qw( $ep );
 
@@ -72,22 +89,32 @@ my $stats = {
 };
 
 # -------------------------------------------------------------------------------------------------
-# Returns the configured 'do': the list of actions
+# Returns the configured 'actions': the list of actions
 
-sub configDo {
+sub configActions {
 	my $config = $daemon->jsonData();
-	my $do = $config->{do} || [];
-	return $do;
+	my $actions = $config->{actions} || [];
+	return $actions;
 }
 
 # -------------------------------------------------------------------------------------------------
-# Returns the configured 'monitoredDir' defaulting to alertsDir
+# Returns the configured 'monitoredDir' defaulting to alertsFileDropdir
 
 sub configMonitoredDir {
 	my $config = $daemon->jsonData();
 	my $dir = $config->{monitoredDir};
-	$dir = TTP::alertsDir() if !$dir;
+	$dir = TTP::alertsFileDropdir() if !$dir;
 	return $dir;
+}
+
+# -------------------------------------------------------------------------------------------------
+# Returns the configured 'monitoredFiles' regulater expression, defaulting to all
+
+sub configMonitoredFiles {
+	my $config = $daemon->jsonData();
+	my $re = $config->{monitoredFiles};
+	$re = "^.*\$" if !$re;
+	return $re;
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -110,11 +137,14 @@ sub configScanInterval {
 
 sub doWithNew {
 	my ( @newFiles ) = @_;
-	my $actions = $daemon->configDo();
+	my $actions = configActions();
 
 	foreach my $file ( @newFiles ){
-		msgVerbose( "new alert '$file'" );
+		msgVerbose( "considering $file" );
 		my $data = TTP::jsonRead( $file );
+		if( !$data ){
+			next;
+		}
 		# incremente our stats
 		$stats->{byLevel}{$data->{level}} = 0 if !defined $stats->{byLevel}{$data->{level}};
 		$stats->{byLevel}{$data->{level}} += 1;
@@ -122,7 +152,8 @@ sub doWithNew {
 		$stats->{byEmitter}{$data->{emitter}} += 1;
 		# tries to execute all defined actions
 		foreach my $do ( @{$actions} ){
-			my $command = TTP::commandByOs([], { json => $do });
+			my $jsonable = TTP::JSONable->new( $ep, $do );
+			my $command = TTP::commandByOs([], { jsonable => $jsonable });
 			if( $command ){
 				my $levelMatch = true;
 				if( $do->{levelRe} ){
@@ -161,9 +192,11 @@ sub doWithNew {
 							TITLE => $data->{title},
 							MESSAGE => $data->{message},
 							STAMP => $data->{stamp},
-							JSON => json_encode( $data )
+							JSON => encode_json( $data ),
+							FILEPATH => $file
 						}
 					});
+					#print "result: ".Dumper( $res );
 				}
 			}
 		}
@@ -180,7 +213,10 @@ sub mqttDisconnect {
 	push( @{$array}, {
 		topic => "$topic/monitoredDir",
 		payload => ''
-	},{
+	}, {
+		topic => "$topic/monitoredFiles",
+		payload => ''
+	}, {
 		topic => "$topic/scanInterval",
 		payload => ''
 	});
@@ -210,7 +246,10 @@ sub mqttMessaging {
 	push( @{$array}, {
 		topic => "$topic/monitoredDir",
 		payload => configMonitoredDir()
-	},{
+	}, {
+		topic => "$topic/monitoredFiles",
+		payload => configMonitoredFiles()
+	}, {
 		topic => "$topic/scanInterval",
 		payload => configScanInterval()
 	});
@@ -227,24 +266,40 @@ sub varReset {
 }
 
 # -------------------------------------------------------------------------------------------------
-# receive here all found files in the searched directories
+# do its work, i.e. detects new files in monitoredDir
+# Note that the find() function sends errors to stderr when directory doesn't exist
+#
 # According to https://perldoc.perl.org/File::Find
 #   $File::Find::dir is the current directory name,
 #   $_ is the current filename within that directory
 #   $File::Find::name is the complete pathname to the file.
 
-sub wanted {
-	return unless /\.json$/;
-	push( @runningScan, $File::Find::name );
-}
-
-# -------------------------------------------------------------------------------------------------
-# do its work, i.e. detects new files in monitoredDir
-# Note that the find() function sends errors to stderr when directory doesn't exist
-
 sub works {
 	@runningScan = ();
-	find( \&wanted, configMonitoredDir());
+	my $dir = configMonitoredDir();
+	my $re = configMonitoredFiles();
+
+	find({
+		# receive here all found files in the searched directories
+		wanted => sub {
+			# this is a design decision to NOT recurse into subdirectories.
+			if( $File::Find::dir ne $dir ){
+                $File::Find::prune = 1;  # skip this directory and its children
+                return;
+            }
+			# only consider matching files
+			if( $_ =~ m/$re/ ){
+				msgVerbose( "$_ matches, pushing $File::Find::name" );
+				push( @runningScan, $File::Find::name );
+			} else {
+				#msgVerbose( "$_ doesn't match" );
+			}
+		},
+		# caution: according to ChatGPT, this option is expected to protect against some chdir side effects - but it has itself the side effect that $_ becomes a full path
+		# so we prefer do not use it
+        #no_chdir => true
+	}, $dir );
+
 	if( scalar @runningScan < scalar @previousScan ){
 		varReset();
 	} elsif( $first ){
@@ -252,8 +307,21 @@ sub works {
 		@previousScan = sort @runningScan;
 	} elsif( scalar @runningScan > scalar @previousScan ){
 		my @sorted = sort @runningScan;
-		my @tmp = @sorted;
-		my @newFiles = splice( @tmp, scalar @previousScan, scalar @runningScan - scalar @previousScan );
+		my @newFiles = ();
+		my $i = 0;
+		my $j = 0;
+		while( $i < scalar( @sorted ) && $j < scalar( @previousScan )){
+			if( $sorted[$i] eq $previousScan[$j] ){
+				$i += 1;
+				$j += 1;
+			} elsif( $sorted[$i] lt $previousScan[$j] ){
+				push( @newFiles, $sorted[$i] );
+				$i += 1;
+			} else {
+				# a file is present in prfeviousScan and not in runningScan: has disappeared
+				$j += 1;
+			}
+		}
 		doWithNew( @newFiles );
 		@previousScan = @sorted;
 	}

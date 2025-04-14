@@ -169,6 +169,7 @@ after _newBase => sub {
 		$ep->{_ioptionable}{dummy_set} = false;
 		$ep->{_ioptionable}{verbose} = false;
 		$ep->{_ioptionable}{verbose_set} = false;
+		print STDERR __PACKAGE__."::var() self=".ref( $self )." initialize IOptionable options to false".EOL if $ENV{TTP_DEBUG};
 	}
 };
 
@@ -182,7 +183,15 @@ after _newBase => sub {
 before run => sub {
 	my ( $self ) = @_;
 
-	$ep->{_ioptionable}{help} = true if scalar @ARGV <= 1;
+	print STDERR __PACKAGE__."::before_run() self=".ref( $self )." scalar \@ARGV=".( scalar( @ARGV )) if $ENV{TTP_DEBUG};
+
+	if( scalar( @ARGV ) <= 1 ){
+		$ep->{_ioptionable}{help} = true;
+		print STDERR " set help=true" if $ENV{TTP_DEBUG};
+	}
+
+	print STDERR EOL if $ENV{TTP_DEBUG};
+
 };
 
 ### Global functions

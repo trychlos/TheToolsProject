@@ -243,9 +243,9 @@ sub verb {
 sub verbHelp {
 	my ( $self, $defaults ) = @_;
 
-	msgVerbose( "helpVerb()" );
 	# display the command one-line help
 	$self->helpOneline( $self->runnablePath());
+
 	# verb pre-usage
 	my @verbHelp = $self->helpPre( $self->{_verb}{path}, { warnIfSeveral => false });
 	my $verbInline = '';
@@ -256,6 +256,7 @@ sub verbHelp {
 	foreach my $line ( @verbHelp ){
 		print "    $line".EOL;
 	}
+
 	# verb usage
 	@verbHelp = $self->helpUsage( $self->{_verb}{path}, { warnIfSeveral => false });
 	if( scalar @verbHelp ){
@@ -266,12 +267,11 @@ sub verbHelp {
 			print "      $line".EOL;
 		}
 	}
+
 	# verb post-usage
 	@verbHelp = $self->helpPost( $self->{_verb}{path}, { warnIfNone => false, warnIfSeveral => false });
-	if( scalar @verbHelp ){
-		foreach my $line ( @verbHelp ){
-			print "    $line".EOL;
-		}
+	foreach my $line ( @verbHelp ){
+		print "    $line".EOL;
 	}
 
 	return $self;

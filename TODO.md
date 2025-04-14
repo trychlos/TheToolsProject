@@ -20,6 +20,7 @@
 |   55 | 2025- 2-17 | daemon.pl status should have an option to publish to mqtt too |
 |   57 | 2025- 2-17 | daemon.pl status should have an option to publish to text too |
 |   59 | 2025- 2-18 | Daemon.pm: metrics for the daemon are windows-specific: re-code for unix'es |
+|      | 2025- 4-14 | mswin32 metrics are isolated |
 |   61 | 2025- 4- 8 | ttp.pl writejson should should actually be ttp.pl filewrite as the json is provided as a string on input - so this is not dedicated to json |
 |   76 | 2024- 4-10 | nodeRoot() should be siteRoot(), shouldn'it ? and so be removed from TTP |
 |   78 | 2024- 4-12 | some daemons should be moveable to libexec/daemons |
@@ -27,9 +28,11 @@
 |   80 | 2024- 4-13 | sufix should be renamed suffix |
 |   81 | 2024- 4-13 | TTP::Daemon should check that listeningPort is OK |
 |   82 | 2024- 4-13 | TTP::Daemon should check that listeningInterval is OK |
-|   83 | 2024- 4-13 | alerts-monitor-daemon.pl: mqtt_timeout() and messagingTimeout() are same function |
+|   83 | 2024- 4-13 | TTP::Daemon mqtt_timeout() and messagingTimeout() are same function |
 |   86 | 2024- 4-13 | TTP::commandExec should have ( $command, { macros => {}} ) definition |
-|   87 |  |  |
+|   87 | 2024- 4-13 | logicals regular expression should be a single string as this is simpler and can still embed several re's |
+|   88 | 2024- 4-14 | review classes hierarchy which should be something like Base -> Command -> Extern -> Daemon |
+|   89 |  |  |
 
 ---
 ## Done
