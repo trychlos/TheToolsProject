@@ -123,7 +123,7 @@ if( !GetOptions(
 }
 
 if( $ep->runner()->help()){
-	$ep->runner()->verbHelp( $defaults );
+	$ep->runner()->displayHelp( $defaults );
 	TTP::exit();
 }
 
