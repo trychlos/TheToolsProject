@@ -36,7 +36,7 @@ use Carp;
 use Data::Dumper;
 use vars::global qw( $ep );
 
-use TTP::Command;
+use TTP;
 use TTP::Constants qw( :all );
 use TTP::Message qw( :all );
 use TTP::Node;
