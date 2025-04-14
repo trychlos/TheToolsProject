@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - TTP, TTP::EP: remove no more used debug variables
 
 ### 4.3.0
 
