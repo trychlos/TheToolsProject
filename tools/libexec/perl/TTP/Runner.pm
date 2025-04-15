@@ -55,14 +55,28 @@ my $Const = {
 # Returns the minimal count of arguments needed by the running executable
 # Below this minimal count, we automatically display the runner's help
 # (I):
-# - the TTP EP entry point
+# - this TTP::Runner instance
 # (O):
-# - this object
+# - the minimal count of arguments needed
 
 sub minArgsCount {
 	my ( $self ) = @_;
 
 	return $Const->{minArgsCount};
+}
+
+# -------------------------------------------------------------------------------------------------
+# Returns the minimal count of arguments needed by the running executable
+# Below this minimal count, we automatically display the runner's help
+# (I):
+# - this TTP::Runner instance
+# (O):
+# - this same instance
+
+sub run {
+	my ( $self ) = @_;
+
+	return $self;
 }
 
 ### Class methods
