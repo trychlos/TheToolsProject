@@ -328,7 +328,7 @@ sub _metrics_mswin32_memory {
 	})->publish( $publish );
 
 	foreach my $it ( sort keys %{$rc} ){
-		msgVerbose( __PACKAGE__."::_metrics() got rc->{$it}='$rc->{$it}'" );
+		msgVerbose( __PACKAGE__."::_metrics_mswin32_memory() got rc->{$it}='$rc->{$it}'" );
 	}
 
 }
@@ -351,7 +351,7 @@ sub _metrics_mswin32_page_faults {
 	})->publish( $publish );
 
 	foreach my $it ( sort keys %{$rc} ){
-		msgVerbose( __PACKAGE__."::_metrics() got rc->{$it}='$rc->{$it}'" );
+		msgVerbose( __PACKAGE__."::_metrics_mswin32_page_faults() got rc->{$it}='$rc->{$it}'" );
 	}
 }
 
@@ -366,14 +366,14 @@ sub _metrics_mswin32_page_file_usage {
 
 	my $rc = TTP::Metric->new( $ep, {
 		name => 'ttp_daemon_page_file_usage_KB',
-		value => sprintf( "%.1f", $self->_metrics_page_file_usage()),
+		value => sprintf( "%.1f", $metric ),
 		type => 'gauge',
 		help => 'Daemon page file usage',
 		labels => $labels
 	})->publish( $publish );
 
 	foreach my $it ( sort keys %{$rc} ){
-		msgVerbose( __PACKAGE__."::_metrics() got rc->{$it}='$rc->{$it}'" );
+		msgVerbose( __PACKAGE__."::_metrics_mswin32_page_file_usage() got rc->{$it}='$rc->{$it}'" );
 	}
 }
 

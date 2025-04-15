@@ -102,7 +102,7 @@ if( $count == 0 ){
 } elsif( $count > 1 ){
 	msgErr( "one of '--json' or '--name' options must be specified, several were found" );
 }
-# if a daemon name is specified, find the full filename
+# if a daemon name is specified, find the full filename of its configuration file
 if( $opt_name ){
 	my $finder = TTP::Finder->new( $ep );
 	$opt_json = $finder->find({ dirs => [ TTP::RunnerDaemon->dirs(), $opt_name ], sufix => TTP::RunnerDaemon->finder()->{sufix}, wantsAll => false });
