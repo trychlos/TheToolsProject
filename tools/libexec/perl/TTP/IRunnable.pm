@@ -225,16 +225,11 @@ after _newBase => sub {
 	$file =~ s/\.[^\.]+$//;
 	$self->{_irunnable}{namewoext} = $file;
 
-	if( $ep->runner()){
-		msgErr( "unexpected runner alreay set when instanciating IRunnable self=".ref( $self ));
-		TTP::stackTrace();
-	} else {
-		msgLog( "[] executing $0 ".join( ' ', @ARGV ));
-		$ep->runner( $self );
-		$SIG{INT} = sub {
-			msgVerbose( "quitting on Ctrl+C keyboard interrupt" );
-			TTP::exit();
-		}
+	msgLog( "[] executing $0 ".join( ' ', @ARGV ));
+	$ep->runner( $self );
+	$SIG{INT} = sub {
+		msgVerbose( "quitting on Ctrl+C keyboard interrupt" );
+		TTP::exit();
 	}
 };
 
