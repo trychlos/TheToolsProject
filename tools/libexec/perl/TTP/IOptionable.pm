@@ -160,17 +160,15 @@ after _newBase => sub {
 	$self->{_ioptionable} //= {};
 
 	# initialize the standard options
-	if( !$ep->runner()){
-		$self->{_ioptionable}{help} = false;
-		$self->{_ioptionable}{help_set} = false;
-		$self->{_ioptionable}{colored} = false;
-		$self->{_ioptionable}{colored_set} = false;
-		$self->{_ioptionable}{dummy} = false;
-		$self->{_ioptionable}{dummy_set} = false;
-		$self->{_ioptionable}{verbose} = false;
-		$self->{_ioptionable}{verbose_set} = false;
-		print STDERR __PACKAGE__."::after_newBase() self=".ref( $self )." initialize IOptionable options to false".EOL if $ENV{TTP_DEBUG};
-	}
+	$self->{_ioptionable}{help} = false;
+	$self->{_ioptionable}{help_set} = false;
+	$self->{_ioptionable}{colored} = false;
+	$self->{_ioptionable}{colored_set} = false;
+	$self->{_ioptionable}{dummy} = false;
+	$self->{_ioptionable}{dummy_set} = false;
+	$self->{_ioptionable}{verbose} = false;
+	$self->{_ioptionable}{verbose_set} = false;
+	print STDERR __PACKAGE__."::after_newBase() self=".ref( $self )." initialize IOptionable options to false".EOL if $ENV{TTP_DEBUG};
 
 	# Set the help flag to true if there are not enough arguments in the command-line
 	# the minimum count of arguments MUST be defined by the implementation class
