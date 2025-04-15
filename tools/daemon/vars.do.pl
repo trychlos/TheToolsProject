@@ -28,7 +28,7 @@ use strict;
 use utf8;
 use warnings;
 
-use TTP::Daemon;
+use TTP::RunnerDaemon;
 
 my $defaults = {
 	help => 'no',
@@ -46,7 +46,7 @@ my $opt_confDirs = false;
 sub listConfdir {
 	my $dirs = [];
 	my @roots = split( /$Config{path_sep}/, $ENV{TTP_ROOTS} );
-	my $specs = TTP::Daemon->dirs();
+	my $specs = TTP::RunnerDaemon->dirs();
 	foreach my $it ( @roots ){
 		foreach my $sub ( @{$specs} ){
 			push( @{$dirs}, File::Spec->catdir( $it, $sub ));

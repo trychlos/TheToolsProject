@@ -37,9 +37,9 @@ use warnings;
 
 use File::Spec;
 
-use TTP::Daemon;
 use TTP::Finder;
 use TTP::Metric;
+use TTP::RunnerDaemon;
 
 my $defaults = {
 	help => 'no',
@@ -153,12 +153,12 @@ if( $count == 0 ){
 # if a daemon name is specified, find the full filename
 if( $opt_name ){
 	my $finder = TTP::Finder->new( $ep );
-	$opt_json = $finder->find({ dirs => [ TTP::Daemon->dirs(), $opt_name ], sufix => TTP::Daemon->finder()->{sufix}, wantsAll => false });
+	$opt_json = $finder->find({ dirs => [ TTP::RunnerDaemon->dirs(), $opt_name ], sufix => TTP::RunnerDaemon->finder()->{sufix}, wantsAll => false });
 	msgErr( "unable to find a suitable daemon JSON configuration file for '$opt_name'" ) if !$opt_json;
 }
-#if a json has been specified or has been found, must have a listeningPort and get it
+# if a json has been specified or has been found, must have a listeningPort and get it
 if( $opt_json ){
-	$daemon = TTP::Daemon->new( $ep, { path => $opt_json, daemonize => false });
+	$daemon = TTP::RunnerDaemon->new( $ep, { path => $opt_json, daemonize => false });
 	if( $daemon->loaded()){
 		$opt_port = $daemon->listeningPort();
 	} else {

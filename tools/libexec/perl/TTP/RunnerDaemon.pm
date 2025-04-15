@@ -626,7 +626,7 @@ sub declareSleepables {
 # ------------------------------------------------------------------------------------------------
 # Set a sub to be called on daemon disconnection
 # The provided sub:
-# - will receive this TTP::Daemon as single argument,
+# - will receive this TTP::RunnerDaemon as single argument,
 # - must return a ref to an array of hashes { topic, payload )
 #   the returned hash may have a 'retain' key, with true|false value, defaulting to false.
 # Note that this cannot be a 'last will' sub as the Net::MQTT::Simple package wants its last_will
@@ -896,7 +896,7 @@ sub messagingInterval {
 # ------------------------------------------------------------------------------------------------
 # Set a sub to be called each time the daemon is about to mqtt-publish
 # The provided sub:
-# - will receive this TTP::Daemon as single argument,
+# - will receive this TTP::RunnerDaemon as single argument,
 # - must return a ref to an array of hashes { topic, payload )
 #   the returned hash may have a 'retain' key, with true|false value, defaulting to false
 # (I):
@@ -1089,7 +1089,7 @@ sub telemetryLabels {
 # ------------------------------------------------------------------------------------------------
 # Set a sub to be called each time the daemon is about to telemetry-publish (either http or text)
 # The provided sub:
-# - will receive this TTP::Daemon as single argument,
+# - will receive this TTP::RunnerDaemon as single argument,
 # - is responsible to publish itself all its own telemetry
 # (I):
 # - a code ref to be called at telemetry-advertising time
