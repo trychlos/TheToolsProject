@@ -160,10 +160,7 @@ after _newBase => sub {
 	$self->{_ioptionable} //= {};
 
 	# initialize the standard options
-	if( $ep->runner()){
-		msgErr( "unexpected runner alreay set when instanciating IOptionable self=".ref( $self ));
-		TTP::stackTrace();
-	} else {
+	if( !$ep->runner()){
 		$self->{_ioptionable}{help} = false;
 		$self->{_ioptionable}{help_set} = false;
 		$self->{_ioptionable}{colored} = false;
