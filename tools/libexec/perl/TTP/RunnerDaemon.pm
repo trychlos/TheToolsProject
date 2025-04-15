@@ -1030,7 +1030,7 @@ sub setConfig {
 				$bname =~ s/\.[^\.]*$//;
 				$self->{_name} = $bname;
 				# set a runnable qualifier as soon as we can
-				$self->runnableSetQualifier( $bname );
+				$self->runnableQualifier( $bname );
 				# and initialize listening socket and messaging connection
 				$self->_initListener( $args );
 			}
