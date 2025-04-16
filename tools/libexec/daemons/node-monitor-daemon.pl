@@ -238,7 +238,7 @@ sub works {
 	my $keys = configKeys();
 	msgVerbose( "searching for monitoring commands at the node level" );
 	#my $commands = $node->var( $keys );
-	my $commands = TTP::commandByOs( $keys, { withCommand => false, withCommands => true, jsonable => $ep->node() });
+	my $commands = TTP::commandByOs( $keys, { withCommands => true, jsonable => $ep->node() });
 	if( hasCommands( $commands )){
 		foreach my $cmd ( @{$commands->{commands}} ){
 			$cmd = macroReplace( $cmd, { '<NODE>' => $node->name() });
