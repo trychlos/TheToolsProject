@@ -873,8 +873,8 @@ sub terminate {
 	TTP::MQTT::disconnect( $self->{_mqtt} ) if $self->{_mqtt};
 
 	# advertise http and text-based telemetry
-	$self->_http_advertise() if $self->httpingInterval() > 0;
-	$self->_text_advertise() if $self->textingInterval() > 0;
+	$self->_http_advertise() if $self->config()->httpingEnabled();
+	$self->_text_advertise() if $self->config()->textingEnabled();
 
 	# close TCP connection
 	$self->{_socket}->close();
