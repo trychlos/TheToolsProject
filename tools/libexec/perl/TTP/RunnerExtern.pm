@@ -27,14 +27,6 @@ use strict;
 use utf8;
 use warnings;
 
-use Carp;
-use Config;
-use Data::Dumper;
-use Getopt::Long;
-use Try::Tiny;
-use vars::global qw( $ep );
-
-use TTP;
 use TTP::Constants qw( :all );
 use TTP::EP;
 use TTP::Message qw( :all );
