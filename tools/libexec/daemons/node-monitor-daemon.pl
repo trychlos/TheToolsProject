@@ -213,8 +213,6 @@ sub mqttMessaging {
 sub works {
 	print STDERR "works()".EOL;
 	# get commands at the node level
-	my $null = TTP::nullByOS();
-	msgVerbose( "got null=$null" );
 	my $node = $ep->node();
 	my $keys = configKeys();
 	msgVerbose( "searching for monitoring commands at the node level" );
@@ -222,7 +220,7 @@ sub works {
 	if( hasCommands( $commands )){
 		foreach my $cmd ( @{$commands} ){
 			msgVerbose( "found command='$cmd'" );
-			TTP::commandExec( "$cmd <$null", {
+			TTP::commandExec( $cmd, {
 				macros => {
 					NODE => $node->name(),
 					ENVIRONMENT => $node->environment()
@@ -244,7 +242,7 @@ sub works {
 			if( hasCommands( $commands )){
 				foreach my $cmd ( @{$commands} ){
 					msgVerbose( "found command='$cmd'" );
-					TTP::commandExec( "$cmd <$null", {
+					TTP::commandExec( $cmd, {
 						macros => {
 							NODE => $node->name(),
 							ENVIRONMENT => $node->environment(),
