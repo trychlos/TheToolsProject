@@ -159,24 +159,6 @@ sub hasCommands {
 }
 
 # -------------------------------------------------------------------------------------------------
-# Replace the found macros
-# (I):
-# - the input string
-# - a hash where keys are the macros to be replaced, and the values the replacement value
-# (O):
-# - the replaced string
-
-sub macroReplace {
-	my( $str, $hash ) = @_;
-	
-	foreach my $k ( keys( %{$hash} )){
-		$str =~ s/$k/$hash->{$k}/g;
-	}
-	
-	return $str;
-}
-
-# -------------------------------------------------------------------------------------------------
 # On disconnection, try to erase the published topics
 
 sub mqttDisconnect {
@@ -229,6 +211,7 @@ sub mqttMessaging {
 # service on this node, and execute them
 
 sub works {
+	print STDERR "works()".EOL;
 	# get commands at the node level
 	my $null = TTP::nullByOS();
 	msgVerbose( "got null=$null" );
@@ -239,10 +222,12 @@ sub works {
 	if( hasCommands( $commands )){
 		foreach my $cmd ( @{$commands} ){
 			msgVerbose( "found command='$cmd'" );
-			$cmd = macroReplace( $cmd, { '<NODE>' => $node->name() });
-			$cmd = macroReplace( $cmd, { '<ENVIRONMENT>' => $node->environment() });
-			msgVerbose( "running $cmd" );
-			TTP::commandExec( "$cmd <$null" );
+			TTP::commandExec( "$cmd <$null", {
+				macros => {
+					NODE => $node->name(),
+					ENVIRONMENT => $node->environment()
+				}
+			});
 		}
 	} else {
 		msgVerbose( "no commands found for node" );
@@ -259,11 +244,13 @@ sub works {
 			if( hasCommands( $commands )){
 				foreach my $cmd ( @{$commands} ){
 					msgVerbose( "found command='$cmd'" );
-					$cmd = macroReplace( $cmd, { '<NODE>' => $node->name() });
-					$cmd = macroReplace( $cmd, { '<ENVIRONMENT>' => $node->environment() });
-					$cmd = macroReplace( $cmd, { '<SERVICE>' => $service });
-					msgVerbose( "running $cmd" );
-					TTP::commandExec( "$cmd <$null" );
+					TTP::commandExec( "$cmd <$null", {
+						macros => {
+							NODE => $node->name(),
+							ENVIRONMENT => $node->environment(),
+							SERVICE => $service
+						}
+					});
 				}
 			} else {
 				msgVerbose( "no commands found for '$service'" );
