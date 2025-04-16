@@ -17,6 +17,8 @@
     - TTP::commandByOs() now accepts 'withCommands' option
     - Define daemonsConfDirs site property (todo #89)
     - Define daemonsConfDirs site property and corresponding TTP::RunnerDaemon::execDirs() method (todo #90)
+    - RunnerDaemon->new() changed options: 'path' becomes 'jsonPath', 'daemonize' becomes 'listener'
+    - Introduce DaemonConfig in order to manage daemons configuration files
 
 ### 4.4.1
 

@@ -333,6 +333,7 @@ sub runCommand {
 
 	my $command = TTP::RunnerCommand->new( $ep );
 	$command->run();
+	return $command;
 }
 
 1;
