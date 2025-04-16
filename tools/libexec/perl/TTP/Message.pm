@@ -230,7 +230,6 @@ sub msgErr {
 
 sub msgLog {
 	my ( $msg, $opts ) = @_;
-	require TTP;
 	$opts //= {};
 	my $ref = ref( $msg );
 	if( $ref eq 'ARRAY' ){
@@ -258,7 +257,6 @@ sub msgLog {
 
 sub _msgLogAppend {
 	my ( $msg, $opts ) = @_;
-	require TTP;
 	require TTP::Path;
 	$opts //= {};
 	my $logFile = $opts->{logFile} || TTP::logsMain();
