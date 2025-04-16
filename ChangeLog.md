@@ -2,12 +2,21 @@
 
 ## ChangeLog
 
-### 4.4.2-rc.0
+### 4.5.0-rc.0
 
     Release date: 
 
     - TTP::commandExec() no more adds an EOL to stdout
 	- ttp.pl alert: fix cmd vs. sh execution and quotings
+    - logicals regular expression is no more an array as it can satisfies itself with a single string (todo #87)
+    - Change TTP::commandExec() prototype to more standard '$command, $opts' (todo #86)
+    - Deduplicate TTP::runnerDaemon::_mqtt_timeout() and TTP::runnerDaemon::messagingTimeout() (todo #83)
+    - Bump minor candidate version number due to site.json change
+    - RunnerDaemon better check listeningPort (todo #81) and listeningInterval (todo #82)
+    - sufix is renamed suffix (todo #80)
+    - TTP::commandByOs() now accepts 'withCommands' option
+    - Define daemonsConfDirs site property (todo #89)
+    - Define daemonsConfDirs site property and corresponding TTP::RunnerDaemon::execDirs() method (todo #90)
 
 ### 4.4.1
 

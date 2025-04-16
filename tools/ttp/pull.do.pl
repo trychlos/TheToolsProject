@@ -100,8 +100,7 @@ sub doPull_byTree {
 	my $srcPath = File::Spec->catpath( $pullVol, $dir_dirs, $dir_file );
 	$result->{asked} += 1;
 	msgVerbose( "source='$srcPath' target='$tree->{target}'" );
-	my $cmdres = TTP::commandExec({
-		command => $command,
+	my $cmdres = TTP::commandExec( $command, {
 		macros => {
 			SOURCE => $srcPath,
 			TARGET => $tree->{target},

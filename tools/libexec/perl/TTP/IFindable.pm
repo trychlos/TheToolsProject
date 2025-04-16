@@ -48,7 +48,7 @@ requires qw( _newBase );
 #     as a scalar, or as a ref to an array of items which have to be concatenated,
 #     when each item for the array may itself be an array of scalars to be sucessively tested
 #   > glob: an optional pattern to glob the files
-#   > sufix: an optional suffix to add to the files
+#   > suffix: an optional suffix to add to the files
 #   > wantsAll: whether we want a full list of just the first found
 #     defaulting to true (wants the full list)
 # - an optional options hash which will be passed to Acceptable role if the object implements it
@@ -153,8 +153,8 @@ sub _find_single {
 	my @results = ();
 	if( $args->{glob} ){
 		push( @results, glob( File::Spec->catfile( $fname, $args->{glob} )));
-	} elsif( $args->{sufix} ){
-		push( @results, $fname.$args->{sufix} );
+	} elsif( $args->{suffix} ){
+		push( @results, $fname.$args->{suffix} );
 	} else {
 		push( @results, $fname );
 	}

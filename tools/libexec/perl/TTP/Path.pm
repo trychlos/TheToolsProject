@@ -56,8 +56,7 @@ sub copyDir {
 	my $command = TTP::commandByOs([ 'copyDir' ]);
 	if( $command ){
 		TTP::Message::msgVerbose( __PACKAGE__."::copyDir() found command='$command', executing it" );
-		my $cmdres = TTP::commandExec({
-			command => $command,
+		my $cmdres = TTP::commandExec( $command, {
 			macros => {
 				SOURCE => $source,
 				TARGET => $target,
@@ -187,8 +186,7 @@ sub copyFile {
 	TTP::Message::msgVerbose( __PACKAGE__."::copyFile() entering with source='$source' target='$target'" );
 	my $command = $opts->{command} || TTP::commandByOs([ 'copyFile' ]);
 	if( $command ){
-		my $cmdres = TTP::commandExec({
-			command => $command,
+		my $cmdres = TTP::commandExec( $command, {
 			macros => {
 				SOURCE => $source,
 				TARGET => $target,

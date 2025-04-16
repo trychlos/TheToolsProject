@@ -106,7 +106,7 @@ my $Const = {
 			'etc/daemons',
 			'daemons'
 		],
-		sufix => '.json'
+		suffix => '.json'
 	},
 	# how to find executable
 	exeFinder => {
@@ -247,7 +247,7 @@ sub _initListener {
 		$self->{_mqtt} = TTP::MQTT::connect({
 			will => $self->_lastwill()
 		});
-		TTP::MQTT::keepalive( $self->{_mqtt}, $self->_mqtt_timeout());
+		TTP::MQTT::keepalive( $self->{_mqtt}, $self->messagingTimeout());
 	}
 
 	# Ctrl+C handling
@@ -522,22 +522,6 @@ sub _mqtt_publish {
 }
 
 # ------------------------------------------------------------------------------------------------
-# returns the to-be-applied mqtt timeout
-
-sub _mqtt_timeout {
-	my ( $self ) = @_;
-
-	my $timeout = $self->jsonData()->{messagingTimeout};
-	$timeout = DEFAULT_MQTT_TIMEOUT if !defined $timeout;
-	if( $timeout && $timeout < MIN_MQTT_TIMEOUT ){
-		msgVerbose( "defined messagingTimeout=$timeout less than minimum accepted ".MIN_MQTT_TIMEOUT.", ignored" );
-		$timeout = DEFAULT_MQTT_TIMEOUT;
-	}
-
-	return $timeout;
-}
-
-# ------------------------------------------------------------------------------------------------
 
 sub _running {
 	my ( $self ) = @_;
@@ -721,7 +705,7 @@ sub execPath {
 
 	if( !File::Spec->file_name_is_absolute( $path )){
 		my $finder = TTP::Finder->new( $ep );
-		$path = $finder->find({ dirs => [ $Const->{exeFinder}{dirs}, $path ], wantsAll => false });
+		$path = $finder->find({ dirs => [ TTP::RunnerDaemon::execDirs(), $path ], wantsAll => false });
 	}
 
 	return $path;
@@ -1010,9 +994,12 @@ sub setConfig {
 			$checkConfig = $args->{checkConfig} if exists $args->{checkConfig};
 			if( $checkConfig ){
 				my $msgRef = $self->ep()->runner()->dummy() ? \&msgWarn : \&msgErr;
+				# must have a valid listening interval
+				my $listeningInterval = $self->listeningInterval();
+				$msgRef->( "$args->{json}: daemon configuration doesn't define a valid 'listeningInterval' value, found '".( $listeningInterval ? $listeningInterval : '(undef)' )."'" ) if !$listeningInterval || $listeningInterval < MIN_LISTEN_INTERVAL;
 				# must have a listening port
 				my $listeningPort = $self->listeningPort();
-				$msgRef->( "$args->{jsonPath}: daemon configuration must define a 'listeningPort' value, not found" ) if !$listeningPort || $listeningPort < 0;
+				$msgRef->( "$args->{json}: daemon configuration doesn't define a valid 'listeningPort' value, found '".( $listeningPort ? $listeningPort : '(undef)' )."'" ) if !$listeningPort || $listeningPort < 1;
 				# must have an exec path
 				my $execPath = $self->execPath();
 				$msgRef->( "$args->{jsonPath}: daemon configuration must define an 'execPath' value, not found" ) if !$execPath;
@@ -1231,9 +1218,36 @@ sub dirs {
 	my ( $class ) = @_;
 	$class = ref( $class ) || $class;
 
-	my $dirs = $ep->var( 'daemonsDirs' ) || $class->finder()->{dirs};
+	my $dirs = $ep->var( 'daemonsConfDirs' ) || $class->finder()->{dirs};
 
 	return $dirs;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns the list of subdirectories of TTP_ROOTS in which we may find daemons executable files
+# (I):
+# - none
+# (O):
+# - returns the list of subdirectories which may contain the daemons executables as an array ref
+
+sub execDirs {
+	my ( $class ) = @_;
+	$class = ref( $class ) || $class;
+
+	my $dirs = $ep->var( 'daemonsExecDirs' ) || $class->execFinder()->{dirs};
+
+	return $dirs;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns the (hardcoded) specifications to find the daemons configuration files
+# (I):
+# - none
+# (O):
+# - returns the list of directories which may contain the daemons executables as an array ref
+
+sub execFinder {
+	return $Const->{exeFinder};
 }
 
 # ------------------------------------------------------------------------------------------------

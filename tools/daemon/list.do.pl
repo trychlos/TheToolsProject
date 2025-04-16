@@ -56,14 +56,14 @@ sub doListJSON {
 	my $count = 0;
 	my $findable = {
 		dirs => [ TTP::RunnerDaemon->dirs() ],
-		glob => '*'.TTP::RunnerDaemon->finder()->{sufix}
+		glob => '*'.TTP::RunnerDaemon->finder()->{suffix}
 	};
 	my $finder = TTP::Finder->new( $ep );
 	my $jsons = $finder->find( $findable );
 	# only keep first enabled found for each basename
 	my $kepts = {};
 	foreach my $it ( @{$jsons} ){
-		my $daemon = TTP::RunnerDaemon->new( $ep, { path => $it, checkConfig => $opt_check, daemonize => false });
+		my $daemon = TTP::RunnerDaemon->new( $ep, { jsonPath => $it, checkConfig => $opt_check, listener => false });
 		my $name = $daemon->name();
 		$kepts->{$name} = $it if !exists( $kepts->{$name} ) && $daemon->loaded();
 	}

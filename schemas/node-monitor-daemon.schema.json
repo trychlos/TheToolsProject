@@ -1,0 +1,93 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "org.trychlos.TheToolsProject/schemas/node-monitor-daemon.schema.json",
+    "title": "Node Monitor Daemon",
+    "description_array": [
+		"Monitor for the status of a node.",
+        "",
+        "Daemons provided by TheToolsProject all share some common characteristics:",
+        "- the daemon is started, stopped and more generally fully managed through 'daemon.pl' verbs.",
+        "- the daemon is addressed by the path its JSON configuration file ('--json' option),",
+        "- the daemon can also be addressed by its name, which is computed as the basename of its JSON configuration file ('--name' option), which means that this name must be unique among all managed daemons,",
+        "- the daemon can also be addressed directly by its listening port when it is running,",
+        "- the code initializes itself by executing 'my $daemon = TTP::Daemon->init();' which makes it a derivative of the TTP::Daemon class,",
+        "- the TTP::Daemon class implements the ISleepable role, which means that each daemon is able to define several intervals, and several subroutines which will be triggered at these intervals,",
+        "- the daemon manages following intervals:",
+        "  > listeningInterval: this is the period between listening for external commands as sent by 'daemon.pl command',",
+        "  > messagingInterval: this is the period between between advertising the daemon's status to the MQTT bus,",
+        "  > httpingInterval: this is the period between publishing to the HTTP-based telemetry system,",
+        "  > textingInterval: this is the period between publishing to the text-based telemetry system.",
+        "",
+        "This daemon defines additional following properties:",
+        "- runInterval: the monitoring period,",
+        "- keys: the keys in the node and services configurations where we are going to find the commands to be executed to monitor the node."
+    ],
+    "type": "object",
+    "properties": {
+        "enabled": {
+            "description": "Whether this JSON configuration must be considered.",
+            "type": "boolean",
+            "default": true
+        },
+        "listeningPort": {
+            "description": "The port this daemon is listening to. No default is provided. Mandatory.",
+            "type": "integer"
+        },
+        "listeningInterval": {
+            "description": "The listening interval. The minimum accepted is 500 ms.",
+            "type": "integer",
+            "default": 1000
+        },
+        "messagingInterval": {
+            "description": "The interval which commands the publication of the daemon's status on the MQTT bus. The minimum accepted is 5000 ms. Set to zero or less to disable this publication.",
+            "type": "integer",
+            "default": 60000
+        },
+        "messagingTimeout": {
+            "description": "The timeout when publishing to the MQTT bus. The minimum accepted is 5 sec.",
+            "type": "integer",
+            "default": 60
+        },
+        "httpingInterval": {
+            "description": "The interval which commands the publication to the HTTP-based telemetry system. The minimum accepted is 5000 ms. Set to zero or less to disable this publication.",
+            "type": "integer",
+            "default": 60000
+        },
+        "textingInterval": {
+            "description": "The interval which commands the publication to the text-based telemetry system. The minimum accepted is 5000 ms. Set to zero or less to disable this publication.",
+            "type": "integer",
+            "default": 60000
+        },
+        "execPath": {
+            "description": "Either the full path to the executable or just a filename. In this later case, the executable is searched for in TTP_ROOTS/libexec/daemons.",
+            "type": "string"
+        },
+        "runInterval": {
+            "description": "The interval between each execution.",
+            "type": "integer",
+            "default": 300000
+        },
+        "keys": {
+            "description_array": [
+                "The keys to be read in the node and services configurations to get the commands to be executed.",
+                "These keys must address a list of commands, maybe per OS, to be executed, i.e.:",
+                "    \"status\": {",
+                "        \"monitor\": {",
+                "            \"commands\": [",
+                "                \"echo 'Status is OK'\",",
+                "                \"byOS\": {",
+                "                    \"linux\": \"/path/to/a/command\",",
+                "                    \"MSWin32\": \"C:\\dir\\command.exe\",",
+                "                }",
+                "            ]",
+                "This same [ 'status', 'monitor' ] list of keys can be defined at the node level or at any service level for this node."
+            ],
+            "type": "array",
+            "items": "string",
+            "default": [
+                "status",
+                "monitor"
+            ]
+        }
+    }
+}

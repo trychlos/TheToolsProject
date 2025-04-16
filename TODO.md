@@ -24,14 +24,15 @@
 |   61 | 2025- 4- 8 | ttp.pl writejson should should actually be ttp.pl filewrite as the json is provided as a string on input - so this is not dedicated to json |
 |   76 | 2024- 4-10 | nodeRoot() should be siteRoot(), shouldn'it ? and so be removed from TTP |
 |   78 | 2024- 4-12 | some daemons should be moveable to libexec/daemons |
+|      | 2024- 4-14 | alerts-monitor-daemon.pl is moved to libexec/daemons |
+|      | 2024- 4-14 | node-monitor-daemon.pl is moved to libexec/daemons |
 |   79 | 2024- 4-12 | let a node override a site variable |
-|   80 | 2024- 4-13 | sufix should be renamed suffix |
-|   81 | 2024- 4-13 | TTP::Daemon should check that listeningPort is OK |
-|   82 | 2024- 4-13 | TTP::Daemon should check that listeningInterval is OK |
-|   83 | 2024- 4-13 | TTP::Daemon mqtt_timeout() and messagingTimeout() are same function |
-|   86 | 2024- 4-13 | TTP::commandExec should have ( $command, { macros => {}} ) definition |
-|   87 | 2024- 4-13 | logicals regular expression should be a single string as this is simpler and can still embed several re's |
-|   89 |  |  |
+|   91 | 2024- 4-15 | ttp.pl push and pull should have same level of verbosity |
+|   92 | 2024- 4-15 | RunnerDaemon::dirs() and finder() should be qualified as in confDirs() and coenfFinder() |
+|   93 | 2024- 4-15 | RunnerCommand should be renamed RunnerVerb |
+|   94 | 2024- 4-15 | TTP::run() should become TTP::runVerb() |
+|   95 | 2024- 4-15 | all getter on Dirs() should be in Path:: |
+|   96 |  |  |
 
 ---
 ## Done
@@ -214,14 +215,30 @@
 |      | 2024- 4-11 | deduplicated to TTP::Path |
 |   77 | 2024- 4-10 | add a comment on how to get site variables |
 |      | 2024- 4-12 | done |
+|   80 | 2024- 4-13 | sufix should be renamed suffix |
+|      | 2024- 4-14 | done |
+|   81 | 2024- 4-13 | TTP::Daemon should check that listeningPort is OK |
+|      | 2024- 4-14 | done |
+|   82 | 2024- 4-13 | TTP::Daemon should check that listeningInterval is OK |
+|      | 2024- 4-14 | done |
+|   83 | 2024- 4-13 | TTP::Daemon mqtt_timeout() and messagingTimeout() are same function |
+|      | 2024- 4-14 | fixed |
 |   84 | 2024- 4-13 | [ttp.pl sizedir] (ERR) do C:\INLINGUA\TheToolsProject\tools\ttp\sizedir.do.pl: |
 |      |            |  ... syntax error at C:\INLINGUA\TheToolsProject\tools\ttp\sizedir.do.pl line 197, near "TTP::Path::( " |
 |      | 2024- 4-13 | fixed |
 |   85 | 2024- 4-13 | [services.pl live] (ERR) do /mnt/ws12dev1/INLINGUA/dev/scripts/TheToolsProject/tools/services/live.do.pl: |
 |      |            | ... Can't call method "runner" on an undefined value at /mnt/ws12dev1/INLINGUA/dev/scripts/TheToolsProject/tools/services/live.do.pl line 129. |
 |      | 2024- 4-13 | fixed |
+|   86 | 2024- 4-13 | TTP::commandExec should have ( $command, { macros => {}} ) definition |
+|      | 2024- 4-14 | done |
+|   87 | 2024- 4-13 | logicals regular expression should be a single string as this is simpler and can still embed several re's |
+|      | 2024- 4-14 | done |
 |   88 | 2024- 4-14 | review classes hierarchy which should be something like Base -> Command -> Extern -> Daemon |
 |      | 2024- 4-14 | done |
+|   89 | 2024- 4-14 | daemonsDirs should be renamed to daemonsConfigDir and configurable in site.json |
+|      | 2024- 4-14 | renamed as daemonsConfDirs and described in site.schema.json |
+|   90 | 2024- 4-14 | also have daemonsExecDir and configurable in site.json |
+|      | 2024- 4-14 | defined as daemonsExecDirs() |
 
 ---
 P. Wieser

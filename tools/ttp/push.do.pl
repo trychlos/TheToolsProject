@@ -119,8 +119,7 @@ sub doPush_byTree {
 	};
 	msgOut( "pushing source='$tree->{source}' to target='$tree->{target}'" );
 	$result->{asked} += 1;
-	my $cmdres = TTP::commandExec({
-		command => $command,
+	my $cmdres = TTP::commandExec( $command, {
 		macros => {
 			SOURCE => $tree->{source},
 			TARGET => $tree->{target},

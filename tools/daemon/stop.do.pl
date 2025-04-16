@@ -175,7 +175,7 @@ if( $count == 0 ){
 # if a daemon name is specified, find the full filename
 if( $opt_name ){
 	my $finder = TTP::Finder->new( $ep );
-	$opt_json = $finder->find({ dirs => [ TTP::RunnerDaemon->dirs(), $opt_name ], sufix => TTP::RunnerDaemon->finder()->{sufix}, wantsAll => false });
+	$opt_json = $finder->find({ dirs => [ TTP::RunnerDaemon->dirs(), $opt_name ], suffix => TTP::RunnerDaemon->finder()->{suffix}, wantsAll => false });
 	msgErr( "unable to find a suitable daemon JSON configuration file for '$opt_name'" ) if !$opt_json;
 }
 # if a json has been specified or has been found, must have a listeningPort and get it
