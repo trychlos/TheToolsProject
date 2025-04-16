@@ -65,8 +65,7 @@ sub minArgsCount {
 }
 
 # -------------------------------------------------------------------------------------------------
-# Returns the minimal count of arguments needed by the running executable
-# Below this minimal count, we automatically display the runner's help
+# Just en empty run()
 # (I):
 # - this TTP::Runner instance
 # (O):
@@ -74,6 +73,8 @@ sub minArgsCount {
 
 sub run {
 	my ( $self ) = @_;
+
+	TTP::Message::msgWarn( __PACKAGE__."::run() should not run here" );
 
 	return $self;
 }

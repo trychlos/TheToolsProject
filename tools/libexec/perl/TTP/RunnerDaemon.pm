@@ -70,24 +70,14 @@ with 'TTP::IEnableable', 'TTP::IAcceptable', 'TTP::IFindable', 'TTP::IJSONable',
 
 use TTP;
 use TTP::Constants qw( :all );
-use TTP::Finder;
+use TTP::DaemonConfig;
 use TTP::Message qw( :all );
 use TTP::Metric;
 use TTP::MQTT;
 
 use constant {
 	BUFSIZE => 4096,
-	MIN_LISTEN_INTERVAL => 500,
-	DEFAULT_LISTEN_INTERVAL => 1000,
-	MIN_MESSAGING_INTERVAL => 5000,
-	DEFAULT_MESSAGING_INTERVAL => 60000,
-	MIN_HTTPING_INTERVAL => 5000,
-	DEFAULT_HTTPING_INTERVAL => 60000,
-	MIN_TEXTING_INTERVAL => 5000,
-	DEFAULT_TEXTING_INTERVAL => 60000,
-	OFFLINE => "offline",
-	MIN_MQTT_TIMEOUT => 5,
-	DEFAULT_MQTT_TIMEOUT => 60
+	OFFLINE => "offline"
 };
 
 # auto-flush on socket
@@ -99,20 +89,6 @@ my $Const = {
 		help => \&_do_help,
 		status => \&_do_status,
 		terminate => \&_do_terminate
-	},
-	# how to find the daemons configuration files
-	jsonFinder => {
-		dirs => [
-			'etc/daemons',
-			'daemons'
-		],
-		suffix => '.json'
-	},
-	# how to find executable
-	exeFinder => {
-		dirs => [
-			'libexec/daemons'
-		]
 	},
 	# the metrics sub by OS
 	metrics => {
@@ -218,14 +194,14 @@ sub _http_advertise {
 sub _initListener {
 	my ( $self, $args ) = @_;
 
-	my $listeningPort = $self->listeningPort();
-	my $listeningInterval = $self->listeningInterval();
-	my $messagingInterval = $self->messagingInterval();
+	my $listeningPort = $self->config()->listeningPort();
+	my $listeningInterval = $self->config()->listeningInterval();
+	my $messagingInterval = $self->config()->messagingInterval();
 	msgVerbose( "listeningPort='$listeningPort' listeningInterval='$listeningInterval' messagingInterval='$messagingInterval'" );
 
-	my $httpingInterval = $self->httpingInterval();
+	my $httpingInterval = $self->config()->httpingInterval();
 	msgVerbose( "httpingInterval='$httpingInterval'" );
-	my $textingInterval = $self->textingInterval();
+	my $textingInterval = $self->config()->textingInterval();
 	msgVerbose( "textingInterval='$textingInterval'" );
 
 	# create a listening socket
@@ -243,11 +219,11 @@ sub _initListener {
 	}
 
 	# connect to MQTT communication bus if the host is configured for and messaging is enabled
-	if( !TTP::errs() && $self->messagingEnabled()){
+	if( !TTP::errs() && $self->config()->messagingEnabled()){
 		$self->{_mqtt} = TTP::MQTT::connect({
 			will => $self->_lastwill()
 		});
-		TTP::MQTT::keepalive( $self->{_mqtt}, $self->messagingTimeout());
+		TTP::MQTT::keepalive( $self->{_mqtt}, $self->config()->messagingTimeout());
 	}
 
 	# Ctrl+C handling
@@ -542,15 +518,15 @@ sub _status {
 	my $status = {};
 	$status->{status} = $self->_running();
 	$status->{pid} = $$;
-	$status->{json} = $self->jsonPath();
-	$status->{enabled} = $self->enabled( $self->jsonData()) ? 'true' : 'false';
-	$status->{listeningPort} = $self->listeningPort();
-	$status->{listeningInterval} = $self->listeningInterval();
-	$status->{messagingInterval} = $self->messagingInterval();
-	$status->{messagingTimeout} = $self->messagingTimeout();
-	$status->{httpingInterval} = $self->httpingInterval();
-	$status->{textingInterval} = $self->textingInterval();
-	$status->{execPath} = $self->execPath();
+	$status->{json} = $self->config()->jsonPath();
+	$status->{enabled} = $self->enabled( $self->config()->jsonData()) ? 'true' : 'false';
+	$status->{listeningPort} = $self->config()->listeningPort();
+	$status->{listeningInterval} = $self->config()->listeningInterval();
+	$status->{messagingInterval} = $self->config()->messagingInterval();
+	$status->{messagingTimeout} = $self->config()->messagingTimeout();
+	$status->{httpingInterval} = $self->config()->httpingInterval();
+	$status->{textingInterval} = $self->config()->textingInterval();
+	$status->{execPath} = $self->config()->execPath();
 
 	return $status;
 }
@@ -566,6 +542,19 @@ sub _text_advertise {
 }
 
 ### Public methods
+
+# ------------------------------------------------------------------------------------------------
+# returns the configuration DaemonConfig instance
+# (I):
+# - none
+# (O):
+# - returns the configuration
+
+sub commonCommands {
+	my ( $self ) = @_;
+
+	return $self->{_config};
+}
 
 # ------------------------------------------------------------------------------------------------
 # returns common commands
@@ -592,16 +581,16 @@ sub declareSleepables {
 	my ( $self, $commands ) = @_;
 
 	# the listening function, each 'listeningInterval'
-	$self->sleepableDeclareFn( sub => sub { $self->listen( $commands ); }, interval => $self->listeningInterval());
+	$self->sleepableDeclareFn( sub => sub { $self->listen( $commands ); }, interval => $self->config()->listeningInterval());
 	# the mqtt status publication, each 'mqttInterval'
-	my $mqttInterval = $self->messagingInterval();
-	$self->sleepableDeclareFn( sub => sub { $self->_mqtt_advertise(); }, interval => $mqttInterval ) if $self->messagingEnabled();
+	my $mqttInterval = $self->config()->messagingInterval();
+	$self->sleepableDeclareFn( sub => sub { $self->_mqtt_advertise(); }, interval => $mqttInterval ) if $self->config()->messagingEnabled();
 	# the http telemetry publication, each 'httpInterval'
-	my $httpInterval = $self->httpingInterval();
-	$self->sleepableDeclareFn( sub => sub { $self->_http_advertise(); }, interval => $httpInterval ) if $self->httpingEnabled();
+	my $httpInterval = $self->config()->httpingInterval();
+	$self->sleepableDeclareFn( sub => sub { $self->_http_advertise(); }, interval => $httpInterval ) if $self->config()->httpingEnabled();
 	# the text telemetry publication, each 'textInterval'
-	my $textInterval = $self->textingInterval();
-	$self->sleepableDeclareFn( sub => sub { $self->_text_advertise(); }, interval => $textInterval ) if $self->textingEnabled();
+	my $textInterval = $self->config()->textingInterval();
+	$self->sleepableDeclareFn( sub => sub { $self->_text_advertise(); }, interval => $textInterval ) if $self->config()->textingEnabled();
 
 	$self->sleepableDeclareStop( sub => sub { return $self->terminating(); });
 
@@ -689,65 +678,6 @@ sub doCommand {
 }
 
 # ------------------------------------------------------------------------------------------------
-# Returns the execPath of the daemon
-# This is a mandatory configuration item.
-# Can be specified either as a full path or as a relative one.
-# In this later case, the executable is searched for in TTP_ROOTS/libexec/daemons.
-# (I):
-# - none
-# (O):
-# - returns the full execPath
-
-sub execPath {
-	my ( $self ) = @_;
-
-	my $path = $self->jsonData()->{execPath};
-
-	if( !File::Spec->file_name_is_absolute( $path )){
-		my $finder = TTP::Finder->new( $ep );
-		$path = $finder->find({ dirs => [ TTP::RunnerDaemon::execDirs(), $path ], wantsAll => false });
-	}
-
-	return $path;
-}
-
-# ------------------------------------------------------------------------------------------------
-# Whether publishing to http-based telemetry system is an enabled feature
-# this is true when the httpingInterval is greater or equal to the mminimum allowed.
-# (I):
-# - none
-# (O):
-# - returns true if this daemon is willing to publish to http-based telemetry system
-
-sub httpingEnabled {
-	my ( $self ) = @_;
-
-	my $interval = $self->httpingInterval();
-	return $interval >= MIN_HTTPING_INTERVAL;
-}
-
-# ------------------------------------------------------------------------------------------------
-# Returns the interval in sec. between two advertisings to http-based telemetry system.
-# May be set to false in the configuration file to disable that.
-# (I):
-# - none
-# (O):
-# - returns the http-ing interval, which may be zero if disabled
-
-sub httpingInterval {
-	my ( $self ) = @_;
-
-	my $interval = $self->jsonData()->{httpingInterval};
-	$interval = DEFAULT_HTTPING_INTERVAL if !defined $interval;
-	if( $interval && $interval > 0 && $interval < MIN_HTTPING_INTERVAL ){
-		msgVerbose( "defined httpingInterval=$interval less than minimum accepted ".MIN_HTTPING_INTERVAL.", ignored" );
-		$interval = DEFAULT_HTTPING_INTERVAL;
-	}
-
-	return $interval;
-}
-
-# ------------------------------------------------------------------------------------------------
 # periodically listen on the TCP port - reevaluate the host configuration at that moment
 # this is needed to cover running when day changes and be sure that we are logging into the right file
 # (I):
@@ -795,90 +725,6 @@ sub listen {
 }
 
 # ------------------------------------------------------------------------------------------------
-# Returns the interval in sec. between two listening loops
-# We provide a default value if not specified in the configuration file.
-# (I):
-# - none
-# (O):
-# - returns the listening interval
-
-sub listeningInterval {
-	my ( $self ) = @_;
-
-	my $interval = $self->jsonData()->{listeningInterval};
-	$interval = DEFAULT_LISTEN_INTERVAL if !defined $interval;
-	if( $interval > 0 && $interval < MIN_LISTEN_INTERVAL ){
-		msgVerbose( "defined listeningInterval=$interval less than minimum accepted ".MIN_LISTEN_INTERVAL.", ignored" );
-		$interval = DEFAULT_LISTEN_INTERVAL;
-	}
-
-	return $interval;
-}
-
-# ------------------------------------------------------------------------------------------------
-# Returns the listening port of the daemon
-# This is a mandatory configuration item.
-# (I):
-# - none
-# (O):
-# - returns the listening port
-
-sub listeningPort {
-	my ( $self ) = @_;
-
-	return $self->jsonData()->{listeningPort};
-}
-
-# ------------------------------------------------------------------------------------------------
-# Returns whether the daemon configuration has been successfully loaded
-# (I):
-# - none
-# (O):
-# - returns true|false
-
-sub loaded {
-	my ( $self ) = @_;
-
-	return $self->jsonLoaded();
-}
-
-# ------------------------------------------------------------------------------------------------
-# Whether publishing to MQTT bus is an enabled feature
-# this is true when the messagingInterval is greater or equal to the mminimum allowed.
-# (I):
-# - none
-# (O):
-# - returns true if this daemon is willing to publish to MQTT
-
-sub messagingEnabled {
-	my ( $self ) = @_;
-
-	my $interval = $self->messagingInterval();
-	return $interval >= MIN_MESSAGING_INTERVAL;
-}
-
-# ------------------------------------------------------------------------------------------------
-# Returns the interval in sec. between two advertisings to messaging system.
-# May be set to false in the configuration file to disable that.
-# (I):
-# - none
-# (O):
-# - returns the listening interval, which may be zero if disabled
-
-sub messagingInterval {
-	my ( $self ) = @_;
-
-	my $interval = $self->jsonData()->{messagingInterval};
-	$interval = DEFAULT_MESSAGING_INTERVAL if !defined $interval;
-	if( $interval && $interval < MIN_MESSAGING_INTERVAL ){
-		msgVerbose( "defined messagingInterval=$interval less than minimum accepted ".MIN_MESSAGING_INTERVAL.", ignored" );
-		$interval = DEFAULT_MESSAGING_INTERVAL;
-	}
-
-	return $interval;
-}
-
-# ------------------------------------------------------------------------------------------------
 # Set a sub to be called each time the daemon is about to mqtt-publish
 # The provided sub:
 # - will receive this TTP::RunnerDaemon as single argument,
@@ -899,26 +745,6 @@ sub messagingSub {
 	}
 
 	return $self;
-}
-
-# ------------------------------------------------------------------------------------------------
-# Returns the mqtt messaging timeout in msec.
-# (I):
-# - none
-# (O):
-# - returns the messaging timeout
-
-sub messagingTimeout {
-	my ( $self ) = @_;
-
-	my $interval = $self->jsonData()->{messagingTimeout};
-	$interval = DEFAULT_MQTT_TIMEOUT if !defined $interval;
-	if( $interval && $interval < MIN_MQTT_TIMEOUT ){
-		msgVerbose( "defined messagingTimeout=$interval less than minimum accepted ".MIN_MQTT_TIMEOUT.", ignored" );
-		$interval = DEFAULT_MQTT_TIMEOUT;
-	}
-
-	return $interval;
 }
 
 # ------------------------------------------------------------------------------------------------
@@ -943,21 +769,16 @@ sub metricLabelAppend {
 }
 
 # ------------------------------------------------------------------------------------------------
-# Returns the canonical name of the daemon
-#  which happens to be the basename of its configuration file without the extension
-# This name is set as soon as the JSON has been successfully loaded, whether the daemon itself
-# is for daemonizing or not.
+# Returns the canonical name of the daemon, which is also the canonical name of the json configuratio
 # (I):
 # - none
 # (O):
-# - returns the name of the daemon, or undef if the initialization has not been successful
+# - returns the name of the daemon whether the config has been successfully loaded or not
 
 sub name {
 	my ( $self ) = @_;
 
-	return undef if !$self->loaded();
-
-	return $self->{_name};
+	return $self->config()->name();
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -1018,6 +839,7 @@ sub setConfig {
 				my ( $vol, $dirs, $bname ) = File::Spec->splitpath( $self->jsonPath());
 				$bname =~ s/\.[^\.]*$//;
 				$self->{_name} = $bname;
+
 				# set a runnable qualifier as soon as we can
 				$self->runnableQualifier( $bname );
 				# and initialize listening socket and messaging connection when asked for
@@ -1028,7 +850,7 @@ sub setConfig {
 		}
 	}
 
-	return $self->loaded();
+	return $self->jsonLoaded();
 }
 
 # ------------------------------------------------------------------------------------------------
@@ -1042,8 +864,8 @@ sub setConfig {
 sub start {
 	my ( $self ) = @_;
 
-	my $program = $self->execPath();
-	my $command = "perl $program -json ".$self->jsonPath()." -ignoreInt ".join( ' ', @ARGV );
+	my $program = $self->config()->execPath();
+	my $command = "perl $program -json ".$self->config()->jsonPath()." -ignoreInt ".join( ' ', @ARGV );
 	my $res = undef;
 
 	if( $ep->runner()->dummy()){
@@ -1152,42 +974,6 @@ sub terminating {
 }
 
 # ------------------------------------------------------------------------------------------------
-# Whether publishing to text-based telemetry system is an enabled feature
-# this is true when the textingInterval is greater or equal to the mminimum allowed.
-# (I):
-# - none
-# (O):
-# - returns true if this daemon is willing to publish to text-based telemetry system
-
-sub textingEnabled {
-	my ( $self ) = @_;
-
-	my $interval = $self->textingInterval();
-	return $interval >= MIN_TEXTING_INTERVAL;
-}
-
-# ------------------------------------------------------------------------------------------------
-# Returns the interval in sec. between two advertisings to text-based telemetry system.
-# May be set to false in the configuration file to disable that.
-# (I):
-# - none
-# (O):
-# - returns the text-ing interval, which may be zero if disabled
-
-sub textingInterval {
-	my ( $self ) = @_;
-
-	my $interval = $self->jsonData()->{textingInterval};
-	$interval = DEFAULT_TEXTING_INTERVAL if !defined $interval;
-	if( $interval && $interval > 0 && $interval < MIN_TEXTING_INTERVAL ){
-		msgVerbose( "defined textingInterval=$interval less than minimum accepted ".MIN_TEXTING_INTERVAL.", ignored" );
-		$interval = DEFAULT_TEXTING_INTERVAL;
-	}
-
-	return $interval;
-}
-
-# ------------------------------------------------------------------------------------------------
 # Getter
 # (I):
 # - none
@@ -1205,62 +991,6 @@ sub topic {
 }
 
 ### Class methods
-
-# ------------------------------------------------------------------------------------------------
-# Returns the list of subdirectories of TTP_ROOTS in which we may find daemons configuration files
-# (I):
-# - none
-# (O):
-# - returns the list of subdirectories which may contain the JSON daemons configuration files as
-#   an array ref
-
-sub dirs {
-	my ( $class ) = @_;
-	$class = ref( $class ) || $class;
-
-	my $dirs = $ep->var( 'daemonsConfDirs' ) || $class->finder()->{dirs};
-
-	return $dirs;
-}
-
-# ------------------------------------------------------------------------------------------------
-# Returns the list of subdirectories of TTP_ROOTS in which we may find daemons executable files
-# (I):
-# - none
-# (O):
-# - returns the list of subdirectories which may contain the daemons executables as an array ref
-
-sub execDirs {
-	my ( $class ) = @_;
-	$class = ref( $class ) || $class;
-
-	my $dirs = $ep->var( 'daemonsExecDirs' ) || $class->execFinder()->{dirs};
-
-	return $dirs;
-}
-
-# ------------------------------------------------------------------------------------------------
-# Returns the (hardcoded) specifications to find the daemons configuration files
-# (I):
-# - none
-# (O):
-# - returns the list of directories which may contain the daemons executables as an array ref
-
-sub execFinder {
-	return $Const->{exeFinder};
-}
-
-# ------------------------------------------------------------------------------------------------
-# Returns the (hardcoded) specifications to find the daemons configuration files
-# (I):
-# - none
-# (O):
-# - returns the list of directories which may contain the JSON daemons configuration files as
-#   an array ref
-
-sub finder {
-	return $Const->{jsonFinder};
-}
 
 # -------------------------------------------------------------------------------------------------
 # Constructor
@@ -1288,7 +1018,7 @@ sub new {
 	# if a path is specified, then we try to load it
 	# IJSONable role takes care of validating the acceptability and the enable-ity
 	if( $args && $args->{jsonPath} ){
-		$self->setConfig( $args );
+		$self->{_config} = TTP::DaemonConfig->new( $args );
 	}
 
 	return $self;

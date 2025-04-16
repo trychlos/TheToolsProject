@@ -34,7 +34,7 @@ use utf8;
 use warnings;
 
 use TTP::Finder;
-use TTP::RunnerDaemon;
+use TTP::DaemonConfig;
 
 my $defaults = {
 	help => 'no',
@@ -54,18 +54,21 @@ my $opt_check = false;
 sub doListJSON {
 	msgOut( "displaying available JSON configuration files..." );
 	my $count = 0;
+	my $confFinder = TTP::DaemonConfig->confFinder();
 	my $findable = {
-		dirs => [ TTP::RunnerDaemon->dirs() ],
-		glob => '*'.TTP::RunnerDaemon->finder()->{suffix}
+		dirs => [ $confFinder->{dirs} ],
+		glob => '*'.$confFinder->{suffix}
 	};
 	my $finder = TTP::Finder->new( $ep );
 	my $jsons = $finder->find( $findable );
 	# only keep first enabled found for each basename
 	my $kepts = {};
 	foreach my $it ( @{$jsons} ){
-		my $daemon = TTP::RunnerDaemon->new( $ep, { jsonPath => $it, checkConfig => $opt_check, listener => false });
-		my $name = $daemon->name();
-		$kepts->{$name} = $it if !exists( $kepts->{$name} ) && $daemon->loaded();
+		my $daemonConfig = TTP::DaemonConfig->new( $ep, { jsonPath => $it, checkConfig => $opt_check });
+		if( $daemonConfig->jsonLoaded()){
+			my $name = $daemonConfig->name();
+			$kepts->{$name} = $it if !exists( $kepts->{$name} );
+		}
 	}
 	# and list in ascii order
 	foreach my $it ( sort keys %{$kepts} ){

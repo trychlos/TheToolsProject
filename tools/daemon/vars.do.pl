@@ -43,7 +43,7 @@ my $opt_confDirs = false;
 # -------------------------------------------------------------------------------------------------
 # list confDirs value - e.g. 'C:\INLINGUA\configurations\daemons'
 
-sub listConfdir {
+sub listConfdirs {
 	my $dirs = [];
 	my @roots = split( /$Config{path_sep}/, $ENV{TTP_ROOTS} );
 	my $specs = TTP::RunnerDaemon->dirs();
@@ -83,7 +83,7 @@ msgVerbose( "got verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got confDirs='".( $opt_confDirs ? 'true':'false' )."'" );
 
 if( !TTP::errs()){
-	listConfdir() if $opt_confDirs;
+	listConfdirs() if $opt_confDirs;
 }
 
 TTP::exit();

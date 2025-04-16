@@ -204,14 +204,13 @@ sub services {
 # (O):
 # - the evaluated value of this variable, which may be undef
 
-my $varDebug = false;
 sub var {
 	my ( $self, $keys ) = @_;
 	#$varDebug = true if ref( $keys ) eq 'ARRAY' && grep( /package/, @{$keys} );
-	print __PACKAGE__."::var() keys=".( ref( $keys ) ? '['.join( ',', @{$keys} ).']' : "'$keys'" ).EOL if $varDebug;
+	print STDERR __PACKAGE__."::var() keys=".( ref( $keys ) ? '['.join( ',', @{$keys} ).']' : "'$keys'" ).EOL if $ENV{TTP_DEBUG};
 	my $value = $self->TTP::IJSONable::var( $keys );
-	print __PACKAGE__."::var() value='".( $value || '(undef)' )."'".EOL if $varDebug;
-	$value = $ep->site()->var( $keys ) if !defined( $value );
+	print __PACKAGE__."::var() value='".( $value || '(undef)' )."'".EOL if $ENV{TTP_DEBUG};
+	$value = $self->ep()->site()->var( $keys ) if !defined( $value );
 	return $value;
 }
 
@@ -220,13 +219,13 @@ sub var {
 # ------------------------------------------------------------------------------------------------
 # Returns the list of subdirectories of TTP_ROOTS in which we may find nodes configuration files
 # (I):
-# - none
+# - the TTP EntryPoint
 # (O):
 # - returns the list of subdirectories which may contain the JSON nodes configuration files as
 #   an array ref
 
 sub dirs {
-	my ( $class ) = @_;
+	my ( $class, $ep ) = @_;
 	$class = ref( $class ) || $class;
 
 	my $dirs = $ep->site() ? $ep->site()->var( 'nodesDirs' ) || $ep->site()->var([ 'nodes', 'dirs' ]) || $class->finder()->{dirs} : $class->finder()->{dirs};
@@ -371,7 +370,7 @@ sub new {
 	my $node = $args->{node} || $ENV{TTP_NODE} || $self->_hostname();
 
 	# allowed nodesDirs can be configured at site-level
-	my $dirs = $class->dirs();
+	my $dirs = $class->dirs( $ep );
 	my $findable = {
 		dirs => [ $dirs, $node.$class->finder()->{suffix} ],
 		wantsAll => false
