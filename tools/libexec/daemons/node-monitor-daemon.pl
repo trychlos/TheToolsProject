@@ -51,7 +51,7 @@ use TTP::Message qw( :all );
 use TTP::RunnerDaemon;
 use vars::global qw( $ep );
 
-my $daemon = TTP::RunnerDaemon->new();
+my $daemon = TTP::RunnerDaemon->startRun();
 
 use constant {
 	MIN_RUN_INTERVAL => 60000,
@@ -103,7 +103,7 @@ sub answerStats {
 sub answerStatus {
 
 	my ( $req ) = @_;
-	my $answer = TTP::Daemon->commonCommands()->{status}( $req, $commands );
+	my $answer = TTP::RunnerDaemon->commonCommands()->{status}( $req, $commands );
 	$answer .= "runInterval: ".configRunInterval().EOL;
 	$answer .= "keys: [".join( ',', @{configKeys()} ).']'.EOL;
 	return $answer;
@@ -113,7 +113,7 @@ sub answerStatus {
 # Returns the configured 'keys' (in sec.) defaulting to DEFAULT_KEYS
 
 sub configKeys {
-	my $config = $daemon->jsonData();
+	my $config = $daemon->config()->jsonData();
 	my $keys = $config->{keys};
 	$keys = DEFAULT_KEYS if !defined $keys;
 
@@ -124,7 +124,7 @@ sub configKeys {
 # Returns the configured 'runInterval' (in sec.) defaulting to DEFAULT_RUN_INTERVAL
 
 sub configRunInterval {
-	my $config = $daemon->jsonData();
+	my $config = $daemon->config()->jsonData();
 	my $interval = $config->{runInterval};
 	$interval = DEFAULT_RUN_INTERVAL if !defined $interval;
 	if( $interval < MIN_RUN_INTERVAL ){
@@ -231,9 +231,6 @@ sub mqttMessaging {
 # service on this node, and execute them
 
 sub works {
-	# recompute at each loop all dynamic variables
-	$daemon->{config} = $daemon->jsonData();
-	# and run..
 	# get commands at the node level
 	my $null = TTP::nullByOS();
 	msgVerbose( "got null=$null" );
@@ -241,7 +238,7 @@ sub works {
 	my $keys = configKeys();
 	msgVerbose( "searching for monitoring commands at the node level" );
 	#my $commands = $node->var( $keys );
-	my $commands = TTP::commandByOs( $keys, { withCommand => false, withCommands => true, jsonable => $ep->node()->jsonData() });
+	my $commands = TTP::commandByOs( $keys, { withCommand => false, withCommands => true, jsonable => $ep->node() });
 	if( hasCommands( $commands )){
 		foreach my $cmd ( @{$commands->{commands}} ){
 			$cmd = macroReplace( $cmd, { '<NODE>' => $node->name() });
@@ -304,15 +301,7 @@ msgVerbose( "found ignoreInt='".( $opt_ignoreInt ? 'true':'false' )."'" );
 msgErr( "'--json' option is mandatory, not specified" ) if !$opt_json;
 
 if( !TTP::errs()){
-	$daemon->setConfig({ json => $opt_json, ignoreInt => $opt_ignoreInt });
-}
-
-# deeply check arguments
-# - current host must have a json configuration file
-# stop here if we do not have any configuration for this host 
-if( !TTP::errs()){
-	$daemon->{config} = $daemon->jsonData();
-	#print Dumper( $daemon );
+	$daemon->run({ jsonPath => $opt_json, ignoreInt => $opt_ignoreInt });
 }
 
 if( TTP::errs()){
