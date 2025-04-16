@@ -1,5 +1,7 @@
 # The Tools Project - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
+# The Tools Project - Tools System and Working Paradigm for IT Production
+# Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
 # Copyright (©) 2023-2025 PWI Consulting
 #
 # TheToolsProject is free software; you can redistribute it and/or
@@ -47,7 +49,6 @@ use if $Config{osname} eq "MSWin32", "Win32::Console::ANSI";
 
 use TTP;
 use TTP::Constants qw( :all );
-use TTP::Path;
 
 Sub::Exporter::setup_exporter({
 	exports => [ qw(
@@ -208,19 +209,15 @@ sub msgDummy {
 sub msgErr {
 	my ( $msg, $opts ) = @_;
 	$opts //= {};
-	if( defined( $ep )){
-		# let have a stack trace
-		#TTP::stackTrace();
-		# and send the message
-		_printMsg({
-			msg => $msg,
-			level => ERR,
-			handle => \*STDERR
-		});
-		my $increment = true;
-		$increment = $opts->{incErr} if exists $opts->{incErr};
-		$ep->runner()->runnableErrInc() if $ep->runner() and $increment;
-	}
+	# send the message
+	_printMsg({
+		msg => $msg,
+		level => ERR,
+		handle => \*STDERR
+	});
+	my $increment = true;
+	$increment = $opts->{incErr} if exists $opts->{incErr};
+	$ep->runner()->runnableErrInc() if $ep && $ep->runner() and $increment;
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -233,6 +230,7 @@ sub msgErr {
 
 sub msgLog {
 	my ( $msg, $opts ) = @_;
+	require TTP;
 	$opts //= {};
 	my $ref = ref( $msg );
 	if( $ref eq 'ARRAY' ){
@@ -260,6 +258,8 @@ sub msgLog {
 
 sub _msgLogAppend {
 	my ( $msg, $opts ) = @_;
+	require TTP;
+	require TTP::Path;
 	$opts //= {};
 	my $logFile = $opts->{logFile} || TTP::logsMain();
 	print STDERR __PACKAGE__."::_msgLogAppend() msg='$msg' opts=".Dumper( $opts )." logFile='".( $logFile ? $logFile : '(undef)' )."'".EOL if $ENV{TTP_DEBUG};
@@ -326,7 +326,6 @@ sub msgVerbose {
 # - the single warning message
 
 sub msgWarn {
-	#TTP::stackTrace();
 	_printMsg({
 		msg => shift,
 		level => WARN
