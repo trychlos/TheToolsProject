@@ -236,8 +236,7 @@
 				"short": false
 			},
 			"logicals": {
-				"regexp": [
-				]
+				"regexp": ""
 			}
 		},
 
@@ -249,29 +248,13 @@
 		],
 		"nodeRoot": "C:\\Temp|/tmp",
 
-		"SMTPGateway_comments": [
-			"This is needed to send mails in order to be able to supply to the lack of a local MTA",
-			"- host: the MTA, default to localhost",
-			"- port: the remote port, have suitable defaults depending of the used protocol",
-			"- mailfrom: the mail emitter, defaulting to 'me@localhost'",
-			"- debug: whether to have a verbose log, defaulting to false",
-			"- security, optional, may be 'ssl' or 'starttls'",
-			"- timeout, defaulting to 60 (sec.)",
-			"- helo, defaulting to current execution node",
-			"if needed, username and password are managed through the credentials usual way."
-		],
 		"SMTPGateway": {
 			"host": "mail.example.com",
 			"port": 465,
 			"mailfrom": "No Reply <no-reply@example.com>"
 		},
 
-		"Telemetry_comments": [
-			"Starting with its v3.0 version, TheToolsProject has chosen Prometheus ecosystem to host its telemetry, while keeping the capability",
-			"to have a messaging-based (MQTT) telemetry. Prometheus let us sent our telemetry either via the PushGateway or via the TextFileCollector.",
-			"These three medias are both available, and configured here."
-		],
-		"Telemetry": {
+		"telemetry": {
 			"withMqtt": {
 				"enabled": false,
 				"command": "mqtt.pl publish -topic <TOPIC> -payload \"<PAYLOAD>\""
