@@ -27,6 +27,7 @@ use Data::Dumper;
 use Data::UUID;
 use Devel::StackTrace;
 use File::Spec;
+use IPC::Run qw( run timeout );
 use JSON;
 use open qw( :std :encoding(UTF-8));
 use Path::Tiny qw( path );
@@ -190,15 +191,18 @@ sub commandByOs_getObject {
 # (O):
 # return a hash with following keys:
 # - evaluated: the evaluated command after macros replacements
-# - stdout: a reference to the array of outputed lines
+# - stdout: stdout as a reference to the array of lines
+# - stderr: stderr as a reference to the array of lines
 # - exit: original exit code of the command
 # - success: true|false
 
 sub commandExec {
 	my ( $command, $opts ) = @_;
 	$opts //= {};
+	print STDERR "in commandExec()".EOL;
 	my $result = {
 		stdout => [],
+		stderr => [],
 		exit => -1,
 		success => false
 	};
@@ -218,28 +222,63 @@ sub commandExec {
 			msgDummy( $result->{evaluated} );
 			$result->{result} = true;
 		} else {
-			my @out = `$result->{evaluated}`;
+			my ( $res_ok, $res_code, $res_stdout, $res_stderr ) = commandExec_run( $result->{evaluated} );
 			# https://www.perlmonks.org/?node_id=81640
 			# Thus, the exit value of the subprocess is actually ($? >> 8), and $? & 127 gives which signal, if any, the
 			# process died from, and $? & 128 reports whether there was a core dump.
 			# https://ss64.com/nt/robocopy-exit.html
-			my $res = $?;
-			$result->{exit} = $res;
-			$result->{success} = ( $res == 0 ) ? true : false;
-			msgVerbose( scalar( @out ) ? join( '', @out ) : '<empty stdout>' );
-			msgVerbose( "TTP::commandExec() return_code=$res firstly interpreted as success=".( $result->{success} ? 'true' : 'false' ));
-			if( $command =~ /robocopy/i ){
-				$res = ( $res >> 8 );
-				$result->{success} = ( $res <= 7 ) ? true : false;
-				msgVerbose( "TTP::commandExec() robocopy specific interpretation res=$res success=".( $result->{success} ? 'true' : 'false' ));
+			#my $res = $?;
+			$result->{exit} = $res_code;
+			$result->{success} = $res_ok;
+			if( $res_stdout ){
+				my @lines = split( /[\r\n]/, $res_stdout );
+				$result->{stdout} = \@lines;
+				msgVerbose( "stdout: $res_stdout" );
+			} else {
+				msgVerbose( "stdout: <empty>" );
 			}
-			$result->{stdout} = \@out;
+			if( $res_stderr ){
+				my @lines = split( /[\r\n]/, $res_stderr );
+				$result->{stderr} = \@lines;
+				msgVerbose( "stderr: $res_stderr" );
+			} else {
+				msgVerbose( "stderr: <empty>" );
+			}
+			msgVerbose( "TTP::commandExec() return_code=$res_code firstly interpreted as success=".( $result->{success} ? 'true' : 'false' ));
+			if( $command =~ /robocopy/i ){
+				$res_code = ( $res_code >> 8 );
+				$result->{success} = ( $res_code <= 7 ) ? true : false;
+				msgVerbose( "TTP::commandExec() robocopy specific interpretation res=$res_code success=".( $result->{success} ? 'true' : 'false' ));
+			}
 		}
 		msgVerbose( "TTP::commandExec() success=".( $result->{success} ? 'true' : 'false' ));
 	}
 	return $result;
 }
+sub commandExec_run {
+    my ( $cmd, $opts ) = @_;
 
+    my $stdin  = $opts->{stdin}  // \undef;
+    my $stdout = '';
+    my $stderr = '';
+    my $timeout = $opts->{timeout} // 10;  # seconds
+
+    my @command = ref( $cmd ) eq 'ARRAY' ? @$cmd : split( /\s+/, $cmd );
+	my $exit_code;
+
+    my $ok = eval {
+        run \@command, '<', $stdin, '>', \$stdout, '2>', \$stderr, timeout( $timeout );
+		$exit_code = $?;
+        1;
+    };
+
+    #if( !$ok ){
+    #    my $err = $@ || 'Unknown error';
+    #    return (0, '', "Execution failed: $err");
+    #}
+
+    return ( $ok, $exit_code, $stdout, $stderr );
+}
 # -------------------------------------------------------------------------------------------------
 # Display an array of hashes as a (sql-type) table
 # (I):
