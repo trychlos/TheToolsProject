@@ -66,7 +66,7 @@ use Time::Moment;
 use vars::global qw( $ep );
 use if $Config{osname} eq 'MSWin32', 'Win32::OLE';
 
-with 'TTP::IEnableable', 'TTP::IAcceptable', 'TTP::IFindable', 'TTP::IJSONable', 'TTP::ISleepable';
+with 'TTP::ISleepable';
 
 use TTP;
 use TTP::Constants qw( :all );
@@ -519,7 +519,7 @@ sub _status {
 	$status->{status} = $self->_running();
 	$status->{pid} = $$;
 	$status->{json} = $self->config()->jsonPath();
-	$status->{enabled} = $self->enabled( $self->config()->jsonData()) ? 'true' : 'false';
+	$status->{enabled} = $self->config()->enabled( $self->config()->jsonData()) ? 'true' : 'false';
 	$status->{listeningPort} = $self->config()->listeningPort();
 	$status->{listeningInterval} = $self->config()->listeningInterval();
 	$status->{messagingInterval} = $self->config()->messagingInterval();
@@ -550,7 +550,7 @@ sub _text_advertise {
 # (O):
 # - returns the configuration
 
-sub commonCommands {
+sub config {
 	my ( $self ) = @_;
 
 	return $self->{_config};
@@ -695,7 +695,7 @@ sub listen {
 
 	# before anything else, reevalute our configurations
 	# -> the daemon config
-	$self->evaluate();
+	$self->config()->evaluate();
 	# -> toops+site and execution host configurations
 	$ep->site()->evaluate();
 	$ep->node()->evaluate();
@@ -782,101 +782,40 @@ sub name {
 }
 
 # -------------------------------------------------------------------------------------------------
-# Set the configuration path
-# Honors the '--dummy' verb option by using msgWarn() instead of msgErr() when checking the configuration
+# The daemon has been instanciated in its own process and the corresponding EntryPoint has been bootstrapped
+# Now that the command-line options has been dealt with, it is time to load the configuration and start to run
 # (I):
 # - a hash argument with following keys:
 #   > jsonPath: the absolute path to the JSON configuration file
-#   > checkConfig: whether to check the loaded config for mandatory items, defaulting to true
-#   > listener: whether to initialize the listener, defaulting to true
+#   > ignoreInt: whether to ignore the 'Ctrl+C' interrupts, defaulting to false
 # (O):
 # - true|false whether the configuration has been successfully loaded
 
-sub setConfig {
+sub run {
 	my ( $self, $args ) = @_;
 	$args //= {};
 
-	# only manage JSON configuration at the moment
-	if( $args->{jsonPath} ){
-		my $loaded = false;
-		my $acceptable = {
-			accept => sub { return $self->enabled( @_ ); },
-			opts => {
-				type => 'JSON'
-			}
-		};
-		# IJSONable role takes care of validating the acceptability and the enable-ity
-		$loaded = $self->jsonLoad({ path => $args->{jsonPath}, acceptable => $acceptable });
-		# evaluate the data if success
-		if( $loaded ){
-			$self->evaluate();
+	my $loaded = false;
 
-			my $checkConfig = true;
-			$checkConfig = $args->{checkConfig} if exists $args->{checkConfig};
-			if( $checkConfig ){
-				my $msgRef = $self->ep()->runner()->dummy() ? \&msgWarn : \&msgErr;
-				# must have a valid listening interval
-				my $listeningInterval = $self->listeningInterval();
-				$msgRef->( "$args->{json}: daemon configuration doesn't define a valid 'listeningInterval' value, found '".( $listeningInterval ? $listeningInterval : '(undef)' )."'" ) if !$listeningInterval || $listeningInterval < MIN_LISTEN_INTERVAL;
-				# must have a listening port
-				my $listeningPort = $self->listeningPort();
-				$msgRef->( "$args->{json}: daemon configuration doesn't define a valid 'listeningPort' value, found '".( $listeningPort ? $listeningPort : '(undef)' )."'" ) if !$listeningPort || $listeningPort < 1;
-				# must have an exec path
-				my $execPath = $self->execPath();
-				$msgRef->( "$args->{jsonPath}: daemon configuration must define an 'execPath' value, not found" ) if !$execPath;
-				$msgRef->( "$args->{jsonPath}: execPath='$execPath' not found or not readable" ) if ! -r $execPath;
-			} else {
-				msgVerbose( "not checking daemon config as checkConfig='false'" );
-			}
-
-			# if the JSON configuration has been checked but misses some informations, then says we cannot load
-			if( TTP::errs()){
-				$self->jsonLoaded( false );
-
-			# else initialize the daemon (socket+messaging) unless otherwise specified
-			# note that we open the listening socket even if we are not going to daemon mode
-			} else {
-				my ( $vol, $dirs, $bname ) = File::Spec->splitpath( $self->jsonPath());
-				$bname =~ s/\.[^\.]*$//;
-				$self->{_name} = $bname;
-
-				# set a runnable qualifier as soon as we can
-				$self->runnableQualifier( $bname );
-				# and initialize listening socket and messaging connection when asked for
-				my $listener = true;
-				$listener = $args->{listener} if defined $args->{listener};
-				$self->_initListener( $args ) if $listener;
-			}
+	# if a path is specified, then we try to load it
+	# IJSONable role takes care of validating the acceptability and the enable-ity
+	if( $args && $args->{jsonPath} ){
+		$self->{_config} = TTP::DaemonConfig->new( $self->ep(), $args );
+		if( $self->config()->jsonLoaded()){
+			# set a runnable qualifier as soon as we can
+			$self->runnableQualifier( $self->config()->name());
+			# and initialize listening socket and messaging connection when asked for
+			my $listener = true;
+			$listener = $args->{listener} if defined $args->{listener};
+			$self->_initListener( $args ) if $listener;
+			$loaded = true;
 		}
-	}
-
-	return $self->jsonLoaded();
-}
-
-# ------------------------------------------------------------------------------------------------
-# Parent process
-# Start the daemon
-# (I):
-# - none
-# (O):
-# - returns true|false
-
-sub start {
-	my ( $self ) = @_;
-
-	my $program = $self->config()->execPath();
-	my $command = "perl $program -json ".$self->config()->jsonPath()." -ignoreInt ".join( ' ', @ARGV );
-	my $res = undef;
-
-	if( $ep->runner()->dummy()){
-		msgDummy( $command );
-		msgDummy( "considering startup as 'true'" );
-		$res = true;
 	} else {
-		$res = Proc::Background->new( $command );
+		msgErr( __PACKAGE__."run() expects args->{jsonPath}, not found" );
+		TTP::stackTrace();
 	}
 
-	return $res;
+	return $loaded;
 }
 
 # ------------------------------------------------------------------------------------------------
@@ -998,10 +937,6 @@ sub topic {
 # 'jsonable-loaded' flag that the caller MUST test.
 # (I):
 # - the TTP EP entry point
-# - an optional argument object with following keys:
-#   > jsonPath: the absolute path to the JSON configuration file
-#   > checkConfig: whether to check the loaded config for mandatory items, defaulting to true if provided
-#   > listener: whether to initialize the listener, defaulting to true
 # (O):
 # - this object
 
@@ -1014,12 +949,6 @@ sub new {
 
 	$self->{_initialized} = false;
 	$self->{_terminating} = false;
-
-	# if a path is specified, then we try to load it
-	# IJSONable role takes care of validating the acceptability and the enable-ity
-	if( $args && $args->{jsonPath} ){
-		$self->{_config} = TTP::DaemonConfig->new( $args );
-	}
 
 	return $self;
 }
@@ -1043,20 +972,54 @@ sub DESTROY {
 ### the class as first argument).
 
 # -------------------------------------------------------------------------------------------------
-# instanciates and run the external command
+# From inside the parent process, i.e. the daemon process has not yet been instanciated...
+# Please note that the EntryPoint which is used where is those of the parent process
 # (I):
-# - the TTP EntryPoint
+# - this TTP::RunnerDaemon class name because this has to be called as 'TTP::RunnerDaemon->start()'
+# - the DaemonConfig configuration
 # (O):
-# - the newly instanciated RunnerExtern
+# - the newly instanciated RunnerDaemon
 
-sub runCommand {
-	my ( $ep ) = @_;
-	print STDERR __PACKAGE__."::run() ep=".ref( $ep ).EOL if $ENV{TTP_DEBUG};
+sub startDaemon {
+	my ( $class, $config ) = @_;
+	print STDERR __PACKAGE__."::run() config=".ref( $config ).EOL if $ENV{TTP_DEBUG};
 
-	my $command = TTP::RunnerDaemon->new( $ep );
-	$command->run();
+	my $program = $config->execPath();
+	my $command = "perl $program -json ".$config->jsonPath()." -ignoreInt ".join( ' ', @ARGV );
+	my $res = undef;
+
+	if( $config->ep()->runner()->dummy()){
+		msgDummy( $command );
+		msgDummy( "considering startup as 'true'" );
+		$res = true;
+	} else {
+		$res = Proc::Background->new( $command );
+	}
 
 	return $command;
 }
+
+# -------------------------------------------------------------------------------------------------
+# the daemon process is just being instanciated: time to instanciate and bootstrap an EntryPoint
+# (I):
+# - the DaemonConfig configuration
+# (O):
+# - the newly instanciated RunnerDaemon
+
+sub startRun {
+	my ( $class ) = @_;
+	print STDERR __PACKAGE__."::run()".EOL if $ENV{TTP_DEBUG};
+
+	$ep = TTP::EP->new();
+	$ep->bootstrap();
+	my $daemon = TTP::RunnerDaemon->new( $ep );
+	return $daemon;
+}
+
+### Global functions
+### Note for the developer: while a global function doesn't take any argument, it can be called both
+### as a class method 'TTP::Package->method()' or as a global function 'TTP::Package::method()',
+### the former being preferred (hence the writing inside of the 'Class methods' block which brings
+### the class as first argument).
 
 1;

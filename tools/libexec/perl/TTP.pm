@@ -875,20 +875,6 @@ sub run {
 }
 
 # -------------------------------------------------------------------------------------------------
-# Run by an external daemon to initialize a TTP context
-# Expects $0 be the full path name to the command script (this is the case in Windows+Strawberry)
-# and @ARGV the command-line arguments
-
-sub runDaemon {
-	require TTP::RunnerDaemon;
-	print STDERR Dumper( @ARGV ) if $ENV{TTP_DEBUG};
-	$ep = TTP::EP->new();
-	$ep->bootstrap();
-	my $command = TTP::RunnerDaemon::runCommand( $ep );
-	return $command;
-}
-
-# -------------------------------------------------------------------------------------------------
 # Run by an external command to initialize a TTP context
 # Expects $0 be the full path name to the command script (this is the case in Windows+Strawberry)
 # and @ARGV the command-line arguments

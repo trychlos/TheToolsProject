@@ -35,6 +35,7 @@ use warnings;
 
 use File::Spec;
 
+use TTP::DaemonConfig;
 use TTP::RunnerDaemon;
 
 my $defaults = {
@@ -54,15 +55,13 @@ my $opt_name = $defaults->{name};
 
 sub doStart {
 	msgOut( "starting the daemon from '$opt_json'..." );
-	my $daemon = TTP::RunnerDaemon->new( $ep, { jsonPath => $opt_json, listener => false });
-	if( $daemon->loaded()){
-		if( $daemon->start()){
+	my $config = TTP::DaemonConfig->new( $ep, { jsonPath => $opt_json });
+	if( $config->jsonLoaded()){
+		if( TTP::RunnerDaemon->startDaemon( $config )){
 			msgOut( "success" );
 		} else {
 			msgErr( "NOT OK" );
 		}
-	} else {
-		msgErr( "unable to load the '$opt_json' specified configuration file" );
 	}
 }
 
@@ -105,7 +104,8 @@ if( $count == 0 ){
 # if a daemon name is specified, find the full filename of its configuration file
 if( $opt_name ){
 	my $finder = TTP::Finder->new( $ep );
-	$opt_json = $finder->find({ dirs => [ TTP::RunnerDaemon->dirs(), $opt_name ], suffix => TTP::RunnerDaemon->finder()->{suffix}, wantsAll => false });
+	my $confFinder = TTP::DaemonConfig->confFinder();
+	$opt_json = $finder->find({ dirs => [ $confFinder->{dirs}, $opt_name ], suffix => $confFinder->{suffix}, wantsAll => false });
 	msgErr( "unable to find a suitable daemon JSON configuration file for '$opt_name'" ) if !$opt_json;
 }
 

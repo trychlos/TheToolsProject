@@ -34,6 +34,7 @@ use warnings;
 
 use Carp;
 use Data::Dumper;
+use Scalar::Util qw( blessed );
 use vars::global qw( $ep );
 
 use TTP;
@@ -147,8 +148,17 @@ sub var {
 	my $value = undef;
 	# we may not have yet a current execution node, so accept that jsonable be undef
 	my $jsonable = $opts->{jsonable} || $self->node();
-	if( $jsonable && ref( $jsonable ) && $jsonable->does( 'TTP::IJSONable' )){
-		$value = $jsonable->var( $keys );
+	if( $jsonable ){
+		if( ref( $jsonable )){
+			if( blessed( $jsonable )){
+				if( $jsonable->does( 'TTP::IJSONable' )){
+					$value = $jsonable->var( $keys );
+				}
+			} else {
+				msgErr( __PACKAGE__."::var() can't call method 'does' on unblessed reference" );
+				TTP::stackTrace();
+			}
+		}
 	}
 	return $value;
 }
