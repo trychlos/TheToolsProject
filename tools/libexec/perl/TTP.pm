@@ -117,8 +117,10 @@ sub commandByOs {
 	$count += 1 if $withCommands;
 	if( $count == 0 ){
 		msgErr( __PACKAGE__."::commandByOs() must have one of 'withCommand' or 'withCommands', found none" );
+		TTP::stackTrace();
 	} elsif( $count > 1 ){
 		msgErr( __PACKAGE__."::commandByOs() must have one of 'withCommand' or 'withCommands', found both" );
+		TTP::stackTrace();
 	} else {
 		push( @locals, 'command' ) if $withCommand;
 		push( @locals, 'commands' ) if $withCommands;
@@ -126,37 +128,72 @@ sub commandByOs {
 		my $obj = $ep->var( \@locals, $opts );
 		if( defined( $obj )){
 			my $ref = ref( $obj );
-			if( $ref eq 'HASH' ){
-				push( @locals, 'byOS', $Config{osname} );
-				my $obj = $ep->var( \@locals, $opts );
-				if( defined( $obj )){
-					$ref = ref( $obj );
-					if( !$ref ){
-						$command = $obj;
-						msgVerbose( "TTP::commandByOs() found command '$command' at [ ".join( ', ', @locals )." ]" );
+			# a single command: expects a command or a 'byOS' object
+			if( $withCommand ){
+				$command = commandByOs_getObject( \@locals, $obj, $opts );
+				if( $ref eq 'HASH' ){
+					push( @locals, 'byOS', $Config{osname} );
+					my $obj = $ep->var( \@locals, $opts );
+					if( defined( $obj )){
+						$ref = ref( $obj );
+						if( !$ref ){
+							$command = $obj;
+							msgVerbose( __PACKAGE__."::commandByOs() found command '$command' at [ ".join( ', ', @locals )." ]" );
+							$done = true;
+						} else {
+							msgErr( __PACKAGE__."::commandByOs() unexpected object found in [".join( ', ', @locals )."] configuration: $obj ($ref)." );
+						}
 					} else {
-						msgErr( "TTP::commandByOs() unexpected object found in [".join( ', ', @locals )."] configuration: $obj ($ref)." );
+						msgWarn( __PACKAGE__."::commandByOs() nothing found at [ ".join( ', ', @locals )." ]" );
 					}
+				} elsif( !$ref ){
+					msgErr( __PACKAGE__."::commandByOs() unexpected object found in [".join( ', ', @locals )."] configuration: $obj ($ref)." );
+				} else {
+
+				}
+			# several commands: expects an array here
+			} elsif( $withCommands ){
+				if( $ref eq 'ARRAY' ){
+					$command = [];
+					foreach my $it ( @{$obj} ){
+						push( @{$command}, commandByOs_getObject( \@locals, $it ));
+					}
+				} else {
+					msgErr( __PACKAGE__."::commandByOs() unexpected object found in [".join( ', ', @locals )."] configuration: $obj ($ref)." );
 				}
 			} else {
-				my $done = false;
-				if( $ref eq 'ARRAY' && $withCommands ){
-					$command = $obj;
-					msgVerbose( "TTP::commandByOs() found commands [ ".join( ', ', @{$command} )." ] at [ ".join( ', ', @locals )." ]" );
-					$done = true;
-				}
-				if( !$ref && $withCommand ){
-					$command = $obj;
-					msgVerbose( "TTP::commandByOs() found command '$command' at [ ".join( ', ', @locals )." ]" );
-					$done = true;
-				}
-			}
-			if( !$done ){
-				msgErr( "TTP::commandByOs() unexpected object found in [".join( ', ', @locals )."] configuration: $obj ($ref)." );
+				msgErr( __PACKAGE__."commandByOs() unexpected 'withCommand(s)' mode" );
+				TTP::stackTrace();
 			}
 		} else {
-			msgVerbose( "TTP::commandByOs() nothing found at [ ".join( ', ', @locals )." ]" );
+			msgVerbose( __PACKAGE__."::commandByOs() nothing found at [ ".join( ', ', @locals )." ]" );
 		}
+	}
+	return $command;
+}
+
+sub commandByOs_getObject {
+	my ( $locals, $parent, $opts ) = @_;
+	my $command = undef;
+	my $ref = ref( $parent );
+	if( $ref eq 'HASH' ){
+		my @locals = @{$locals};
+		push( @locals, 'byOS', $Config{osname} );
+		my $obj = $ep->var( \@locals, $opts );
+		if( defined( $obj )){
+			$ref = ref( $obj );
+			if( !$ref ){
+				$command = $obj;
+				msgVerbose( __PACKAGE__."::commandByOs() found command '$command' at [ ".join( ', ', @locals )." ]" );
+				$done = true;
+			} else {
+				msgErr( __PACKAGE__."::commandByOs() unexpected object found in [".join( ', ', @locals )."] configuration: $obj ($ref)." );
+			}
+		} else {
+			msgWarn( __PACKAGE__."::commandByOs() nothing found at [ ".join( ', ', @locals )." ]" );
+		}
+	} else {
+		$command = $parent;
 	}
 	return $command;
 }
