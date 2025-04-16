@@ -148,7 +148,9 @@
                                 "command": {
                                     "description_array": [
                                         "The command to be used to send the alert by SMS.",
-                                        "The command has access to additional <RECIPIENTS> macro which is resolved with a comma-separated list of the recipients.",
+                                        "The command has access to additional macros:",
+                                        "- <RECIPIENTS> is resolved with a comma-separated list of the recipients,",
+                                        "- <CONTENTFNAME> is the filename of a text file which contains the full message.",
                                         "No default command is provided as of v4.1"
                                     ],
                                     "type": [
@@ -187,7 +189,9 @@
                                 "command": {
                                     "description_array": [
                                         "The command to be used to send the alert by email.",
-                                        "The command has access to additional <RECIPIENTS> macro which is resolved with a comma-separated list of the recipients."
+                                        "The command has access to additional macros:",
+                                        "- <RECIPIENTS> is resolved with a comma-separated list of the recipients,",
+                                        "- <CONTENTFNAME> is the filename of a text file which contains the full message."
                                     ],
                                     "type": [
                                         "string",
@@ -306,6 +310,23 @@
                         "private"
                     ]
                 },
+                "daemonsConfDirs": {
+                    "description": "The list of subdirectories of TTP_ROOTS trees where we search for daemons JSON configurations.",
+                    "type": "array",
+                    "items": "string",
+                    "default": [
+                        "etc/daemons",
+                        "daemons"
+                    ]
+                },
+                "daemonsExecDirs": {
+                    "description": "The list of subdirectories of TTP_ROOTS trees where we search for daemons executables.",
+                    "type": "array",
+                    "items": "string",
+                    "default": [
+                        "libexec/daemons"
+                    ]
+                },
                 "deployments": {
                     "description_array": [
                         "When deploying from a development TTP layer to a pull reference, and from this pull reference to other machines of the parc.",
@@ -415,16 +436,9 @@
                                         "Regular expressions should be anchored and identify the first mount point.",
                                         "",
                                         "Example:",
-                                        "   \"regexp\": [",
-                                                "^/(ne.*)$",
-                                                "^/(bo.*)$",
-                                        "   ]"
+                                        "   \"regexp\": \"^/(ne.*)$|^/(bo.*)$\""
                                     ],
-                                    "type": [
-                                        "array",
-                                        "string"
-                                    ],
-                                    "items": "string"
+                                    "type": "string"
                                 }
                             }
                         }
@@ -479,6 +493,80 @@
                             "description": "Default email emitter.",
                             "type": "string",
                             "default": "No Reply <no-reply@localhost>"
+                        }
+                    }
+                },
+                "Telemetry": {
+                    "description": "The configuration of the telemetry. Deprecated in favor of 'telemetry' in v4.5.",
+                    "deprecated": true
+                },
+                "telemetry": {
+                    "description_array": [
+                        "Starting with its v3.0 version, TheToolsProject has chosen Prometheus ecosystem to host its telemetry, while keeping the capability",
+                        "to have a messaging-based (MQTT) telemetry. Prometheus let us sent our telemetry either via the PushGateway or via the TextFileCollector.",
+                        "These three medias are both configurable here."
+                    ],
+                    "type": "object",
+                    "properties": {
+                        "withMqtt": {
+                            "description": "The messaging-based configuration of the telemetry.",
+                            "type": "object",
+                            "properties": {
+                                "default": {
+                                    "description": "Whether the messaging-based telemetry is a default of the 'telemetry.pl publish' command.",
+                                    "type": "boolean",
+                                    "default": true
+                                },
+                                "command": {
+                                    "description": "The command to be run to publish a telemetry on the MQTT bus.",
+                                    "type": [
+                                        "object",
+                                        "string"
+                                    ],
+                                    "properties": {
+                                        "byOS": {
+                                            "description": "Let a command be specific to the running OS.",
+                                            "type": "object",
+                                            "patternProperties": {
+                                                "^.*$": {
+                                                    "description": "The OS name as reported by Perl-Config, the value being the command to be applied for this OS.",
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "withHttp": {
+                            "description": "The HTTP-based configuration of the telemetry.",
+                            "type": "object",
+                            "properties": {
+                                "default": {
+                                    "description": "Whether the HTTP-based telemetry is a default of the 'telemetry.pl publish' command.",
+                                    "type": "boolean",
+                                    "default": true
+                                },
+                                "url": {
+                                    "description": "The based URL of the HTTP PushGateway.",
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "withText": {
+                            "description": "The text-based configuration of the telemetry.",
+                            "type": "object",
+                            "properties": {
+                                "default": {
+                                    "description": "Whether the text-based telemetry is a default of the 'telemetry.pl publish' command.",
+                                    "type": "boolean",
+                                    "default": true
+                                },
+                                "url": {
+                                    "description": "The based URL of the HTTP PushGateway.",
+                                    "type": "string"
+                                }
+                            }
                         }
                     }
                 }
