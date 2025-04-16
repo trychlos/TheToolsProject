@@ -38,7 +38,6 @@ use vars::global qw( $ep );
 
 with 'TTP::IHelpable', 'TTP::IOptionable', 'TTP::IRunnable';
 
-use TTP;
 use TTP::Constants qw( :all );
 use TTP::Message qw( :all );
 
