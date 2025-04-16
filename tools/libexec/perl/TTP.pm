@@ -40,10 +40,6 @@ use TTP::EP;
 use TTP::Finder;
 use TTP::Message qw( :all );
 use TTP::Node;
-use TTP::Path;
-use TTP::RunnerCommand;
-use TTP::RunnerDaemon;
-use TTP::RunnerExtern;
 
 # autoflush STDOUT
 $| = 1;
@@ -587,6 +583,7 @@ sub host {
 
 sub jsonAppend {
 	my ( $hash, $path ) = @_;
+	require TTP::Path;
 	msgVerbose( "jsonAppend() to '$path'" );
 	my $json = JSON->new;
 	my $str = $json->encode( $hash );
@@ -684,6 +681,7 @@ sub jsonRead {
 
 sub jsonWrite {
 	my ( $hash, $path ) = @_;
+	require TTP::Path;
 	msgVerbose( "jsonWrite() to '$path'" );
 	my $json = JSON->new;
 	my $str = $json->encode( $hash );
@@ -861,6 +859,7 @@ sub random {
 # and @ARGV the command-line arguments
 
 sub run {
+	require TTP::RunnerCommand;
 	print STDERR Dumper( @ARGV ) if $ENV{TTP_DEBUG};
 	$ep = TTP::EP->new();
 	$ep->bootstrap();
@@ -874,6 +873,7 @@ sub run {
 # and @ARGV the command-line arguments
 
 sub runDaemon {
+	require TTP::RunnerDaemon;
 	print STDERR Dumper( @ARGV ) if $ENV{TTP_DEBUG};
 	$ep = TTP::EP->new();
 	$ep->bootstrap();
@@ -887,6 +887,7 @@ sub runDaemon {
 # and @ARGV the command-line arguments
 
 sub runExtern {
+	require TTP::RunnerExtern;
 	print STDERR Dumper( @ARGV ) if $ENV{TTP_DEBUG};
 	$ep = TTP::EP->new();
 	$ep->bootstrap();
