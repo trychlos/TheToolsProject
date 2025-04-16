@@ -41,7 +41,7 @@ use Time::Moment;
 $| = 1;
 
 use TTP::Finder;
-use TTP::RunnerDaemon;
+use TTP::DaemonConfig;
 
 my $defaults = {
 	help => 'no',
@@ -182,14 +182,15 @@ if( $count == 0 ){
 # if a daemon name is specified, find the full JSON filename
 if( $opt_name ){
 	my $finder = TTP::Finder->new( $ep );
-	$opt_json = $finder->find({ dirs => [ TTP::RunnerDaemon->dirs(), $opt_name ], suffix => TTP::RunnerDaemon->finder()->{suffix}, wantsAll => false });
+	my $confFinder = TTP::DaemonConfig->confFinder();
+	$opt_json = $finder->find({ dirs => [ $confFinder->{dirs}, $opt_name ], suffix => $confFinder->{suffix}, wantsAll => false });
 	msgErr( "unable to find a suitable daemon JSON configuration file for '$opt_name'" ) if !$opt_json;
 }
 # if a json has been specified or has been found, must have a listeningPort and get it
 if( $opt_json ){
-	my $daemon = TTP::RunnerDaemon->new( $ep, { jsonPath => $opt_json, listener => false });
-	if( $daemon->loaded()){
-		$opt_port = $daemon->listeningPort();
+	my $config = TTP::DaemonConfig->new( $ep, { jsonPath => $opt_json, listener => false });
+	if( $config->jsonLoaded()){
+		$opt_port = $config->listeningPort();
 	} else {
 		msgErr( "unable to load a suitable daemon configuration for json='$opt_json'" );
 	}

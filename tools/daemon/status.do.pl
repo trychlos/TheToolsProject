@@ -37,9 +37,9 @@ use warnings;
 
 use File::Spec;
 
+use TTP::DaemonConfig;
 use TTP::Finder;
 use TTP::Metric;
-use TTP::RunnerDaemon;
 
 my $defaults = {
 	help => 'no',
@@ -62,13 +62,13 @@ my $opt_http = false;
 my $opt_metric = $defaults->{metric};
 my @opt_labels = ();
 
-# the addressed daemon
-my $daemon = undef;
-
 # -------------------------------------------------------------------------------------------------
 # get a daemon status
+# (I):
+# - the DaemonConfig object
 
 sub doStatus {
+	my ( $config ) = @_;
 	msgOut( "requesting the daemon for its status..." );
 	my $dummy = $ep->runner()->dummy() ? "-dummy" : "-nodummy";
 	my $verbose = $ep->runner()->verbose() ? "-verbose" : "-noverbose";
@@ -86,7 +86,7 @@ sub doStatus {
 	}
 	# publish a http telemetry if asked for
 	if( $opt_http ){
-		push( @opt_labels, "daemon=".$daemon->name());
+		push( @opt_labels, "daemon=".$config->name());
 		TTP::Metric->new( $ep, {
 			name => $opt_metric,
 			value => $result ? 1 : 0,
@@ -153,14 +153,16 @@ if( $count == 0 ){
 # if a daemon name is specified, find the full filename
 if( $opt_name ){
 	my $finder = TTP::Finder->new( $ep );
-	$opt_json = $finder->find({ dirs => [ TTP::RunnerDaemon->dirs(), $opt_name ], suffix => TTP::RunnerDaemon->finder()->{suffix}, wantsAll => false });
+	my $confFinder = TTP::DaemonConfig->confFinder();
+	$opt_json = $finder->find({ dirs => [ $confFinder->{dirs}, $opt_name ], suffix => $confFinder->{suffix}, wantsAll => false });
 	msgErr( "unable to find a suitable daemon JSON configuration file for '$opt_name'" ) if !$opt_json;
 }
 # if a json has been specified or has been found, must have a listeningPort and get it
+my $config = undef;
 if( $opt_json ){
-	$daemon = TTP::RunnerDaemon->new( $ep, { path => $opt_json, daemonize => false });
-	if( $daemon->loaded()){
-		$opt_port = $daemon->listeningPort();
+	$config = TTP::DaemonConfig->new( $ep, { jsonPath => $opt_json, daemonize => false });
+	if( $config->jsonLoaded()){
+		$opt_port = $config->listeningPort();
 	} else {
 		msgErr( "unable to load a suitable daemon configuration for json='$opt_json'" );
 	}
@@ -169,7 +171,7 @@ if( $opt_json ){
 msgErr( "when specified, addressed port must be greater than zero" ) if $opt_port <= 0 and $opt_port_set;
 
 if( !TTP::errs()){
-	doStatus();
+	doStatus( $config );
 }
 
 TTP::exit();
