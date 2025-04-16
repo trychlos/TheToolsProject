@@ -54,7 +54,7 @@ my $opt_name = $defaults->{name};
 
 sub doStart {
 	msgOut( "starting the daemon from '$opt_json'..." );
-	my $daemon = TTP::RunnerDaemon->new( $ep, { path => $opt_json, daemonize => false });
+	my $daemon = TTP::RunnerDaemon->new( $ep, { jsonPath => $opt_json, listener => false });
 	if( $daemon->loaded()){
 		if( $daemon->start()){
 			msgOut( "success" );

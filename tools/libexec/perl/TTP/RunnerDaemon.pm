@@ -70,6 +70,7 @@ with 'TTP::IEnableable', 'TTP::IAcceptable', 'TTP::IFindable', 'TTP::IJSONable',
 
 use TTP;
 use TTP::Constants qw( :all );
+use TTP::Finder;
 use TTP::Message qw( :all );
 use TTP::Metric;
 use TTP::MQTT;
@@ -980,9 +981,9 @@ sub name {
 # Honors the '--dummy' verb option by using msgWarn() instead of msgErr() when checking the configuration
 # (I):
 # - a hash argument with following keys:
-#   > json: the path to the JSON configuration file
+#   > jsonPath: the absolute path to the JSON configuration file
 #   > checkConfig: whether to check the loaded config for mandatory items, defaulting to true
-#   > daemonize: whether to activate the daemonization process, defaulting to true
+#   > listener: whether to initialize the listener, defaulting to true
 # (O):
 # - true|false whether the configuration has been successfully loaded
 
@@ -991,7 +992,7 @@ sub setConfig {
 	$args //= {};
 
 	# only manage JSON configuration at the moment
-	if( $args->{json} ){
+	if( $args->{jsonPath} ){
 		my $loaded = false;
 		my $acceptable = {
 			accept => sub { return $self->enabled( @_ ); },
@@ -999,8 +1000,8 @@ sub setConfig {
 				type => 'JSON'
 			}
 		};
-		# JSOnable role takes care of validating the acceptability and the enable-ity
-		$loaded = $self->jsonLoad({ path => $args->{json}, acceptable => $acceptable });
+		# IJSONable role takes care of validating the acceptability and the enable-ity
+		$loaded = $self->jsonLoad({ path => $args->{jsonPath}, acceptable => $acceptable });
 		# evaluate the data if success
 		if( $loaded ){
 			$self->evaluate();
@@ -1010,11 +1011,12 @@ sub setConfig {
 			if( $checkConfig ){
 				my $msgRef = $self->ep()->runner()->dummy() ? \&msgWarn : \&msgErr;
 				# must have a listening port
-				$msgRef->( "$args->{json}: daemon configuration must define a 'listeningPort' value, not found" ) if !$self->listeningPort();
+				my $listeningPort = $self->listeningPort();
+				$msgRef->( "$args->{jsonPath}: daemon configuration must define a 'listeningPort' value, not found" ) if !$listeningPort || $listeningPort < 0;
 				# must have an exec path
-				my $program = $self->execPath();
-				$msgRef->( "$args->{json}: daemon configuration must define an 'execPath' value, not found" ) if !$program;
-				$msgRef->( "$args->{json}: execPath='$program' not found or not readable" ) if ! -r $program;
+				my $execPath = $self->execPath();
+				$msgRef->( "$args->{jsonPath}: daemon configuration must define an 'execPath' value, not found" ) if !$execPath;
+				$msgRef->( "$args->{jsonPath}: execPath='$execPath' not found or not readable" ) if ! -r $execPath;
 			} else {
 				msgVerbose( "not checking daemon config as checkConfig='false'" );
 			}
@@ -1031,8 +1033,10 @@ sub setConfig {
 				$self->{_name} = $bname;
 				# set a runnable qualifier as soon as we can
 				$self->runnableQualifier( $bname );
-				# and initialize listening socket and messaging connection
-				$self->_initListener( $args );
+				# and initialize listening socket and messaging connection when asked for
+				my $listener = true;
+				$listener = $args->{listener} if defined $args->{listener};
+				$self->_initListener( $args ) if $listener;
 			}
 		}
 	}
@@ -1251,7 +1255,9 @@ sub finder {
 # (I):
 # - the TTP EP entry point
 # - an optional argument object with following keys:
-#   > path: the absolute path to the JSON configuration file
+#   > jsonPath: the absolute path to the JSON configuration file
+#   > checkConfig: whether to check the loaded config for mandatory items, defaulting to true if provided
+#   > listener: whether to initialize the listener, defaulting to true
 # (O):
 # - this object
 
@@ -1267,8 +1273,7 @@ sub new {
 
 	# if a path is specified, then we try to load it
 	# IJSONable role takes care of validating the acceptability and the enable-ity
-	if( $args && $args->{path} ){
-		$args->{json} = $args->{path};
+	if( $args && $args->{jsonPath} ){
 		$self->setConfig( $args );
 	}
 
