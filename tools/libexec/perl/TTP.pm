@@ -131,32 +131,12 @@ sub commandByOs {
 			# a single command: expects a command or a 'byOS' object
 			if( $withCommand ){
 				$command = commandByOs_getObject( \@locals, $obj, $opts );
-				if( $ref eq 'HASH' ){
-					push( @locals, 'byOS', $Config{osname} );
-					my $obj = $ep->var( \@locals, $opts );
-					if( defined( $obj )){
-						$ref = ref( $obj );
-						if( !$ref ){
-							$command = $obj;
-							msgVerbose( __PACKAGE__."::commandByOs() found command '$command' at [ ".join( ', ', @locals )." ]" );
-							$done = true;
-						} else {
-							msgErr( __PACKAGE__."::commandByOs() unexpected object found in [".join( ', ', @locals )."] configuration: $obj ($ref)." );
-						}
-					} else {
-						msgWarn( __PACKAGE__."::commandByOs() nothing found at [ ".join( ', ', @locals )." ]" );
-					}
-				} elsif( !$ref ){
-					msgErr( __PACKAGE__."::commandByOs() unexpected object found in [".join( ', ', @locals )."] configuration: $obj ($ref)." );
-				} else {
-
-				}
 			# several commands: expects an array here
 			} elsif( $withCommands ){
 				if( $ref eq 'ARRAY' ){
 					$command = [];
 					foreach my $it ( @{$obj} ){
-						push( @{$command}, commandByOs_getObject( \@locals, $it ));
+						push( @{$command}, commandByOs_getObject( \@locals, $it, $opts ));
 					}
 				} else {
 					msgErr( __PACKAGE__."::commandByOs() unexpected object found in [".join( ', ', @locals )."] configuration: $obj ($ref)." );
@@ -185,7 +165,6 @@ sub commandByOs_getObject {
 			if( !$ref ){
 				$command = $obj;
 				msgVerbose( __PACKAGE__."::commandByOs() found command '$command' at [ ".join( ', ', @locals )." ]" );
-				$done = true;
 			} else {
 				msgErr( __PACKAGE__."::commandByOs() unexpected object found in [".join( ', ', @locals )."] configuration: $obj ($ref)." );
 			}
