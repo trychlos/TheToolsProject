@@ -40,7 +40,6 @@ use warnings;
 use Data::Dumper;
 use vars::global qw( $ep );
 
-use TTP;
 use TTP::Constants qw( :all );
 use TTP::Message qw( :all );
 
