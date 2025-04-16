@@ -145,17 +145,15 @@ sub getServices {
 # -------------------------------------------------------------------------------------------------
 # Returns true if the given var has a non-empty 'commands' array
 # (I):
-# - a variable to be tested (should be a hash as returned by ->var() methods)
+# - a variable to be tested (should be an array as returned by TTP::commandByOs()
 
 sub hasCommands {
 	my ( $var ) = @_;
 	my $res = false;
-	if( $var and $var->{commands} ){
-		my $ref = ref( $var->{commands} );
-		if( $ref eq 'ARRAY' ){
-			my $count = scalar( @{$var->{commands}} );
-			$res = ( $count > 0 );
-		}
+	my $ref = ref( $var );
+	if( $ref eq 'ARRAY' ){
+		my $count = scalar( @{$var} );
+		$res = ( $count > 0 );
 	}
 	return $res;
 }
@@ -237,10 +235,10 @@ sub works {
 	my $node = $ep->node();
 	my $keys = configKeys();
 	msgVerbose( "searching for monitoring commands at the node level" );
-	#my $commands = $node->var( $keys );
 	my $commands = TTP::commandByOs( $keys, { withCommands => true, jsonable => $ep->node() });
 	if( hasCommands( $commands )){
-		foreach my $cmd ( @{$commands->{commands}} ){
+		foreach my $cmd ( @{$commands} ){
+			msgVerbose( "found command='$cmd'" );
 			$cmd = macroReplace( $cmd, { '<NODE>' => $node->name() });
 			$cmd = macroReplace( $cmd, { '<ENVIRONMENT>' => $node->environment() });
 			msgVerbose( "running $cmd" );
@@ -256,9 +254,10 @@ sub works {
 	foreach my $service ( @{$services} ){
 		msgVerbose( "examining service $service" );
 		my $serviceKeys = [ 'Services', $service, @{$keys} ];
-		my $commands = $node->var( $serviceKeys );
+		my $commands = TTP::commandByOs( $serviceKeys, { withCommands => true, jsonable => $ep->node() });
 		if( hasCommands( $commands )){
-			foreach my $cmd ( @{$commands->{commands}} ){
+			foreach my $cmd ( @{$commands} ){
+				msgVerbose( "found command='$cmd'" );
 				$cmd = macroReplace( $cmd, { '<NODE>' => $node->name() });
 				$cmd = macroReplace( $cmd, { '<ENVIRONMENT>' => $node->environment() });
 				$cmd = macroReplace( $cmd, { '<SERVICE>' => $service });
