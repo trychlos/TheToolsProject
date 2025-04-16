@@ -188,7 +188,7 @@ if( $opt_name ){
 }
 # if a json has been specified or has been found, must have a listeningPort and get it
 if( $opt_json ){
-	my $config = TTP::DaemonConfig->new( $ep, { jsonPath => $opt_json, listener => false });
+	my $config = TTP::DaemonConfig->new( $ep, { jsonPath => $opt_json });
 	if( $config->jsonLoaded()){
 		$opt_port = $config->listeningPort();
 	} else {
