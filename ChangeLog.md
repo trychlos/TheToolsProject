@@ -19,6 +19,7 @@
     - Define daemonsConfDirs site property and corresponding TTP::RunnerDaemon::execDirs() method (todo #90)
     - RunnerDaemon->new() changed options: 'path' becomes 'jsonPath', 'daemonize' becomes 'listener'
     - Introduce DaemonConfig in order to manage daemons configuration files
+    - TTP::commandByOs() changes the default values of 'withCommand' and 'withCommands' to both false
 
 ### 4.4.1
 

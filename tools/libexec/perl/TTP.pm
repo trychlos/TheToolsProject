@@ -95,9 +95,9 @@ sub alertsFileDropdir {
 # (I):
 # - the list of keys before the 'command' as an array ref
 # - an optional options hash ref with following keys:
-#   > withCommand: whether to have a top 'command' property before 'byOS', defaulting to true
+#   > withCommand: whether to have a top 'command' property before 'byOS', defaulting to false
 #   > withCommands: whether to have a top 'commands' property before 'byOS', defaulting to false
-#	  NB: should not have both withCommand and withCommands!
+#	  NB: must have one and only one of 'withCommand' and 'withCommands'!
 #   > jsonable: a IJSONable to be searched for for the provided keys, defaulting to node/site data
 # (O):
 # - the found command as a string, or undef
@@ -107,38 +107,56 @@ sub commandByOs {
 	$opts //= {};
 	my $command = undef;
 	my @locals = @{$keys};
-	# have withCommand ?
+	# have withCommand or withCommands ?
 	my $withCommand = $opts->{withCommand};
-	$withCommand = true if !defined $withCommand;
-	push( @locals, 'command' ) if $withCommand;
-	# have withCommands ?
+	$withCommand = false if !defined $withCommand;
 	my $withCommands = $opts->{withCommands};
 	$withCommands = false if !defined( $withCommands );
-	push( @locals, 'commands' ) if $withCommands;
-	# search...
-	my $obj = $ep->var( \@locals, $opts );
-	if( defined( $obj )){
-		my $ref = ref( $obj );
-		if( $ref eq 'HASH' ){
-			push( @locals, 'byOS', $Config{osname} );
-			my $obj = $ep->var( \@locals, $opts );
-			if( defined( $obj )){
-				$ref = ref( $obj );
-				if( !$ref ){
+	my $count = 0;
+	$count += 1 if $withCommand;
+	$count += 1 if $withCommands;
+	if( $count == 0 ){
+		msgErr( __PACKAGE__."::commandByOs() must have one of 'withCommand' or 'withCommands', found none" );
+	} elsif( $count > 1 ){
+		msgErr( __PACKAGE__."::commandByOs() must have one of 'withCommand' or 'withCommands', found both" );
+	} else {
+		push( @locals, 'command' ) if $withCommand;
+		push( @locals, 'commands' ) if $withCommands;
+		# search...
+		my $obj = $ep->var( \@locals, $opts );
+		if( defined( $obj )){
+			my $ref = ref( $obj );
+			if( $ref eq 'HASH' ){
+				push( @locals, 'byOS', $Config{osname} );
+				my $obj = $ep->var( \@locals, $opts );
+				if( defined( $obj )){
+					$ref = ref( $obj );
+					if( !$ref ){
+						$command = $obj;
+						msgVerbose( "TTP::commandByOs() found command '$command' at [ ".join( ', ', @locals )." ]" );
+					} else {
+						msgErr( "TTP::commandByOs() unexpected object found in [".join( ', ', @locals )."] configuration: $obj ($ref)." );
+					}
+				}
+			} else {
+				my $done = false;
+				if( $ref eq 'ARRAY' && $withCommands ){
+					$command = $obj;
+					msgVerbose( "TTP::commandByOs() found commands [ ".join( ', ', @{$command} )." ] at [ ".join( ', ', @locals )." ]" );
+					$done = true;
+				}
+				if( !$ref && $withCommand ){
 					$command = $obj;
 					msgVerbose( "TTP::commandByOs() found command '$command' at [ ".join( ', ', @locals )." ]" );
-				} else {
-					msgErr( "TTP::commandByOs() unexpected object found in [".join( ', ', @locals )."] configuration: $obj ($ref)." );
+					$done = true;
 				}
 			}
-		} elsif( !$ref ){
-			$command = $obj;
-			msgVerbose( "TTP::commandByOs() found command '$command' at [ ".join( ', ', @locals )." ]" );
+			if( !$done ){
+				msgErr( "TTP::commandByOs() unexpected object found in [".join( ', ', @locals )."] configuration: $obj ($ref)." );
+			}
 		} else {
-			msgErr( "TTP::commandByOs() unexpected object found in [".join( ', ', @locals )."] configuration: $obj ($ref)." );
+			msgVerbose( "TTP::commandByOs() nothing found at [ ".join( ', ', @locals )." ]" );
 		}
-	} else {
-		msgVerbose( "TTP::commandByOs() nothing found at [ ".join( ', ', @locals )." ]" );
 	}
 	return $command;
 }
