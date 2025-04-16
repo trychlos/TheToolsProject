@@ -76,8 +76,8 @@ function ttpf_main
 	[ -z "${NOTTP}" -a -z "${TTP_NODE}" ] \
 		&& { echo "[${ttp_command}] no current execution node, aborting" >&2; let ttp_errs+=1; let ttp_code+=1; return ${ttp_code}; }
 
-	# sub-contract to new Perl version which returns the exit code of TTP::run()
-	ttp_me="sh/ttpf_main" perl -MTTP -e 'TTP::run();' -- $*
+	# sub-contract to new Perl version which returns the exit code of TTP::runCommand()
+	ttp_me="sh/ttpf_main" perl -MTTP -e 'TTP::runCommand();' -- $*
 	ttp_code=$?
 	#echo $? 1>&2
 }

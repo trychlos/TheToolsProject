@@ -938,7 +938,7 @@ sub random {
 # Expects $0 be the full path name to the command script (this is the case in Windows+Strawberry)
 # and @ARGV the command-line arguments
 
-sub run {
+sub runCommand {
 	require TTP::RunnerCommand;
 	print STDERR Dumper( @ARGV ) if $ENV{TTP_DEBUG};
 	$ep = TTP::EP->new();

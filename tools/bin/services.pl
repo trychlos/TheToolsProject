@@ -26,4 +26,4 @@ use warnings;
 
 use TTP;
 
-TTP::run();
+TTP::runCommand();
