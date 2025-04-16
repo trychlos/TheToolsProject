@@ -242,7 +242,7 @@ sub works {
 			$cmd = macroReplace( $cmd, { '<NODE>' => $node->name() });
 			$cmd = macroReplace( $cmd, { '<ENVIRONMENT>' => $node->environment() });
 			msgVerbose( "running $cmd" );
-			`$cmd <$null`;
+			TTP::commandExec( "$cmd <$null" );
 		}
 	} else {
 		msgVerbose( "no commands found for node" );
@@ -251,22 +251,26 @@ sub works {
 	msgVerbose( "searching for monitoring commands at the services level" );
 	my $services = getServices();
 	# and run the same for each services
-	foreach my $service ( @{$services} ){
-		msgVerbose( "examining service $service" );
-		my $serviceKeys = [ 'Services', $service, @{$keys} ];
-		my $commands = TTP::commandByOs( $serviceKeys, { withCommands => true, jsonable => $ep->node() });
-		if( hasCommands( $commands )){
-			foreach my $cmd ( @{$commands} ){
-				msgVerbose( "found command='$cmd'" );
-				$cmd = macroReplace( $cmd, { '<NODE>' => $node->name() });
-				$cmd = macroReplace( $cmd, { '<ENVIRONMENT>' => $node->environment() });
-				$cmd = macroReplace( $cmd, { '<SERVICE>' => $service });
-				msgVerbose( "running $cmd" );
-				`$cmd <$null`;
+	if( scalar( @{$services} )){
+		foreach my $service ( @{$services} ){
+			msgVerbose( "examining service $service" );
+			my $serviceKeys = [ 'Services', $service, @{$keys} ];
+			my $commands = TTP::commandByOs( $serviceKeys, { withCommands => true, jsonable => $ep->node() });
+			if( hasCommands( $commands )){
+				foreach my $cmd ( @{$commands} ){
+					msgVerbose( "found command='$cmd'" );
+					$cmd = macroReplace( $cmd, { '<NODE>' => $node->name() });
+					$cmd = macroReplace( $cmd, { '<ENVIRONMENT>' => $node->environment() });
+					$cmd = macroReplace( $cmd, { '<SERVICE>' => $service });
+					msgVerbose( "running $cmd" );
+					TTP::commandExec( "$cmd <$null" );
+				}
+			} else {
+				msgVerbose( "no commands found for '$service'" );
 			}
-		} else {
-			msgVerbose( "no commands found for '$service'" );
 		}
+	} else {
+		msgVerbose( "no service found on node" );
 	}
 }
 
