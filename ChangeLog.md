@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - Add 'stdinFromNull' option to TTP::commandExec(), defaulting to true
 
 ### 4.5.1
 
