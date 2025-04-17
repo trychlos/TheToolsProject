@@ -231,7 +231,7 @@ sub commandExec {
 			$result->{success} = ( $res_code == 0 ) ? true : false;
 			msgVerbose( scalar( @res_out ) ? join( EOL, @res_out ) : '<empty stdout>' );
 			msgVerbose( "TTP::commandExec() return_code=$res_code firstly interpreted as success=".( $result->{success} ? 'true' : 'false' ));
-			if( $args->{command} =~ /robocopy/i ){
+			if( $result->{evaluated} =~ /^\s*robocopy/i ){
 				$res_code = ( $res_code >> 8 );
 				$result->{success} = ( $res_code <= 7 ) ? true : false;
 				msgVerbose( "TTP::commandExec() robocopy specific interpretation res=$res_code success=".( $result->{success} ? 'true' : 'false' ));
