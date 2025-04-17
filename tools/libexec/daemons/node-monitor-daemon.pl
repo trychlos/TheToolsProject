@@ -211,7 +211,6 @@ sub mqttMessaging {
 # service on this node, and execute them
 
 sub works {
-	print STDERR "works()".EOL;
 	# get commands at the node level
 	my $node = $ep->node();
 	my $keys = configKeys();
