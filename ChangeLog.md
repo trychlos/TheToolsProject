@@ -2,13 +2,14 @@
 
 ## ChangeLog
 
-### 4.5.2-rc.0
+### 4.6.0-rc.0
 
     Release date: 
 
     - Add 'stdinFromNull' option to TTP::commandExec(), defaulting to true
     - TTP::commandByOs() is renamed to commandByOS() for consistency reasons (todo #96)
     - TTP::RunnerCommand module is renamed RunnerVerb (todo #93)
+    - Replace RunnerDaemon->startRun() with bootstrap() (todo #97), thus bumping minor candidate version number
 
 ### 4.5.1
 

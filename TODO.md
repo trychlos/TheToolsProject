@@ -29,9 +29,7 @@
 |   79 | 2024- 4-12 | let a node override a site variable |
 |   91 | 2024- 4-15 | ttp.pl push and pull should have same level of verbosity |
 |   92 | 2024- 4-15 | RunnerDaemon::dirs() and finder() should be qualified as in confDirs() and coenfFinder() |
-|   94 | 2024- 4-15 | TTP::run() should become TTP::runVerb() |
 |   95 | 2024- 4-15 | all getter on Dirs() should be in Path:: |
-|   97 | 2024- 4-16 | replace RunnerDaemon->startRun() with bootstrap() |
 |   98 | 2024- 4-17 | remove TTP::Ports |
 |   99 |  |  |
 
@@ -242,9 +240,13 @@
 |      | 2024- 4-14 | defined as daemonsExecDirs() |
 |   93 | 2024- 4-15 | RunnerCommand should be renamed RunnerVerb |
 |      | 2024- 4-17 | done |
+|   94 | 2024- 4-15 | TTP::run() should become TTP::runVerb() |
+|      | 2024- 4-17 | TTP::runCommand() as some sense when run from, e.g. daemon.pl, which is a command - cancelled  |
 |   96 | 2024- 4-16 | rename nullByOS with nullByOs (like commandByOs) |
 |      | 2024- 4-17 | actually rather keep the byOS case |
 |      | 2024- 4-17 | commandByOs() is now named commandByOS() - done |
+|   97 | 2024- 4-16 | replace RunnerDaemon->startRun() with bootstrap() |
+|      | 2024- 4-17 | done in node-monitor-daemon.pl and alerts-monitor-daemon.pl |
 
 ---
 P. Wieser

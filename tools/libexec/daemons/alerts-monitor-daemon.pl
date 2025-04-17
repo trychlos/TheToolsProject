@@ -53,7 +53,7 @@ use TTP::Message qw( :all );
 use TTP::RunnerDaemon;
 use vars::global qw( $ep );
 
-my $daemon = TTP::runDaemon();
+my $daemon = TTP::RunnerDaemon->bootstrap();
 
 use constant {
 	MIN_SCAN_INTERVAL => 1000,
