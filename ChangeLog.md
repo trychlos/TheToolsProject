@@ -10,6 +10,7 @@
     - TTP::commandByOs() is renamed to commandByOS() for consistency reasons (todo #96)
     - TTP::RunnerCommand module is renamed RunnerVerb (todo #93)
     - Replace RunnerDaemon->startRun() with bootstrap() (todo #97), thus bumping minor candidate version number
+    - ttp.pl push is now as verbose as ttp.pl pull (todo #91)
 
 ### 4.5.1
 

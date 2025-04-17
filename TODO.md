@@ -27,8 +27,6 @@
 |      | 2024- 4-14 | alerts-monitor-daemon.pl is moved to libexec/daemons |
 |      | 2024- 4-14 | node-monitor-daemon.pl is moved to libexec/daemons |
 |   79 | 2024- 4-12 | let a node override a site variable |
-|   91 | 2024- 4-15 | ttp.pl push and pull should have same level of verbosity |
-|   92 | 2024- 4-15 | RunnerDaemon::dirs() and finder() should be qualified as in confDirs() and coenfFinder() |
 |   95 | 2024- 4-15 | all getter on Dirs() should be in Path:: |
 |   98 | 2024- 4-17 | remove TTP::Ports |
 |   99 |  |  |
@@ -238,6 +236,10 @@
 |      | 2024- 4-14 | renamed as daemonsConfDirs and described in site.schema.json |
 |   90 | 2024- 4-14 | also have daemonsExecDir and configurable in site.json |
 |      | 2024- 4-14 | defined as daemonsExecDirs() |
+|   91 | 2024- 4-15 | ttp.pl push and pull should have same level of verbosity |
+|      | 2024- 4-17 | done |
+|   92 | 2024- 4-15 | RunnerDaemon::dirs() and finder() should be qualified as in confDirs() and confFinder() |
+|      | 2024- 4-17 | obsolete |
 |   93 | 2024- 4-15 | RunnerCommand should be renamed RunnerVerb |
 |      | 2024- 4-17 | done |
 |   94 | 2024- 4-15 | TTP::run() should become TTP::runVerb() |
