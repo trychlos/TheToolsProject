@@ -12,6 +12,7 @@
     - Replace RunnerDaemon->startRun() with bootstrap() (todo #97), thus bumping minor candidate version number
     - ttp.pl push is now as verbose as ttp.pl pull (todo #91)
     - alerts-monitor-daemon.pl: rename 'scanInterval' property with 'workerInterval'
+    - node-monitor-daemon.pl: rename 'runInterval' property with 'workerInterval'
 
 ### 4.5.1
 
