@@ -14,6 +14,7 @@
     - alerts-monitor-daemon.pl: rename 'scanInterval' property with 'workerInterval'
     - node-monitor-daemon.pl: rename 'runInterval' property with 'workerInterval'
     - TTP::commandExec() provided macros are globally substituted
+    - Fix TTP::DaemonConfig messages when there is no listeningPort or listeningInterval
 
 ### 4.5.1
 
