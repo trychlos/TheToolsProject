@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - TTP::commandExec() remove debug lines and temporary subroutines
 
 ### 4.5.0
 
