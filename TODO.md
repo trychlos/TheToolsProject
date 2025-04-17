@@ -32,7 +32,9 @@
 |   93 | 2024- 4-15 | RunnerCommand should be renamed RunnerVerb |
 |   94 | 2024- 4-15 | TTP::run() should become TTP::runVerb() |
 |   95 | 2024- 4-15 | all getter on Dirs() should be in Path:: |
-|   96 |  |  |
+|   96 | 2024- 4-16 | rename nullByOS with nullByOs (like commandByOs) |
+|   97 | 2024- 4-16 | replace RunnerDaemon->startRun() with bootstrap() |
+|   98 |  |  |
 
 ---
 ## Done
