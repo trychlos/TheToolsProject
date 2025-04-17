@@ -26,15 +26,15 @@
 |   78 | 2024- 4-12 | some daemons should be moveable to libexec/daemons |
 |      | 2024- 4-14 | alerts-monitor-daemon.pl is moved to libexec/daemons |
 |      | 2024- 4-14 | node-monitor-daemon.pl is moved to libexec/daemons |
+|      | 2024- 4-17 | mqtt-monitor-daemon.pl is moved to libexec/daemons |
+|      | 2024- 4-17 | at the moment, still exists backup-monitor-daemon in site tree - to be evaluated |
 |   79 | 2024- 4-12 | let a node override a site variable |
 |   95 | 2024- 4-15 | all getter on Dirs() should be in Path:: |
 |   98 | 2024- 4-17 | remove TTP::Ports |
 |   99 | 2024- 4-17 | daemons should have a HUP command to fully reload their config |
-|  100 | 2024- 4-17 | review MQTT gateway schema to name the default MQTT gateway of the site |
-|  101 | 2024- 4-17 | review MQTT gateway schema so that the port number is part of the host address |
-|  102 | 2024- 4-17 | review SMTP gateway schema to name the default SMTP gateway of the site |
-|  103 | 2024- 4-17 | review SMTP gateway schema so that the port number is part of the host address |
-|  104 |  |  |
+|  100 | 2024- 4-17 | review MQTT gateway schema so that the port number is part of the host address |
+|  101 | 2024- 4-17 | review SMTP gateway schema so that the port number is part of the host address |
+|  102 |  |  |
 
 ---
 ## Done

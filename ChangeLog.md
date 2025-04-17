@@ -15,6 +15,7 @@
     - node-monitor-daemon.pl: rename 'runInterval' property with 'workerInterval'
     - TTP::commandExec() provided macros are globally substituted
     - Fix TTP::DaemonConfig messages when there is no listeningPort or listeningInterval
+    - mqtt-monitor-daemon.pl is moved into libexec/daemons (todo #78)
 
 ### 4.5.1
 
