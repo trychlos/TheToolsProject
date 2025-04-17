@@ -51,7 +51,7 @@ use TTP::Message qw( :all );
 use TTP::RunnerDaemon;
 use vars::global qw( $ep );
 
-my $daemon = TTP::RunnerDaemon->startRun();
+my $daemon = TTP::RunnerDaemon->bootstrap();
 
 use constant {
 	MIN_RUN_INTERVAL => 60000,

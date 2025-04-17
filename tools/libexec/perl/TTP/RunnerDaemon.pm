@@ -972,6 +972,23 @@ sub DESTROY {
 ### the class as first argument).
 
 # -------------------------------------------------------------------------------------------------
+# the daemon process is just being instanciated: time to instanciate and bootstrap an EntryPoint
+# (I):
+# - the DaemonConfig configuration
+# (O):
+# - the newly instanciated RunnerDaemon
+
+sub bootstrap {
+	my ( $class ) = @_;
+	print STDERR __PACKAGE__."::run()".EOL if $ENV{TTP_DEBUG};
+
+	$ep = TTP::EP->new();
+	$ep->bootstrap();
+	my $daemon = TTP::RunnerDaemon->new( $ep );
+	return $daemon;
+}
+
+# -------------------------------------------------------------------------------------------------
 # From inside the parent process, i.e. the daemon process has not yet been instanciated...
 # Please note that the EntryPoint which is used where is those of the parent process
 # (I):
@@ -997,23 +1014,6 @@ sub startDaemon {
 	}
 
 	return $command;
-}
-
-# -------------------------------------------------------------------------------------------------
-# the daemon process is just being instanciated: time to instanciate and bootstrap an EntryPoint
-# (I):
-# - the DaemonConfig configuration
-# (O):
-# - the newly instanciated RunnerDaemon
-
-sub startRun {
-	my ( $class ) = @_;
-	print STDERR __PACKAGE__."::run()".EOL if $ENV{TTP_DEBUG};
-
-	$ep = TTP::EP->new();
-	$ep->bootstrap();
-	my $daemon = TTP::RunnerDaemon->new( $ep );
-	return $daemon;
 }
 
 ### Global functions
