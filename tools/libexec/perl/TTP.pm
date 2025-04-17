@@ -188,6 +188,7 @@ sub commandByOs_getObject {
 #   > macros: a hash of the macros to be replaced where:
 #     - key is the macro name, must be labeled in the toops.json as '<macro>' (i.e. between angle brackets)
 #     - value is the replacement value
+#   > stdinFromNull: whether stdin must be redirected from NULL, defaulting to true
 # (O):
 # return a hash with following keys:
 # - evaluated: the evaluated command after macros replacements
@@ -210,6 +211,12 @@ sub commandExec {
 		stackTrace();
 	} else {
 		msgVerbose( "TTP::commandExec() got command='".( $command )."'" );
+		my $stdinFromNull = true;
+		$stdinFromNull = $opts->{stdinFromNull} if defined $opts->{stdinFromNull};
+		if( $stdinFromNull ){
+			$command .= " < ".TTP::nullByOS();
+			msgVerbose( "TTP::commandExec() rewritten to='".( $command )."'" );
+		}
 		$result->{evaluated} = $command;
 		if( $opts->{macros} ){
 			foreach my $key ( sort keys %{$opts->{macros}} ){
