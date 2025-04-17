@@ -29,7 +29,6 @@
 |   79 | 2024- 4-12 | let a node override a site variable |
 |   91 | 2024- 4-15 | ttp.pl push and pull should have same level of verbosity |
 |   92 | 2024- 4-15 | RunnerDaemon::dirs() and finder() should be qualified as in confDirs() and coenfFinder() |
-|   93 | 2024- 4-15 | RunnerCommand should be renamed RunnerVerb |
 |   94 | 2024- 4-15 | TTP::run() should become TTP::runVerb() |
 |   95 | 2024- 4-15 | all getter on Dirs() should be in Path:: |
 |   97 | 2024- 4-16 | replace RunnerDaemon->startRun() with bootstrap() |
@@ -241,6 +240,8 @@
 |      | 2024- 4-14 | renamed as daemonsConfDirs and described in site.schema.json |
 |   90 | 2024- 4-14 | also have daemonsExecDir and configurable in site.json |
 |      | 2024- 4-14 | defined as daemonsExecDirs() |
+|   93 | 2024- 4-15 | RunnerCommand should be renamed RunnerVerb |
+|      | 2024- 4-17 | done |
 |   96 | 2024- 4-16 | rename nullByOS with nullByOs (like commandByOs) |
 |      | 2024- 4-17 | actually rather keep the byOS case |
 |      | 2024- 4-17 | commandByOs() is now named commandByOS() - done |
