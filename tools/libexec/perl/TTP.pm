@@ -222,7 +222,11 @@ sub commandExec {
 			msgDummy( $result->{evaluated} );
 			$result->{result} = true;
 		} else {
-			my ( $res_ok, $res_code, $res_stdout, $res_stderr ) = commandExec_run( $result->{evaluated} );
+			my ( $res_ok, $res_code, $res_stdout, $res_stderr ) = commandExec_qx( $result->{evaluated}, { stdin => TTP::nullByOS() });
+			print "res_ok ".Dumper( $res_ok );
+			print "res_code ".Dumper( $res_code );
+			print "res_stdout ".Dumper( $res_stdout );
+			print "res_stderr ".Dumper( $res_stderr );
 			# https://www.perlmonks.org/?node_id=81640
 			# Thus, the exit value of the subprocess is actually ($? >> 8), and $? & 127 gives which signal, if any, the
 			# process died from, and $? & 128 reports whether there was a core dump.
@@ -230,17 +234,14 @@ sub commandExec {
 			#my $res = $?;
 			$result->{exit} = $res_code;
 			$result->{success} = $res_ok;
-			if( $res_stdout ){
-				my @lines = split( /[\r\n]/, $res_stdout );
-				$result->{stdout} = \@lines;
-				msgVerbose( "stdout: $res_stdout" );
+			if( $res_stdout && scalar( @{$res_stdout} ) > 0 ){
+				$result->{stdout} = $res_stdout;
+				msgVerbose( "stdout: ".join( '', @{$res_stdout} ));
 			} else {
 				msgVerbose( "stdout: <empty>" );
 			}
-			if( $res_stderr ){
-				my @lines = split( /[\r\n]/, $res_stderr );
-				$result->{stderr} = \@lines;
-				msgVerbose( "stderr: $res_stderr" );
+			if( $res_stderr && scalar( @{$res_stderr} ) > 0 ){
+				msgVerbose( "stderr: ".join( '', @{$res_stderr} ) );
 			} else {
 				msgVerbose( "stderr: <empty>" );
 			}
@@ -253,32 +254,94 @@ sub commandExec {
 		}
 		msgVerbose( "TTP::commandExec() success=".( $result->{success} ? 'true' : 'false' ));
 	}
+	print STDERR "quitting commandExec() with ".Dumper( $result ).EOL;
 	return $result;
 }
+
 sub commandExec_run {
     my ( $cmd, $opts ) = @_;
+	print STDERR "commandExec_run() cmd='$cmd'".EOL;
 
     my $stdin  = $opts->{stdin}  // \undef;
-    my $stdout = '';
-    my $stderr = '';
+    my @stdout = ();
+    my @stderr = ();
     my $timeout = $opts->{timeout} // 10;  # seconds
 
     my @command = ref( $cmd ) eq 'ARRAY' ? @$cmd : split( /\s+/, $cmd );
 	my $exit_code;
+	my $ok;
 
-    my $ok = eval {
-        run \@command, '<', $stdin, '>', \$stdout, '2>', \$stderr, timeout( $timeout );
+    eval {
+        $ok = run \@command, '<', $stdin, '>', \@stdout, '2>', \@stderr, timeout( $timeout );
 		$exit_code = $?;
         1;
     };
-
-    #if( !$ok ){
-    #    my $err = $@ || 'Unknown error';
-    #    return (0, '', "Execution failed: $err");
-    #}
-
-    return ( $ok, $exit_code, $stdout, $stderr );
+	if (!$ok) {
+		my $err = $@ || 'Unknown error';
+		warn "Command failed to run: $err\n";
+		return (0, '', "Execution failed: $err", undef);
+	}
+	print STDERR "commandExec_run() ok=$ok exit_code=$exit_code".EOL;
+    return ( $ok, $exit_code, \@stdout, \@stderr );
 }
+
+sub commandExec_system {
+    my ( $cmd, $opts ) = @_;
+	print STDERR "commandExec_system() cmd='$cmd'".EOL;
+
+    my $stdin  = $opts->{stdin}  // \undef;
+    my @stdout = ();
+    my @stderr = ();
+    my $timeout = $opts->{timeout} // 10;  # seconds
+
+    my @command = ref( $cmd ) eq 'ARRAY' ? @$cmd : split( /\s+/, $cmd );
+	my $exit_code;
+	my $ok;
+
+    eval {
+        $ok = system( \@command, '<', $stdin, '>', \@stdout, '2>', \@stderr );
+		$exit_code = $?;
+        1;
+    };
+	if (!$ok) {
+		my $err = $@ || 'Unknown error';
+		warn "Command failed to run: $err\n";
+		return (0, '', "Execution failed: $err", undef);
+	}
+	print STDERR "commandExec_system() ok=$ok exit_code=$exit_code".EOL;
+    return ( $ok, $exit_code, \@stdout, \@stderr );
+}
+
+sub commandExec_qx {
+    my ( $cmd, $opts ) = @_;
+	print STDERR "commandExec_qx() cmd='$cmd'".EOL;
+
+    my $stdin  = $opts->{stdin}  // \undef;
+    my @stdout = ();
+    my @stderr = ();
+    my $timeout = $opts->{timeout} // 10;  # seconds
+	
+	my @out = `$cmd < $opts->{stdin}`;
+	my $exit_code = $?;
+	print STDERR Dumper( @out );
+
+    #my @command = ref( $cmd ) eq 'ARRAY' ? @$cmd : split( /\s+/, $cmd );
+	my $ok;
+	#
+    #eval {
+    #   $ok = system( \@command, '<', $stdin, '>', \@stdout, '2>', \@stderr );
+	#	$exit_code = $?;
+    #    1;
+    #};
+	if (!$ok) {
+		my $err = $@ || 'Unknown error';
+		warn "Command failed to run: $err\n";
+		return (0, '', "Execution failed: $err", undef);
+	}
+	print STDERR "commandExec_qx() ok=$ok exit_code=$exit_code".EOL;
+    return ( $ok, $exit_code, \@stdout, \@stderr );
+}
+
 # -------------------------------------------------------------------------------------------------
 # Display an array of hashes as a (sql-type) table
 # (I):
