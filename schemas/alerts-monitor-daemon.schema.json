@@ -38,26 +38,31 @@
         "listeningInterval": {
             "description": "The listening interval. The minimum accepted is 500 ms.",
             "type": "integer",
+            "units": "ms",
             "default": 1000
         },
         "messagingInterval": {
             "description": "The interval which commands the publication of the daemon's status on the MQTT bus. The minimum accepted is 5000 ms. Set to zero or less to disable this publication.",
             "type": "integer",
+            "units": "ms",
             "default": 60000
         },
         "messagingTimeout": {
             "description": "The timeout when publishing to the MQTT bus. The minimum accepted is 5 sec.",
             "type": "integer",
+            "units": "s",
             "default": 60
         },
         "httpingInterval": {
             "description": "The interval which commands the publication to the HTTP-based telemetry system. The minimum accepted is 5000 ms. Set to zero or less to disable this publication.",
             "type": "integer",
+            "units": "ms",
             "default": 60000
         },
         "textingInterval": {
             "description": "The interval which commands the publication to the text-based telemetry system. The minimum accepted is 5000 ms. Set to zero or less to disable this publication.",
             "type": "integer",
+            "units": "ms",
             "default": 60000
         },
         "execPath": {
@@ -74,9 +79,10 @@
             "type": "string",
             "default": "^.*$"
         },
-        "scanInterval": {
+        "workerInterval": {
             "description": "The interval between each monitored directory scan.",
             "type": "integer",
+            "units": "ms",
             "default": 10000
         },
         "actions": {

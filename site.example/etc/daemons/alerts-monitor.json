@@ -4,11 +4,12 @@
 	"listeningPort": 12321,
 	"listeningInterval": 1000,
 	"messagingInterval": 60000,
+	"messagingTimeout": 60,
 	"httpingInterval": 300000,
-	"textingInterval": -1,
+	"textingInterval": 300000,
 	"monitoredDir": "[eval:TTP::alertsFileDropdir()]",
 	"monitoredFiles": "^alert-",
-	"scanInterval" : 1000,
+	"workerInterval" : 10000,
 	"actions": [
 		{
 			"command": "cat <FILEPATH> 1>&2",

@@ -35,7 +35,7 @@
 #
 # - monitoredDir: the directory to be monitored for alerts files, defaulting to alertsDir
 # - monitoredFile: a regular expression to match the alert files, defaulting to '^.*$'
-# - scanInterval, the scan interval, defaulting to 10000 ms (10 sec.)
+# - workerInterval, the scan interval, defaulting to 10000 ms (10 sec.)
 
 use utf8;
 use strict;
@@ -56,8 +56,8 @@ use vars::global qw( $ep );
 my $daemon = TTP::RunnerDaemon->bootstrap();
 
 use constant {
-	MIN_SCAN_INTERVAL => 1000,
-	DEFAULT_SCAN_INTERVAL => 10000
+	MIN_WORKER_INTERVAL => 1000,
+	DEFAULT_WORKER_INTERVAL => 10000
 };
 
 my $defaults = {
@@ -118,15 +118,15 @@ sub configMonitoredFiles {
 }
 
 # -------------------------------------------------------------------------------------------------
-# Returns the configured 'scanInterval' (in sec.) defaulting to DEFAULT_SCAN_INTERVAL
+# Returns the configured 'workerInterval' (in sec.) defaulting to DEFAULT_WORKER_INTERVAL
 
-sub configScanInterval {
+sub configWorkerInterval {
 	my $config = $daemon->jsonData();
-	my $interval = $config->{scanInterval};
-	$interval = DEFAULT_SCAN_INTERVAL if !defined $interval;
-	if( $interval < MIN_SCAN_INTERVAL ){
-		msgVerbose( "defined scanInterval=$interval less than minimum accepted ".MIN_SCAN_INTERVAL.", ignored" );
-		$interval = DEFAULT_SCAN_INTERVAL;
+	my $interval = $config->{workerInterval};
+	$interval = DEFAULT_WORKER_INTERVAL if !defined $interval;
+	if( $interval < MIN_WORKER_INTERVAL ){
+		msgVerbose( "defined workerInterval=$interval less than minimum accepted ".MIN_WORKER_INTERVAL.", ignored" );
+		$interval = DEFAULT_WORKER_INTERVAL;
 	}
 
 	return $interval;
@@ -216,7 +216,7 @@ sub mqttDisconnect {
 		topic => "$topic/monitoredFiles",
 		payload => ''
 	}, {
-		topic => "$topic/scanInterval",
+		topic => "$topic/workerInterval",
 		payload => ''
 	});
 	return $array;
@@ -249,8 +249,8 @@ sub mqttMessaging {
 		topic => "$topic/monitoredFiles",
 		payload => configMonitoredFiles()
 	}, {
-		topic => "$topic/scanInterval",
-		payload => configScanInterval()
+		topic => "$topic/workerInterval",
+		payload => configWorkerInterval()
 	});
 	return $array;
 }
@@ -273,7 +273,7 @@ sub varReset {
 #   $_ is the current filename within that directory
 #   $File::Find::name is the complete pathname to the file.
 
-sub works {
+sub worker {
 	@runningScan = ();
 	my $dir = configMonitoredDir();
 	my $re = configMonitoredFiles();
@@ -356,7 +356,7 @@ msgVerbose( "got ignoreInt='".( $opt_ignoreInt ? 'true':'false' )."'" );
 msgErr( "'--json' option is mandatory, not specified" ) if !$opt_json;
 
 if( !TTP::errs()){
-	$daemon->setConfig({ json => $opt_json, ignoreInt => $opt_ignoreInt });
+	$daemon->run({ jsonPath => $opt_json, ignoreInt => $opt_ignoreInt });
 }
 if( TTP::errs()){
 	TTP::exit();
@@ -368,7 +368,7 @@ if( $daemon->messagingEnabled()){
 }
 
 $daemon->declareSleepables( $commands );
-$daemon->sleepableDeclareFn( sub => \&works, interval => configScanInterval());
+$daemon->sleepableDeclareFn( sub => \&worker, interval => configWorkerInterval());
 $daemon->sleepableStart();
 
 $daemon->terminate();
