@@ -2,11 +2,12 @@
 
 ## ChangeLog
 
-### 4.5.1-rc.0
+### 4.5.1
 
-    Release date: 
+    Release date: 2025- 4-17
 
     - TTP::commandExec() remove debug lines and temporary subroutines
+    - node-monitor-daemon.pl: remove debug code, fixing TTP::commandExec() accordingly
 
 ### 4.5.0
 
