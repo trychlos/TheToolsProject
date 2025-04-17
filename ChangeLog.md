@@ -13,6 +13,7 @@
     - ttp.pl push is now as verbose as ttp.pl pull (todo #91)
     - alerts-monitor-daemon.pl: rename 'scanInterval' property with 'workerInterval'
     - node-monitor-daemon.pl: rename 'runInterval' property with 'workerInterval'
+    - TTP::commandExec() provided macros are globally substituted
 
 ### 4.5.1
 

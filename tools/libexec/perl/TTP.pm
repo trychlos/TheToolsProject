@@ -220,7 +220,7 @@ sub commandExec {
 		$result->{evaluated} = $command;
 		if( $opts->{macros} ){
 			foreach my $key ( sort keys %{$opts->{macros}} ){
-				$result->{evaluated} =~ s/<$key>/$opts->{macros}{$key}/;
+				$result->{evaluated} =~ s/<$key>/$opts->{macros}{$key}/g;
 			}
 		}
 		msgVerbose( "TTP::commandExec() evaluated to '$result->{evaluated}'" );
