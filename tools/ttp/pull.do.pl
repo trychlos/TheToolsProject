@@ -95,11 +95,10 @@ sub doPull_byTree {
 		asked => 0,
 		done => 0
 	};
-	msgVerbose( "pulling '$tree->{target}'" );
 	my ( $dir_vol, $dir_dirs, $dir_file ) = File::Spec->splitpath( $tree->{target} );
 	my $srcPath = File::Spec->catpath( $pullVol, $dir_dirs, $dir_file );
 	$result->{asked} += 1;
-	msgVerbose( "source='$srcPath' target='$tree->{target}'" );
+	msgOut( "pulling from source='$srcPath' into target='$tree->{target}'" );
 	my $cmdres = TTP::commandExec( $command, {
 		macros => {
 			SOURCE => $srcPath,
