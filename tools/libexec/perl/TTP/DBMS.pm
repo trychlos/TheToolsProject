@@ -38,7 +38,7 @@ use Time::Moment;
 use TTP;
 use TTP::Constants qw( :all );
 use TTP::Message qw( :all );
-use TTP::path;
+use TTP::Path;
 use TTP::SqlServer;
 
 ### Private methods
