@@ -20,6 +20,7 @@
     - RunnerDaemon->new() changed options: 'path' becomes 'jsonPath', 'daemonize' becomes 'listener'
     - Introduce DaemonConfig in order to manage daemons configuration files
     - TTP::commandByOs() changes the default values of 'withCommand' and 'withCommands' to both false
+    - Fix TTP::Path inclusion in DBMS.pm
 
 ### 4.4.1
 
