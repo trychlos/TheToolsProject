@@ -103,7 +103,7 @@ sub alertsFileDropdir {
 # (O):
 # - the found command as a string, or undef
 
-sub commandByOs {
+sub commandByOS {
 	my ( $keys, $opts ) = @_;
 	$opts //= {};
 	my $command = undef;
@@ -117,10 +117,10 @@ sub commandByOs {
 	$count += 1 if $withCommand;
 	$count += 1 if $withCommands;
 	if( $count == 0 ){
-		msgErr( __PACKAGE__."::commandByOs() must have one of 'withCommand' or 'withCommands', found none" );
+		msgErr( __PACKAGE__."::commandByOS() must have one of 'withCommand' or 'withCommands', found none" );
 		TTP::stackTrace();
 	} elsif( $count > 1 ){
-		msgErr( __PACKAGE__."::commandByOs() must have one of 'withCommand' or 'withCommands', found both" );
+		msgErr( __PACKAGE__."::commandByOS() must have one of 'withCommand' or 'withCommands', found both" );
 		TTP::stackTrace();
 	} else {
 		push( @locals, 'command' ) if $withCommand;
@@ -131,29 +131,29 @@ sub commandByOs {
 			my $ref = ref( $obj );
 			# a single command: expects a command or a 'byOS' object
 			if( $withCommand ){
-				$command = commandByOs_getObject( \@locals, $obj, $opts );
+				$command = commandByOS_getObject( \@locals, $obj, $opts );
 			# several commands: expects an array here
 			} elsif( $withCommands ){
 				if( $ref eq 'ARRAY' ){
 					$command = [];
 					foreach my $it ( @{$obj} ){
-						push( @{$command}, commandByOs_getObject( \@locals, $it, $opts ));
+						push( @{$command}, commandByOS_getObject( \@locals, $it, $opts ));
 					}
 				} else {
-					msgErr( __PACKAGE__."::commandByOs() unexpected object found in [".join( ', ', @locals )."] configuration: $obj ($ref)." );
+					msgErr( __PACKAGE__."::commandByOS() unexpected object found in [".join( ', ', @locals )."] configuration: $obj ($ref)." );
 				}
 			} else {
-				msgErr( __PACKAGE__."commandByOs() unexpected 'withCommand(s)' mode" );
+				msgErr( __PACKAGE__."commandByOS() unexpected 'withCommand(s)' mode" );
 				TTP::stackTrace();
 			}
 		} else {
-			msgVerbose( __PACKAGE__."::commandByOs() nothing found at [ ".join( ', ', @locals )." ]" );
+			msgVerbose( __PACKAGE__."::commandByOS() nothing found at [ ".join( ', ', @locals )." ]" );
 		}
 	}
 	return $command;
 }
 
-sub commandByOs_getObject {
+sub commandByOS_getObject {
 	my ( $locals, $parent, $opts ) = @_;
 	my $command = undef;
 	my $ref = ref( $parent );
@@ -165,12 +165,12 @@ sub commandByOs_getObject {
 			$ref = ref( $obj );
 			if( !$ref ){
 				$command = $obj;
-				msgVerbose( __PACKAGE__."::commandByOs() found command '$command' at [ ".join( ', ', @locals )." ]" );
+				msgVerbose( __PACKAGE__."::commandByOS() found command '$command' at [ ".join( ', ', @locals )." ]" );
 			} else {
-				msgErr( __PACKAGE__."::commandByOs() unexpected object found in [".join( ', ', @locals )."] configuration: $obj ($ref)." );
+				msgErr( __PACKAGE__."::commandByOS() unexpected object found in [".join( ', ', @locals )."] configuration: $obj ($ref)." );
 			}
 		} else {
-			msgWarn( __PACKAGE__."::commandByOs() nothing found at [ ".join( ', ', @locals )." ]" );
+			msgWarn( __PACKAGE__."::commandByOS() nothing found at [ ".join( ', ', @locals )." ]" );
 		}
 	} else {
 		$command = $parent;

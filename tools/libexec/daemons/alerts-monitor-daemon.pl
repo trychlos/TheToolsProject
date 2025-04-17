@@ -153,7 +153,7 @@ sub doWithNew {
 		# tries to execute all defined actions
 		foreach my $do ( @{$actions} ){
 			my $jsonable = TTP::JSONable->new( $ep, $do );
-			my $command = TTP::commandByOs([], { jsonable => $jsonable, withCommand => true });
+			my $command = TTP::commandByOS([], { jsonable => $jsonable, withCommand => true });
 			if( $command ){
 				my $levelMatch = true;
 				if( $do->{levelRe} ){
