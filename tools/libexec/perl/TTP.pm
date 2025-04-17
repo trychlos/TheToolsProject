@@ -199,7 +199,6 @@ sub commandByOs_getObject {
 sub commandExec {
 	my ( $command, $opts ) = @_;
 	$opts //= {};
-	print STDERR "in commandExec()".EOL;
 	my $result = {
 		stdout => [],
 		stderr => [],
@@ -222,124 +221,26 @@ sub commandExec {
 			msgDummy( $result->{evaluated} );
 			$result->{result} = true;
 		} else {
-			my ( $res_ok, $res_code, $res_stdout, $res_stderr ) = commandExec_qx( $result->{evaluated}, { stdin => TTP::nullByOS() });
-			print "res_ok ".Dumper( $res_ok );
-			print "res_code ".Dumper( $res_code );
-			print "res_stdout ".Dumper( $res_stdout );
-			print "res_stderr ".Dumper( $res_stderr );
+			my @res_out = `$result->{evaluated}`;
 			# https://www.perlmonks.org/?node_id=81640
 			# Thus, the exit value of the subprocess is actually ($? >> 8), and $? & 127 gives which signal, if any, the
 			# process died from, and $? & 128 reports whether there was a core dump.
 			# https://ss64.com/nt/robocopy-exit.html
-			#my $res = $?;
+			my $res_code = $?;
 			$result->{exit} = $res_code;
-			$result->{success} = $res_ok;
-			if( $res_stdout && scalar( @{$res_stdout} ) > 0 ){
-				$result->{stdout} = $res_stdout;
-				msgVerbose( "stdout: ".join( '', @{$res_stdout} ));
-			} else {
-				msgVerbose( "stdout: <empty>" );
-			}
-			if( $res_stderr && scalar( @{$res_stderr} ) > 0 ){
-				msgVerbose( "stderr: ".join( '', @{$res_stderr} ) );
-			} else {
-				msgVerbose( "stderr: <empty>" );
-			}
+			$result->{success} = ( $res_code == 0 ) ? true : false;
+			msgVerbose( scalar( @res_out ) ? join( EOL, @res_out ) : '<empty stdout>' );
 			msgVerbose( "TTP::commandExec() return_code=$res_code firstly interpreted as success=".( $result->{success} ? 'true' : 'false' ));
-			if( $command =~ /robocopy/i ){
+			if( $args->{command} =~ /robocopy/i ){
 				$res_code = ( $res_code >> 8 );
 				$result->{success} = ( $res_code <= 7 ) ? true : false;
 				msgVerbose( "TTP::commandExec() robocopy specific interpretation res=$res_code success=".( $result->{success} ? 'true' : 'false' ));
 			}
+			$result->{stdout} = \@res_out;
 		}
 		msgVerbose( "TTP::commandExec() success=".( $result->{success} ? 'true' : 'false' ));
 	}
-	print STDERR "quitting commandExec() with ".Dumper( $result ).EOL;
 	return $result;
-}
-
-sub commandExec_run {
-    my ( $cmd, $opts ) = @_;
-	print STDERR "commandExec_run() cmd='$cmd'".EOL;
-
-    my $stdin  = $opts->{stdin}  // \undef;
-    my @stdout = ();
-    my @stderr = ();
-    my $timeout = $opts->{timeout} // 10;  # seconds
-
-    my @command = ref( $cmd ) eq 'ARRAY' ? @$cmd : split( /\s+/, $cmd );
-	my $exit_code;
-	my $ok;
-
-    eval {
-        $ok = run \@command, '<', $stdin, '>', \@stdout, '2>', \@stderr, timeout( $timeout );
-		$exit_code = $?;
-        1;
-    };
-	if (!$ok) {
-		my $err = $@ || 'Unknown error';
-		warn "Command failed to run: $err\n";
-		return (0, '', "Execution failed: $err", undef);
-	}
-	print STDERR "commandExec_run() ok=$ok exit_code=$exit_code".EOL;
-    return ( $ok, $exit_code, \@stdout, \@stderr );
-}
-
-sub commandExec_system {
-    my ( $cmd, $opts ) = @_;
-	print STDERR "commandExec_system() cmd='$cmd'".EOL;
-
-    my $stdin  = $opts->{stdin}  // \undef;
-    my @stdout = ();
-    my @stderr = ();
-    my $timeout = $opts->{timeout} // 10;  # seconds
-
-    my @command = ref( $cmd ) eq 'ARRAY' ? @$cmd : split( /\s+/, $cmd );
-	my $exit_code;
-	my $ok;
-
-    eval {
-        $ok = system( \@command, '<', $stdin, '>', \@stdout, '2>', \@stderr );
-		$exit_code = $?;
-        1;
-    };
-	if (!$ok) {
-		my $err = $@ || 'Unknown error';
-		warn "Command failed to run: $err\n";
-		return (0, '', "Execution failed: $err", undef);
-	}
-	print STDERR "commandExec_system() ok=$ok exit_code=$exit_code".EOL;
-    return ( $ok, $exit_code, \@stdout, \@stderr );
-}
-
-sub commandExec_qx {
-    my ( $cmd, $opts ) = @_;
-	print STDERR "commandExec_qx() cmd='$cmd'".EOL;
-
-    my $stdin  = $opts->{stdin}  // \undef;
-    my @stdout = ();
-    my @stderr = ();
-    my $timeout = $opts->{timeout} // 10;  # seconds
-	
-	my @out = `$cmd < $opts->{stdin}`;
-	my $exit_code = $?;
-	print STDERR Dumper( @out );
-
-    #my @command = ref( $cmd ) eq 'ARRAY' ? @$cmd : split( /\s+/, $cmd );
-	my $ok;
-	#
-    #eval {
-    #   $ok = system( \@command, '<', $stdin, '>', \@stdout, '2>', \@stderr );
-	#	$exit_code = $?;
-    #    1;
-    #};
-	if (!$ok) {
-		my $err = $@ || 'Unknown error';
-		warn "Command failed to run: $err\n";
-		return (0, '', "Execution failed: $err", undef);
-	}
-	print STDERR "commandExec_qx() ok=$ok exit_code=$exit_code".EOL;
-    return ( $ok, $exit_code, \@stdout, \@stderr );
 }
 
 # -------------------------------------------------------------------------------------------------
