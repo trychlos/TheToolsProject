@@ -110,10 +110,10 @@ sub _loadConfig {
 			my $msgRef = $ep->runner()->dummy() ? \&msgWarn : \&msgErr;
 			# must have a valid listening interval
 			my $listeningInterval = $self->listeningInterval();
-			$msgRef->( "$args->{json}: daemon configuration doesn't define a valid 'listeningInterval' value, found '".( $listeningInterval ? $listeningInterval : '(undef)' )."'" ) if !$listeningInterval || $listeningInterval < MIN_LISTEN_INTERVAL;
+			$msgRef->( "$args->{jsonPath}: daemon configuration doesn't define a valid 'listeningInterval' value, found '".( $listeningInterval ? $listeningInterval : '(undef)' )."'" ) if !$listeningInterval || $listeningInterval < MIN_LISTEN_INTERVAL;
 			# must have a valid listening port
 			my $listeningPort = $self->listeningPort();
-			$msgRef->( "$args->{json}: daemon configuration doesn't define a valid 'listeningPort' value, found '".( $listeningPort ? $listeningPort : '(undef)' )."'" ) if !$listeningPort || $listeningPort < 1;
+			$msgRef->( "$args->{jsonPath}: daemon configuration doesn't define a valid 'listeningPort' value, found '".( $listeningPort ? $listeningPort : '(undef)' )."'" ) if !$listeningPort || $listeningPort < 1;
 			# must have an exec path
 			my $execPath = $self->execPath();
 			if( $execPath ){
