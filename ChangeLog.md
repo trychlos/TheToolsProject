@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.5.0-rc.0
+### 4.5.0
 
-    Release date: 
+    Release date: 2025- 4-17
 
     - TTP::commandExec() no more adds an EOL to stdout
 	- ttp.pl alert: fix cmd vs. sh execution and quotings
@@ -176,4 +176,4 @@
 
 ---
 P. Wieser
-- Last updated on 2025, Apr. 14th
+- Last updated on 2025, Apr. 17th
