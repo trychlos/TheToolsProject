@@ -1,0 +1,198 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "org.trychlos.TheToolsProject/schemas/mqtt-monitor-daemon.schema.json",
+    "title": "MQTT Monitor Daemon",
+    "description_array": [
+		"Monitor a MQTT bus for topics.",
+        "",
+        "Daemons provided by TheToolsProject all share some common characteristics:",
+        "- the daemon is started, stopped and more generally fully managed through 'daemon.pl' verbs.",
+        "- the daemon is addressed by the path its JSON configuration file ('--json' option),",
+        "- the daemon can also be addressed by its name, which is computed as the basename of its JSON configuration file ('--name' option), which means that this name must be unique among all managed daemons,",
+        "- the daemon can also be addressed directly by its listening port when it is running,",
+        "- the code initializes itself by executing 'my $daemon = TTP::runDaemon();' which makes it an instanciation of the TTP::RunnerDaemon class,",
+        "- the TTP::RunnerDaemon class implements the ISleepable role, which means that each daemon is able to define several intervals, and several subroutines which will be triggered at these intervals,",
+        "- the daemon manages following intervals:",
+        "  > listeningInterval: this is the period between listening for external commands as sent by 'daemon.pl command',",
+        "  > messagingInterval: this is the period between between advertising the daemon's status to the MQTT bus,",
+        "  > httpingInterval: this is the period between publishing to the HTTP-based telemetry system,",
+        "  > textingInterval: this is the period between publishing to the text-based telemetry system.",
+        "",
+        "This daemon defines additional following properties:",
+        "- workerInterval: the period between each MQTT scan,",
+        "- topics: the list of to-be-monitored topics."
+    ],
+    "type": "object",
+    "properties": {
+        "enabled": {
+            "description": "Whether this JSON configuration must be considered.",
+            "type": "boolean",
+            "default": true
+        },
+        "listeningPort": {
+            "description": "The port this daemon is listening to. No default is provided. Mandatory.",
+            "type": "integer"
+        },
+        "listeningInterval": {
+            "description": "The listening interval. The minimum accepted is 500 ms.",
+            "type": "integer",
+            "units": "ms",
+            "default": 1000
+        },
+        "messagingInterval": {
+            "description": "The interval which commands the publication of the daemon's status on the MQTT bus. The minimum accepted is 5000 ms. Set to zero or less to disable this publication.",
+            "type": "integer",
+            "units": "ms",
+            "default": 60000
+        },
+        "messagingTimeout": {
+            "description": "The timeout when publishing to the MQTT bus. The minimum accepted is 5 sec.",
+            "type": "integer",
+            "units": "s",
+            "default": 60
+        },
+        "httpingInterval": {
+            "description": "The interval which commands the publication to the HTTP-based telemetry system. The minimum accepted is 5000 ms. Set to zero or less to disable this publication.",
+            "type": "integer",
+            "units": "ms",
+            "default": 60000
+        },
+        "textingInterval": {
+            "description": "The interval which commands the publication to the text-based telemetry system. The minimum accepted is 5000 ms. Set to zero or less to disable this publication.",
+            "type": "integer",
+            "units": "ms",
+            "default": 60000
+        },
+        "execPath": {
+            "description": "Either the full path to the executable or just a filename. In this later case, the executable is searched for in TTP_ROOTS/libexec/daemons.",
+            "type": "string"
+        },
+        "workerInterval": {
+            "description": "The interval between each bus scan.",
+            "type": "integer",
+            "units": "ms",
+            "default": 10000
+        },
+        "topics": {
+            "description_array": [
+                "This MQTT monitoring daemon always suscribes to the '#' and '$SYS/#' wildcards.",
+                "The below configuration only says what to do with some particular topics.",
+                "Each received topic is matched against each (key) regular expression. When matched, configuration applies as follow:",
+                "- toLog: whether to log the topic and its payload, defaulting to false",
+                "- toStdout: whether to print the topic and its payload, defaulting to false",
+                "- toStderr: whether to print the topic and its payload, defaulting to false",
+                "- toFile: whether to record the topic and its payload in a file, defaulting to false",
+                "- actions: a list of other actions to be executed.",
+                "Note that regular expressions provided as keys of 'topics' hash may overlap each other: they will all be examined on each receive MQTT message."
+            ],
+            "type": "object",
+            "patternProperties": {
+                "^.*$": {
+                    "description": "A regular expression to be matched against the found topics.",
+                    "type": "string"
+                },
+                "type": "object",
+                "properties": {
+                    "host": {
+                        "description": "The address name or IP, possibly with a colon and a port number, of the broker, defaulting to the site MQTT gateway.",
+                        "type": "string"
+                    },
+                    "toLog": {
+                        "description": "Whether a line with the topic and its payload must be appended to a log file.",
+                        "type": "object",
+                        "properties": {
+                            "enabled": {
+                                "description": "Whether logging the topic and its payload in a logfile is an enabled feature.",
+                                "type": "boolean",
+                                "default": false
+                            },
+                            "filename": {
+                                "description_array": [
+                                    "The filename where to append a line with the topic and the payload.",
+                                    "The filename can be evaluated at runtime. <TOPIC> and <PAYLOAD> macros are available."
+                                ],
+                                "type": "string",
+                                "default": "[eval:File::Spec->catfile( TTP::logsCommands(), $daemon->name().'.log' )]"
+                            }
+                        }
+                    },
+                    "toStdout": {
+                        "description": "Whether the topic and its payload must be displayed to stdout.",
+                        "type": "object",
+                        "properties": {
+                            "enabled": {
+                                "description": "Whether logging the topic and its payload to stdout is an enabled feature.",
+                                "type": "boolean",
+                                "default": false
+                            }
+                        }
+                    },
+                    "toStderr": {
+                        "description": "Whether the topic and its payload must be displayed to stderr.",
+                        "type": "object",
+                        "properties": {
+                            "enabled": {
+                                "description": "Whether logging the topic and its payload to stderr is an enabled feature.",
+                                "type": "boolean",
+                                "default": false
+                            }
+                        }
+                    },
+                    "toFile": {
+                        "description": "Whether the topic and its payload must be written into a new file.",
+                        "type": "object",
+                        "properties": {
+                            "enabled": {
+                                "description": "Whether logging the topic and its payload to a new file is an enabled feature.",
+                                "type": "boolean",
+                                "default": false
+                            },
+                            "filename": {
+                                "description_array": [
+                                    "The full path of the file to be created.",
+                                    "The filename can be evaluated at runtime. <TOPIC> and <PAYLOAD> macros are available."
+                                ],
+                                "type": "string",
+                                "default": "[eval:File::Spec->catfile( File::Spec->catdir( TTP::logsCommands(), $daemon->name()), <TOPIC>.[eval:Time::Moment->now->epoch->strftime( '%y%m%d%H%M%S%6N' )].'.log' )]"
+                            }
+                        }
+                    },
+                    "actions": {
+                        "description": "Other actions to be done on the topic.",
+                        "type": "array",
+                        "items": "object",
+                        "properties": {
+                            "enabled": {
+                                "description": "Whether this particular action is enabled.",
+                                "type": "boolean",
+                                "default": false
+                            },
+                            "command": {
+                                "description_array": [
+                                    "The command to be executed when a topic is matched, either as a single string or as a 'byOS' object.",
+                                    "The provided command can take advantage of <TOPIC> and <PAYLOAD> macros."
+                                ],
+                                "type": [
+                                    "object",
+                                    "string"
+                                ],
+                                "properties": {
+                                    "byOS": {
+                                        "description": "Let a command be specific to the running OS.",
+                                        "type": "object",
+                                        "patternProperties": {
+                                            "^.*$": {
+                                                "description": "The OS name as reported by Perl-Config, the value being the command to be applied for this OS.",
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

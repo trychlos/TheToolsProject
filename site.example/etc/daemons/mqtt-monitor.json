@@ -1,0 +1,43 @@
+{
+	"enabled": true,
+	"execPath": "mqtt-monitor-daemon.pl",
+	"listeningPort": 12321,
+	"listeningInterval": 1000,
+	"messagingInterval": 60000,
+	"messagingTimeout": 60,
+	"httpingInterval": 300000,
+	"textingInterval": 300000,
+	"workerInterval" : 300000,
+	"topics": {
+		"^(?!\\$SYS)": {
+			"description": "Match all which is not $SYS and let logs",
+			"toLog": {
+				"enabled": true,
+				"filename": "[eval:File::Spec->catfile( TTP::logsCommands(), $daemon->name().'.log' )]"
+			}
+		},
+		"^[^/]+/executionReport/dbms\\.pl/backup": {
+			"description": "Match 'dbms.pl backup' execution reports, no need to log them again",
+			"toStdout": {
+				"enabled": false
+			}
+		},
+		"^\\$SYS/": {
+			"comment": "Match $SYS broker internal messages - do not log them (they are too numerous), but let a client request them",
+			"actions": [
+				{
+					"enabled": false,
+					"command": "echo <TOPIC> <PAYLOAD>"
+				},
+				{
+					"enabled": false,
+					"command": {
+						"byOS": {
+							"MSWin32": "echo <TOPIC> <PAYLOAD>"
+						}
+					}
+				}
+			]
+		}
+	}
+}
