@@ -53,7 +53,7 @@ sub copyDir {
 		TTP::Message::msgVerbose( __PACKAGE__."::copyDir() doesn't empty target tree before copying as emptyTree is false" );
 	}
 	# have a command or use dircopy() or use fcopy()
-	my $command = TTP::commandByOs([ 'copyDir' ], { withCommand => true });
+	my $command = TTP::commandByOS([ 'copyDir' ], { withCommand => true });
 	if( $command ){
 		TTP::Message::msgVerbose( __PACKAGE__."::copyDir() found command='$command', executing it" );
 		my $cmdres = TTP::commandExec( $command, {
@@ -78,7 +78,7 @@ sub copyDir {
 			$opts->{work}{target} = $target;
 			$opts->{work}{errors_count} = 0;
 			$opts->{work}{makeDirExist} = true;
-			$opts->{work}{command} = TTP::commandByOs([ 'copyFile' ], { withCommand => true });
+			$opts->{work}{command} = TTP::commandByOS([ 'copyFile' ], { withCommand => true });
 			find( sub { _copy_to( $opts, $_ ); }, $source );
 			$result = !$opts->{work}{errors_count};
 			$opts->{work} = undef;
@@ -184,7 +184,7 @@ sub copyFile {
 	$opts //= {};
 	my $result = false;
 	TTP::Message::msgVerbose( __PACKAGE__."::copyFile() entering with source='$source' target='$target'" );
-	my $command = $opts->{command} || TTP::commandByOs([ 'copyFile' ], { withCommand => true });
+	my $command = $opts->{command} || TTP::commandByOS([ 'copyFile' ], { withCommand => true });
 	if( $command ){
 		my $cmdres = TTP::commandExec( $command, {
 			macros => {

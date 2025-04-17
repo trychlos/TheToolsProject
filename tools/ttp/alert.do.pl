@@ -129,7 +129,7 @@ sub doDisplayLevels {
 
 sub doFileAlert {
 	msgOut( "creating a new '$opt_level' JSON file alert..." );
-	my $command = TTP::commandByOs([ 'alerts', 'withFile' ], { withCommand => true });
+	my $command = TTP::commandByOS([ 'alerts', 'withFile' ], { withCommand => true });
 	my $dir = TTP::alertsFileDropdir();
 	if( !$command ){
 		my $file = File::Spec->catfile( $dir, 'alert-'.$alertStamp->strftime( '%Y%m%d%H%M%S%6N' ).'.json' );
@@ -164,7 +164,7 @@ sub doMqttAlert {
 	msgOut( "publishing a '$opt_level' alert on MQTT bus..." );
 	my $data = buildAlertData();
 	my $topic = $ep->var([ 'alerts', 'withMqtt', 'topic' ]) || $ep->node()->name()."/alerts/".$alertStamp->strftime( '%Y%m%d%H%M%S%6N' );
-	my $command = TTP::commandByOs([ 'alerts', 'withMqtt' ], { withCommand => true });
+	my $command = TTP::commandByOS([ 'alerts', 'withMqtt' ], { withCommand => true });
 	if( !$command ){
 		my $verbose = $ep->runner()->verbose() ? "-verbose" : "-noverbose";
 		$command = "mqtt.pl publish -nocolored $verbose -topic $topic -payload \"<JSON>\" <OPTIONS>";
@@ -191,7 +191,7 @@ sub doMqttAlert {
 
 sub doSmsAlert {
 	msgOut( "sending a '$opt_level' alert by SMS..." );
-	my $command = TTP::commandByOs([ 'alerts', 'withSms' ], { withCommand => true });
+	my $command = TTP::commandByOS([ 'alerts', 'withSms' ], { withCommand => true });
 	if( !$command ){
 		my $verbose = $ep->runner()->verbose() ? "-verbose" : "-noverbose";
 		# it is up to the site to know if and how send SMS
@@ -233,7 +233,7 @@ sub doSmsAlert {
 
 sub doSmtpAlert {
 	msgOut( "publishing a '$opt_level' alert by SMTP..." );
-	my $command = TTP::commandByOs([ 'alerts', 'withSmtp' ], { withCommand => true });
+	my $command = TTP::commandByOS([ 'alerts', 'withSmtp' ], { withCommand => true });
 	if( !$command ){
 		my $verbose = $ep->runner()->verbose() ? "-verbose" : "-noverbose";
 		$command = "smtp.pl send -nocolored $verbose -to <RECIPIENTS> -subject \"<TITLE>\" -textfname <CONTENTFNAME> <OPTIONS>";

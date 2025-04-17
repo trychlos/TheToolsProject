@@ -145,7 +145,7 @@ sub getServices {
 # -------------------------------------------------------------------------------------------------
 # Returns true if the given var has a non-empty 'commands' array
 # (I):
-# - a variable to be tested (should be an array as returned by TTP::commandByOs()
+# - a variable to be tested (should be an array as returned by TTP::commandByOS()
 
 sub hasCommands {
 	my ( $var ) = @_;
@@ -215,7 +215,7 @@ sub works {
 	my $node = $ep->node();
 	my $keys = configKeys();
 	msgVerbose( "searching for monitoring commands at the node level" );
-	my $commands = TTP::commandByOs( $keys, { withCommands => true, jsonable => $ep->node() });
+	my $commands = TTP::commandByOS( $keys, { withCommands => true, jsonable => $ep->node() });
 	if( hasCommands( $commands )){
 		foreach my $cmd ( @{$commands} ){
 			msgVerbose( "found command='$cmd'" );
@@ -237,7 +237,7 @@ sub works {
 		foreach my $service ( @{$services} ){
 			msgVerbose( "examining service $service" );
 			my $serviceKeys = [ 'Services', $service, @{$keys} ];
-			my $commands = TTP::commandByOs( $serviceKeys, { withCommands => true, jsonable => $ep->node() });
+			my $commands = TTP::commandByOS( $serviceKeys, { withCommands => true, jsonable => $ep->node() });
 			if( hasCommands( $commands )){
 				foreach my $cmd ( @{$commands} ){
 					msgVerbose( "found command='$cmd'" );
