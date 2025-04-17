@@ -910,11 +910,11 @@ sub random {
 # and @ARGV the command-line arguments
 
 sub runCommand {
-	require TTP::RunnerCommand;
+	require TTP::RunnerVerb;
 	print STDERR Dumper( @ARGV ) if $ENV{TTP_DEBUG};
 	$ep = TTP::EP->new();
 	$ep->bootstrap();
-	my $command = TTP::RunnerCommand::runCommand( $ep );
+	my $command = TTP::RunnerVerb::runCommand( $ep );
 	return $command;
 }
 

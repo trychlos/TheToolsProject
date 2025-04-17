@@ -32,6 +32,7 @@ use warnings;
 use Config;
 
 use TTP::Node;
+use TTP::RunnerVerb;
 use TTP::Service;
 
 my $defaults = {
@@ -53,7 +54,7 @@ sub listCommands {
 	msgOut( "displaying available commands..." );
 	my $count = 0;
 	# list all commands in all TTP_ROOTS trees
-	my $finder = TTP::RunnerCommand->finder();
+	my $finder = TTP::RunnerVerb->finder();
 	my $findable = {
 		dirs => [ $finder->{dirs} ],
 		glob => '*'.$finder->{suffix}

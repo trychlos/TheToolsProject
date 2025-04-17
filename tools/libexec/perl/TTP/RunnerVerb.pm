@@ -20,9 +20,9 @@
 # - a 'command' the first executed word, here: 'ttp.pl'
 # - a 'verb' the second word, here 'vars'.
 #
-# Verbs are executed in this RunnerCommand context.
+# Verbs are executed in this RunnerVerb context.
 
-package TTP::RunnerCommand;
+package TTP::RunnerVerb;
 
 use base qw( TTP::Runner );
 our $VERSION = '1.00';
@@ -325,13 +325,13 @@ sub DESTROY {
 # (I):
 # - the TTP EntryPoint
 # (O):
-# - the newly instanciated RunnerCommand
+# - the newly instanciated RunnerVerb
 
 sub runCommand {
 	my ( $ep ) = @_;
 	print STDERR __PACKAGE__."::run() ep=".ref( $ep ).EOL if $ENV{TTP_DEBUG};
 
-	my $command = TTP::RunnerCommand->new( $ep );
+	my $command = TTP::RunnerVerb->new( $ep );
 	$command->run();
 	return $command;
 }
