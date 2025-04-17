@@ -30,7 +30,6 @@
 |      | 2024- 4-17 | at the moment, still exists backup-monitor-daemon in site tree - to be evaluated |
 |   79 | 2024- 4-12 | let a node override a site variable |
 |   95 | 2024- 4-15 | all getter on Dirs() should be in Path:: |
-|   98 | 2024- 4-17 | remove TTP::Ports |
 |   99 | 2024- 4-17 | daemons should have a HUP command to fully reload their config |
 |  100 | 2024- 4-17 | review MQTT gateway schema so that the port number is part of the host address |
 |  101 | 2024- 4-17 | review SMTP gateway schema so that the port number is part of the host address |
@@ -254,6 +253,8 @@
 |      | 2024- 4-17 | commandByOs() is now named commandByOS() - done |
 |   97 | 2024- 4-16 | replace RunnerDaemon->startRun() with bootstrap() |
 |      | 2024- 4-17 | done in node-monitor-daemon.pl and alerts-monitor-daemon.pl |
+|   98 | 2024- 4-17 | remove TTP::Ports |
+|      | 2024- 4-17 | done |
 
 ---
 P. Wieser

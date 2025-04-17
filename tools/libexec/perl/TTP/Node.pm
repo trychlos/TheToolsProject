@@ -30,6 +30,7 @@ use warnings;
 use Carp;
 use Config;
 use Data::Dumper;
+use File::Spec;
 use Role::Tiny::With;
 use Sys::Hostname qw( hostname );
 use vars::global qw( $ep );
@@ -38,9 +39,17 @@ with 'TTP::IAcceptable', 'TTP::IEnableable', 'TTP::IFindable', 'TTP::IJSONable';
 
 use TTP::Constants qw( :all );
 use TTP::Message qw( :all );
-use TTP::Ports;
 
 my $Const = {
+	# command by OS to detect mountpoints
+	mountPoints => {
+		aix => {
+			command => 'mount | awk \'{ print $2 }\''
+		},
+		linux => {
+			command => 'mount | awk \'{ print $3 }\''
+		}
+	},
 	# hardcoded subpaths to find the <node>.json files
 	# even if this not too sexy in Win32, this is a standard and a common usage on Unix/Darwin platforms
 	finder => {
@@ -76,6 +85,37 @@ sub _hostname {
 	}
 	$ENV{TTP_DEBUG} && print STDERR __PACKAGE__."::_hostname() returns '$name'".EOL;
 	return $name;
+}
+
+# -------------------------------------------------------------------------------------------------
+# List the root mount points
+# We are only interested (and only return) with mounts at first level
+# (I):
+#  -
+# (O):
+#  - the mount points as an array ref
+
+sub _rootMountPoints {
+	my $list = [];
+	$ENV{TTP_DEBUG} && print STDERR __PACKAGE__."::_rootMountPoints() osname '".$Config{osname}."'".EOL;
+	my $command = $Commands->{mountPoints}{$Config{osname}}{command};
+	$ENV{TTP_DEBUG} && print STDERR __PACKAGE__."::_rootMountPoints() command \"".$command."\"".EOL;
+	if( $command ){
+		my @out = `$command`;
+		foreach my $path ( @out ){
+			chomp $path;
+			my ( $volume, $directories, $file ) = File::Spec->splitpath( $path, true );
+			my @dirs = File::Spec->splitdir( $directories );
+			# as mount points are always returned as absolute paths, the first element of @dirs is always empty
+			# so we must restrict our list to paths which only two elements, second being not empty
+			#print STDERR "path=$path directories='$directories' dirs=[ ".join( ', ', @dirs )." ] scalar=".(scalar( @dirs )).EOL;
+			if( scalar( @dirs ) == 2 && !$dirs[0] && $dirs[1] ){
+				$ENV{TTP_DEBUG} && print STDERR __PACKAGE__."::_rootMountPoints() found '".$path."'".EOL;
+				push( @{$list}, $path ) ;
+			}
+		}
+	}
+	return $list;
 }
 
 ### Public methods
@@ -252,7 +292,7 @@ sub enum {
 	my $logicalRe = $ep->site()->var([ 'nodes', 'logicals', 'regexp' ]);
 	$ENV{TTP_DEBUG} && print STDERR __PACKAGE__."::enum() logicalRe='".( $logicalRe || '' )."'".EOL;
 	if( $logicalRe ){
-		my $mounteds = TTP::Ports::rootMountPoints();
+		my $mounteds = _rootMountPoints();
 		$ENV{TTP_DEBUG} && print STDERR __PACKAGE__."::enum() mounteds ".Dumper( $mounteds );
 		foreach my $mount( @${mounteds} ){
 			my $candidate = $class->_enumTestForRe( $mount, $logicalRe );
