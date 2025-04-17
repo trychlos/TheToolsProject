@@ -35,7 +35,7 @@
 #
 # JSON specific configuration:
 #
-# - runInterval, the monitoring period, defaulting to 300000 ms (5 min.)
+# - workerInterval, the monitoring period, defaulting to 300000 ms (5 min.)
 # - keys, the keys to be executed, defaulting to ( 'status', 'monitor' )
 
 use utf8;
@@ -54,8 +54,8 @@ use vars::global qw( $ep );
 my $daemon = TTP::RunnerDaemon->bootstrap();
 
 use constant {
-	MIN_RUN_INTERVAL => 60000,
-	DEFAULT_RUN_INTERVAL => 300000,
+	MIN_WORKER_INTERVAL => 60000,
+	DEFAULT_WORKER_INTERVAL => 300000,
 	DEFAULT_KEYS => [ 'status', 'monitor' ]
 };
 
@@ -104,7 +104,7 @@ sub answerStatus {
 
 	my ( $req ) = @_;
 	my $answer = TTP::RunnerDaemon->commonCommands()->{status}( $req, $commands );
-	$answer .= "runInterval: ".configRunInterval().EOL;
+	$answer .= "workerInterval: ".configWorkerInterval().EOL;
 	$answer .= "keys: [".join( ',', @{configKeys()} ).']'.EOL;
 	return $answer;
 }
@@ -121,15 +121,15 @@ sub configKeys {
 }
 
 # -------------------------------------------------------------------------------------------------
-# Returns the configured 'runInterval' (in sec.) defaulting to DEFAULT_RUN_INTERVAL
+# Returns the configured 'workerInterval' (in sec.) defaulting to DEFAULT_WORKER_INTERVAL
 
-sub configRunInterval {
+sub configWorkerInterval {
 	my $config = $daemon->config()->jsonData();
-	my $interval = $config->{runInterval};
-	$interval = DEFAULT_RUN_INTERVAL if !defined $interval;
-	if( $interval < MIN_RUN_INTERVAL ){
-		msgVerbose( "defined runInterval=$interval less than minimum accepted ".MIN_RUN_INTERVAL.", ignored" );
-		$interval = DEFAULT_RUN_INTERVAL;
+	my $interval = $config->{workerInterval};
+	$interval = DEFAULT_WORKER_INTERVAL if !defined $interval;
+	if( $interval < MIN_WORKER_INTERVAL ){
+		msgVerbose( "defined workerInterval=$interval less than minimum accepted ".MIN_WORKER_INTERVAL.", ignored" );
+		$interval = DEFAULT_WORKER_INTERVAL;
 	}
 
 	return $interval;
@@ -166,7 +166,7 @@ sub mqttDisconnect {
 	my $topic = $daemon->topic();
 	my $array = [];
 	push( @{$array}, {
-		topic => "$topic/runInterval",
+		topic => "$topic/workerInterval",
 		payload => ''
 	},{
 		topic => "$topic/keys",
@@ -196,8 +196,8 @@ sub mqttMessaging {
 	my $topic = $daemon->topic();
 	my $array = [];
 	push( @{$array}, {
-		topic => "$topic/runInterval",
-		payload => configRunInterval()
+		topic => "$topic/workerInterval",
+		payload => configWorkerInterval()
 	},{
 		topic => "$topic/keys",
 		payload => '['.join( ',', @{configKeys()}).']'
@@ -210,7 +210,7 @@ sub mqttMessaging {
 # search for the specified monitoring keys at the node level, and then at the service level for each
 # service on this node, and execute them
 
-sub works {
+sub worker {
 	# get commands at the node level
 	my $node = $ep->node();
 	my $keys = configKeys();
@@ -295,11 +295,13 @@ if( TTP::errs()){
 	TTP::exit();
 }
 
-$daemon->messagingSub( \&mqttMessaging );
-$daemon->disconnectSub( \&mqttDisconnect );
+if( $daemon->messagingEnabled()){
+	$daemon->messagingSub( \&mqttMessaging );
+	$daemon->disconnectSub( \&mqttDisconnect );
+}
 
 $daemon->declareSleepables( $commands );
-$daemon->sleepableDeclareFn( sub => \&works, interval => configRunInterval());
+$daemon->sleepableDeclareFn( sub => \&worker, interval => configWorkerInterval());
 $daemon->sleepableStart();
 
 $daemon->terminate();

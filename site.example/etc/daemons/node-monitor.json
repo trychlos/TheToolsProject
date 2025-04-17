@@ -4,9 +4,10 @@
 	"listeningPort": 12321,
 	"listeningInterval": 1000,
 	"messagingInterval": 60000,
+	"messagingTimeout": 60,
 	"httpingInterval": 300000,
-	"textingInterval": -1,
-	"scanInterval" : 1000,
+	"textingInterval": 300000,
+	"workerInterval" : 300000,
 	"keys": [
 		"status",
 		"monitor"
