@@ -29,7 +29,12 @@
 |   79 | 2024- 4-12 | let a node override a site variable |
 |   95 | 2024- 4-15 | all getter on Dirs() should be in Path:: |
 |   98 | 2024- 4-17 | remove TTP::Ports |
-|   99 |  |  |
+|   99 | 2024- 4-17 | daemons should have a HUP command to fully reload their config |
+|  100 | 2024- 4-17 | review MQTT gateway schema to name the default MQTT gateway of the site |
+|  101 | 2024- 4-17 | review MQTT gateway schema so that the port number is part of the host address |
+|  102 | 2024- 4-17 | review SMTP gateway schema to name the default SMTP gateway of the site |
+|  103 | 2024- 4-17 | review SMTP gateway schema so that the port number is part of the host address |
+|  104 |  |  |
 
 ---
 ## Done
