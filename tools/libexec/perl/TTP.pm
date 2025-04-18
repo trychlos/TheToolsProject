@@ -616,18 +616,6 @@ sub hashFromTabular {
 }
 
 # -------------------------------------------------------------------------------------------------
-# Getter
-# (I):
-# - none
-# (O):
-# - returns the current execution node name, which may be undef very early in the process
-
-sub host {
-	my $node = $ep->node();
-	return $node ? $node->name() : undef;
-}
-
-# -------------------------------------------------------------------------------------------------
 # Append a JSON element to a file
 # (I):
 # - the hash to be written into
@@ -801,10 +789,11 @@ sub logsRoot {
 # (I):
 # - none
 # (O):
-# - returns the name of the current node
+# - returns the name of the current node, which may be undef in the very early stage of bootstrap
 
 sub nodeName {
-	return $ep->node()->name();
+	my $node = $ep ? $ep->node() : undef;
+	return $node ? $node->name() : undef;
 }
 
 # ------------------------------------------------------------------------------------------------

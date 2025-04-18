@@ -100,7 +100,7 @@
 		],
 
 		"DBMS": {
-			"backupsDir": "[eval:File::Spec->catdir( TTP::var([ 'DBMS', 'backupsRoot' ]), Time::Moment->now->strftime( '%y%m%d' ), TTP::host())]",
+			"backupsDir": "[eval:File::Spec->catdir( TTP::var([ 'DBMS', 'backupsRoot' ]), Time::Moment->now->strftime( '%y%m%d' ), TTP::nodeName())]",
 			"backupsRoot": "[eval:File::Spec->catdir( TTP::nodeRoot(), 'dailySQLBackups' )]",
 			"instance": "MSSQLSERVER",
 			"byInstance": {
@@ -265,7 +265,7 @@
 			],
 			"withHttp": {
 				"enabled": false,
-				"url": "http://10.11.12.13:9091/metrics/job/telemetry/host/[eval:TTP::host()]"
+				"url": "http://10.11.12.13:9091/metrics/job/telemetry/host/[eval:TTP::nodeName()]"
 			},
 			"withTextfile_comments": [
 				"The Prometheus TextFileCollector"
