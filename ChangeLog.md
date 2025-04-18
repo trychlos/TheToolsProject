@@ -9,7 +9,6 @@
     - Change 'MQTTGateway' schema so that the port number is included in the host definition (todo #100), thus bumping minor candidate version number
     - Update 'MQTT' package according to new 'MQATTGateway' schema
     - Update mqtt-monitor-dameon.pl to only manage a single MQTT broker (todo #105)
-    - TTP::RunnerExtern now defines bootstrap() class method, rather that relying on TTP::runExtern() (todo #104)
     - TTP::IRunnable now uses qualifiers as an (illimited) array (todo #103)
 
 ### 4.6.0

@@ -109,24 +109,6 @@ sub DESTROY {
 ### the former being preferred (hence the writing inside of the 'Class methods' block which brings
 ### the class as first argument).
 
-# -------------------------------------------------------------------------------------------------
-# instanciates and run the external command
-# (I):
-# - the TTP EntryPoint
-# (O):
-# - the newly instanciated RunnerExtern
-
-sub bootstrap {
-	my ( $class ) = @_;
-	print STDERR __PACKAGE__."::bootstrap() ".Dumper( @ARGV ) if $ENV{TTP_DEBUG};
-
-	$ep = TTP::EP->new();
-	$ep->bootstrap();
-	my $command = TTP::RunnerExtern->new( $ep );
-
-	return $command;
-}
-
 1;
 
 __END__

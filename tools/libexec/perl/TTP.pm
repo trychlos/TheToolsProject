@@ -923,6 +923,20 @@ sub runCommand {
 }
 
 # -------------------------------------------------------------------------------------------------
+# Run by the command
+# Expects $0 be the full path name to the command script (this is the case in Windows+Strawberry)
+# and @ARGV the command-line arguments
+
+sub runExtern {
+	require TTP::RunnerExtern;
+	print STDERR Dumper( @ARGV ) if $ENV{TTP_DEBUG};
+	$ep = TTP::EP->new();
+	$ep->bootstrap();
+	my $command = TTP::RunnerExtern->new( $ep );
+	return $command;
+}
+
+# -------------------------------------------------------------------------------------------------
 # print a stack trace
 # https://stackoverflow.com/questions/229009/how-can-i-get-a-call-stack-listing-in-perl
 # to be called for code errors
