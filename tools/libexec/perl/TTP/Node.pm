@@ -83,7 +83,7 @@ sub _hostname {
 		my @a = split( /\./, $name );
 		$name = $a[0];
 	}
-	$ENV{TTP_DEBUG} && print STDERR __PACKAGE__."::_hostname() returns '$name'".EOL;
+	print STDERR __PACKAGE__."::_hostname() returns '$name'".EOL if $ENV{TTP_DEBUG};
 	return $name;
 }
 
@@ -97,9 +97,9 @@ sub _hostname {
 
 sub _rootMountPoints {
 	my $list = [];
-	$ENV{TTP_DEBUG} && print STDERR __PACKAGE__."::_rootMountPoints() osname '".$Config{osname}."'".EOL;
-	my $command = $Commands->{mountPoints}{$Config{osname}}{command};
-	$ENV{TTP_DEBUG} && print STDERR __PACKAGE__."::_rootMountPoints() command \"".$command."\"".EOL;
+	print STDERR __PACKAGE__."::_rootMountPoints() osname '".$Config{osname}."'".EOL if $ENV{TTP_DEBUG};
+	my $command = $Const->{mountPoints}{$Config{osname}}{command};
+	print STDERR __PACKAGE__."::_rootMountPoints() command \"".$command."\"".EOL if $ENV{TTP_DEBUG};
 	if( $command ){
 		my @out = `$command`;
 		foreach my $path ( @out ){
@@ -110,7 +110,7 @@ sub _rootMountPoints {
 			# so we must restrict our list to paths which only two elements, second being not empty
 			#print STDERR "path=$path directories='$directories' dirs=[ ".join( ', ', @dirs )." ] scalar=".(scalar( @dirs )).EOL;
 			if( scalar( @dirs ) == 2 && !$dirs[0] && $dirs[1] ){
-				$ENV{TTP_DEBUG} && print STDERR __PACKAGE__."::_rootMountPoints() found '".$path."'".EOL;
+				print STDERR __PACKAGE__."::_rootMountPoints() found '".$path."'".EOL if $ENV{TTP_DEBUG};
 				push( @{$list}, $path ) ;
 			}
 		}
@@ -268,7 +268,7 @@ sub dirs {
 	my ( $class, $ep ) = @_;
 	$class = ref( $class ) || $class;
 
-	my $dirs = $ep->site() ? $ep->site()->var( 'nodesDirs' ) || $ep->site()->var([ 'nodes', 'dirs' ]) || $class->finder()->{dirs} : $class->finder()->{dirs};
+	my $dirs = $ep && $ep->site() ? $ep->site()->var( 'nodesDirs' ) || $ep->site()->var([ 'nodes', 'dirs' ]) || $class->finder()->{dirs} : $class->finder()->{dirs};
 
 	return $dirs;
 }

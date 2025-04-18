@@ -127,6 +127,9 @@ sub var {
 
 # -------------------------------------------------------------------------------------------------
 # Returns the (hardcoded) site specifications
+# The 'Site' is the first object we instanciate, and the parent of all configuration values.
+# No way to configure anything here: the path and name have to be hardcoded
+# (and we do not want go into environment variables or command-line)
 # (I):
 # - none
 # (O):
