@@ -514,7 +514,7 @@ sub new {
 
 	# if an arguments is provided but not a hash ref, this is an unrecoverable error
 	} elsif( defined( $args )){
-		msgErr( __PACKAGE__."::new() expects an optiona hash ref arguments, found '".ref( $args )."'" );
+		msgErr( __PACKAGE__."::new() expects an optional hash ref arguments, found '".ref( $args )."'" );
 		$self = undef;
 	}
 

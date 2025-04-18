@@ -17,6 +17,7 @@
 # see <http://www.gnu.org/licenses/>.
 #
 # Commands which are extern to TheToolsProject.
+# RunnerExtern has one qualifier, the program name. e.g. 'workload-summary.pl'
 
 package TTP::RunnerExtern;
 

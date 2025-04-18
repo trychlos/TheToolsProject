@@ -17,9 +17,10 @@
 # see <http://www.gnu.org/licenses/>.
 #
 # A role to be composed by both commands+verbs and external commands.
-# Take care of initializing to-be-logged words as:
+# Take care of initializing to-be-logged words said as qualifiers
 # - name, e.g. 'ttp.pl'
 # - qualifier, e.g. 'vars'
+# 
 
 package TTP::IRunnable;
 our $VERSION = '1.00';
@@ -139,20 +140,31 @@ sub runnablePath {
 };
 
 # -------------------------------------------------------------------------------------------------
-# Getter/Setter
+# Setter
 # (I):
-# - may be a qualifier when acting as a setter
+# - push a new qualifier to this runner
 # (O):
-# - returns the qualifier
+# - returns the new list of qualifiers as an array ref
 
-sub runnableQualifier {
+sub runnablePushQualifier {
 	my ( $self, $qualifier ) = @_;
 
-	if( $qualifier ){
-		$self->{_irunnable}{qualifier} = $qualifier;
-	}
+	push( @{$self->{_irunnable}{qualifiers}}, $qualifier );
 
-	return $self->{_irunnable}{qualifier};
+	return $self->runnableQualifiers();
+};
+
+# -------------------------------------------------------------------------------------------------
+# Getter
+# (I):
+# - none
+# (O):
+# - returns the list of qualifiers as an array ref
+
+sub runnableQualifiers {
+	my ( $self ) = @_;
+
+	return $self->{_irunnable}{qualifiers};
 };
 
 # -------------------------------------------------------------------------------------------------
@@ -224,6 +236,11 @@ after _newBase => sub {
 	$self->{_irunnable}{basename} = $file;
 	$file =~ s/\.[^\.]+$//;
 	$self->{_irunnable}{namewoext} = $file;
+
+	# starting with v4.7 we prefer manage a list of qualifiers which are logged as the program name and its main component, but is not limited to
+	# here the first qualifier is set as soon as runner instanciation
+	$self->{_irunnable}{qualifiers} = [];
+	$self->runnablePushQualifier( $self->runnableBNameFull());
 
 	msgLog( "[] executing $0 ".join( ' ', @ARGV ));
 	$ep->runner( $self );
