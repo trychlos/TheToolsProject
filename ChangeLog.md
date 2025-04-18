@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.6.0-rc.0
+### 4.6.0
 
-    Release date: 
+    Release date: 2025- 4-18
 
     - Add 'stdinFromNull' option to TTP::commandExec(), defaulting to true
     - TTP::commandByOs() is renamed to commandByOS() for consistency reasons (todo #96)
