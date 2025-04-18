@@ -35,6 +35,7 @@
 # JSON specific configuration:
 #
 # - workerInterval, the monitoring period, defaulting to 300000 ms (5 min.)
+# - host: the MQTT broker
 # - topics: a HASH whose each key is a regular expression which is matched against the topics
 #   and whose values are the behavior to have.
 
@@ -76,47 +77,101 @@ my $opt_json = $defaults->{json};
 my $opt_ignoreInt = false;
 
 my $commands = {
-	#help => \&help,
+	stats => \&answerStats,
+	status => \&answerStatus,
 };
 
-# specific to this daemon
-# keep a hash of mqtt connections to topics
-my $mqtts = {};
+# the MQTT connection handle (unique for this daemon)
+my $mqtt = undef;
+# our statistics
+my $stats = {};
+
+# -------------------------------------------------------------------------------------------------
+sub answerStats {
+	my ( $req ) = @_;
+	my $answer = "";
+	foreach my $key ( sort keys %{$stats} ){
+		$answer .= "topic: '$key'".EOL;
+		$answer .= "  seen: '$stats->{$key}{count}'".EOL;
+		$answer .= "  toLog: '$stats->{$key}{toLog}'".EOL;
+		$answer .= "  toStdout: '$stats->{$key}{toStdout}'".EOL;
+		$answer .= "  toStderr: '$stats->{$key}{toStderr}'".EOL;
+		$answer .= "  toFile: '$stats->{$key}{toFile}'".EOL;
+		$answer .= "  actions:".EOL;
+		$answer .= "    total: '$stats->{$key}{actions}{total}'".EOL;
+		$answer .= "    enabled: '$stats->{$key}{actions}{enabled}'".EOL;
+		$answer .= "    success: '$stats->{$key}{actions}{success}'".EOL;
+		$answer .= "    failed: '$stats->{$key}{actions}{failed}'".EOL;
+	}
+	return $answer;
+}
+
+# -------------------------------------------------------------------------------------------------
+# add to the standard 'status' answer our own data
+
+sub answerStatus {
+	my ( $req ) = @_;
+	my $answer = TTP::RunnerDaemon->commonCommands()->{status}( $req, $commands );
+	$answer .= "host: ".configHost().EOL;
+	$answer .= "workerInterval: ".configWorkerInterval().EOL;
+	$answer .= "topics: [ ".join( ', ', sort keys %{$daemon->config()->jsonData()->{topics}} )." ]".EOL;
+	return $answer;
+}
+
+# -------------------------------------------------------------------------------------------------
+# returns the configured MQTT broker host
+
+sub configHost {
+	my $host = $daemon->config()->jsonData()->{host};
+	$host = $ep->var([ 'MQTTGateway', 'host' ]) if !$host;
+	return $host;
+}
+
+# -------------------------------------------------------------------------------------------------
+# connect to the target MQTT broker
+# either it is configured in the daemon, or connect to the site default
+# return truethy value if OK
+
+sub configMqtt {
+	my $host = configHost();
+	if( $host ){
+		$mqtt = TTP::MQTT::connect({
+			broker => $host
+		});
+		if( $mqtt ){
+			my $listeningInterval = $daemon->config()->listeningInterval()
+			$daemon->sleepableDeclareFn( sub => sub { $mqtt->tick( $listeningInterval ); }, interval => $listeningInterval );
+			$mqtt->subscribe( '#' => \&worker, '$SYS/#' => \&worker );
+		}
+	} else {
+		msgErr( "unable to found a host to connect to" ) if !$host;
+	}
+	return $mqtt;
+}
 
 # -------------------------------------------------------------------------------------------------
 # interprets the defined topics
 # simultaneously identifying the target MQTT broker and connecting to
 # may send error messages in case of an error
+# return truethy value if OK
 
 sub configTopics {
 	my $topics = $daemon->config()->jsonData()->{topics};
-	foreach my $topicRe ( sort keys %{$topics} ){
-		my $topic = $topics->{$topicRe};
-		# identify the broker, may be undef
-		my $host =  $topic->{host};
-		my $name = $host || 'default';
-		# initialize our structure
-		$mqtts->{$name} = $mqtts->{$name} || {};
-		$mqtts->{$name}{$topicRe} = {
+	foreach my $key ( sort keys %{$topics} ){
+		# initialize our stats for this topic
+		$stats->{$key} = {
 			count => 0,
 			toLog => 0,
 			toStdout => 0,
 			toStderr => 0,
 			toFile => 0,
-			actions => 0
-		};
-		# connect to it
-		# reiter for each topic which wants subscribe to this broker if not done
-		# on connection subscribe to all topics
-		if( !$mqtts->{$name}{mqtt} ){
-			$mqtts->{$name}{mqtt} = TTP::MQTT::connect({
-				broker => $host
-			});
-			if( $mqtts->{$name}{mqtt} ){
-				$daemon->sleepableDeclareFn( sub => sub { $mqtts->{$name}{mqtt}->tick( $daemon->config()->listeningInterval()); }, interval => $daemon->config()->listeningInterval());
-				$mqtts->{$name}{mqtt}->subscribe( '#' => sub { worker( $name, @_ ); }, '$SYS/#' => sub { worker( $name, @_ ); });
+			actions => {
+				total => 0,
+				enabled => 0,
+				success => 0,
+				failed => 0
 			}
-		}
+		};
 	}
 }
 
@@ -138,17 +193,16 @@ sub configWorkerInterval {
 # -------------------------------------------------------------------------------------------------
 # the received topic match a daemon configuration item
 # (I):
-# - the name of the broker
 # - the received topic
 # - the corresponding payload
 # - the definition key (the matching topic regular expression)
 # - the corresponding object which defines the actions to be done
 
 sub doMatched {
-	my ( $name, $topic, $payload, $key, $config ) = @_;
+	my ( $topic, $payload, $key, $config ) = @_;
 
 	# increment the counter
-	$mqtts->{$name}{$key}{count} += 1;
+	$stats->{$key}{count} += 1;
 
 	# whether to log the message to an appended file
 	my $toLog = false;
@@ -161,7 +215,7 @@ sub doMatched {
 			PAYLOAD => $payload
 		});
 		msgLog( "$topic [$payload]", { logFile => $logFile });
-		$mqtts->{$name}{$key}{toLog} += 1;
+		$stats->{$key}{toLog} += 1;
 	} else {
 		msgVerbose( "$topic: toLog is not enabled" );
 	}
@@ -171,7 +225,7 @@ sub doMatched {
 	$toStdout = $config->{toStdout}{enabled} if exists $config->{toStdout} && exists $config->{toStdout}{enabled};
 	if( $toStdout ){
 		print STDOUT Time::Moment->now->strftime( '%Y-%m-%d %H:%M:%S.%6N %:z' )." $topic $payload".EOL;
-		$mqtts->{$name}{$key}{toStdout} += 1;
+		$stats->{$key}{toStdout} += 1;
 	} else {
 		msgVerbose( "$topic: toStdout is not enabled" );
 	}
@@ -181,7 +235,7 @@ sub doMatched {
 	$toStderr = $config->{toStderr}{enabled} if exists $config->{toStderr} && exists $config->{toStderr}{enabled};
 	if( $toStderr ){
 		print STDERR Time::Moment->now->strftime( '%Y-%m-%d %H:%M:%S.%6N %:z' )." $topic $payload".EOL;
-		$mqtts->{$name}{$key}{toStderr} += 1;
+		$stats->{$key}{toStderr} += 1;
 	} else {
 		msgVerbose( "$topic: toStderr is not enabled" );
 	}
@@ -197,7 +251,7 @@ sub doMatched {
 			PAYLOAD => $payload
 		});
 		path( $destFile )->spew_utf8( Time::Moment->now->strftime( '%Y-%m-%d %H:%M:%S.%6N %:z' )." $topic $payload".EOL );
-		$mqtts->{$name}{$key}{toFile} += 1;
+		$stats->{$key}{toFile} += 1;
 	} else {
 		msgVerbose( "$topic: toFile is not enabled" );
 	}
@@ -207,12 +261,16 @@ sub doMatched {
 	if( $actions ){
 		if( ref( $actions ) eq 'ARRAY' ){
 			# tries to execute all defined actions
-			my $count = 0;
+			my $totalCount = 0;
+			my $enabledCount = 0;
+			my $successCount = 0;
+			my $failedCount = 0;
 			foreach my $do ( @{$actions} ){
-				$count += 1;
+				$totalCount += 1;
 				my $enabled = false;
 				$enabled = $do->{enabled} if exists $do->{enabled};
 				if( $enabled ){
+					$enabledCount += 1
 					my $jsonable = TTP::JSONable->new( $ep, $do );
 					my $command = TTP::commandByOS([], { jsonable => $jsonable, withCommand => true });
 					if( $command ){
@@ -222,14 +280,22 @@ sub doMatched {
 								PAYLOAD => $payload
 							}
 						});
-						#print "result: ".Dumper( $res );
+						if( $res->{success} ){
+							$successCount += 1;
+						} else {
+							$failedCount += 1;
+						}
 					} else {
-						msgVerbose( "$topic: action n° $count doesn't have a command" );
+						msgVerbose( "$topic: action n° $totalCount doesn't have a command" );
 					}
 				} else {
-					msgVerbose( "$topic: action n° $count is not enabled" );
+					msgVerbose( "$topic: action n° $totalCount is not enabled" );
 				}
 			}
+			$stats->{$keys}{actions}{total} = $totalCount;
+			$stats->{$keys}{actions}{enabled} = $enabledCount;
+			$stats->{$keys}{actions}{success} += $successCount;
+			$stats->{$keys}{actions}{failed} += $failedCount;
 		} else {
 			msgErr( "$topic: unexpected object found for 'actions', expected 'ARRAY', got '".ref( $actions )."'" );
 		}
@@ -251,22 +317,23 @@ sub replaceMacros {
 }
 
 # -------------------------------------------------------------------------------------------------
-# do its work, examining the MQTT queues
+# do its work, examining the MQTT queue
 # (I):
-# - the broker name
 # - the topic
 # - the payload
 
 sub worker {
-	my ( $name, $topic, $payload ) = @_;
+	my ( $topic, $payload ) = @_;
 	# may get empty topic at initialization time
 	if( $topic ){
 		my $topics = $daemon->config()->jsonData()->{topics};
 		foreach my $key ( sort keys %{$topics} ){
 			if( $topic =~ m/$key/ ){
-				doMatched( $name, $topic, $payload, $key, $topics->{$key} );
+				doMatched( $topic, $payload, $key, $topics->{$key} );
 			}
 		}
+	} else {
+		print STDERR Dumper( @_ );
 	}
 }
 
@@ -303,6 +370,9 @@ if( !TTP::errs()){
 	$daemon->run({ jsonPath => $opt_json, ignoreInt => $opt_ignoreInt });
 }
 if( !TTP::errs()){
+	configMqtt();
+}
+if( !TTP::errs()){
 	configTopics();
 }
 
@@ -314,5 +384,5 @@ $daemon->declareSleepables( $commands );
 $daemon->sleepableDeclareFn( sub => \&worker, interval => configWorkerInterval());
 $daemon->sleepableStart();
 
-#TTP::MQTT::disconnect( $mqtt );
+TTP::MQTT::disconnect( $mqtt );
 $daemon->terminate();
