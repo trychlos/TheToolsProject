@@ -159,9 +159,9 @@ sub _find_single {
 		push( @results, $fname );
 	}
 	foreach my $candidate ( @results ){
-		$ENV{TTP_DEBUG} && print STDERR __PACKAGE__."::_find_single() testing '$candidate'".EOL;
+		print STDERR __PACKAGE__."::_find_single() testing '$candidate'".EOL if $ENV{TTP_DEBUG};
 		if( -r $candidate ){
-			$ENV{TTP_DEBUG} && print STDERR __PACKAGE__."::_find_single() found candidate '$candidate'".EOL;
+			print STDERR __PACKAGE__."::_find_single() found candidate '$candidate'".EOL if $ENV{TTP_DEBUG};
 			push( @{$self->{_ifindable}{candidates}}, $candidate );
 			my $accepted = true;
 			if( $self->does( 'TTP::IAcceptable' ) && $opts->{acceptable} ){
@@ -172,9 +172,9 @@ sub _find_single {
 			if( $accepted ){
 				push( @{$self->{_ifindable}{accepted}}, $candidate );
 				$self->{_ifindable}{end} = true unless $self->{_ifindable}{wantsAll};
-				$ENV{TTP_DEBUG} && print STDERR __PACKAGE__."::_find_inpath() candidate='$candidate' is accepted".EOL;
+				print STDERR __PACKAGE__."::_find_inpath() candidate='$candidate' is accepted".EOL if $ENV{TTP_DEBUG};
 			} else {
-				$ENV{TTP_DEBUG} && print STDERR __PACKAGE__."::_find_inpath() candidate='$candidate' is refused".EOL;
+				print STDERR __PACKAGE__."::_find_inpath() candidate='$candidate' is refused".EOL if $ENV{TTP_DEBUG};
 			}
 		}
 	}
