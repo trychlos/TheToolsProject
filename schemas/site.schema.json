@@ -380,7 +380,15 @@
                 "MQTTGateway": {
                     "description_array": [
                         "Address the MQTT gateway (aka the MQTT broker) to be able to publish our topics.",
-                        "If needed, username and password are managed through the credentials usual way."
+                        "If needed, username and password are managed through the credentials usual way.",
+                        "The credentials are expected to be found in 'credentialsDirs/site.json', with a schema like:",
+                        "    \"MQTTGateway\": {",
+                        "        \"11.12.13.14:1883\": {",
+                        "            \"username\": \"myUsername\",",
+                        "            \"password\": \"myPassword\"",
+                        "        }",
+                        "    }",
+                        "and may be got with \"TTP::Credentials::get([ 'MQTTGateway', $broker, 'username' ]);\" sentence."
                     ],
                     "type": "object",
                     "properties": {
@@ -389,14 +397,13 @@
                             "deprecated": true
                         },
                         "host": {
-                            "description": "The name or the IP address of the broker.",
+                            "description": "The address name or IP, possibly with a colon and a port number, of the broker.",
                             "type": "string",
                             "default": "localhost"
                         },
                         "port": {
-                            "description": "The broker port number to connect to.",
-                            "type": "integer",
-                            "default": 1883
+                            "description": "The broker port number to connect to. Deprecated in favor of 'host' in v4.7",
+                            "deprecated": true
                         }
                     }
                 },

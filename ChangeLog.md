@@ -2,11 +2,11 @@
 
 ## ChangeLog
 
-### 4.6.1-rc.0
+### 4.7.0-rc.0
 
     Release date: 
 
-    - 
+    - Change 'MQTTGateway' schema so that the port number is included in the host definition (todo #100), thus bumping minor candidate version number
 
 ### 4.6.0
 

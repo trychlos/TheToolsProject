@@ -37,7 +37,8 @@
 |  103 | 2024- 4-17 | IRunnable qualifier should be an array of qualifiers |
 |  104 | 2024- 4-17 | RunnerExtern should have the same type of bootstrap than RunnerDaemon |
 |  105 | 2024- 4-17 | each mqtt daemon connects to a single host: several hosts imply several daemons |
-|  106 |  |  |
+|  106 | 2024- 4-18 | Node->dirs() doesn't appear to be more relevant than DaemonConfig->confDirs() or execDirs() |
+|  107 |  |  |
 
 ---
 ## Done

@@ -1,0 +1,8 @@
+{
+    "MQTTGateway": {
+        "10.11.12.13:1883": {
+            "username": "username",
+            "password": "password"
+        }
+    }
+}
