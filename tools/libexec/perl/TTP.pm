@@ -709,6 +709,7 @@ sub jsonRead {
 		# may croak on error, intercepted below
 		eval { $result = $json->decode( $content ) };
 		if( $@ ){
+			chomp $@;
 			msgWarn( "jsonRead() $path: $@" );
 			$result = undef;
 		}
