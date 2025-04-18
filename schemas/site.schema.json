@@ -300,15 +300,25 @@
                     }
                 },
                 "credentialsDirs": {
-                    "description": "The list of subdirectories of TTP_ROOTS trees where we search for credentials.",
-                    "type": "array",
-                    "items": "string",
-                    "default": [
-                        "etc/credentials",
-                        "credentials",
-                        "etc/private",
-                        "private"
-                    ]
+                    "description": "The list of subdirectories of TTP_ROOTS trees where we search for credentials. Deprecated in favor of 'credentials.dirs' in v4.7.",
+                    "deprecated": true
+                },
+                "credentials": {
+                    "description": "The configuration of the credentials.",
+                    "type": "object",
+                    "properties": {
+                        "dirs": {
+                            "description": "The list of subdirectories of TTP_ROOTS trees where we search for credentials.",
+                            "type": "array",
+                            "items": "string",
+                            "default": [
+                                "etc/credentials",
+                                "credentials",
+                                "etc/private",
+                                "private"
+                            ]
+                        }
+                    }
                 },
                 "daemons": {
                     "description": "The common configuration of the daemons.",
@@ -388,7 +398,7 @@
                     "description_array": [
                         "Address the MQTT gateway (aka the MQTT broker) to be able to publish our topics.",
                         "If needed, username and password are managed through the credentials usual way.",
-                        "The credentials are expected to be found in 'credentialsDirs/site.json', with a schema like:",
+                        "The credentials are expected to be found in 'credentials.dirs/site.json', with a schema like:",
                         "    \"MQTTGateway\": {",
                         "        \"11.12.13.14:1883\": {",
                         "            \"username\": \"myUsername\",",

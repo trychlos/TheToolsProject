@@ -61,9 +61,31 @@ my $Const = {
 sub find {
 	my ( $file ) = @_;
 	my $finder = TTP::Finder->new( $ep );
-	my $credentialsDirs = $ep->var([ 'credentialsDirs' ]) || $Const->{finder}{dirs};
-	my $res = $finder->find({ dirs => [ $credentialsDirs, $file ]});
+	my $credentialsFinder = TTP::Credentials::finder();
+	my $res = $finder->find({ dirs => [ $credentialsFinder->{dirs}, $file ]});
 	return $res && ref( $res ) eq 'ARRAY' ? $res->[0] : undef;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns the full specifications to find the credentials configuration files
+# It is dynamically updated with 'credentials.dirs' variable if any.
+# (I):
+# - none
+# (O):
+# - returns a ref to the finder, honoring 'credentials.dirs' variable if any
+
+sub finder {
+	my %finder = %{$Const->{finder}};
+	my $dirs = $ep->var([ 'credentials', 'dirs' ]);
+	if( !$dirs ){
+		$dirs = $ep->var( 'credentialsDirs' );
+		if( $dirs ){
+			msgWarn( "'credentialsDirs' property is deprecated in favor of 'credentials.dirs'. You should update your configurations." );
+		}
+	}
+	$finder{dirs} = $dirs if $dirs;
+
+	return \%finder;
 }
 
 # ------------------------------------------------------------------------------------------------
@@ -76,7 +98,8 @@ sub find {
 
 sub get {
 	my ( $keys ) = @_;
-	return getWithFiles( $keys, $Const->{finder}{files} );
+	my $credentialsFinder = TTP::Credentials::finder();
+	return getWithFiles( $keys, $credentialsFinder->{files} );
 }
 
 # ------------------------------------------------------------------------------------------------
@@ -99,10 +122,13 @@ sub getWithFiles {
 		# first look in the TTP/host configurations
 		$res = $ep->var( $keys );
 
+		# prepare a finder for the credentials
+		my $credentialsFinder = TTP::Credentials::finder();
+
 		# if not found, looks at credentialsDirs/credentialsFiles
 		if( !defined( $res )){
 			if( $finder->jsonLoad({ findable => {
-				dirs => [ $Const->{finder}{dirs}, $Const->{finder}{files} ],
+				dirs => [ $credentialsFinder->{dirs}, $credentialsFinder->{files} ],
 				wantsAll => false
 			}})){
 				$finder->evaluate();
@@ -113,7 +139,7 @@ sub getWithFiles {
 		if( !defined( $res )){
 			my $node = $ep->node()->name();
 			if( $finder->jsonLoad({ findable => {
-				dirs => [ $Const->{finder}{dirs}, "$node.json" ],
+				dirs => [ $credentialsFinder->{dirs}, "$node.json" ],
 				wantsAll => false
 			}})){
 				$finder->evaluate();

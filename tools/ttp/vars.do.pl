@@ -5,6 +5,7 @@
 # @(-) --[no]dummy             dummy run (ignored here) [${dummy}]
 # @(-) --[no]verbose           run verbosely [${verbose}]
 # @(-) --[no]siteSpec          display the hardcoded site search specification [${siteSpec}]
+# @(-) --[no]credentialsDirs   display the list of credentials directories [${credentialsDirs}]
 # @(-) --[no]nodeRoot          display the site-defined root path [${nodeRoot}]
 # @(-) --[no]nodesDirs         display the site-defined nodes directories [${nodesDirs}]
 # @(-) --[no]logsRoot          display the TTP logs root (not daily) [${logsRoot}]
@@ -36,12 +37,15 @@ use strict;
 use utf8;
 use warnings;
 
+use TTP::Credentials;
+
 my $defaults = {
 	help => 'no',
 	colored => 'no',
 	dummy => 'no',
 	verbose => 'no',
 	siteSpec => 'no',
+	credentialsDirs => 'no',
 	nodeRoot => 'no',
 	nodesDirs => 'no',
 	logsRoot => 'no',
@@ -53,6 +57,7 @@ my $defaults = {
 };
 
 my $opt_siteSpec = false;
+my $opt_credentialsDirs = false;
 my $opt_nodeRoot = false;
 my $opt_nodesDirs = false;
 my $opt_logsRoot = false;
@@ -63,10 +68,10 @@ my $opt_alertsDir = false;
 my @opt_keys = ();
 
 # -------------------------------------------------------------------------------------------------
-# Display the configured alertsDir
+# Display the configured alerts.byFile.dir
 
 sub listAlertsDir {
-	my $str = "alertsDir: ".TTP::alertsDir();
+	my $str = "alertsFileDropdir: ".TTP::alertsFileDropdir();
 	msgVerbose( "returning '$str'" );
 	print " $str".EOL;
 }
@@ -77,6 +82,16 @@ sub listAlertsDir {
 sub listByKeys {
 	my $value = $ep->var( \@opt_keys );
 	print "  [".join( ',', @opt_keys )."]: ".(( defined( $value ) && !ref( $value )) ? $value.EOL : Dumper( $value ));
+}
+
+# -------------------------------------------------------------------------------------------------
+# Display the configured credentials.dirs
+
+sub listCredentialsDirs {
+	my $credentialsFinder = TTP::Credentials::finder();
+	my $str = "credentialsDirs: [".join( ',', @{$credentialsFinder->{dirs}})."]";
+	msgVerbose( "returning '$str'" );
+	print " $str".EOL;
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -153,6 +168,7 @@ if( !GetOptions(
 	"dummy!"			=> sub { $ep->runner()->dummy( @_ ); },
 	"verbose!"			=> sub { $ep->runner()->verbose( @_ ); },
 	"siteSpec!"			=> \$opt_siteSpec,
+	"credentialsDirs!"	=> \$opt_credentialsDirs,
 	"nodeRoot!"			=> \$opt_nodeRoot,
 	"nodesDirs!"		=> \$opt_nodesDirs,
 	"logsRoot!"			=> \$opt_logsRoot,
@@ -175,6 +191,7 @@ msgVerbose( "got colored='".( $ep->runner()->colored() ? 'true':'false' )."'" );
 msgVerbose( "got dummy='".( $ep->runner()->dummy() ? 'true':'false' )."'" );
 msgVerbose( "got verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got siteSpec='".( $opt_siteSpec ? 'true':'false' )."'" );
+msgVerbose( "got credentialsDirs='".( $opt_credentialsDirs ? 'true':'false' )."'" );
 msgVerbose( "got nodeRoot='".( $opt_nodeRoot ? 'true':'false' )."'" );
 msgVerbose( "got nodesDirs='".( $opt_nodesDirs ? 'true':'false' )."'" );
 msgVerbose( "got logsRoot='".( $opt_logsRoot ? 'true':'false' )."'" );
@@ -186,7 +203,8 @@ msgVerbose( "got alertsDir='".( $opt_alertsDir ? 'true':'false' )."'" );
 msgVerbose( "got keys='".join( ',', @opt_keys )."'" );
 
 if( !TTP::errs()){
-	listAlertsdir() if $opt_alertsDir;
+	listAlertsDir() if $opt_alertsDir;
+	listCredentialsDirs() if $opt_credentialsDirs;
 	listLogsdaily() if $opt_logsDaily;
 	listLogscommands() if $opt_logsCommands;
 	listLogsmain() if $opt_logsMain;
