@@ -32,7 +32,6 @@
 |   95 | 2024- 4-15 | all getter on Dirs() should be in Path:: |
 |   99 | 2024- 4-17 | daemons should have a HUP command to fully reload their config |
 |  102 | 2024- 4-17 | compare Node::hostname() vs TTP::host() |
-|  106 | 2024- 4-18 | Node->dirs() doesn't appear to be more relevant than DaemonConfig->confDirs() or execDirs() |
 |  107 |  |  |
 
 ---
@@ -264,6 +263,9 @@
 |  104 | 2024- 4-17 | RunnerExtern should have the same type of bootstrap than RunnerDaemon |
 |      | 2024- 4-18 | cancelled: using TTP::runExtern() let the 'ep' global be correctly allocated |
 |  105 | 2024- 4-17 | each mqtt daemon connects to a single host: several hosts imply several daemons |
+|      | 2024- 4-18 | done |
+|  106 | 2024- 4-18 | Node->dirs() doesn't appear to be more relevant than DaemonConfig->confDirs() or execDirs() |
+|      | 2024- 4-18 | TTP::nodesDirs() is obsoleted (not used) - TTP::Node->dirs() is obsoleted too in favor of (updated) TTP::Node->finder() |
 |      | 2024- 4-18 | done |
 
 ---

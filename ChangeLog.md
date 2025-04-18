@@ -11,6 +11,8 @@
     - Update mqtt-monitor-dameon.pl to only manage a single MQTT broker (todo #105)
     - TTP::IRunnable now uses qualifiers as an (illimited) array (todo #103)
     - Fix TTP::DaemonConfig configuration and schema - Do not modify the hardcoded constant
+    - Remove TTP::nodesDirs() function
+    - Remove TTP::Node->dirs() method in favor of updated TTP::Node->finder() (todo #106)
 
 ### 4.6.0
 

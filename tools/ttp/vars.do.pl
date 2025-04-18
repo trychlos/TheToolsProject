@@ -128,7 +128,8 @@ sub listNoderoot {
 # list nodesDirs value - e.g. '[ 'etc/nodes', 'nodes', 'etc/machines', 'machines' ]'
 
 sub listNodesdirs {
-	my $str = "nodesDirs: [".join( ',', @{TTP::nodesDirs()} )."]";
+	my $finder = TTP::Node->finder();
+	my $str = "nodesDirs: [".join( ',', @{$finder->{dirs}} )."]";
 	msgVerbose( "returning '$str'" );
 	print " $str".EOL;
 }

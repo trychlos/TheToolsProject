@@ -350,11 +350,11 @@ sub textingInterval {
 
 # ------------------------------------------------------------------------------------------------
 # Returns the full specifications to find the daemons configuration files
-# It is dynamically updated with 'daemonsConfDirs' variable if any.
+# It is dynamically updated with 'daemons.confDirs' variable if any.
 # (I):
 # - none
 # (O):
-# - returns a ref to the finder, honoring 'daemonsConfDirs' variable if any
+# - returns a ref to the finder, honoring 'daemons.confDirs' variable if any
 
 sub confFinder {
 	my ( $class ) = @_;
@@ -369,11 +369,11 @@ sub confFinder {
 
 # ------------------------------------------------------------------------------------------------
 # Returns the full specifications to find the daemons executables
-# It is dynamically updated with 'daemonsExecDirs' variable if any.
+# It is dynamically updated with 'daemons.execDirs' variable if any.
 # (I):
 # - none
 # (O):
-# - returns a ref to the finder, honoring 'daemonsExecDirs' variable if any
+# - returns a ref to the finder, honoring 'daemons.execDirs' variable if any
 
 sub execFinder {
 	my ( $class ) = @_;

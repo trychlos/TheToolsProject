@@ -55,7 +55,9 @@ my $Const = {
 	finder => {
 		dirs => [
 			'etc/nodes',
-			'etc/machines'
+			'nodes',
+			'etc/machines',
+			'machines'
 		],
 		suffix => '.json'
 	}
@@ -257,23 +259,6 @@ sub var {
 ### Class methods
 
 # ------------------------------------------------------------------------------------------------
-# Returns the list of subdirectories of TTP_ROOTS in which we may find nodes configuration files
-# (I):
-# - the TTP EntryPoint
-# (O):
-# - returns the list of subdirectories which may contain the JSON nodes configuration files as
-#   an array ref
-
-sub dirs {
-	my ( $class, $ep ) = @_;
-	$class = ref( $class ) || $class;
-
-	my $dirs = $ep && $ep->site() ? $ep->site()->var( 'nodesDirs' ) || $ep->site()->var([ 'nodes', 'dirs' ]) || $class->finder()->{dirs} : $class->finder()->{dirs};
-
-	return $dirs;
-}
-
-# ------------------------------------------------------------------------------------------------
 # Returns the list of nodes available on the current host
 # This is used at startup by 'ttp.sh switch -default'
 # (I):
@@ -381,10 +366,23 @@ sub findCandidate {
 # (I):
 # - none
 # (O):
-# - Returns the Const->{finder} specification as an array ref
+# - returns a ref to the finder, honoring 'nodes.dirs' variable if any
 
 sub finder {
-	return $Const->{finder};
+	my ( $class ) = @_;
+	$class = ref( $class ) || $class;
+
+	my %finder = %{$Const->{finder}};
+	my $dirs = $ep->var([ 'nodes', 'dirs' ]);
+	if( !$dirs ){
+		$dirs = $ep->var( 'nodesDirs' );
+		if( $dirs ){
+			msgWarn( "'nodesDirs' property is deprecated in favor of 'nodes.dirs'. You should update your configurations." );
+		}
+	}
+	$finder{dirs} = $dirs if $dirs;
+
+	return \%finder;
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -409,10 +407,10 @@ sub new {
 	# of which node are we talking about ?
 	my $node = $args->{node} || $ENV{TTP_NODE} || $self->_hostname();
 
-	# allowed nodesDirs can be configured at site-level
-	my $dirs = $class->dirs( $ep );
+	# allowed nodes.dirs can be configured at site-level
+	my $finder = $class->finder();
 	my $findable = {
-		dirs => [ $dirs, $node.$class->finder()->{suffix} ],
+		dirs => [ $finder->{dirs}, $node.$finder->{suffix} ],
 		wantsAll => false
 	};
 	my $acceptable = {
@@ -432,7 +430,7 @@ sub new {
 		my $abort = true;
 		$abort = $args->{abortOnError} if exists $args->{abortOnError};
 		if( $abort ){
-			msgErr( "Unable to find a valid execution node for '$node' in [ ".join( ', ', @{$dirs} )." ]" );
+			msgErr( "Unable to find a valid execution node for '$node' in [ ".join( ', ', @{$finder->{dirs}} )." ]" );
 			msgErr( "Exiting with code 1" );
 			exit( 1 );
 		} else {
