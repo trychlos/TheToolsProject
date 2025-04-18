@@ -80,24 +80,22 @@
 			}
 		},
 
-		"credentialsDirs_comments": [
-			"The directories to be searched for credentials, passwords and other secrets",
-			"Defaults to (successively searched for) subdirectories of TTP_ROOTS",
-			""
-		],
-		"credentialsDirs": [
-			"etc/credentials",
-			"etc/private"
-		],
+		"credentials": {
+			"dirs": [
+				"etc/credentials",
+				"etc/private"
+			]
+		},
 
-		"daemonsDirs_comments": [
-			"The directories where are written the daemons JSON configuration files.",
-			"We can here define several subdirectories of TTP_ROOTS tree, which let us have distinct daemons in distinct directories (even if we ourselves advise against this type of architecture).",
-			"Below the hardcoded default values"
-		],
-		"daemonsDirs": [
-			"etc/daemons"
-		],
+		"daemons": {
+			"confDirs": [
+				"etc/daemons",
+				"daemons"
+			],
+			"execDirs": [
+				"libexec/daemons"
+			]
+		},
 
 		"DBMS": {
 			"backupsDir": "[eval:File::Spec->catdir( TTP::var([ 'DBMS', 'backupsRoot' ]), Time::Moment->now->strftime( '%y%m%d' ), TTP::nodeName())]",
