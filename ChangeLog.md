@@ -10,6 +10,7 @@
     - Update 'MQTT' package according to new 'MQATTGateway' schema
     - Update mqtt-monitor-dameon.pl to only manage a single MQTT broker (todo #105)
     - TTP::IRunnable now uses qualifiers as an (illimited) array (todo #103)
+    - Fix TTP::DaemonConfig configuration and schema - Do not modify the hardcoded constant
 
 ### 4.6.0
 

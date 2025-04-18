@@ -354,18 +354,17 @@ sub textingInterval {
 # (I):
 # - none
 # (O):
-# - returns the list of directories which may contain the JSON daemons configuration files as
-#   an array ref
+# - returns a ref to the finder, honoring 'daemonsConfDirs' variable if any
 
 sub confFinder {
 	my ( $class ) = @_;
 	$class = ref( $class ) || $class;
 
-	my $finder = $Const->{confFinder};
-	my $dirs = $ep->var( 'daemonsConfDirs' );
-	$finder->{dirs} = $dirs if $dirs;
+	my %finder = %{$Const->{confFinder}};
+	my $dirs = $ep->var([ 'daemons', 'confDirs' ]);
+	$finder{dirs} = $dirs if $dirs;
 
-	return $finder;
+	return \%finder;
 }
 
 # ------------------------------------------------------------------------------------------------
@@ -374,17 +373,17 @@ sub confFinder {
 # (I):
 # - none
 # (O):
-# - returns the list of directories which may contain the daemons executables as an array ref
+# - returns a ref to the finder, honoring 'daemonsExecDirs' variable if any
 
 sub execFinder {
 	my ( $class ) = @_;
 	$class = ref( $class ) || $class;
 
-	my $finder = $Const->{execFinder};
-	my $dirs = $ep->var( 'daemonsExecDirs' );
-	$finder->{dirs} = $dirs if $dirs;
+	my %finder = %{$Const->{execFinder}};
+	my $dirs = $ep->var([ 'daemons', 'execDirs' ]);
+	$finder{dirs} = $dirs if $dirs;
 
-	return $finder;
+	return \%finder;
 }
 
 # -------------------------------------------------------------------------------------------------
