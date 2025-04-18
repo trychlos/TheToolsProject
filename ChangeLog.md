@@ -17,6 +17,7 @@
     - Fix TTP::DaemonConfig messages when there is no listeningPort or listeningInterval
     - mqtt-monitor-daemon.pl is moved into libexec/daemons (todo #78)
     - Fix calls to TTP::Node->dirs()
+    - Homogeneize TTP_DEBUG prints
 
 ### 4.5.1
 
