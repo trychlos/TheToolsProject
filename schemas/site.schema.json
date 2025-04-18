@@ -310,22 +310,29 @@
                         "private"
                     ]
                 },
-                "daemonsConfDirs": {
-                    "description": "The list of subdirectories of TTP_ROOTS trees where we search for daemons JSON configurations.",
-                    "type": "array",
-                    "items": "string",
-                    "default": [
-                        "etc/daemons",
-                        "daemons"
-                    ]
-                },
-                "daemonsExecDirs": {
-                    "description": "The list of subdirectories of TTP_ROOTS trees where we search for daemons executables.",
-                    "type": "array",
-                    "items": "string",
-                    "default": [
-                        "libexec/daemons"
-                    ]
+                "daemons": {
+                    "description": "The common configuration of the daemons.",
+                    "type": "object",
+                    "properties": {
+                        "confDirs": {
+                            "description": "The list of subdirectories of TTP_ROOTS trees where we search for daemons JSON configurations.",
+                            "type": "array",
+                            "items": "string",
+                            "default": [
+                                "etc/daemons",
+                                "daemons"
+                            ]
+                        },
+                        "execDirs": {
+                            "description": "The list of subdirectories of TTP_ROOTS trees where we search for daemons executables.",
+                            "type": "array",
+                            "items": "string",
+                            "default": [
+                                "libexec/daemons"
+                            ]
+                        }
+                    }
+
                 },
                 "deployments": {
                     "description_array": [
