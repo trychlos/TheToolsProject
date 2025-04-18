@@ -74,7 +74,7 @@ sub minArgsCount {
 sub run {
 	my ( $self ) = @_;
 
-	TTP::Message::msgWarn( __PACKAGE__."::run() should not run here" );
+	TTP::Message::msgWarn( __PACKAGE__."::run() should never run here" );
 
 	return $self;
 }

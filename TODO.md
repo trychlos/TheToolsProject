@@ -31,10 +31,8 @@
 |   79 | 2024- 4-12 | let a node override a site variable |
 |   95 | 2024- 4-15 | all getter on Dirs() should be in Path:: |
 |   99 | 2024- 4-17 | daemons should have a HUP command to fully reload their config |
-|  101 | 2024- 4-17 | review SMTP gateway schema so that the port number is part of the host address |
 |  102 | 2024- 4-17 | compare Node::hostname() vs TTP::host() |
 |  103 | 2024- 4-17 | IRunnable qualifier should be an array of qualifiers |
-|  104 | 2024- 4-17 | RunnerExtern should have the same type of bootstrap than RunnerDaemon |
 |  106 | 2024- 4-18 | Node->dirs() doesn't appear to be more relevant than DaemonConfig->confDirs() or execDirs() |
 |  107 |  |  |
 
@@ -260,6 +258,10 @@
 |      | 2024- 4-17 | done |
 |  100 | 2024- 4-17 | review MQTT gateway schema so that the port number is part of the host address |
 |      | 2024- 4-18 | done |
+|  101 | 2024- 4-17 | review SMTP gateway schema so that the port number is part of the host address |
+|      | 2024- 4-18 | cancelled as our SMTP module tries to guess the port number - so better to keep it explicit if needed |
+|  104 | 2024- 4-17 | RunnerExtern should have the same type of bootstrap than RunnerDaemon |
+|      | 2024- 4-18 | done: the extern program must no wuse with RunnerExtern->bootstrap(), and that's enough |
 |  105 | 2024- 4-17 | each mqtt daemon connects to a single host: several hosts imply several daemons |
 |      | 2024- 4-18 | done |
 
