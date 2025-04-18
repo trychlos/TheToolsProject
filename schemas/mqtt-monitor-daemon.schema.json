@@ -73,6 +73,10 @@
             "units": "ms",
             "default": 10000
         },
+        "host": {
+            "description": "The address name or IP, possibly with a colon and a port number, of the broker, defaulting to the site MQTT gateway.",
+            "type": "string"
+        },
         "topics": {
             "description_array": [
                 "This MQTT monitoring daemon always suscribes to the '#' and '$SYS/#' wildcards.",
@@ -93,10 +97,6 @@
                 },
                 "type": "object",
                 "properties": {
-                    "host": {
-                        "description": "The address name or IP, possibly with a colon and a port number, of the broker, defaulting to the site MQTT gateway.",
-                        "type": "string"
-                    },
                     "toLog": {
                         "description": "Whether a line with the topic and its payload must be appended to a log file.",
                         "type": "object",
