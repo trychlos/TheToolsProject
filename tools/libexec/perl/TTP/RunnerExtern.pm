@@ -115,12 +115,13 @@ sub DESTROY {
 # (O):
 # - the newly instanciated RunnerExtern
 
-sub runCommand {
-	my ( $ep ) = @_;
-	print STDERR __PACKAGE__."::run() ep=".ref( $ep ).EOL if $ENV{TTP_DEBUG};
+sub bootstrap {
+	my ( $class ) = @_;
+	print STDERR __PACKAGE__."::bootstrap() ".Dumper( @ARGV ) if $ENV{TTP_DEBUG};
 
+	$ep = TTP::EP->new();
+	$ep->bootstrap();
 	my $command = TTP::RunnerExtern->new( $ep );
-	$command->run();
 
 	return $command;
 }
