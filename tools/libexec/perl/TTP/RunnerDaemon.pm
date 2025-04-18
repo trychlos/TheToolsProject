@@ -799,7 +799,7 @@ sub run {
 
 	# if a path is specified, then we try to load it
 	# IJSONable role takes care of validating the acceptability and the enable-ity
-	if( $args && $args->{jsonPath} ){
+	if( $args->{jsonPath} ){
 		$self->{_config} = TTP::DaemonConfig->new( $self->ep(), $args );
 		if( $self->config()->jsonLoaded()){
 			# set a runnable qualifier as soon as we can

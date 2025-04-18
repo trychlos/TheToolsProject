@@ -8,6 +8,7 @@
 
     - Change 'MQTTGateway' schema so that the port number is included in the host definition (todo #100), thus bumping minor candidate version number
     - Update 'MQTT' package according to new 'MQATTGateway' schema
+    - Update mqtt-monitor-dameon.pl to only manage a single MQTT broker (todo #105)
 
 ### 4.6.0
 

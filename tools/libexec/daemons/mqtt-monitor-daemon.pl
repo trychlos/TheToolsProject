@@ -139,7 +139,7 @@ sub configMqtt {
 			broker => $host
 		});
 		if( $mqtt ){
-			my $listeningInterval = $daemon->config()->listeningInterval()
+			my $listeningInterval = $daemon->config()->listeningInterval();
 			$daemon->sleepableDeclareFn( sub => sub { $mqtt->tick( $listeningInterval ); }, interval => $listeningInterval );
 			$mqtt->subscribe( '#' => \&worker, '$SYS/#' => \&worker );
 		}
@@ -270,7 +270,7 @@ sub doMatched {
 				my $enabled = false;
 				$enabled = $do->{enabled} if exists $do->{enabled};
 				if( $enabled ){
-					$enabledCount += 1
+					$enabledCount += 1;
 					my $jsonable = TTP::JSONable->new( $ep, $do );
 					my $command = TTP::commandByOS([], { jsonable => $jsonable, withCommand => true });
 					if( $command ){
@@ -292,10 +292,10 @@ sub doMatched {
 					msgVerbose( "$topic: action n° $totalCount is not enabled" );
 				}
 			}
-			$stats->{$keys}{actions}{total} = $totalCount;
-			$stats->{$keys}{actions}{enabled} = $enabledCount;
-			$stats->{$keys}{actions}{success} += $successCount;
-			$stats->{$keys}{actions}{failed} += $failedCount;
+			$stats->{$key}{actions}{total} = $totalCount;
+			$stats->{$key}{actions}{enabled} = $enabledCount;
+			$stats->{$key}{actions}{success} += $successCount;
+			$stats->{$key}{actions}{failed} += $failedCount;
 		} else {
 			msgErr( "$topic: unexpected object found for 'actions', expected 'ARRAY', got '".ref( $actions )."'" );
 		}
@@ -324,16 +324,12 @@ sub replaceMacros {
 
 sub worker {
 	my ( $topic, $payload ) = @_;
-	# may get empty topic at initialization time
-	if( $topic ){
-		my $topics = $daemon->config()->jsonData()->{topics};
-		foreach my $key ( sort keys %{$topics} ){
-			if( $topic =~ m/$key/ ){
-				doMatched( $topic, $payload, $key, $topics->{$key} );
-			}
+	msgVerbose( "receiving $topic" );
+	my $topics = $daemon->config()->jsonData()->{topics};
+	foreach my $key ( sort keys %{$topics} ){
+		if( $topic =~ m/$key/ ){
+			doMatched( $topic, $payload, $key, $topics->{$key} );
 		}
-	} else {
-		print STDERR Dumper( @_ );
 	}
 }
 
@@ -381,7 +377,6 @@ if( TTP::errs()){
 }
 
 $daemon->declareSleepables( $commands );
-$daemon->sleepableDeclareFn( sub => \&worker, interval => configWorkerInterval());
 $daemon->sleepableStart();
 
 TTP::MQTT::disconnect( $mqtt );

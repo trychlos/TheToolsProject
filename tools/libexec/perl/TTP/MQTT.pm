@@ -61,24 +61,24 @@ sub connect {
 		if( !$broker ){
 			$broker = $ep->var([ 'MQTTGateway', 'broker' ]);
 			if( $broker ){
-				msgWarn( "'MQTTGateway.broker' property is deprecated in favor of 'MQTTGateway.host'. You should update your configurations." );
+				msgWarn( __PACKAGE__."::connect() 'MQTTGateway.broker' property is deprecated in favor of 'MQTTGateway.host'. You should update your configurations." );
 			}
 		}
 		my $port = $ep->var([ 'MQTTGateway', 'port' ]);
 		if( $port ){
-			msgWarn( "'MQTTGateway.port' property is deprecated in favor of 'MQTTGateway.host'. You should update your configurations." );
+			msgWarn( __PACKAGE__."::connect() 'MQTTGateway.port' property is deprecated in favor of 'MQTTGateway.host'. You should update your configurations." );
 			$broker = "$broker:$port";
 		}
 	}
-	msgErr( "MQTT::connect() broker is not configured nor provided as an argument" ) if !$broker;
+	msgErr( __PACKAGE__."::connect() broker is not configured nor provided as an argument" ) if !$broker;
 
 	my $username = $args->{username};
 	$username = TTP::Credentials::get([ 'MQTTGateway', $broker, 'username' ]) if !$username;
-	msgErr( "MQTT::connect() username is not configured nor provided as an argument" ) if !$username;
+	msgErr( __PACKAGE__."::connect() username is not configured nor provided as an argument" ) if !$username;
 
 	my $password = $args->{password};
 	$password = TTP::Credentials::get([ 'MQTTGateway', $broker, 'password' ]) if !$password;
-	msgErr( "MQTT::connect() password is not configured nor provided as an argument" ) if !$password;
+	msgErr( __PACKAGE__."::connect() password is not configured nor provided as an argument" ) if !$password;
 
 	if( !TTP::errs()){
 		$mqtt = Net::MQTT::Simple->new( $broker, $sockopts );
@@ -98,9 +98,9 @@ sub connect {
 			}
 			# login
 			my $logged = $mqtt->login( $username, $password );
-			msgVerbose( "MQTT::connect() logged-in with '$logged' account" );
+			msgVerbose( __PACKAGE__."::connect() logged-in to '$broker' with '$logged' account" );
 		} else {
-			msgErr( "MQTT::connect() unable to instanciate a new connection against '".( $broker ? $broker : '(undef)' )."' broker" );
+			msgErr( __PACKAGE__."::connect() unable to instanciate a new connection against '".( $broker ? $broker : '(undef)' )."' broker" );
 		}
 	}
 	
@@ -116,19 +116,19 @@ sub disconnect {
 	my ( $handle ) = @_;
 	if( $handle ){
 		if( $handle->{ttpLastWill} ){
-			msgLog( "executing lastwill for the daemon" );
+			msgLog( __PACKAGE__."::disconnect() executing lastwill for the daemon" );
 			if( $handle->{ttpLastWill}{retain} ){
-				msgLog( "retain ".$handle->{ttpLastWill}{topic}." [".$handle->{ttpLastWill}{payload}."]" );
+				msgLog( __PACKAGE__."::disconnect() retain ".$handle->{ttpLastWill}{topic}." [".$handle->{ttpLastWill}{payload}."]" );
 				$handle->retain( $handle->{ttpLastWill}{topic}, $handle->{ttpLastWill}{payload} );
 			} else {
-				msgLog( "publish ".$handle->{ttpLastWill}{topic}." [".$handle->{ttpLastWill}{payload}."]" );
+				msgLog( __PACKAGE__."::disconnect() publish ".$handle->{ttpLastWill}{topic}." [".$handle->{ttpLastWill}{payload}."]" );
 				$handle->publish( $handle->{ttpLastWill}{topic}, $handle->{ttpLastWill}{payload} );
 			}
 		}
-		msgVerbose( "MQTT::disconnect()" );
+		msgVerbose( __PACKAGE__."::disconnect()" );
 		$handle->disconnect();
 	} else {
-		msgErr( "MQTT::disconnect() undefined connection handle" );
+		msgErr( __PACKAGE__."::disconnect() undefined connection handle" );
 		TTP::stackTrace();
 	}
 }
@@ -143,9 +143,9 @@ sub keepalive {
 	my ( $handle, $interval ) = @_;
 	if( $handle ){
 		$Net::MQTT::Simple::KEEPALIVE_INTERVAL = $interval;
-		msgVerbose( "setting KEEPALIVE_INTERVAL='$interval'" );
+		msgVerbose( __PACKAGE__."::keepalive() setting KEEPALIVE_INTERVAL='$interval'" );
 	} else {
-		msgErr( "MQTT::keepalive() undefined connection handle" );
+		msgErr( __PACKAGE__."::keepalive() undefined connection handle" );
 		TTP::stackTrace();
 	}
 }
