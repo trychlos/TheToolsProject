@@ -81,9 +81,10 @@ sub listNodes {
 	msgOut( "displaying available nodes..." );
 	my $count = 0;
 	# list all nodes in all TTP_ROOTS trees
+	my $finder = TTP::Node->finder();
 	my $findable = {
-		dirs => [ TTP::Node->dirs( $ep ) ],
-		glob => '*'.TTP::Node->finder()->{suffix}
+		dirs => [ $finder->{dirs} ],
+		glob => '*'.$finder->{suffix}
 	};
 	my $nodes = $ep->runner()->find( $findable );
 	# get only unique available nodes

@@ -823,17 +823,6 @@ sub nodeRoot {
 # (I):
 # - none
 # (O):
-# - returns the 'nodes.dirs' array of directories specified in the site configuration which are the
-#   subdirectories of TTP_ROOTS where we can find nodes JSON configuration files.
-
-sub nodesDirs {
-	return TTP::Node->dirs( $ep );
-}
-
-# ------------------------------------------------------------------------------------------------
-# (I):
-# - none
-# (O):
 # - returns the null value to be used for this OS
 
 sub nullByOS {
