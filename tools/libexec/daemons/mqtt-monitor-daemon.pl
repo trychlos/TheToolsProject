@@ -328,6 +328,7 @@ sub worker {
 	my $topics = $daemon->config()->jsonData()->{topics};
 	foreach my $key ( sort keys %{$topics} ){
 		if( $topic =~ m/$key/ ){
+			msgVerbose( "$topic is matched" );
 			doMatched( $topic, $payload, $key, $topics->{$key} );
 		}
 	}
