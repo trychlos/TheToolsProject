@@ -262,7 +262,7 @@
 |  103 | 2024- 4-17 | IRunnable qualifier should be an array of qualifiers |
 |      | 2024- 4-18 | done |
 |  104 | 2024- 4-17 | RunnerExtern should have the same type of bootstrap than RunnerDaemon |
-|      | 2024- 4-18 | done: the extern program must no wuse with RunnerExtern->bootstrap(), and that's enough |
+|      | 2024- 4-18 | cancelled: using TTP::runExtern() let the 'ep' global be correctly allocated |
 |  105 | 2024- 4-17 | each mqtt daemon connects to a single host: several hosts imply several daemons |
 |      | 2024- 4-18 | done |
 
