@@ -262,7 +262,7 @@ sub _msgLogAppend {
 	my $logFile = $opts->{logFile} || TTP::logsMain();
 	print STDERR __PACKAGE__."::_msgLogAppend() msg='$msg' opts=".Dumper( $opts )." logFile='".( $logFile ? $logFile : '(undef)' )."'".EOL if $ENV{TTP_DEBUG};
 	if( $logFile ){
-		my $host = TTP::host() || '-';
+		my $host = TTP::nodeName() || '-';
 		my $username = $ENV{LOGNAME} || $ENV{USER} || $ENV{USERNAME} || 'unknown'; #getpwuid( $< );
 		my $line = Time::Moment->now->strftime( '%Y-%m-%d %H:%M:%S.%6N %:z' )." $host $$ $username $msg";
 		# make sure the directory exists
