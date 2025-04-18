@@ -823,7 +823,7 @@ sub nodeRoot {
 #   subdirectories of TTP_ROOTS where we can find nodes JSON configuration files.
 
 sub nodesDirs {
-	return TTP::Node->dirs();
+	return TTP::Node->dirs( $ep );
 }
 
 # ------------------------------------------------------------------------------------------------

@@ -82,7 +82,7 @@ sub listNodes {
 	my $count = 0;
 	# list all nodes in all TTP_ROOTS trees
 	my $findable = {
-		dirs => [ TTP::Node->dirs() ],
+		dirs => [ TTP::Node->dirs( $ep ) ],
 		glob => '*'.TTP::Node->finder()->{suffix}
 	};
 	my $nodes = $ep->runner()->find( $findable );
