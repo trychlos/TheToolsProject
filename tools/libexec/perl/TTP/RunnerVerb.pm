@@ -21,6 +21,7 @@
 # - a 'verb' the second word, here 'vars'.
 #
 # Verbs are executed in this RunnerVerb context.
+# RunnerVerb has two qualifiers, the command and the verb itself. e.g. 'ttp.pl list'
 
 package TTP::RunnerVerb;
 
@@ -231,7 +232,8 @@ sub run {
 
 			# if found, then execute it with our global variables
 			if( $self->{_verb}{path} ){
-				$self->runnableQualifier( $verb );
+				$self->{_verb}{verb} = $verb;
+				$self->runnablePushQualifier( $verb );
 
 				# as verbs are written as Perl scripts, they are dynamically ran from here in the context of 'self'
 				# + have direct access to '$ep' entry point
@@ -267,7 +269,7 @@ sub run {
 sub verb {
 	my ( $self ) = @_;
 
-	return $self->runnableQualifier();
+	return $self->{_verb}{verb};
 }
 
 ### Class methods

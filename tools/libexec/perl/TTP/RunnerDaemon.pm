@@ -45,6 +45,8 @@
 #   According to the documentation: "INFO: Since fork is not performed the same way on Windows systems as on Linux, this module does not work with Windows. Patches appreciated!"
 # - Win32::Daemon 20200728 (as of 2024- 2- 3) defines a service, and is too specialized toward win32 plaforms.
 # - Proc::Background seems OK.
+#
+# RunnerDaemon has two qualifiers, the daemon name and the configuration name. e.g. 'mqtt-monitor-daemon.pl trychlos-mqtt-monitor'
 
 package TTP::RunnerDaemon;
 
@@ -803,7 +805,7 @@ sub run {
 		$self->{_config} = TTP::DaemonConfig->new( $self->ep(), $args );
 		if( $self->config()->jsonLoaded()){
 			# set a runnable qualifier as soon as we can
-			$self->runnableQualifier( $self->config()->name());
+			$self->runnablePushQualifier( $self->config()->name());
 			# and initialize listening socket and messaging connection when asked for
 			my $listener = true;
 			$listener = $args->{listener} if defined $args->{listener};
@@ -832,7 +834,11 @@ sub telemetryLabels {
 	my $env = $ep->node()->environment();
 	push( @{$labels}, "environment=$env" ) if $env;
 	push( @{$labels}, "command=".$self->command());
-	push( @{$labels}, "qualifier=".$self->runnableQualifier());
+	# get only the first other (the second) qualifier
+	my @qualifiers = @{$self->runnableQualifiers()};
+	if( @qualifiers and scalar( @qualifiers ) >= 2 ){
+		push( @{$labels}, "qualifier=".$qualifiers[1] );
+	}
 	push( @{$labels}, @{$self->{_labels}} ) if exists $self->{_labels};
 	
 	return $labels;

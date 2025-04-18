@@ -541,12 +541,15 @@ sub filter {
 }
 
 # -------------------------------------------------------------------------------------------------
-# returns a new unique temp filename
+# returns a new unique temp filename built with the qualifiers and a random string
 
 sub getTempFileName {
 	my $fname = $ep->runner()->runnableBNameShort();
-	my $qualifier = $ep->runner()->runnableQualifier();
-	$fname .= "-$qualifier" if $qualifier;
+	my @qualifiers = @{$ep->runner()->runnableQualifiers()};
+	if( scalar( @qualifiers ) > 0 ){
+		shift( @qualifiers );
+		$fname .= "-".join( '-', @qualifiers );
+	}
 	my $random = random();
 	my $tempfname = File::Spec->catfile( logsCommands(), "$fname-$random.tmp" );
 	msgVerbose( "getTempFileName() tempfname='$tempfname'" );

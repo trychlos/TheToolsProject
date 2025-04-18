@@ -290,13 +290,7 @@ sub msgOut {
 sub _msgPrefix {
 	my $prefix = '';
 	if( $ep && $ep->runner()){
-		my $command = $ep->runner()->runnableBNameFull();
-		if( $command ){
-			my $qualifier = $ep->runner()->runnableQualifier() || '';
-			$prefix = "[$command";
-			$prefix .= " $qualifier" if $qualifier;
-			$prefix.= '] ';
-		}
+		$prefix .= "[".join( ' ', @{$ep->runner()->runnableQualifiers()} )."] ";
 	}
 	return $prefix;
 }
