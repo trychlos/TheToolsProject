@@ -84,6 +84,8 @@ my $stats = {
 };
 
 # -------------------------------------------------------------------------------------------------
+# display some execution statistics on demand
+
 sub answerStats {
 	my ( $req ) = @_;
 	my $answer = "total seen execution reports: $stats->{count}".EOL;
@@ -100,8 +102,8 @@ sub answerStats {
 
 # -------------------------------------------------------------------------------------------------
 # add to the standard 'status' answer our own data (remote host and dir)
-sub answerStatus {
 
+sub answerStatus {
 	my ( $req ) = @_;
 	my $answer = TTP::RunnerDaemon->commonCommands()->{status}( $req, $commands );
 	$answer .= "workerInterval: ".configWorkerInterval().EOL;
