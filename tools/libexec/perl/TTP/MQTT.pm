@@ -64,37 +64,44 @@ sub connect {
 				msgWarn( "'MQTTGateway.broker' property is deprecated in favor of 'MQTTGateway.host'. You should update your configurations." );
 			}
 		}
+		my $port = $ep->var([ 'MQTTGateway', 'port' ]);
+		if( $port ){
+			msgWarn( "'MQTTGateway.port' property is deprecated in favor of 'MQTTGateway.host'. You should update your configurations." );
+			$broker = "$broker:$port";
+		}
 	}
 	msgErr( "MQTT::connect() broker is not configured nor provided as an argument" ) if !$broker;
 
-	my $username = TTP::Credentials::get([ 'MQTTGateway', 'username' ]);
-	$username = $args->{username} if $args->{username};
+	my $username = $args->{username};
+	$username = TTP::Credentials::get([ 'MQTTGateway', $broker, 'username' ]) if !$username;
 	msgErr( "MQTT::connect() username is not configured nor provided as an argument" ) if !$username;
 
-	my $password = TTP::Credentials::get([ 'MQTTGateway', 'password' ]);
-	$password = $args->{password} if $args->{password};
+	my $password = $args->{password};
+	$password = TTP::Credentials::get([ 'MQTTGateway', $broker, 'password' ]) if !$password;
 	msgErr( "MQTT::connect() password is not configured nor provided as an argument" ) if !$password;
 
-	$mqtt = Net::MQTT::Simple->new( $broker, $sockopts ) if $broker;
-	if( $mqtt ){
-		# define a last will if requested by the caller
-		if( $args->{will} ){
-			my $topic = $args->{will}{topic} || '';
-			my $payload = $args->{will}{payload} || '';
-			my $retain = false;
-			$retain = $args->{will}{retain} if exists $args->{will}{retain};
-			$mqtt->last_will( $topic, $payload, $retain );
-			$mqtt->{ttpLastWill} = {
-				topic => $topic,
-				payload => $payload,
-				retain => $retain
+	if( !TTP::errs()){
+		$mqtt = Net::MQTT::Simple->new( $broker, $sockopts );
+		if( $mqtt ){
+			# define a last will if requested by the caller
+			if( $args->{will} ){
+				my $topic = $args->{will}{topic} || '';
+				my $payload = $args->{will}{payload} || '';
+				my $retain = false;
+				$retain = $args->{will}{retain} if exists $args->{will}{retain};
+				$mqtt->last_will( $topic, $payload, $retain );
+				$mqtt->{ttpLastWill} = {
+					topic => $topic,
+					payload => $payload,
+					retain => $retain
+				}
 			}
+			# login
+			my $logged = $mqtt->login( $username, $password );
+			msgVerbose( "MQTT::connect() logged-in with '$logged' account" );
+		} else {
+			msgErr( "MQTT::connect() unable to instanciate a new connection against '".( $broker ? $broker : '(undef)' )."' broker" );
 		}
-		# login
-		my $logged = $mqtt->login( $username, $password );
-		msgVerbose( "MQTT::connect() logged-in with '$logged' account" );
-	} else {
-		msgErr( "MQTT::connect() unable to instanciate a new connection against '".( $broker ? $broker : '(undef)' )."' broker" );
 	}
 	
 	return $mqtt;

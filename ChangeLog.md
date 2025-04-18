@@ -7,6 +7,7 @@
     Release date: 
 
     - Change 'MQTTGateway' schema so that the port number is included in the host definition (todo #100), thus bumping minor candidate version number
+    - Update 'MQTT' package according to new 'MQATTGateway' schema
 
 ### 4.6.0
 

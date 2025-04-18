@@ -31,7 +31,6 @@
 |   79 | 2024- 4-12 | let a node override a site variable |
 |   95 | 2024- 4-15 | all getter on Dirs() should be in Path:: |
 |   99 | 2024- 4-17 | daemons should have a HUP command to fully reload their config |
-|  100 | 2024- 4-17 | review MQTT gateway schema so that the port number is part of the host address |
 |  101 | 2024- 4-17 | review SMTP gateway schema so that the port number is part of the host address |
 |  102 | 2024- 4-17 | compare Node::hostname() vs TTP::host() |
 |  103 | 2024- 4-17 | IRunnable qualifier should be an array of qualifiers |
@@ -260,6 +259,8 @@
 |      | 2024- 4-17 | done in node-monitor-daemon.pl and alerts-monitor-daemon.pl |
 |   98 | 2024- 4-17 | remove TTP::Ports |
 |      | 2024- 4-17 | done |
+|  100 | 2024- 4-17 | review MQTT gateway schema so that the port number is part of the host address |
+|      | 2024- 4-18 | done |
 
 ---
 P. Wieser
