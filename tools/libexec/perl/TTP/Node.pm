@@ -366,18 +366,23 @@ sub findCandidate {
 # (I):
 # - none
 # (O):
-# - returns a ref to the finder, honoring 'nodes.dirs' variable if any
+# - returns a ref to the finder, honoring 'nodes.confDirs' variable if any
 
 sub finder {
 	my ( $class ) = @_;
 	$class = ref( $class ) || $class;
 
 	my %finder = %{$Const->{finder}};
-	my $dirs = $ep->var([ 'nodes', 'dirs' ]);
+	my $dirs = $ep->var([ 'nodes', 'confDirs' ]);
 	if( !$dirs ){
-		$dirs = $ep->var( 'nodesDirs' );
+		$dirs = $ep->var([ 'nodes', 'dirs' ]);
 		if( $dirs ){
-			msgWarn( "'nodesDirs' property is deprecated in favor of 'nodes.dirs'. You should update your configurations." );
+			msgWarn( "'nodes.dirs' property is deprecated in favor of 'nodes.confDirs'. You should update your configurations." );
+		} else {
+			$dirs = $ep->var( 'nodesDirs' );
+			if( $dirs ){
+				msgWarn( "'nodesDirs' property is deprecated in favor of 'nodes.dirs'. You should update your configurations." );
+			}
 		}
 	}
 	$finder{dirs} = $dirs if $dirs;

@@ -227,7 +227,7 @@
 		},
 
 		"nodes": {
-			"dirs": [
+			"confDirs": [
 				"etc/nodes",
 				"etc/machines"
 			],
