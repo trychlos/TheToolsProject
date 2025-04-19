@@ -747,8 +747,7 @@ sub jsonWrite {
 #   and at least not definitive while the node has not been instanciated/loaded/evaluated
 
 sub logsCommands {
-	my $result = $ep->node() ? ( $ep->var( 'logsCommands' ) || logsPeriodic()) : undef;
-	return $result;
+	return TTP::Path::logsCommands();
 }
 
 # ------------------------------------------------------------------------------------------------

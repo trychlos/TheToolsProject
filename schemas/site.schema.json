@@ -405,6 +405,14 @@
                     "description": "The logs and messages configurations.",
                     "type": "object",
                     "properties": {
+                        "commandsDir": {
+                            "description_array": [
+                                "The periodic directory where TTP writes commands and verbs logs.",
+                                "This 'logs.commandsDir' directory can be got by the user via the 'ttp.pl vars --logsCommands' command"
+                            ],
+                            "type": "string",
+                            "default": "[eval:TTP::logsPeriodic()]"
+                        },
                         "periodicDir": {
                             "description_array": [
                                 "The periodic, by time, root directory of the logs tree.",
@@ -424,6 +432,10 @@
                             "default": "[eval:TTP::tempDir()]"
                         }
                     }
+                },
+                "logsCommands": {
+                    "description": "The periodic directory where TTP writes commands and verbs logs. Deprecated in favor of 'logs.commandsDir' in v4.7.",
+                    "deprecated": true
                 },
                 "logsDaily": {
                     "description": "The periodic, by time, root directory of the logs tree. Deprecated in favor of 'logs.periodicDir' in v4.7.",
