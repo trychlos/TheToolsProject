@@ -146,41 +146,6 @@
 			"rootDir": "[eval:File::Spec->catdir( TTP::tempDir(), 'TTP' )]"
 		},
 
-		"Message_comments": [
-			"Define the default behavior for msgDummy(), msgErr(), msgOut(), msgVerbose() and msgWarn() functions",
-			"These are all per-node overridable values"
-		],
-		"Message": {
-			"msgDummy": {
-				"withColor": true,
-				"withLog": true,
-				"color": "cyan",
-				"marker": "(DUM) "
-			},
-			"msgErr": {
-				"withColor": true,
-				"withLog": true,
-				"color": "bold red",
-				"marker": "(ERR) "
-			},
-			"msgOut": {
-				"withColor": false,
-				"withLog": true
-			},
-			"msgVerbose": {
-				"withColor": true,
-				"withLog": true,
-				"color": "bright_blue",
-				"marker": "(VER) "
-			},
-			"msgWarn": {
-				"withColor": true,
-				"withLog": true,
-				"color": "bright_yellow",
-				"marker": "(WAR) "
-			}
-		},
-
 		"moveDir_comments": [
 			"manage macros: SOURCE, TARGET"
 		],
