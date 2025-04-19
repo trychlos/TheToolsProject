@@ -178,7 +178,7 @@ sub _copy_match_file {
 #      this option let us reverse this behavior, e.g. when copying a directory tree with empty dirs
 #   > 'command': the to-be-used command
 # (O):
-# return true|false
+# returns true|false
 
 sub copyFile {
 	my ( $source, $target, $opts ) = @_;

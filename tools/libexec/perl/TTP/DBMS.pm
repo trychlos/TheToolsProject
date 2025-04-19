@@ -53,7 +53,7 @@ use TTP::SqlServer;
 #   > output: optional
 #   > mode: full-diff, defaulting to 'full'
 #   > compress: true|false
-# return a hash reference with:
+# returns a hash reference with:
 # - status: true|false
 # - output: the output filename (even if provided on input)
 
@@ -262,7 +262,7 @@ sub package {
 #   > diff: optional, the diff backup file
 #   > verifyonly: whether we want only check the restorability of the provided file
 # (O):
-# - return true|false
+# - returns true|false
 
 sub restoreDatabase {
 	my ( $self, $parms ) = @_;

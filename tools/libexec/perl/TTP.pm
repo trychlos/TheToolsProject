@@ -372,7 +372,7 @@ sub errs {
 # - hostname
 # - start timestamp
 # - end timestamp
-# - return code
+# - exit code
 # - full run command
 
 sub executionReport {

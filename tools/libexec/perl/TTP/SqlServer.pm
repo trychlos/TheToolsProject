@@ -367,7 +367,6 @@ sub _restoreDatabaseMove {
 # -------------------------------------------------------------------------------------------------
 # restore the target database from the specified backup file
 # in this first phase, set it first offline (if it exists)
-# return true|false
 # (I):
 # - the DBMS instance
 # - parms is a hash ref with keys:

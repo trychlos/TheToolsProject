@@ -130,7 +130,7 @@ sub configHost {
 # -------------------------------------------------------------------------------------------------
 # connect to the target MQTT broker
 # either it is configured in the daemon, or connect to the site default
-# return truethy value if OK
+# returns truethy value if OK
 
 sub configMqtt {
 	my $host = configHost();
@@ -153,7 +153,7 @@ sub configMqtt {
 # interprets the defined topics
 # simultaneously identifying the target MQTT broker and connecting to
 # may send error messages in case of an error
-# return truethy value if OK
+# returns truethy value if OK
 
 sub configTopics {
 	my $topics = $daemon->config()->jsonData()->{topics};
