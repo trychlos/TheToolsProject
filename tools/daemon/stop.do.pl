@@ -94,7 +94,7 @@ sub doStop {
 
 # -------------------------------------------------------------------------------------------------
 # wait for the daemon actual termination
-# return true if the daemon is terminated, false else
+# returns true if the daemon is terminated, false else
 # In dummy mode, just considers that the daemon has exited immediately
 
 sub doWait {
