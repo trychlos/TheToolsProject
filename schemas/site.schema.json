@@ -428,7 +428,7 @@
                     "description": "General configuration of the nodes.",
                     "type": "object",
                     "properties": {
-                        "dirs": {
+                        "confDirs": {
                             "description": "List of subdirectories of TTP_ROOTS where we can find nodes JSON configuration files. Not per-node overidable.",
                             "type": "array",
                             "items": {
@@ -438,6 +438,10 @@
                                 "etc/nodes",
                                 "etc/machines"
                             ]
+                        },
+                        "dirs": {
+                            "description": "List of subdirectories of TTP_ROOTS where we can find nodes JSON configuration files. Deprecated in favor of 'nodes.confDirs' in v4.7.",
+                            "deprecated": true
                         },
                         "hostname": {
                             "description": "How to get the hostname of a machine.",

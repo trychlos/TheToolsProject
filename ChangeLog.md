@@ -15,6 +15,7 @@
     - Remove TTP::Node->dirs() method in favor of updated TTP::Node->finder() (todo #106)
     - Obsolete TTP::host() in favor of already existing TTP::nodeName() (todo #102)
     - Obsolete 'credentialsDirs' variable in favor of 'credentials.dirs'
+    - Deprecate 'nodes.dirs' variable in favor of 'nodes.confDirs'
 
 ### 4.6.0
 
