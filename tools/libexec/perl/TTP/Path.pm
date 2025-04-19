@@ -347,6 +347,34 @@ sub fromCommand {
 	return $path;
 }
 
+# ------------------------------------------------------------------------------------------------
+# Compute and returns the root directory of the logs tree.
+# As a particular case, we emit the deprecation warning only once to not clutter the user.
+# (I):
+# - none
+# (O):
+# - returns the 'logsRoot' directory, which may be undef very early in the bootstrap process
+#   and at least not definitive while the node has not been instanciated/loaded/evaluated
+
+sub logsRoot {
+	my $dir;
+	my $node = $ep ? $ep->node() : undef;
+	if( $node ){
+		$dir = $ep->var([ 'logs', 'rootDir' ]);
+		if( !$dir ){
+			$dir = $ep->var( 'logsRoot' );
+			if( $dir ){
+				$ep->{_warnings} //= {};
+				if( !$ep->{_warnings}{logsroot} ){
+					msgWarn( "'logsRoot' property is deprecated in favor of 'logs.rootDir'. You should update your configurations." );
+					$ep->{_warnings}{logsroot} = true;
+				}
+			}
+		}
+	}
+	return $dir || TTP::tempDir();
+}
+
 # -------------------------------------------------------------------------------------------------
 # make sure a directory exist
 # note that this does NOT honor the '-dummy' option as creating a directory is easy and a work may

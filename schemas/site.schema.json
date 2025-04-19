@@ -401,6 +401,24 @@
                         }
                     }
                 },
+                "logs": {
+                    "description": "The logs and messages configurations.",
+                    "type": "object",
+                    "properties": {
+                        "rootDir": {
+                            "description_array": [
+                                "The root directory of the logs tree. ",
+                                "This 'logs.rootDir' directory can be got by the user via the 'ttp.pl vars --logsRoot' command"
+                            ],
+                            "type": "string",
+                            "default": "[eval:TTP::tempDir()]"
+                        }
+                    }
+                },
+                "logsRoot": {
+                    "description": "The root directory of the logs tree. Deprecated in favor of 'logs.rootDir' in v4.7.",
+                    "deprecated": true
+                },
                 "MQTTGateway": {
                     "description_array": [
                         "Address the MQTT gateway (aka the MQTT broker) to be able to publish our topics.",

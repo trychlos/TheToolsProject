@@ -18,5 +18,7 @@
 	"environment": {
 		"id": "AnyStringIdentifier"
 	},
-	"logsRoot": "[eval:File::Spec->catdir( '/tmp', 'Myself' )]"
+	"logs": {
+		"rootDir": "[eval:File::Spec->catdir( '/tmp', 'Myself' )]"
+	}
 }

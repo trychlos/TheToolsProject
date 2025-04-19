@@ -41,6 +41,7 @@ use TTP::EP;
 use TTP::Finder;
 use TTP::Message qw( :all );
 use TTP::Node;
+use TTP::Path;
 
 # autoflush STDOUT
 $| = 1;
@@ -782,8 +783,7 @@ sub logsMain {
 #   and at least not definitive while the node has not been instanciated/loaded/evaluated
 
 sub logsRoot {
-	my $result = $ep->node() ? ( $ep->var( 'logsRoot' ) || tempDir()) : undef;
-	return $result;
+	return TTP::Path::logsRoot();
 }
 
 # ------------------------------------------------------------------------------------------------
