@@ -457,6 +457,146 @@
                     "description": "The root directory of the logs tree. Deprecated in favor of 'logs.rootDir' in v4.7.",
                     "deprecated": true
                 },
+                "messages": {
+                    "description": "Defines the default behavior for msgDummy(), msgErr(), msgOut(), msgVerbose() and msgWarn() functions.",
+                    "type": "object",
+                    "properties": {
+                        "msgDummy": {
+                            "description": "Defines the default behavior of TTP::Message::msgDummy() function.",
+                            "type": "object",
+                            "properties": {
+                                "withColor": {
+                                    "description": "Whether these messages default to be colored.",
+                                    "type": "boolean",
+                                    "default": true
+                                },
+                                "withLog": {
+                                    "description": "Whether these messages default to be written in the log file.",
+                                    "type": "boolean",
+                                    "default": true
+                                },
+                                "color": {
+                                    "description": "The ANSI color to be used when displaying the message, only honored when 'withColor' is true.",
+                                    "type": "string",
+                                    "default": "cyan"
+                                },
+                                "marker": {
+                                    "description": "An optional prefix for these messages.",
+                                    "type": "string",
+                                    "default": "(DUM) "
+                                }
+                            }
+                        },
+                        "msgErr": {
+                            "description": "Defines the default behavior of TTP::Message::msgErr() function.",
+                            "type": "object",
+                            "properties": {
+                                "withColor": {
+                                    "description": "Whether these messages default to be colored.",
+                                    "type": "boolean",
+                                    "default": true
+                                },
+                                "withLog": {
+                                    "description": "Whether these messages default to be written in the log file.",
+                                    "type": "boolean",
+                                    "default": true
+                                },
+                                "color": {
+                                    "description": "The ANSI color to be used when displaying the message, only honored when 'withColor' is true.",
+                                    "type": "string",
+                                    "default": "bold red"
+                                },
+                                "marker": {
+                                    "description": "An optional prefix for these messages.",
+                                    "type": "string",
+                                    "default": "(ERR) "
+                                }
+                            }
+                        },
+                        "msgOut": {
+                            "description": "Defines the default behavior of TTP::Message::msgOut() function.",
+                            "type": "object",
+                            "properties": {
+                                "withColor": {
+                                    "description": "Whether these messages default to be colored.",
+                                    "type": "boolean",
+                                    "default": false
+                                },
+                                "withLog": {
+                                    "description": "Whether these messages default to be written in the log file.",
+                                    "type": "boolean",
+                                    "default": true
+                                },
+                                "color": {
+                                    "description": "The ANSI color to be used when displaying the message, only honored when 'withColor' is true.",
+                                    "type": "string",
+                                    "default": ""
+                                },
+                                "marker": {
+                                    "description": "An optional prefix for these messages.",
+                                    "type": "string",
+                                    "default": ""
+                                }
+                            }
+                        },
+                        "msgVerbose": {
+                            "description": "Defines the default behavior of TTP::Message::msgVerbose() function.",
+                            "type": "object",
+                            "properties": {
+                                "withColor": {
+                                    "description": "Whether these messages default to be colored.",
+                                    "type": "boolean",
+                                    "default": true
+                                },
+                                "withLog": {
+                                    "description": "Whether these messages default to be written in the log file.",
+                                    "type": "boolean",
+                                    "default": true
+                                },
+                                "color": {
+                                    "description": "The ANSI color to be used when displaying the message, only honored when 'withColor' is true.",
+                                    "type": "string",
+                                    "default": "bright_blue"
+                                },
+                                "marker": {
+                                    "description": "An optional prefix for these messages.",
+                                    "type": "string",
+                                    "default": "(VER) "
+                                }
+                            }
+                        },
+                        "msgWarn": {
+                            "description": "Defines the default behavior of TTP::Message::msgWarn() function.",
+                            "type": "object",
+                            "properties": {
+                                "withColor": {
+                                    "description": "Whether these messages default to be colored.",
+                                    "type": "boolean",
+                                    "default": true
+                                },
+                                "withLog": {
+                                    "description": "Whether these messages default to be written in the log file.",
+                                    "type": "boolean",
+                                    "default": true
+                                },
+                                "color": {
+                                    "description": "The ANSI color to be used when displaying the message, only honored when 'withColor' is true.",
+                                    "type": "string",
+                                    "default": "bright_yellow"
+                                },
+                                "marker": {
+                                    "description": "An optional prefix for these messages.",
+                                    "type": "string",
+                                    "default": "(WAR) "
+                                }
+                            }
+                        }
+                    }
+                },
+                "Message": {
+                    "description": "Defines the default behavior for msgDummy(), msgErr(), msgOut(), msgVerbose() and msgWarn() functions. Deprecated in favor of 'messages' in v4.7.",
+                    "deprecated": true
+                },
                 "MQTTGateway": {
                     "description_array": [
                         "Address the MQTT gateway (aka the MQTT broker) to be able to publish our topics.",

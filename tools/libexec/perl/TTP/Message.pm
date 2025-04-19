@@ -344,40 +344,26 @@ sub _printMsg {
 		$withPrefix = $args->{withPrefix} if exists $args->{withPrefix};
 		$line .= _msgPrefix() if $withPrefix;
 		# have a level marker ?
+		# the computed one can be empty, but never undef
 		my $level = INFO;
 		$level = $args->{level} if exists $args->{level};
-		my $marker = '';
-		$marker = $Const->{$level}{marker} if exists $Const->{$level}{marker};
-		$configured = undef;
-		$configured = $ep->var([ 'Message',  $Const->{$level}{key}, 'marker' ]) if exists $Const->{$level}{key};
-		$marker = $configured if defined $configured;
-		$line .= $marker;
+		$line .= _printMsg_marker( $level );
 		$line .= $args->{msg} if exists $args->{msg};
 		# writes in log ?
-		my $withLog = true;
-		$configured = undef;
-		$configured = $ep->var([ 'Message',  $Const->{$level}{key}, 'withLog' ]) if exists $Const->{$level}{key};
-		$withLog = $configured if defined $configured;
-		_msgLogAppend( $line ) if $withLog;
+		# the computed one defaults to (hardcoded) true which hopefully covers all non-particular cases
+		_msgLogAppend( $line ) if _printMsg_withLog( $level );
 		# output to the console ?
 		my $withConsole = true;
 		$withConsole = $args->{withConsole} if exists $args->{withConsole};
 		if( $withConsole ){
 			# print a colored line ?
 			# global runtime option is only considered if not disabled in toops/host configuration
-			my $withColor = true;
-			$configured = undef;
-			$configured = $ep->var([ 'Message',  $Const->{$level}{key}, 'withColor' ]) if exists $Const->{$level}{key};
-			#print __PACKAGE__."::_printMsg() configured='".( defined $configured ? $configured : '(undef)' )."'".EOL if $level eq "VERBOSE";
-			$withColor = $configured if defined $configured;
-			$withColor = $ep->runner()->colored() if $ep->runner() && $ep->runner()->coloredSet();
+			my $withColor = _printMsg_withColor( $level );
+			my $color = $withColor ?  _printMsg_color( $level ) : '';
 			my $colorstart = '';
 			my $colorend = '';
-			if( $withColor ){
-				$colorstart = color( $Const->{$level}{color} ) if exists( $Const->{$level}{color} );
-				$configured = undef;
-				$configured = $ep->var([ 'Message',  $Const->{$level}{key}, 'color' ]) if exists $Const->{$level}{key};
-				$colorstart = color( $configured ) if defined $configured;
+			if( $withColor && $color ){
+				$colorstart = color( $color );
 				$colorend = color( 'reset' );
 			}
 			# print on which handle ?
@@ -386,6 +372,114 @@ sub _printMsg {
 			print $handle "$colorstart$line$colorend".EOL;
 		}
 	}
+}
+
+# -------------------------------------------------------------------------------------------------
+# computes the marker of the message depending of the current level and of the site/node configuration
+# As a particular case, we emit the deprecation warning only once to not clutter the user.
+# - returns the color or an empty string
+
+sub _printMsg_color {
+	my ( $level ) = @_;
+	my $color = '';
+	if( $Const->{$level}{key} ){
+		$color = $ep->var([ 'messages', $Const->{$level}{key}, 'color' ]);
+		if( !$color ){
+			$color = $ep->var([ 'Message', $Const->{$level}{key}, 'color' ]);
+			if( $color ){
+				$ep->{_warnings} //= {};
+				if( !$ep->{_warnings}{message} ){
+					msgWarn( "'Message' property is deprecated in favor of 'messages'. You should update your configurations." );
+					$ep->{_warnings}{message} = true;
+				}
+			}
+		}
+	}
+	if( !$color ){
+		$color = $Const->{$level}{color} if exists $Const->{$level}{color};
+	}
+	return $color;
+}
+
+# -------------------------------------------------------------------------------------------------
+# computes the marker of the message depending of the current level and of the site/node configuration
+# As a particular case, we emit the deprecation warning only once to not clutter the user.
+# - returns the marker or an empty string
+
+sub _printMsg_marker {
+	my ( $level ) = @_;
+	my $marker = '';
+	if( $Const->{$level}{key} ){
+		$marker = $ep->var([ 'messages', $Const->{$level}{key}, 'marker' ]);
+		if( !$marker ){
+			$marker = $ep->var([ 'Message', $Const->{$level}{key}, 'marker' ]);
+			if( $marker ){
+				$ep->{_warnings} //= {};
+				if( !$ep->{_warnings}{message} ){
+					msgWarn( "'Message' property is deprecated in favor of 'messages'. You should update your configurations." );
+					$ep->{_warnings}{message} = true;
+				}
+			}
+		}
+	}
+	if( !$marker ){
+		$marker = $Const->{$level}{marker} if exists $Const->{$level}{marker};
+	}
+	return $marker;
+}
+
+# -------------------------------------------------------------------------------------------------
+# computes whether the current message should be colored depending of the current level and of the
+#  site/node configuration
+# As a particular case, we emit the deprecation warning only once to not clutter the user.
+# - returns whether to write in log file, defaulting to (hardcoded) true
+
+sub _printMsg_withColor {
+	my ( $level ) = @_;
+	my $withColor = true;
+	if( $ep && $ep->runner() && $ep->runner()->coloredSet()){
+		$withColor = $ep->runner()->colored();
+	} elsif( $Const->{$level}{key} ){
+		my $value = $ep->var([ 'messages', $Const->{$level}{key}, 'withColor' ]);
+		if( !defined $value ){
+			$value = $ep->var([ 'Message', $Const->{$level}{key}, 'withColor' ]);
+			if( defined $value ){
+				$ep->{_warnings} //= {};
+				if( !$ep->{_warnings}{message} ){
+					msgWarn( "'Message' property is deprecated in favor of 'messages'. You should update your configurations." );
+					$ep->{_warnings}{message} = true;
+				}
+			}
+		}
+		$withColor = $value if defined $value;
+	}
+	return $withColor;
+}
+
+# -------------------------------------------------------------------------------------------------
+# computes whether the current message should be written in log file depending of the current level
+#  and of the site/node configuration
+# As a particular case, we emit the deprecation warning only once to not clutter the user.
+# - returns whether to write in log file, defaulting to (hardcoded) true
+
+sub _printMsg_withLog {
+	my ( $level ) = @_;
+	my $withLog = true;
+	if( $Const->{$level}{key} ){
+		my $value = $ep->var([ 'messages', $Const->{$level}{key}, 'withLog' ]);
+		if( !defined $value ){
+			$value = $ep->var([ 'Message', $Const->{$level}{key}, 'withLog' ]);
+			if( defined $value ){
+				$ep->{_warnings} //= {};
+				if( !$ep->{_warnings}{message} ){
+					msgWarn( "'Message' property is deprecated in favor of 'messages'. You should update your configurations." );
+					$ep->{_warnings}{message} = true;
+				}
+			}
+		}
+		$withLog = $value if defined $value;
+	}
+	return $withLog;
 }
 
 1;

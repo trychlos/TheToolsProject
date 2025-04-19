@@ -21,6 +21,7 @@
     - Deprecate 'logsDaily' variable in favor of 'logs.periodicDir'
     - Deprecate 'logsCommands' variable in favor of 'logs.commandsDir'
     - Deprecate 'logsMain' variable in favor of 'logs.mainFile'
+    - Deprecate 'Message' variable in favor of 'messages'
 
 ### 4.6.0
 
