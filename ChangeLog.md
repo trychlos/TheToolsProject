@@ -16,6 +16,7 @@
     - Obsolete TTP::host() in favor of already existing TTP::nodeName() (todo #102)
     - Obsolete 'credentialsDirs' variable in favor of 'credentials.dirs'
     - Deprecate 'nodes.dirs' variable in favor of 'nodes.confDirs'
+    - Define 'copyFile' new macros SOURCEDIR, SOURCEFILE, TARGETDIR, TARGETFILE
 
 ### 4.6.0
 

@@ -190,7 +190,7 @@ sub commandByOS_getObject {
 #     - value is the replacement value
 #   > stdinFromNull: whether stdin must be redirected from NULL, defaulting to true
 # (O):
-# return a hash with following keys:
+# returns a hash with following keys:
 # - evaluated: the evaluated command after macros replacements
 # - stdout: stdout as a reference to the array of lines
 # - stderr: stderr as a reference to the array of lines
@@ -220,13 +220,14 @@ sub commandExec {
 		$result->{evaluated} = $command;
 		if( $opts->{macros} ){
 			foreach my $key ( sort keys %{$opts->{macros}} ){
-				$result->{evaluated} =~ s/<$key>/$opts->{macros}{$key}/g;
+				my $value = $opts->{macros}{$key} || '';
+				$result->{evaluated} =~ s/<$key>/$value/g;
 			}
 		}
 		msgVerbose( "TTP::commandExec() evaluated to '$result->{evaluated}'" );
 		if( $ep->runner()->dummy()){
 			msgDummy( $result->{evaluated} );
-			$result->{result} = true;
+			$result->{success} = true;
 		} else {
 			my @res_out = `$result->{evaluated}`;
 			# https://www.perlmonks.org/?node_id=81640

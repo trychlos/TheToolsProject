@@ -225,7 +225,7 @@
                     "description_array": [
                         "The command used by TheToolsProject each time a tree of directories must be copied from a source to a target.",
                         "This can be either a simple command string or a byOS command.",
-                        "Please note that, as the default 'File::Copy::Recursive::dircopy()' is less than efficient when manageing exclusions,",
+                        "Please note that, as the default 'File::Copy::Recursive::dircopy()' is less than efficient when managing exclusions,",
                         "all directory copies requiring some exclusions will make use of File::Copy::Recursive::fcopy().",
                         "We strongly suggest to use 'ttp.pl copydirs' each time you can as the command manages both full logs and these properties."
                     ],
@@ -288,7 +288,14 @@
                                         "^.*$": {
                                             "description_array": [
                                                 "The OS name as reported by Perl-Config, the value being the command to be applied for this OS.",
-                                                "The value (the command) honors <SOURCE>, <TARGET> and <OPTIONS> macros."
+                                                "The value (the command) honors following macros:",
+                                                "- <SOURCE> the source volume, directory and filename,",
+                                                "- <SOURCEDIR> the source volume and directory,",
+                                                "- <SOURCEFILE> the source filename,",
+                                                "- <TARGET> the target volume, directory and filename,",
+                                                "- <TARGETDIR> the target volume and directory",
+                                                "- <TARGETFILE> the target filename",
+                                                "- <OPTIONS> the options provided to the command."
                                             ],
                                             "type": "string"
                                         }
