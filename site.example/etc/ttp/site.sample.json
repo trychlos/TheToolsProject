@@ -142,16 +142,10 @@
 		},
 
 		"logs": {
+			"commandsDir": "[eval:TTP::logsPeriodic()]",
 			"periodicDir": "[eval:File::Spec->catdir( TTP::logsRoot(), Time::Moment->now->strftime( '%y%m%d' ))]",
 			"rootDir": "[eval:File::Spec->catdir( TTP::tempDir(), 'TTP' )]"
 		},
-
-		"logsCommands_comments": [
-			"The daily directory where TTP writes commands and verbs logs",
-			"Defaults to the 'logsPeriodic' value",
-			"The 'logsCommands' directory can be got by the user via the 'ttp.pl vars --logsCommands' command"
-		],
-		"logsCommands": "[eval:File::Spec->catdir( TTP::logsPeriodic(), 'TTP' )]",
 
 		"logsMain_comments": [
 			"The full pathname of the file where TTP writes commands and verbs logs",

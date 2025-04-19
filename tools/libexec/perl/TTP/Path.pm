@@ -348,12 +348,40 @@ sub fromCommand {
 }
 
 # ------------------------------------------------------------------------------------------------
+# Compute and returns the commands logs directory.
+# As a particular case, we emit the deprecation warning only once to not clutter the user.
+# (I):
+# - none
+# (O):
+# - returns the 'logs.commandsdir' directory, which may be undef very early in the bootstrap process
+#   and at least not definitive while the node has not been instanciated/loaded/evaluated
+
+sub logsCommands {
+	my $dir;
+	my $node = $ep ? $ep->node() : undef;
+	if( $node ){
+		$dir = $ep->var([ 'logs', 'commandsDir' ]);
+		if( !$dir ){
+			$dir = $ep->var( 'logsCommands' );
+			if( $dir ){
+				$ep->{_warnings} //= {};
+				if( !$ep->{_warnings}{logscommands} ){
+					msgWarn( "'logsCommands' property is deprecated in favor of 'logs.commandsDir'. You should update your configurations." );
+					$ep->{_warnings}{logscommands} = true;
+				}
+			}
+		}
+	}
+	return $dir || TTP::Path::logsPeriodic();
+}
+
+# ------------------------------------------------------------------------------------------------
 # Compute and returns the periodic root directory of the logs tree.
 # As a particular case, we emit the deprecation warning only once to not clutter the user.
 # (I):
 # - none
 # (O):
-# - returns the 'logsPeriodic' directory, which may be undef very early in the bootstrap process
+# - returns the 'logs.periodicDir' directory, which may be undef very early in the bootstrap process
 #   and at least not definitive while the node has not been instanciated/loaded/evaluated
 
 sub logsPeriodic {
@@ -381,7 +409,7 @@ sub logsPeriodic {
 # (I):
 # - none
 # (O):
-# - returns the 'logsRoot' directory, which may be undef very early in the bootstrap process
+# - returns the 'logs.rootDir' directory, which may be undef very early in the bootstrap process
 #   and at least not definitive while the node has not been instanciated/loaded/evaluated
 
 sub logsRoot {

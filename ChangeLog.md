@@ -19,6 +19,7 @@
     - Define 'copyFile' new macros SOURCEDIR, SOURCEFILE, TARGETDIR, TARGETFILE
     - Deprecate 'logsRoot' in favor of 'logs.rootDir'
     - Deprecate 'logsDaily' variable in favor of 'logs.periodicDir'
+    - Deprecate 'logsCommands' variable in favor of 'logs.commandsDir'
 
 ### 4.6.0
 
