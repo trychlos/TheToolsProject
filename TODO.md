@@ -27,9 +27,8 @@
 |      | 2024- 4-14 | node-monitor-daemon.pl is moved to libexec/daemons |
 |      | 2024- 4-17 | mqtt-monitor-daemon.pl is moved to libexec/daemons |
 |      | 2024- 4-17 | at the moment, still exists backup-monitor-daemon in site tree - to be evaluated |
-|   79 | 2024- 4-12 | let a node override a site variable |
 |   99 | 2024- 4-17 | daemons should have a HUP command to fully reload their config |
-|  107 |  |  |
+|  108 |  |  |
 
 ---
 ## Done
@@ -218,6 +217,8 @@
 |      |            | so just remove nodeRoot() |
 |   77 | 2024- 4-10 | add a comment on how to get site variables |
 |      | 2024- 4-12 | done |
+|   79 | 2024- 4-12 | let a node override a site variable |
+|      | 2024- 4-19 | this is already done and works well when the node json file is rightly addressed |
 |   80 | 2024- 4-13 | sufix should be renamed suffix |
 |      | 2024- 4-14 | done |
 |   81 | 2024- 4-13 | TTP::Daemon should check that listeningPort is OK |
@@ -281,6 +282,8 @@
 |  106 | 2024- 4-18 | Node->dirs() doesn't appear to be more relevant than DaemonConfig->confDirs() or execDirs() |
 |      | 2024- 4-18 | TTP::nodesDirs() is obsoleted (not used) - TTP::Node->dirs() is obsoleted too in favor of (updated) TTP::Node->finder() |
 |      | 2024- 4-18 | done |
+|  107 | 2024- 4-19 | ttp.pl vars -key knownA,knownB,unknown returns knownA,knownB but should return undef |
+|      | 2024- 4-19 | fixed |
 
 ---
 P. Wieser

@@ -23,6 +23,7 @@
     - Deprecate 'logsMain' variable in favor of 'logs.mainFile'
     - Deprecate 'Message' variable in favor of 'messages'
     - Deprecate, do not replace, nodeRoot() (todo #76)
+    - Fix ttp.pl vars returning a value even when a key doesn't exist (todo #107)
 
 ### 4.6.0
 

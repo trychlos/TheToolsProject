@@ -248,10 +248,9 @@ sub services {
 
 sub var {
 	my ( $self, $keys ) = @_;
-	#$varDebug = true if ref( $keys ) eq 'ARRAY' && grep( /package/, @{$keys} );
-	print STDERR __PACKAGE__."::var() keys=".( ref( $keys ) ? '['.join( ',', @{$keys} ).']' : "'$keys'" ).EOL if $ENV{TTP_DEBUG};
+	print STDERR __PACKAGE__."::var() keys=".( ref( $keys ) ? "[ ".join( ', ', @{$keys} )." ]" : "'$keys'" ).EOL if $ENV{TTP_DEBUG};
 	my $value = $self->TTP::IJSONable::var( $keys );
-	print __PACKAGE__."::var() value='".( $value || '(undef)' )."'".EOL if $ENV{TTP_DEBUG};
+	print STDERR __PACKAGE__."::var() value='".( $value || '(undef)' )."'".EOL if $ENV{TTP_DEBUG};
 	$value = $self->ep()->site()->var( $keys ) if !defined( $value );
 	return $value;
 }
