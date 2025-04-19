@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.7.0-rc.0
+### 4.7.0
 
-    Release date: 
+    Release date: 2025- 4-19
 
     - Change 'MQTTGateway' schema so that the port number is included in the host definition (todo #100), thus bumping minor candidate version number
     - Update 'MQTT' package according to new 'MQATTGateway' schema
