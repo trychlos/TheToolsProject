@@ -408,17 +408,25 @@
                         "commandsDir": {
                             "description_array": [
                                 "The periodic directory where TTP writes commands and verbs logs.",
-                                "This 'logs.commandsDir' directory can be got by the user via the 'ttp.pl vars --logsCommands' command"
+                                "This 'logs.commandsDir' directory can be got by the user via the 'ttp.pl vars --logsCommands' command."
                             ],
                             "type": "string",
                             "default": "[eval:TTP::logsPeriodic()]"
+                        },
+                        "mainFile": {
+                            "description_array": [
+                                "The full pathname of the file where TTP writes commands and verbs logs.",
+                                "This 'logs.mainFile' filename can be got by the user via the 'ttp.pl vars --logsMain' command."
+                            ],
+                            "type": "string",
+                            "default": "[eval:File::Spec->catfile( TTP::logsCommands(), 'main.log' )]"
                         },
                         "periodicDir": {
                             "description_array": [
                                 "The periodic, by time, root directory of the logs tree.",
                                 "Rationale: having a per-day or per-week or per-month logs tree is the easiest way in order to periodically purge the logs.",
-                                "This is not mandatory at all, and the default is to stick to the 'logs.rootDir' value",
-                                "This 'logs.periodicDir' directory can be got by the user via the 'ttp.pl vars --logsPeriodic' command"
+                                "This is not mandatory at all, and the default is to stick to the 'logs.rootDir' value.",
+                                "This 'logs.periodicDir' directory can be got by the user via the 'ttp.pl vars --logsPeriodic' command."
                             ],
                             "type": "string",
                             "default": "[eval:TTP::logsRoot()]"
@@ -439,6 +447,10 @@
                 },
                 "logsDaily": {
                     "description": "The periodic, by time, root directory of the logs tree. Deprecated in favor of 'logs.periodicDir' in v4.7.",
+                    "deprecated": true
+                },
+                "logsMain": {
+                    "description": "The full pathname of the file where TTP writes commands and verbs logs. Deprecated in favor of 'logs.mainFile' in v4.7.",
                     "deprecated": true
                 },
                 "logsRoot": {

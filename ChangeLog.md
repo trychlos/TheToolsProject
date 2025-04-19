@@ -20,6 +20,7 @@
     - Deprecate 'logsRoot' in favor of 'logs.rootDir'
     - Deprecate 'logsDaily' variable in favor of 'logs.periodicDir'
     - Deprecate 'logsCommands' variable in favor of 'logs.commandsDir'
+    - Deprecate 'logsMain' variable in favor of 'logs.mainFile'
 
 ### 4.6.0
 

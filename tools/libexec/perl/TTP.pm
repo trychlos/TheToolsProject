@@ -770,8 +770,7 @@ sub logsDaily {
 #   and at least not definitive while the node has not been instanciated/loaded/evaluated
 
 sub logsMain {
-	my $result = $ep->node() ? ( $ep->var( 'logsMain' ) || File::Spec->catfile( logsCommands(), 'main.log' )) : undef;
-	return $result;
+	return TTP::Path::logsMain();
 }
 
 # ------------------------------------------------------------------------------------------------
