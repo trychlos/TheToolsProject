@@ -317,33 +317,43 @@ my $varDebug = false;
 
 sub var {
 	my ( $self, $keys, $base ) = @_;
-	#print STDERR __PACKAGE__."::var() self=".ref( $self )." keys=".Dumper( $keys )." searching in ".Dumper( $base ) if $ENV{TTP_DEBUG};
-	print STDERR __PACKAGE__."::var() self=".ref( $self )." keys=".Dumper( $keys ) if $ENV{TTP_DEBUG};
+	# keys cannot be empty
+	if( !$keys || ( ref( $keys ) eq 'ARRAY' ) && !scalar( @{$keys} )){
+		msgErr( __PACKAGE__."::var() expects keys be a scalar, or an array of scalars, or an array of arrays of scalars, found empty" );
+		return undef;
+	}
+	#$varDebug = ref( $keys ) eq 'ARRAY' && scalar( @{$keys} ) >= 2 && $keys->[0] eq 'site' && $keys->[1] eq 'myVar';
+	print STDERR __PACKAGE__."::var() self=".ref( $self )." keys=".Dumper( $keys )." searching in ".ref( $base || $self ).EOL if $varDebug;
+	#if( $varDebug ){
+	#	print STDERR __PACKAGE__."::var() self ".ref( $self ).EOL;
+	#	print STDERR __PACKAGE__."::var() self ".Dumper( $self );
+	#	print STDERR __PACKAGE__."::var() jsonData ".Dumper( $self->jsonData());
+	#}
+	# if provided, base must be a HASH
 	my $jsonData = undef;
-	my $value = undef;
 	if( $base ){
 		my $ref = ref( $base );
-		if( $ref && $ref eq 'HASH' ){
+		if( $ref eq 'HASH' ){
 			$jsonData = $base;
-		} elsif( $ref ){
-			msgErr( __PACKAGE__."::var() expects base be a hash or a scalar, found '$ref'" );
 		} else {
-			$value = $base;
+			msgErr( __PACKAGE__."::var() expects base be a hash, found '$ref'" );
+			return undef;
 		}
 	} else {
 		$jsonData = $self->jsonData();
 	}
-	$value = $self->jsonVar_rec( $keys, $jsonData ) if !defined $value && $jsonData;
+	my $value = $self->jsonVar_rec( $keys, $jsonData, $jsonData );
+	print STDERR __PACKAGE__."::var() eventually returns ".Dumper( $value ) if $varDebug;
 	return $value;
 }
 
 # keys is a scalar, or an array of scalars, or an array of arrays of scalars
 
 sub jsonVar_rec {
-	my ( $self, $keys, $base, $startBase ) = @_;
-	print __PACKAGE__."::jsonVar_rec() entering with keys='$keys' base='".( defined $base ? $base : '(undef)' )."'".EOL if $varDebug;
-	return $base if !defined( $base ) || ref( $base ) ne 'HASH';
-	$startBase = $startBase || $base;
+	my ( $self, $keys, $base, $initialBase ) = @_;
+	print STDERR __PACKAGE__."::jsonVar_rec() entering with keys=".Dumper( $keys )." base=".Dumper( $base ) if $varDebug;
+	#return undef if !defined $base;
+	#return $base if !defined( $base ) || ref( $base ) ne 'HASH';
 	my $ref = ref( $keys );
 	#print "keys=[".( ref( $keys ) eq 'ARRAY' ? join( ',', @{$keys} ) : $keys )."] base=$base".EOL;
 	if( $ref eq 'ARRAY' ){
@@ -354,25 +364,47 @@ sub jsonVar_rec {
 				my @newKeys = @{$keys};
 				for( my $j=0 ; $j<scalar @{$k} ; ++$j ){
 					$newKeys[$i] = $k->[$j];
-					$base = $startBase;
-					$base = $self->jsonVar_rec( \@newKeys, $base, $startBase );
+					$base = $initialBase;
+					$base = $self->jsonVar_rec( \@newKeys, $base, $initialBase );
 					last if defined( $base );
+				}
+				if( !defined( $base )){
+					print STDERR __PACKAGE__."::jsonVar_rec() returns undef as no key has been found among [ ".join( ', ', @{$keys} )." ]".EOL if $varDebug;
+					return undef;
 				}
 			} elsif( $ref ){
 				msgErr( __PACKAGE__."::jsonVar_rec() unexpected intermediate ref='$ref'" );
+				return undef;
 			} else {
-				#print __PACKAGE__."::jsonVar_rec() searching for '$k' key in $base".EOL;
-				$base = $self->jsonVar_rec( $k, $base, $startBase );
+				print STDERR __PACKAGE__."::jsonVar_rec() will search for '$k' key in ".Dumper( $base ) if $varDebug;
+				$base = $self->jsonVar_rec( $k, $base, $initialBase );
+				if( !defined( $base )){
+					print STDERR __PACKAGE__."::jsonVar_rec() returns undef as key='$k' has not been found in ".Dumper( $base ) if $varDebug;
+					return undef;
+				}
 			}
 		}
 	} elsif( $ref ){
 		msgErr( __PACKAGE__."::jsonVar_rec() unexpected final ref='$ref'" );
+		return undef;
 	} else {
 		# the key here may be empty when targeting the top of the hash
-		$base = $keys ? $base->{$keys} : $base;
-		#print __PACKAGE__."::jsonVar_rec() keys='$keys' found '".( defined $base ? $base : '(undef)' )."'".EOL;
+		print STDERR __PACKAGE__."::jsonVar_rec() searching for '$keys' key in ".Dumper( $base ) if $varDebug;
+		if( $keys ){
+			if( defined( $base )){
+				if( ref( $base ) eq 'HASH' ){
+					if( exists( $base->{$keys} )){
+						$base = $base->{$keys};
+					} else {
+						$base = undef;
+					}
+				} else {
+					$base = undef;
+				}
+			}
+		}
 	}
-	print __PACKAGE__."::jsonVar_rec() returning '".( defined $base ? $base : '(undef)' )."'".EOL if $varDebug;
+	print STDERR __PACKAGE__."::jsonVar_rec() returning ".Dumper( $base ) if $varDebug;
 	return $base;
 }
 
