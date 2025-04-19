@@ -747,7 +747,7 @@ sub jsonWrite {
 #   and at least not definitive while the node has not been instanciated/loaded/evaluated
 
 sub logsCommands {
-	my $result = $ep->node() ? ( $ep->var( 'logsCommands' ) || logsDaily()) : undef;
+	my $result = $ep->node() ? ( $ep->var( 'logsCommands' ) || logsPeriodic()) : undef;
 	return $result;
 }
 
@@ -759,8 +759,8 @@ sub logsCommands {
 #   and at least not definitive while the node has not been instanciated/loaded/evaluated
 
 sub logsDaily {
-	my $result = $ep->node() ? ( $ep->var( 'logsDaily' ) || logsRoot()) : undef;
-	return $result;
+	msgWarn( "TTP::logsDaily() is deprecated in favor of TTP:logsPeriodic(). You should update your code." );
+	return TTP::Path::logsPeriodic();
 }
 
 # ------------------------------------------------------------------------------------------------
@@ -773,6 +773,17 @@ sub logsDaily {
 sub logsMain {
 	my $result = $ep->node() ? ( $ep->var( 'logsMain' ) || File::Spec->catfile( logsCommands(), 'main.log' )) : undef;
 	return $result;
+}
+
+# ------------------------------------------------------------------------------------------------
+# (I):
+# - none
+# (O):
+# - returns the 'logsPeriodic' directory, which may be undef very early in the bootstrap process
+#   and at least not definitive while the node has not been instanciated/loaded/evaluated
+
+sub logsPeriodic {
+	return TTP::Path::logsPeriodic();
 }
 
 # ------------------------------------------------------------------------------------------------

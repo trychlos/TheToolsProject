@@ -18,6 +18,7 @@
     - Deprecate 'nodes.dirs' variable in favor of 'nodes.confDirs'
     - Define 'copyFile' new macros SOURCEDIR, SOURCEFILE, TARGETDIR, TARGETFILE
     - Deprecate 'logsRoot' in favor of 'logs.rootDir'
+    - Deprecate 'logsDaily' variable in favor of 'logs.periodicDir'
 
 ### 4.6.0
 

@@ -405,15 +405,29 @@
                     "description": "The logs and messages configurations.",
                     "type": "object",
                     "properties": {
+                        "periodicDir": {
+                            "description_array": [
+                                "The periodic, by time, root directory of the logs tree.",
+                                "Rationale: having a per-day or per-week or per-month logs tree is the easiest way in order to periodically purge the logs.",
+                                "This is not mandatory at all, and the default is to stick to the 'logs.rootDir' value",
+                                "This 'logs.periodicDir' directory can be got by the user via the 'ttp.pl vars --logsPeriodic' command"
+                            ],
+                            "type": "string",
+                            "default": "[eval:TTP::logsRoot()]"
+                        },
                         "rootDir": {
                             "description_array": [
-                                "The root directory of the logs tree. ",
-                                "This 'logs.rootDir' directory can be got by the user via the 'ttp.pl vars --logsRoot' command"
+                                "The root directory of the logs tree.",
+                                "This 'logs.rootDir' directory can be got by the user via the 'ttp.pl vars --logsRoot' command."
                             ],
                             "type": "string",
                             "default": "[eval:TTP::tempDir()]"
                         }
                     }
+                },
+                "logsDaily": {
+                    "description": "The periodic, by time, root directory of the logs tree. Deprecated in favor of 'logs.periodicDir' in v4.7.",
+                    "deprecated": true
                 },
                 "logsRoot": {
                     "description": "The root directory of the logs tree. Deprecated in favor of 'logs.rootDir' in v4.7.",
