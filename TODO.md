@@ -22,14 +22,12 @@
 |   59 | 2025- 2-18 | Daemon.pm: metrics for the daemon are windows-specific: re-code for unix'es |
 |      | 2025- 4-14 | mswin32 metrics are isolated |
 |   61 | 2025- 4- 8 | ttp.pl writejson should should actually be ttp.pl filewrite as the json is provided as a string on input - so this is not dedicated to json |
-|   76 | 2024- 4-10 | nodeRoot() should be siteRoot(), shouldn'it ? and so be removed from TTP |
 |   78 | 2024- 4-12 | some daemons should be moveable to libexec/daemons |
 |      | 2024- 4-14 | alerts-monitor-daemon.pl is moved to libexec/daemons |
 |      | 2024- 4-14 | node-monitor-daemon.pl is moved to libexec/daemons |
 |      | 2024- 4-17 | mqtt-monitor-daemon.pl is moved to libexec/daemons |
 |      | 2024- 4-17 | at the moment, still exists backup-monitor-daemon in site tree - to be evaluated |
 |   79 | 2024- 4-12 | let a node override a site variable |
-|   95 | 2024- 4-15 | all getter on Dirs() should be in Path:: |
 |   99 | 2024- 4-17 | daemons should have a HUP command to fully reload their config |
 |  107 |  |  |
 
@@ -212,6 +210,12 @@
 |      | 2024- 4-11 | done |
 |   75 | 2024- 4-11 | fromCommand() appears both in TTP and in TTP::Path |
 |      | 2024- 4-11 | deduplicated to TTP::Path |
+|   76 | 2024- 4-10 | nodeRoot() should be siteRoot(), shouldn'it ? and so be removed from TTP |
+|      | 2024- 4-19 | whether a logical machine actually has or not a node 'root', aka the root mounted filesystem, it is never used in TTP code itself |
+|      |            | this is only used as a variable when computing directories |
+|      |            | as described in the 'site.schema.json', we allow to put any variable inside of the 'site' property object |
+|      |            | there is so no nodeRoot neither siteRoot (from TTP point of view) but just a site variable which can be get with 'ttp.pl var -key' command |
+|      |            | so just remove nodeRoot() |
 |   77 | 2024- 4-10 | add a comment on how to get site variables |
 |      | 2024- 4-12 | done |
 |   80 | 2024- 4-13 | sufix should be renamed suffix |
@@ -246,6 +250,11 @@
 |      | 2024- 4-17 | done |
 |   94 | 2024- 4-15 | TTP::run() should become TTP::runVerb() |
 |      | 2024- 4-17 | TTP::runCommand() as some sense when run from, e.g. daemon.pl, which is a command - cancelled  |
+|   95 | 2024- 4-15 | all getter on Dirs() should be in Path:: |
+|      | 2024- 4-19 | we are keeping in TTP the functions the user is used to call from its json configurations files |
+|      |            | there are two reasons: first it is shorter, and second we are not willing to expose the details of our internal modules |
+|      |            | but we are moving the actual code to the relevant internal module |
+|      |            | e.g. the user still can [eval:TTP::logsRoot()], which is redirected to TTP::Path::logsRoot(), which itself does the actual work |
 |   96 | 2024- 4-16 | rename nullByOS with nullByOs (like commandByOs) |
 |      | 2024- 4-17 | actually rather keep the byOS case |
 |      | 2024- 4-17 | commandByOs() is now named commandByOS() - done |

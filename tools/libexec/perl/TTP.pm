@@ -810,12 +810,11 @@ sub nodeName {
 # (I):
 # - none
 # (O):
-# - returns the 'nodeRoot' directory specified in the site configuration to act as a replacement
-#   to the mounted filesystem as there is no logical machine in this Perl version
+# - returns the 'nodeRoot' directory - removed in v4.7
 
 sub nodeRoot {
-	my $result = $ep->site() ? ( $ep->var( 'nodeRoot' ) || $Const->{byOS}{$Config{osname}}{tempDir} ) : undef;
-	return $result;
+	msgErr( "TTP::nodeRoot() is deprecated and not replaczed. You should update your code." );
+	return undef;
 }
 
 # ------------------------------------------------------------------------------------------------

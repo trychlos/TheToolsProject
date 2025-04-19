@@ -21,13 +21,14 @@
 		"We can define here some variables at the site level."
 	],
 	"site": {
-		"commandsDir": "[eval:File::Spec->catdir( TTP::nodeRoot(), 'SiteResources', 'Commands' )]",
+		"commandsDir": "[eval:File::Spec->catdir( TTP::vars([ 'site', 'rootDir' ]), 'SiteResources', 'Commands' )]",
 		"workloadSummary_comments": [
 			"manage macros: SUBJECT, OPTIONS"
 		],
 		"workloadSummary": {
 			"command": "smtp.pl send -subject \"<SUBJECT>\" -to my-admin@example.com <OPTIONS>"
-		}
+		},
+		"rootDir": "C:\\CUSTOMER_1234"
 	},
 
 	"TTP": {
@@ -92,7 +93,7 @@
 
 		"DBMS": {
 			"backupsDir": "[eval:File::Spec->catdir( TTP::var([ 'DBMS', 'backupsRoot' ]), Time::Moment->now->strftime( '%y%m%d' ), TTP::nodeName())]",
-			"backupsRoot": "[eval:File::Spec->catdir( TTP::nodeRoot(), 'dailySQLBackups' )]",
+			"backupsRoot": "[eval:File::Spec->catdir( TTP::vars([ 'site', 'rootDir' ]), 'dailySQLBackups' )]",
 			"instance": "MSSQLSERVER",
 			"byInstance": {
 				"MSSQLSERVER": {
@@ -173,14 +174,6 @@
 				"regexp": ""
 			}
 		},
-
-		"nodeRoot_comments": [
-			"Historical reminder: in the logical machine paradigm, the root tree is located under the dynamically mounted filesystem, and this is one of its main prooperties.",
-			"When the site doesn't implement this paradigm, we have to define it explicitly.",
-			"This is a per-node overridable value, which defaults to C:\\Temp or /tmp depending of the running OS",
-			"The 'nodeRoot' directory can be got by the user via the 'ttp.pl vars --nodeRoot' command"
-		],
-		"nodeRoot": "C:\\Temp|/tmp",
 
 		"SMTPGateway": {
 			"host": "mail.example.com",

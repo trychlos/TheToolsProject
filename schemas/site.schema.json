@@ -675,8 +675,12 @@
                         }
                     }
                 },
+                "nodeRoot": {
+                    "description": "The root directory of the node. Deprecated in v4.7.",
+                    "deprecated": true
+                },
                 "nodesDirs": {
-                    "descriptions": "List of subdirectories of TTP_ROOTS where we can find nodes JSON configuration files. Deprecated in favor of 'nodes.dirs' in v4.1.",
+                    "description": "List of subdirectories of TTP_ROOTS where we can find nodes JSON configuration files. Deprecated in favor of 'nodes.dirs' in v4.1.",
                     "deprecated": true
                 },
                 "SMTPGateway": {
