@@ -6,10 +6,8 @@
 # @(-) --[no]verbose           run verbosely [${verbose}]
 # @(-) --[no]siteSpec          display the hardcoded site search specification [${siteSpec}]
 # @(-) --[no]credentialsDirs   display the list of credentials directories [${credentialsDirs}]
-# @(-) --[no]nodeRoot          display the site-defined root path [${nodeRoot}]
 # @(-) --[no]nodesDirs         display the site-defined nodes directories [${nodesDirs}]
 # @(-) --[no]logsRoot          display the TTP logs root (not daily) [${logsRoot}]
-# @(-) --[no]logsDaily         display the TTP daily root [${logsDaily}]
 # @(-) --[no]logsPeriodic      display the TTP periodic root [${logsPeriodic}]
 # @(-) --[no]logsCommands      display the current TTP logs directory [${logsCommands}]
 # @(-) --[no]logsMain          display the current TTP main logs file [${logsMain}]
@@ -47,10 +45,8 @@ my $defaults = {
 	verbose => 'no',
 	siteSpec => 'no',
 	credentialsDirs => 'no',
-	nodeRoot => 'no',
 	nodesDirs => 'no',
 	logsRoot => 'no',
-	logsDaily => 'no',
 	logsPeriodic => 'no',
 	logsCommands => 'no',
 	logsMain => 'no',
@@ -100,7 +96,7 @@ sub listCredentialsDirs {
 # -------------------------------------------------------------------------------------------------
 # list logsCommands value - e.g. 'C:\INLINGUA\Logs\240201\TTP'
 
-sub listLogscommands {
+sub listLogsCommands {
 	my $str = "logsCommands: ".TTP::logsCommands();
 	msgVerbose( "returning '$str'" );
 	print " $str".EOL;
@@ -118,7 +114,7 @@ sub listLogsdaily {
 # -------------------------------------------------------------------------------------------------
 # list logsMain value - e.g. 'C:\INLINGUA\Logs\240201\TTP\main.log'
 
-sub listLogsmain {
+sub listLogsMain {
 	my $str = "logsMain: ".TTP::logsMain();
 	msgVerbose( "returning '$str'" );
 	print " $str".EOL;
@@ -136,7 +132,7 @@ sub listLogsPeriodic {
 # -------------------------------------------------------------------------------------------------
 # list logsRoot value - e.g. 'C:\INLINGUA\Logs'
 
-sub listLogsroot {
+sub listLogsRoot {
 	my $str = "logsRoot: ".TTP::logsRoot();
 	msgVerbose( "returning '$str'" );
 	print " $str".EOL;
@@ -154,7 +150,7 @@ sub listNoderoot {
 # -------------------------------------------------------------------------------------------------
 # list nodesDirs value - e.g. '[ 'etc/nodes', 'nodes', 'etc/machines', 'machines' ]'
 
-sub listNodesdirs {
+sub listNodesDirs {
 	my $finder = TTP::Node->finder();
 	my $str = "nodesDirs: [".join( ',', @{$finder->{dirs}} )."]";
 	msgVerbose( "returning '$str'" );
@@ -216,6 +212,8 @@ msgVerbose( "got alertsDir='".( $opt_alertsDir ? 'true':'false' )."'" );
 @opt_keys= split( /,/, join( ',', @opt_keys ));
 msgVerbose( "got keys='".join( ',', @opt_keys )."'" );
 
+msgErr( "'--nodesRoot' option is deprecated and not replaced. You should update your configurations and/or your code." ) if $opt_nodeRoot;
+
 msgWarn( "'--logsDaily' option is deprecated in favor of '--logsPeriodic'. You should update your configurations and/or your code." ) if $opt_logsDaily;
 
 if( !TTP::errs()){
@@ -223,11 +221,10 @@ if( !TTP::errs()){
 	listCredentialsDirs() if $opt_credentialsDirs;
 	listLogsdaily() if $opt_logsDaily;
 	listLogsPeriodic() if $opt_logsPeriodic;
-	listLogscommands() if $opt_logsCommands;
-	listLogsmain() if $opt_logsMain;
-	listLogsroot() if $opt_logsRoot;
-	listNoderoot() if $opt_nodeRoot;
-	listNodesdirs() if $opt_nodesDirs;
+	listLogsCommands() if $opt_logsCommands;
+	listLogsMain() if $opt_logsMain;
+	listLogsRoot() if $opt_logsRoot;
+	listNodesDirs() if $opt_nodesDirs;
 	listSitespec() if $opt_siteSpec;
 	listByKeys() if scalar @opt_keys;
 }

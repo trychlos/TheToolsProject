@@ -22,6 +22,7 @@
     - Deprecate 'logsCommands' variable in favor of 'logs.commandsDir'
     - Deprecate 'logsMain' variable in favor of 'logs.mainFile'
     - Deprecate 'Message' variable in favor of 'messages'
+    - Deprecate, do not replace, nodeRoot() (todo #76)
 
 ### 4.6.0
 
