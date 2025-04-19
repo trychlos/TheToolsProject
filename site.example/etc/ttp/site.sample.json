@@ -142,16 +142,9 @@
 		},
 
 		"logs": {
-			"commandsDir": "[eval:TTP::logsPeriodic()]",
 			"periodicDir": "[eval:File::Spec->catdir( TTP::logsRoot(), Time::Moment->now->strftime( '%y%m%d' ))]",
 			"rootDir": "[eval:File::Spec->catdir( TTP::tempDir(), 'TTP' )]"
 		},
-
-		"logsMain_comments": [
-			"The full pathname of the file where TTP writes commands and verbs logs",
-			"The 'logsCommands' directory can be got by the user via the 'ttp.pl vars --logsMain' command"
-		],
-		"logsMain": "[eval:File::Spec->catfile( TTP::logsCommands(), 'main.log' )]",
 
 		"Message_comments": [
 			"Define the default behavior for msgDummy(), msgErr(), msgOut(), msgVerbose() and msgWarn() functions",

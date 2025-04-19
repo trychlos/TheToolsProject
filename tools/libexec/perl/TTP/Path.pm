@@ -376,6 +376,34 @@ sub logsCommands {
 }
 
 # ------------------------------------------------------------------------------------------------
+# Compute and returns the main log filename.
+# As a particular case, we emit the deprecation warning only once to not clutter the user.
+# (I):
+# - none
+# (O):
+# - returns the 'logs.mainFile' full pathname, which may be undef very early in the bootstrap process
+#   and at least not definitive while the node has not been instanciated/loaded/evaluated
+
+sub logsMain {
+	my $dir;
+	my $node = $ep ? $ep->node() : undef;
+	if( $node ){
+		$dir = $ep->var([ 'logs', 'mainFile' ]);
+		if( !$dir ){
+			$dir = $ep->var( 'logsMain' );
+			if( $dir ){
+				$ep->{_warnings} //= {};
+				if( !$ep->{_warnings}{logsmain} ){
+					msgWarn( "'logsMain' property is deprecated in favor of 'logs.mainFile'. You should update your configurations." );
+					$ep->{_warnings}{logsmain} = true;
+				}
+			}
+		}
+	}
+	return $dir || File::Spec->catfile( TTP::Path::logsCommands(), 'main.log' );
+}
+
+# ------------------------------------------------------------------------------------------------
 # Compute and returns the periodic root directory of the logs tree.
 # As a particular case, we emit the deprecation warning only once to not clutter the user.
 # (I):
