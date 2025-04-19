@@ -141,27 +141,17 @@
 			}
 		},
 
-		"logsRoot_comments": [
-			"The (per-node overridable) root directory of the logs tree",
-			"Hardcoded default is C:\\Temp or /tmp depending of the running OS",
-			"The 'logsRoot' directory can be got by the user via the 'ttp.pl vars --logsRoot' command"
-		],
-		"logsRoot": "[eval:File::Spec->catdir( TTP::nodeRoot(), 'dailyLogs' )]",
-
-		"logsDaily_comments": [
-			"The (per-node overridable) daily root of the logs tree",
-			"Rationale: having a per-day or per-week or per-month logs tree is the easiest way in order to periodically purge the logs.",
-			"This is not mandatory at all, and the default is to stick to the 'logsRoot' value",
-			"The 'logsDaily' directory can be got by the user via the 'ttp.pl vars --logsDaily' command"
-		],
-		"logsDaily": "[eval:File::Spec->catdir( TTP::logsRoot(), Time::Moment->now->strftime( '%y%m%d' ))]",
+		"logs": {
+			"periodicDir": "[eval:File::Spec->catdir( TTP::logsRoot(), Time::Moment->now->strftime( '%y%m%d' ))]",
+			"rootDir": "[eval:File::Spec->catdir( TTP::tempDir(), 'TTP' )]"
+		},
 
 		"logsCommands_comments": [
 			"The daily directory where TTP writes commands and verbs logs",
-			"Defaults to the 'logsDaily' value",
+			"Defaults to the 'logsPeriodic' value",
 			"The 'logsCommands' directory can be got by the user via the 'ttp.pl vars --logsCommands' command"
 		],
-		"logsCommands": "[eval:File::Spec->catdir( TTP::logsDaily(), 'TTP' )]",
+		"logsCommands": "[eval:File::Spec->catdir( TTP::logsPeriodic(), 'TTP' )]",
 
 		"logsMain_comments": [
 			"The full pathname of the file where TTP writes commands and verbs logs",

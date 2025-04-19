@@ -10,6 +10,7 @@
 # @(-) --[no]nodesDirs         display the site-defined nodes directories [${nodesDirs}]
 # @(-) --[no]logsRoot          display the TTP logs root (not daily) [${logsRoot}]
 # @(-) --[no]logsDaily         display the TTP daily root [${logsDaily}]
+# @(-) --[no]logsPeriodic      display the TTP periodic root [${logsPeriodic}]
 # @(-) --[no]logsCommands      display the current TTP logs directory [${logsCommands}]
 # @(-) --[no]logsMain          display the current TTP main logs file [${logsMain}]
 # @(-) --[no]alertsDir         display the configured alerts directory [${alertsDir}]
@@ -50,6 +51,7 @@ my $defaults = {
 	nodesDirs => 'no',
 	logsRoot => 'no',
 	logsDaily => 'no',
+	logsPeriodic => 'no',
 	logsCommands => 'no',
 	logsMain => 'no',
 	alertsDir => 'no',
@@ -62,6 +64,7 @@ my $opt_nodeRoot = false;
 my $opt_nodesDirs = false;
 my $opt_logsRoot = false;
 my $opt_logsDaily = false;
+my $opt_logsPeriodic = false;
 my $opt_logsCommands = false;
 my $opt_logsMain = false;
 my $opt_alertsDir = false;
@@ -122,6 +125,15 @@ sub listLogsmain {
 }
 
 # -------------------------------------------------------------------------------------------------
+# list logsperiodic value - e.g. 'C:\INLINGUA\Logs\240201'
+
+sub listLogsPeriodic {
+	my $str = "logsPeriodic: ".TTP::logsPeriodic();
+	msgVerbose( "returning '$str'" );
+	print " $str".EOL;
+}
+
+# -------------------------------------------------------------------------------------------------
 # list logsRoot value - e.g. 'C:\INLINGUA\Logs'
 
 sub listLogsroot {
@@ -173,6 +185,7 @@ if( !GetOptions(
 	"nodesDirs!"		=> \$opt_nodesDirs,
 	"logsRoot!"			=> \$opt_logsRoot,
 	"logsDaily!"		=> \$opt_logsDaily,
+	"logsPeriodic!"		=> \$opt_logsPeriodic,
 	"logsCommands!"		=> \$opt_logsCommands,
 	"logsMain!"			=> \$opt_logsMain,
 	"alertsDir!"		=> \$opt_alertsDir,
@@ -196,16 +209,20 @@ msgVerbose( "got nodeRoot='".( $opt_nodeRoot ? 'true':'false' )."'" );
 msgVerbose( "got nodesDirs='".( $opt_nodesDirs ? 'true':'false' )."'" );
 msgVerbose( "got logsRoot='".( $opt_logsRoot ? 'true':'false' )."'" );
 msgVerbose( "got logsDaily='".( $opt_logsDaily ? 'true':'false' )."'" );
+msgVerbose( "got logsPeriodic='".( $opt_logsPeriodic ? 'true':'false' )."'" );
 msgVerbose( "got logsCommands='".( $opt_logsCommands ? 'true':'false' )."'" );
 msgVerbose( "got logsMain='".( $opt_logsMain ? 'true':'false' )."'" );
 msgVerbose( "got alertsDir='".( $opt_alertsDir ? 'true':'false' )."'" );
 @opt_keys= split( /,/, join( ',', @opt_keys ));
 msgVerbose( "got keys='".join( ',', @opt_keys )."'" );
 
+msgWarn( "'--logsDaily' option is deprecated in favor of '--logsPeriodic'. You should update your configurations and/or your code." ) if $opt_logsDaily;
+
 if( !TTP::errs()){
 	listAlertsDir() if $opt_alertsDir;
 	listCredentialsDirs() if $opt_credentialsDirs;
 	listLogsdaily() if $opt_logsDaily;
+	listLogsPeriodic() if $opt_logsPeriodic;
 	listLogscommands() if $opt_logsCommands;
 	listLogsmain() if $opt_logsMain;
 	listLogsroot() if $opt_logsRoot;
