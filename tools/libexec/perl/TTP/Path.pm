@@ -33,7 +33,8 @@ use TTP::Message qw( :all );
 #   > 'excludeFiles': a ref to a list of source file globs to exclude
 #   > 'options': additional options to pass to the (external) command
 #   > 'emptyTree': whether to empty the target tree before the copy, defaulting to true
-# return true|false
+# (O):
+# returns true|false
 
 sub copyDir {
 	my ( $source, $target, $opts ) = @_;
@@ -169,7 +170,7 @@ sub _copy_match_file {
 # TTP allows to provide a system-specific command in its configuration file
 # (I):
 # - source: the source volume, directory and filename
-# - target :the target volume and directory
+# - target :the target volume, directory and filename
 # - an optional options hash ref with following keys:
 #   > 'options': additional options to pass to the (external) command
 #   > 'makeDirExist', when using fcopy(), whether a source directory must be created on the target, defaulting to false
@@ -186,10 +187,19 @@ sub copyFile {
 	TTP::Message::msgVerbose( __PACKAGE__."::copyFile() entering with source='$source' target='$target'" );
 	my $command = $opts->{command} || TTP::commandByOS([ 'copyFile' ], { withCommand => true });
 	if( $command ){
+		my ( $src_vol, $src_dir, $src_file ) = File::Spec->splitpath( $source );
+		my $src_path = File::Spec->catpath( $src_vol, $src_dir, "" );
+		my ( $target_vol, $target_dir, $target_file ) = File::Spec->splitpath( $target );
+		my $target_path = File::Spec->catpath( $target_vol, $target_dir, "" );
+		#TTP::Message::msgVerbose( __PACKAGE__."::copyFile() sourcedir='$src_path' sourcefile='$src_file' targetdir='$target_path' targetfile='$target_file'" );
 		my $cmdres = TTP::commandExec( $command, {
 			macros => {
 				SOURCE => $source,
+				SOURCEDIR => $src_path,
+				SOURCEFILE => $src_file,
 				TARGET => $target,
+				TARGETDIR => $target_path,
+				TARGETFILE => $target_file,
 				OPTIONS => $opts->{options}
 			}
 		});

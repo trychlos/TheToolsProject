@@ -60,7 +60,7 @@
 		},
 
 		"copyDir_comments": [
-			"manage macros: SOURCE, TARGET"
+			"manage macros: SOURCE, TARGET, EXCLUDEDIRS, EXCLUDEFILES and OPTIONS"
 		],
 		"copyDir": {
 			"byOS": {
@@ -70,15 +70,8 @@
 			}
 		},
 		"copyFile_comments": [
-			"manage macros: SOURCE, TARGET, FILE"
+			"manage macros: SOURCE, SOURCEDIR, SOURCEFILE, TARGET, TARGETDIR, TARGETFILE, OPTIONS"
 		],
-		"copyFile": {
-			"byOS": {
-				"MSWin32": {
-					"command": "robocopy <SOURCE> <TARGET> <FILE> /TS /FP /NP /BYTES"
-				}
-			}
-		},
 
 		"credentials": {
 			"dirs": [
