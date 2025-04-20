@@ -27,7 +27,6 @@
 |      | 2024- 4-14 | node-monitor-daemon.pl is moved to libexec/daemons |
 |      | 2024- 4-17 | mqtt-monitor-daemon.pl is moved to libexec/daemons |
 |      | 2024- 4-17 | at the moment, still exists backup-monitor-daemon in site tree - to be evaluated |
-|   99 | 2024- 4-17 | daemons should have a HUP command to fully reload their config |
 |  108 |  |  |
 
 ---
@@ -263,6 +262,8 @@
 |      | 2024- 4-17 | done in node-monitor-daemon.pl and alerts-monitor-daemon.pl |
 |   98 | 2024- 4-17 | remove TTP::Ports |
 |      | 2024- 4-17 | done |
+|   99 | 2024- 4-17 | daemons should have a HUP command to fully reload their config |
+|      | 2024- 4-20 | done |
 |  100 | 2024- 4-17 | review MQTT gateway schema so that the port number is part of the host address |
 |      | 2024- 4-18 | done |
 |  101 | 2024- 4-17 | review SMTP gateway schema so that the port number is part of the host address |

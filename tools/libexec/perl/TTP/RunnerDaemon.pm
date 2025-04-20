@@ -89,6 +89,7 @@ my $Const = {
 	# the commands the class manages for all daemons
 	commonCommands => {
 		help => \&_do_help,
+		hup => \&_do_hup,
 		status => \&_do_status,
 		terminate => \&_do_terminate
 	},
@@ -123,6 +124,24 @@ sub _do_help {
 		$hash->{$k} = 1;
 	}
 	my $answer = join( ', ', sort keys %{$hash} ).EOL;
+	return $answer;
+}
+
+# ------------------------------------------------------------------------------------------------
+# answers to 'hup' command
+# reload the JSON configuration
+# (I):
+# - the received request
+# - the daemon-specific commands
+# (O):
+# - an empty answer
+
+sub _do_hup {
+	my ( $self, $req, $commands ) = @_;
+
+	$self->config()->reload();
+
+	my $answer = "";
 	return $answer;
 }
 

@@ -311,6 +311,22 @@ sub name {
 }
 
 # ------------------------------------------------------------------------------------------------
+# Reload the configuration file
+# (I):
+# - none
+# (O):
+# - returns true|false
+
+sub reload {
+	my ( $self ) = @_;
+
+	my $jsonPath = $self->jsonPath();
+	my $res = $self->_loadConfig({ jsonPath => $jsonPath });
+
+	return $res;
+}
+
+# ------------------------------------------------------------------------------------------------
 # Whether publishing to text-based telemetry system is an enabled feature
 # this is true when the textingInterval is greater or equal to the mminimum allowed.
 # (I):

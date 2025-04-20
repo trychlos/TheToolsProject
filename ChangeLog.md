@@ -7,6 +7,7 @@
     Release date: 
 
     - Define new verb daemon.pl hup (todo #99), thus bumping minor candidate version number
+    - TTP::RunnerDaemon honors 'hup' command
 
 ### 4.7.2
 
