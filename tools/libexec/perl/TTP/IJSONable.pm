@@ -322,7 +322,7 @@ sub var {
 		msgErr( __PACKAGE__."::var() expects keys be a scalar, or an array of scalars, or an array of arrays of scalars, found empty" );
 		return undef;
 	}
-	#$varDebug = ref( $keys ) eq 'ARRAY' && scalar( @{$keys} ) >= 2 && $keys->[0] eq 'site' && $keys->[1] eq 'myVar';
+	#$varDebug = ref( $keys ) eq 'ARRAY' && scalar( @{$keys} ) >= 3 && $keys->[1] eq 'logs' && $keys->[2] eq 'rootDir';
 	print STDERR __PACKAGE__."::var() self=".ref( $self )." keys=".Dumper( $keys )." searching in ".ref( $base || $self ).EOL if $varDebug;
 	#if( $varDebug ){
 	#	print STDERR __PACKAGE__."::var() self ".ref( $self ).EOL;
@@ -342,22 +342,20 @@ sub var {
 	} else {
 		$jsonData = $self->jsonData();
 	}
-	my $value = $self->jsonVar_rec( $keys, $jsonData, $jsonData );
-	print STDERR __PACKAGE__."::var() eventually returns ".Dumper( $value ) if $varDebug;
+	my $level = 0;
+	my $value = $self->jsonVar_rec( $keys, $jsonData, $jsonData, $level );
+	print STDERR __PACKAGE__."::var() (rec=$level) eventually returns ".Dumper( $value ) if $varDebug;
 	return $value;
 }
 
 # keys is a scalar, or an array of scalars, or an array of arrays of scalars
 
 sub jsonVar_rec {
-	my ( $self, $keys, $base, $initialBase ) = @_;
-	print STDERR __PACKAGE__."::jsonVar_rec() entering with keys=".Dumper( $keys )." base=".Dumper( $base ) if $varDebug;
-	#return undef if !defined $base;
-	#return $base if !defined( $base ) || ref( $base ) ne 'HASH';
+	my ( $self, $keys, $base, $initialBase, $level ) = @_;
+	print STDERR __PACKAGE__."::jsonVar_rec() entering (level=$level) with keys=".Dumper( $keys )." base=".Dumper( $base ) if $varDebug;
 	my $ref = ref( $keys );
-	#print "keys=[".( ref( $keys ) eq 'ARRAY' ? join( ',', @{$keys} ) : $keys )."] base=$base".EOL;
 	if( $ref eq 'ARRAY' ){
-		for( my $i=0 ; $i<scalar @{$keys} ; ++$i ){
+EXT:	for( my $i=0 ; $i<scalar @{$keys} ; ++$i ){
 			my $k = $keys->[$i];
 			$ref = ref( $k );
 			if( $ref eq 'ARRAY' ){
@@ -365,22 +363,21 @@ sub jsonVar_rec {
 				for( my $j=0 ; $j<scalar @{$k} ; ++$j ){
 					$newKeys[$i] = $k->[$j];
 					$base = $initialBase;
-					$base = $self->jsonVar_rec( \@newKeys, $base, $initialBase );
-					last if defined( $base );
+					$base = $self->jsonVar_rec( \@newKeys, $base, $initialBase, $level+1 );
+					last EXT if defined( $base );
 				}
 				if( !defined( $base )){
-					print STDERR __PACKAGE__."::jsonVar_rec() returns undef as no key has been found among [ ".join( ', ', @{$keys} )." ]".EOL if $varDebug;
-					return undef;
+					print STDERR __PACKAGE__."::jsonVar_rec() (level=$level) returns undef as no key has been found among [ ".join( ', ', @{$keys} )." ]".EOL if $varDebug;
 				}
 			} elsif( $ref ){
 				msgErr( __PACKAGE__."::jsonVar_rec() unexpected intermediate ref='$ref'" );
-				return undef;
 			} else {
-				print STDERR __PACKAGE__."::jsonVar_rec() will search for '$k' key in ".Dumper( $base ) if $varDebug;
-				$base = $self->jsonVar_rec( $k, $base, $initialBase );
+				print STDERR __PACKAGE__."::jsonVar_rec() (level=$level) will search for '$k' key in ".Dumper( $base ) if $varDebug;
+				my $prevbase = $base;
+				$base = $self->jsonVar_rec( $k, $base, $initialBase, $level+1 );
 				if( !defined( $base )){
-					print STDERR __PACKAGE__."::jsonVar_rec() returns undef as key='$k' has not been found in ".Dumper( $base ) if $varDebug;
-					return undef;
+					print STDERR __PACKAGE__."::jsonVar_rec() (level=$level) returns undef as key='$k' has not been found in ".Dumper( $prevbase ) if $varDebug;
+					last;
 				}
 			}
 		}
@@ -388,8 +385,8 @@ sub jsonVar_rec {
 		msgErr( __PACKAGE__."::jsonVar_rec() unexpected final ref='$ref'" );
 		return undef;
 	} else {
-		# the key here may be empty when targeting the top of the hash
-		print STDERR __PACKAGE__."::jsonVar_rec() searching for '$keys' key in ".Dumper( $base ) if $varDebug;
+		# the key here may be empty when targeting the top of the hash, if so, then just return the hash
+		print STDERR __PACKAGE__."::jsonVar_rec() (level=$level) searching for '$keys' key in ".Dumper( $base ) if $varDebug;
 		if( $keys ){
 			if( defined( $base )){
 				if( ref( $base ) eq 'HASH' ){
@@ -404,7 +401,7 @@ sub jsonVar_rec {
 			}
 		}
 	}
-	print STDERR __PACKAGE__."::jsonVar_rec() returning ".Dumper( $base ) if $varDebug;
+	print STDERR __PACKAGE__."::jsonVar_rec() (level=$level) returning ".Dumper( $base ) if $varDebug;
 	return $base;
 }
 

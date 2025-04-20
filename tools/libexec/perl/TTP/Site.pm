@@ -119,6 +119,7 @@ sub var {
 	my ( $self, $keys ) = @_;
 	my @newKeys = ref $keys eq 'ARRAY' ? @{$keys} : ( $keys );
 	unshift( @newKeys, $Const->{prefix} );
+	print STDERR __PACKAGE__."::var() keys=[ ".join( ', ', @newKeys )." ]".EOL if $ENV{TTP_DEBUG};
 	my $value = $self->TTP::IJSONable::var( \@newKeys, $self->jsonData());
 	return $value;
 }

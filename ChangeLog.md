@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - Fix regression in TTP::IJSONable::var() introduced when coding #107
 
 ### 4.7.0
 
