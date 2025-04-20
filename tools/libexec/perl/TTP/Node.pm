@@ -250,8 +250,9 @@ sub var {
 	my ( $self, $keys ) = @_;
 	print STDERR __PACKAGE__."::var() keys=".( ref( $keys ) ? "[ ".join( ', ', @{$keys} )." ]" : "'$keys'" ).EOL if $ENV{TTP_DEBUG};
 	my $value = $self->TTP::IJSONable::var( $keys );
-	print STDERR __PACKAGE__."::var() value='".( $value || '(undef)' )."'".EOL if $ENV{TTP_DEBUG};
+	print STDERR __PACKAGE__."::var() Node.value='".( $value || '(undef)' )."'".EOL if $ENV{TTP_DEBUG};
 	$value = $self->ep()->site()->var( $keys ) if !defined( $value );
+	print STDERR __PACKAGE__."::var() Site.value='".( $value || '(undef)' )."'".EOL if $ENV{TTP_DEBUG};
 	return $value;
 }
 
