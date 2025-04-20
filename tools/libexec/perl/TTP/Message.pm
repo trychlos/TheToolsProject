@@ -383,9 +383,9 @@ sub _printMsg_color {
 	my ( $level ) = @_;
 	my $color = '';
 	if( $Const->{$level}{key} ){
-		$color = $ep->var([ 'messages', $Const->{$level}{key}, 'color' ]);
+		$color = $ep->var([ 'messages', $Const->{$level}{key}, 'color' ]) || '';
 		if( !$color ){
-			$color = $ep->var([ 'Message', $Const->{$level}{key}, 'color' ]);
+			$color = $ep->var([ 'Message', $Const->{$level}{key}, 'color' ]) || '';
 			if( $color ){
 				$ep->{_warnings} //= {};
 				if( !$ep->{_warnings}{message} ){
@@ -410,9 +410,9 @@ sub _printMsg_marker {
 	my ( $level ) = @_;
 	my $marker = '';
 	if( $Const->{$level}{key} ){
-		$marker = $ep->var([ 'messages', $Const->{$level}{key}, 'marker' ]);
+		$marker = $ep->var([ 'messages', $Const->{$level}{key}, 'marker' ]) || '';
 		if( !$marker ){
-			$marker = $ep->var([ 'Message', $Const->{$level}{key}, 'marker' ]);
+			$marker = $ep->var([ 'Message', $Const->{$level}{key}, 'marker' ]) || '';
 			if( $marker ){
 				$ep->{_warnings} //= {};
 				if( !$ep->{_warnings}{message} ){
