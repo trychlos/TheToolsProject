@@ -10,6 +10,7 @@
 # - subject, mailto, content
 
 package TTP::SMTP;
+die __PACKAGE__ . " must be loaded as TTP::SMTP\n" unless __PACKAGE__ eq 'TTP::SMTP';
 
 use strict;
 use utf8;

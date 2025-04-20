@@ -31,6 +31,8 @@
 # which are not yet in the running context.
 
 package TTP::IJSONable;
+die __PACKAGE__ . " must be loaded as TTP::IJSONable\n" unless __PACKAGE__ eq 'TTP::IJSONable';
+
 our $VERSION = '1.00';
 
 use strict;

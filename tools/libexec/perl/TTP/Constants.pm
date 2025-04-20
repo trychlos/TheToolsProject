@@ -17,6 +17,7 @@
 # see <http://www.gnu.org/licenses/>.
 
 package TTP::Constants;
+die __PACKAGE__ . " must be loaded as TTP::Constants\n" unless __PACKAGE__ eq 'TTP::Constants';
 
 use strict;
 use utf8;

@@ -19,6 +19,7 @@
 # A class which just implements the IJSONable role.
 
 package TTP::JSONable;
+die __PACKAGE__ . " must be loaded as TTP::JSONable\n" unless __PACKAGE__ eq 'TTP::JSONable';
 
 use base qw( TTP::Base );
 our $VERSION = '1.00';

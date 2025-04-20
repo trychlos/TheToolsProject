@@ -19,6 +19,8 @@
 # Manage the helps both for commands+verbs than for external scripts.
 
 package TTP::IHelpable;
+die __PACKAGE__ . " must be loaded as TTP::IHelpable\n" unless __PACKAGE__ eq 'TTP::IHelpable';
+
 our $VERSION = '1.00';
 
 use strict;

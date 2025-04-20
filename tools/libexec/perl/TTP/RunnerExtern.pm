@@ -20,6 +20,7 @@
 # RunnerExtern has one qualifier, the program name. e.g. 'workload-summary.pl'
 
 package TTP::RunnerExtern;
+die __PACKAGE__ . " must be loaded as TTP::RunnerExtern\n" unless __PACKAGE__ eq 'TTP::RunnerExtern';
 
 use base qw( TTP::Runner );
 our $VERSION = '1.00';

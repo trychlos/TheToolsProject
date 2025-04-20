@@ -20,6 +20,7 @@
 # All these executables share some common features provided by the roles below.
 
 package TTP::Runner;
+die __PACKAGE__ . " must be loaded as TTP::Runner\n" unless __PACKAGE__ eq 'TTP::Runner';
 
 use base qw( TTP::Base );
 our $VERSION = '1.00';

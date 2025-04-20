@@ -23,6 +23,7 @@
 # the caller.
 
 package TTP::Site;
+die __PACKAGE__ . " must be loaded as TTP::Site\n" unless __PACKAGE__ eq 'TTP::Site';
 
 use base qw( TTP::Base );
 our $VERSION = '1.00';

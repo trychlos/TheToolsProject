@@ -24,6 +24,7 @@
 # RunnerVerb has two qualifiers, the command and the verb itself. e.g. 'ttp.pl list'
 
 package TTP::RunnerVerb;
+die __PACKAGE__ . " must be loaded as TTP::RunnerVerb\n" unless __PACKAGE__ eq 'TTP::RunnerVerb';
 
 use base qw( TTP::Runner );
 our $VERSION = '1.00';

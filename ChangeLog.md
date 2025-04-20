@@ -10,6 +10,7 @@
     - TTP::RunnerDaemon honors 'hup' command
     - DBMS no more uses TTP::SqlServer but only dynamically loads it
     - TTP::SqlServer only uses Win32::SqlServer on MSWin32 platforms
+    - Check that each Perl module is loaded through its canonical name
 
 ### 4.7.2
 

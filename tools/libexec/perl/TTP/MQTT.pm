@@ -19,6 +19,7 @@
 # MQTT management.
 
 package TTP::MQTT;
+die __PACKAGE__ . " must be loaded as TTP::MQTT\n" unless __PACKAGE__ eq 'TTP::MQTT';
 
 use strict;
 use utf8;

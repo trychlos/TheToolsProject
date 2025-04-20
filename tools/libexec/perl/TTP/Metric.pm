@@ -40,6 +40,7 @@
 #   > doesn't care about labels ordering
 
 package TTP::Metric;
+die __PACKAGE__ . " must be loaded as TTP::Metric\n" unless __PACKAGE__ eq 'TTP::Metric';
 
 use base qw( TTP::Base );
 our $VERSION = '1.00';

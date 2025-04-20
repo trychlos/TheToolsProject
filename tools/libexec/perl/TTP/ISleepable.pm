@@ -30,6 +30,8 @@
 # Then sleepableStart(), and let each sub be called at its own interval
 
 package TTP::ISleepable;
+die __PACKAGE__ . " must be loaded as TTP::ISleepable\n" unless __PACKAGE__ eq 'TTP::ISleepable';
+
 our $VERSION = '1.00';
 
 use strict;

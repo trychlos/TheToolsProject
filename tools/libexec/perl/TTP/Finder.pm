@@ -19,6 +19,7 @@
 # An empty - but Findable - class
 
 package TTP::Finder;
+die __PACKAGE__ . " must be loaded as TTP::Finder\n" unless __PACKAGE__ eq 'TTP::Finder';
 
 use base qw( TTP::Base );
 our $VERSION = '1.00';

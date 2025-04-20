@@ -49,6 +49,7 @@
 # RunnerDaemon has two qualifiers, the daemon name and the configuration name. e.g. 'mqtt-monitor-daemon.pl trychlos-mqtt-monitor'
 
 package TTP::RunnerDaemon;
+die __PACKAGE__ . " must be loaded as TTP::RunnerDaemon\n" unless __PACKAGE__ eq 'TTP::RunnerDaemon';
 
 use base qw( TTP::RunnerExtern );
 our $VERSION = '1.00';
