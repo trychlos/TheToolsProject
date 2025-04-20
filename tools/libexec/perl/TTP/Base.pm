@@ -23,6 +23,7 @@
 # - and stored as a reference in this base class, so available through $object->ep().
 
 package TTP::Base;
+die __PACKAGE__ . " must be loaded as TTP::Base\n" unless __PACKAGE__ eq 'TTP::Base';
 
 our $VERSION = '1.00';
 

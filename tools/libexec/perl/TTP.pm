@@ -17,6 +17,7 @@
 # see <http://www.gnu.org/licenses/>.
 
 package TTP;
+die __PACKAGE__ . " must be loaded as TTP\n" unless __PACKAGE__ eq 'TTP';
 
 use strict;
 use utf8;

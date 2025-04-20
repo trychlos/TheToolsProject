@@ -19,6 +19,8 @@
 # Find a file
 
 package TTP::IFindable;
+die __PACKAGE__ . " must be loaded as TTP::IFindable\n" unless __PACKAGE__ eq 'TTP::IFindable';
+
 our $VERSION = '1.00';
 
 use strict;

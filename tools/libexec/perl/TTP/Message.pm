@@ -34,6 +34,7 @@
 #	in contrary just add a line to TTP/main.log
 
 package TTP::Message;
+die __PACKAGE__ . " must be loaded as TTP::Message\n" unless __PACKAGE__ eq 'TTP::Message';
 
 use strict;
 use utf8;

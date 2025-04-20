@@ -25,6 +25,8 @@
 # The accepted status is set to true at instanciation time.
 
 package TTP::IAcceptable;
+die __PACKAGE__ . " must be loaded as TTP::IAcceptable\n" unless __PACKAGE__ eq 'TTP::IAcceptable';
+
 our $VERSION = '1.00';
 
 use strict;

@@ -19,6 +19,7 @@
 # OVH API Access
 
 package TTP::Ovh;
+die __PACKAGE__ . " must be loaded as TTP::Ovh\n" unless __PACKAGE__ eq 'TTP::Ovh';
 
 use strict;
 use utf8;

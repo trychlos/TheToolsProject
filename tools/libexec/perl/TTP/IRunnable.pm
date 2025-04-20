@@ -23,6 +23,8 @@
 # 
 
 package TTP::IRunnable;
+die __PACKAGE__ . " must be loaded as TTP::IRunnable\n" unless __PACKAGE__ eq 'TTP::IRunnable';
+
 our $VERSION = '1.00';
 
 use strict;

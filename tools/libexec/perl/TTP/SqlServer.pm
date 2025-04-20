@@ -19,6 +19,7 @@
 # A package dediccated to Microsoft SQL-Server
 
 package TTP::SqlServer;
+die __PACKAGE__ . " must be loaded as TTP::SqlServer\n" unless __PACKAGE__ eq 'TTP::SqlServer';
 
 use strict;
 use utf8;

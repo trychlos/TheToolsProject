@@ -31,6 +31,8 @@
 # After their initialization here, 'dummy' and 'verbose' flags only depend of GetOptions().
 
 package TTP::IOptionable;
+die __PACKAGE__ . " must be loaded as TTP::IOptionable\n" unless __PACKAGE__ eq 'TTP::IOptionable';
+
 our $VERSION = '1.00';
 
 use strict;

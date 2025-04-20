@@ -26,6 +26,7 @@
 #   'Services' object of its own configuration file
 
 package TTP::Service;
+die __PACKAGE__ . " must be loaded as TTP::Service\n" unless __PACKAGE__ eq 'TTP::Service';
 
 use base qw( TTP::Base );
 our $VERSION = '1.00';

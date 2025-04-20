@@ -3,6 +3,7 @@
 # Various paths management
 
 package TTP::Path;
+die __PACKAGE__ . " must be loaded as TTP::Path\n" unless __PACKAGE__ eq 'TTP::Path';
 
 use strict;
 use utf8;

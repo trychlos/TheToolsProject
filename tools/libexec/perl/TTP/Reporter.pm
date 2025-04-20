@@ -19,6 +19,7 @@
 # A JSONable class to read and write execution reports
 
 package TTP::Reporter;
+die __PACKAGE__ . " must be loaded as TTP::Reporter\n" unless __PACKAGE__ eq 'TTP::Reporter';
 
 use base qw( TTP::Base );
 our $VERSION = '1.00';

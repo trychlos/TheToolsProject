@@ -19,6 +19,7 @@
 # Credentials
 
 package TTP::Credentials;
+die __PACKAGE__ . " must be loaded as TTP::Credentials\n" unless __PACKAGE__ eq 'TTP::Credentials';
 
 use strict;
 use utf8;

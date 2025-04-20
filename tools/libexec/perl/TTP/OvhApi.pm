@@ -6,6 +6,7 @@
 # pwi 2024- 3- 5 patched to provide the credentials ini file path at connection instanciation time
 
 package TTP::OvhApi;
+die __PACKAGE__ . " must be loaded as TTP::OvhApi\n" unless __PACKAGE__ eq 'TTP::OvhApi';
 
 use strict;
 use utf8;

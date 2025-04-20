@@ -3,6 +3,7 @@
 # See OvhApi.pm
 
 package TTP::OvhAnswer;
+die __PACKAGE__ . " must be loaded as TTP::OvhAnswer\n" unless __PACKAGE__ eq 'TTP::OvhAnswer';
 
 use strict;
 use utf8;

@@ -25,6 +25,7 @@
 # - any var defined in the underlying JSON configurations with $ep->var().
 
 package TTP::EP;
+die __PACKAGE__ . " must be loaded as TTP::EP\n" unless __PACKAGE__ eq 'TTP::EP';
 
 our $VERSION = '1.00';
 

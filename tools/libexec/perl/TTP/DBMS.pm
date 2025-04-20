@@ -20,6 +20,7 @@
 #(Win32::SqlServer, PostgreSQL and MariaDB are involved)
 
 package TTP::DBMS;
+die __PACKAGE__ . " must be loaded as TTP::DBMS\n" unless __PACKAGE__ eq 'TTP::DBMS';
 
 use base qw( TTP::Base );
 our $VERSION = '1.00';

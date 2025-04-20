@@ -26,6 +26,7 @@
 # Other daemons are free to derive this class, or just do not manage :(
 
 package TTP::DaemonConfig;
+die __PACKAGE__ . " must be loaded as TTP::DaemonConfig\n" unless __PACKAGE__ eq 'TTP::DaemonConfig';
 
 use base qw( TTP::Base );
 our $VERSION = '1.00';

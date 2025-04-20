@@ -26,6 +26,8 @@
 # object.
 
 package TTP::IEnableable;
+die __PACKAGE__ . " must be loaded as TTP::IEnableable\n" unless __PACKAGE__ eq 'TTP::IEnableable';
+
 our $VERSION = '1.00';
 
 use strict;
