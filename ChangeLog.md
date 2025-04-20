@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.7.1-rc.0
+### 4.7.1
 
-    Release date: 
+    Release date: 2025- 4-20
 
     - Fix regression in TTP::IJSONable::var() introduced when coding #107
 
