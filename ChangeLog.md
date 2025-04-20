@@ -2,11 +2,11 @@
 
 ## ChangeLog
 
-### 4.7.2-rc.0
+### 4.7.2
 
-    Release date: 
+    Release date: 2025- 4-20
 
-    - 
+    - Fix regression in TTP::Message::printMsg() introduced when refactoring Message
 
 ### 4.7.1
 
