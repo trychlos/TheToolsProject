@@ -2,11 +2,11 @@
 
 ## ChangeLog
 
-### 4.7.3-rc.0
+### 4.8.0-rc.0
 
     Release date: 
 
-    - 
+    - Define new verb daemon.pl hup (todo #99), thus bumping minor candidate version number
 
 ### 4.7.2
 
