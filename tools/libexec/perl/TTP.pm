@@ -627,7 +627,6 @@ sub hashFromTabular {
 
 sub jsonAppend {
 	my ( $hash, $path ) = @_;
-	require TTP::Path;
 	msgVerbose( "jsonAppend() to '$path'" );
 	my $json = JSON->new;
 	my $str = $json->encode( $hash );
@@ -726,7 +725,6 @@ sub jsonRead {
 
 sub jsonWrite {
 	my ( $hash, $path ) = @_;
-	require TTP::Path;
 	msgVerbose( "jsonWrite() to '$path'" );
 	my $json = JSON->new;
 	my $str = $json->encode( $hash );
