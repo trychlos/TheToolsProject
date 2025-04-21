@@ -27,7 +27,9 @@ thisdir="$(cd "$(dirname "$0")"; pwd)"
 thisbase="$(basename "${thisdir}")"
 . "$(dirname "${thisdir}")/functions.sh"
 
-echo -n "[${thisbase}] checking that perl is addressable... "
+color_blue "[${thisbase}] checking for perl binary"
+
+echo -n "  [${thisbase}] checking that perl is addressable... "
 perl_path=$(which perl 2>/dev/null)
 (( _count_total += 1 ))
 
@@ -41,7 +43,7 @@ else
     echo "perl="${perl_path}" - OK"
     (( _count_ok += 1 ))
 
-    echo -n "[${thisbase}] checking for Perl version... "
+    echo -n "  [${thisbase}] checking for Perl version... "
     perl_version="$(perl -v 2>/dev/null | grep -ve '^$' | head -1 | cut -d' ' -f9 | sed -e 's|[\(\)]||g' 2>/dev/null)"
     (( _count_total += 1 ))
 

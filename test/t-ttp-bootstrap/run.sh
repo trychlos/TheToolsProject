@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -x
 # The Tools Project - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
 # Copyright (©) 2023-2025 PWI Consulting
@@ -17,7 +17,7 @@
 # along with TheToolsProject; see the file COPYING. If not,
 # see <http://www.gnu.org/licenses/>.
 #
-# Check for ksh, displaying its version
+# Check for TTP bootstrapping when site.json or node.json are not present
 #
 # (I):
 # - temp file where results counts are to be written
@@ -27,35 +27,21 @@ thisdir="$(cd "$(dirname "$0")"; pwd)"
 thisbase="$(basename "${thisdir}")"
 . "$(dirname "${thisdir}")/functions.sh"
 
-color_blue "[${thisbase}] checking for ksh binary"
+_toolsdir="$(dirname $(dirname "${thisdir}"))/tools"
+color_blue "[${thisbase}] checking sh bootstrapping"
 
-echo -n "  [${thisbase}] checking that ksh is addressable... "
-ksh_path=$(which ksh 2>/dev/null)
-(( _count_total += 1 ))
+# dynamically build a working environment
+rm -fr "${thisdir}/work"
+mkdir -p "${thisdir}/work/etc/ttp"
+mkdir -p "${thisdir}/work/etc/nodes"
 
-if [ -z "${ksh_path}" ]; then
-    ksh_err=$(which ksh 2>&1)
-    color_red "${ksh_err} - NOT OK"
-    echo "${ksh_err}" >> "${_fic_errors}"
-    (( _count_notok += 1 ))
+export TTP_ROOTS="${_toolsdir}:${thisdir}/work"
+export TTP_NODE=$(hostname)
+export PATH="/bin:/sbin:/usr/bin:/usr/sbin:$HOME/bin:$HOME/local/bin:${_toolsdir}/bin:${thisdir}/work/bin"
+export FPATH="${_toolsdir}/libexec/sh:${thisdir}/work/libexec/sh"
+export PERL5LIB="${_toolsdir}/libexec/perl:${thisdir}/work/libexec/perl"
 
-else
-    echo "ksh="${ksh_path}" - OK"
-    (( _count_ok += 1 ))
-
-    echo -n "  [${thisbase}] checking for ksh version... "
-    ksh_version="$(ksh --version 2>&1 | awk '{ for( i=3; i<=NF; ++i ) printf( "%s ", $i ); printf( "\n" )}' | sed -e 's|\([^\)]\)\+)\s*||')"
-    (( _count_total += 1 ))
-
-    if [ -z "${ksh_version}" ]; then
-        color_red "unable to get ksh version - NOT OK"
-        echo "unable to get ksh version" >> "${_fic_errors}"
-        (( _count_notok += 1 ))
-
-    else
-        echo "${ksh_version} - OK"
-        (( _count_ok += 1 ))
-    fi
-fi
+# without site.json, we expect an error message
+ttp.pl
 
 ender

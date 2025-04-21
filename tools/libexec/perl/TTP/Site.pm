@@ -61,10 +61,15 @@ my $Const = {
 	# even if this not too sexy in Win32, this is a standard and a common usage on Unix/Darwin platforms
 	finder => {
 		dirs => [
-			'etc/ttp/site.json',
 			'etc/site.json',
+			'etc/toops.json',
+			'etc/ttp.json',
+			'etc/toops/site.json',
+			'etc/toops/toops.json',
+			'etc/toops/ttp.json',
+			'etc/ttp/site.json',	# the current preferred version
 			'etc/ttp/toops.json',
-			'etc/toops.json'
+			'etc/ttp/ttp.json'
 		]
 	}
 };
@@ -172,6 +177,7 @@ sub new {
 	my $loaded = $self->jsonLoad({ findable => $findable, acceptable => $acceptable });
 
 	# unable to find and load a site configuration file ? this is an unrecoverable error
+	# Caution: do not change these error messages as they are checked in test suite
 	if( !$loaded ){
 		msgErr( "Unable to find an acceptable site configuration file among [ ".( join( ', ', @{$class->finder()->{dirs}}))." ]" );
 		msgErr( "Please make sure that the file exists in one of the TTP_ROOTS paths, is JSON-valid, and is not disabled" );
@@ -181,6 +187,7 @@ sub new {
 
 	# check the top keys of the site file
 	# found a not allowed key ? this is still an unrecoverable error
+	# Caution: do not change these error messages as they are checked in test suite
 	$self->{_disallowed} = $self->_checkTopKeys( $self->jsonData(), $Const->{keys } );
 	if( scalar @{$self->{_disallowed}} ){
 		msgErr( "Invalid key(s) found in site configuration file: [".join( ', ', @{$self->disallowed()} )."]" );

@@ -58,6 +58,7 @@ thisdir="$( cd "$(dirname "$0")"; pwd)"
 let -i _count_total=0
 let -i _count_ok=0
 let -i _count_notok=0
+let -i _count_skipped=0
 
 _fcounts="$(mktemp)"
 _ferrors="$(mktemp)"
@@ -67,8 +68,10 @@ _ferrors="$(mktemp)"
     #t-perl-std \
     #t-ttp-case \
     #t-ttp-load \
+    #t-sh-bootstrap \
+    #t-ttp-bootstrap \
 for _d in \
-    t-ttp-load \
+    t-ttp-bootstrap \
         ; do
     (( _count_total += 1 ))
     if [ -x "${thisdir}/${_d}/run.sh" ]; then
@@ -80,12 +83,14 @@ for _d in \
         (( _count_ok += ${_ok} ))
         _notok="$(echo "${_results}" | cut -d- -f3)"
         (( _count_notok += ${_notok} ))
+        _skipped="$(echo "${_results}" | cut -d- -f4)"
+        (( _count_skipped += ${_skipped} ))
     else
         echo "${_d}: no run.sh available, passing"
     fi
 done
 
-echo "[run.sh] counted ${_count_total} total tests, among them ${_count_notok} failed"
+echo "[run.sh] counted ${_count_total} total tests, among them ${_count_skipped} skipped, and ${_count_notok} failed"
 
 if [ ${_count_notok} -gt 0 ]; then
     echo "Error summary:"
