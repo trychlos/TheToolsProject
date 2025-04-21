@@ -31,17 +31,18 @@ _toolsdir="$(dirname $(dirname "${thisdir}"))/tools"
 color_blue "[${thisbase}] checking TTP standard commands and verbs helps"
 
 # dynamically build a working environment
-rm -fr "${thisdir}/work"
-mkdir -p "${thisdir}/work/etc/ttp"
-echo "{}" > "${thisdir}/work/etc/ttp/site.json"
-mkdir -p "${thisdir}/work/etc/nodes"
-echo "{}" > "${thisdir}/work/etc/nodes/$(hostname).json"
+_workdir="$(mktemp -d)"
+rm -fr "${_workdir}"
+mkdir -p "${_workdir}/etc/ttp"
+echo "{}" > "${_workdir}/etc/ttp/site.json"
+mkdir -p "${_workdir}/etc/nodes"
+echo "{}" > "${_workdir}/etc/nodes/$(hostname).json"
 
-export TTP_ROOTS="${_toolsdir}:${thisdir}/work"
+export TTP_ROOTS="${_toolsdir}:${_workdir}"
 export TTP_NODE=$(hostname)
-export PATH="/bin:/sbin:/usr/bin:/usr/sbin:$HOME/bin:$HOME/local/bin:${_toolsdir}/bin:${thisdir}/work/bin"
-export FPATH="${_toolsdir}/libexec/sh:${thisdir}/work/libexec/sh"
-export PERL5LIB="${_toolsdir}/libexec/perl:${thisdir}/work/libexec/perl"
+export PATH="/bin:/sbin:/usr/bin:/usr/sbin:$HOME/bin:$HOME/local/bin:${_toolsdir}/bin:${_workdir}/bin"
+export FPATH="${_toolsdir}/libexec/sh:${_workdir}/libexec/sh"
+export PERL5LIB="${_toolsdir}/libexec/perl:${_workdir}/libexec/perl"
 
 _fout="$(mktemp)"
 _ferr="$(mktemp)"
@@ -88,13 +89,28 @@ for _command in $(grep -v '^\[ttp.pl list] ' "${_fout}" | sed -e 's|^\s*||' -e '
         echo "OK"
         (( _count_ok += 1 ))
 
-        # and ask the help for each verb
+        # and ask for help for each verb
         _fverb="$(mktemp)"
         for _verb in $(grep -v "^${_command}:" "${_fout}" | sed -e 's|^s*||' -e 's|:.*$||'); do
 
-            echo -n "  [${thisbase}] asking for '${_command} ${_verb}' help... "
+            echo -n "  [${thisbase}] checking that '${_command} ${_verb}' displays standard help... "
             (( _count_total+=1 ))
             ${_command} ${_verb} 1>"${_fverb}" 2>"${_ferr}"
+            _rc=$?
+            if [ ${_rc} -eq 0 -a -s "${_fverb}" -a ! -s "${_ferr}" ]; then
+                echo "OK"
+                (( _count_ok += 1 ))
+
+            else
+                color_red "NOTOK"
+                (( _count_notok += 1 ))
+                cat "${_fverb}" >> ${_fic_errors}
+                cat "${_ferr}" >> ${_fic_errors}
+            fi
+
+            echo -n "  [${thisbase}] checking that '${_command} ${_verb}' accepts standard options... "
+            (( _count_total+=1 ))
+            ${_command} ${_verb} -help -dummy -verbose -colored 1>"${_fverb}" 2>"${_ferr}"
             _rc=$?
             if [ ${_rc} -eq 0 -a -s "${_fverb}" -a ! -s "${_ferr}" ]; then
                 echo "OK"
@@ -120,5 +136,5 @@ done
 
 rm -f "${_fout}"
 rm -f "${_ferr}"
-rm -fr "${thisdir}/work"
+rm -fr "${_workdir}"
 ender
