@@ -32,7 +32,6 @@ use Carp;
 use Config;
 use Data::Dumper;
 use Role::Tiny::With;
-use vars::global qw( $ep );
 
 with 'TTP::IFindable', 'TTP::IJSONable';
 

@@ -16,9 +16,10 @@ use File::Find;
 use File::Path qw( make_path remove_tree );
 use File::Spec;
 use Text::Glob qw( match_glob );
-use vars::global qw( $ep );
 
 use TTP;
+use vars::global qw( $ep );
+
 use TTP::Constants qw( :all );
 use TTP::Message qw( :all );
 

@@ -20,9 +20,10 @@ use Data::Dumper;
 use Email::Stuffer;
 use Email::Sender::Transport::SMTP;
 use Try::Tiny;
-use vars::global qw( $ep );
 
 use TTP;
+use vars::global qw( $ep );
+
 use TTP::Constants qw( :all );
 use TTP::Credentials;
 use TTP::Message qw( :all );

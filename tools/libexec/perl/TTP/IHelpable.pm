@@ -29,7 +29,6 @@ use warnings;
 
 use Data::Dumper;
 use Path::Tiny qw( path );
-use vars::global qw( $ep );
 
 use TTP;
 use TTP::Constants qw( :all );

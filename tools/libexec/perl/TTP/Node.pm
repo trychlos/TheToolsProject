@@ -34,6 +34,8 @@ use Data::Dumper;
 use File::Spec;
 use Role::Tiny::With;
 use Sys::Hostname qw( hostname );
+
+use TTP;
 use vars::global qw( $ep );
 
 with 'TTP::IAcceptable', 'TTP::IEnableable', 'TTP::IFindable', 'TTP::IJSONable';

@@ -29,7 +29,6 @@ use utf8;
 use warnings;
 
 use Role::Tiny::With;
-use vars::global qw( $ep );
 
 with 'TTP::IJSONable';
 

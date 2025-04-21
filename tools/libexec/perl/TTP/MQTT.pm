@@ -27,9 +27,10 @@ use warnings;
 
 use Data::Dumper;
 use Net::MQTT::Simple;
-use vars::global qw( $ep );
 
 use TTP;
+use vars::global qw( $ep );
+
 use TTP::Constants qw( :all );
 use TTP::Credentials;
 use TTP::Message qw( :all );

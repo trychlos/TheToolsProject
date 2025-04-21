@@ -34,7 +34,6 @@ use warnings;
 use Data::Dumper;
 use File::Spec;
 use Time::Moment;
-use vars::global qw( $ep );
 
 use TTP;
 use TTP::Constants qw( :all );
