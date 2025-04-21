@@ -67,7 +67,7 @@ use Proc::ProcessTable;
 use Role::Tiny::With;
 use Time::Moment;
 use vars::global qw( $ep );
-use if $Config{osname} eq 'MSWin32', 'Win32::OLE';
+use if $Config{osname} eq 'MSWin32', "Win32::OLE";
 
 with 'TTP::ISleepable';
 

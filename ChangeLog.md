@@ -16,6 +16,7 @@
     - Check sh and perl bootstrapping processes
     - Fix TTP::RunnerVerb->run() command when no verb is available
     - Have a test suite with an almost fixed architecture
+    - Homogeneize and fix 'use if' sentences
 
 ### 4.7.2
 

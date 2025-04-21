@@ -31,7 +31,7 @@ use Data::Dumper;
 use File::Spec;
 use Path::Tiny;
 use Time::Moment;
-use if $Config{osname} eq 'MSWin32', "Win32::SqlServer qw( :DEFAULT :consts )";
+use if $Config{osname} eq 'MSWin32', "Win32::SqlServer", qw( :DEFAULT :consts );
 
 use TTP;
 use TTP::Constants qw( :all );
