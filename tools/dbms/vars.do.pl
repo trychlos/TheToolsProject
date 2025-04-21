@@ -4,8 +4,8 @@
 # @(-) --[no]colored           color the output depending of the message level [${colored}]
 # @(-) --[no]dummy             dummy run (ignored here) [${dummy}]
 # @(-) --[no]verbose           run verbosely [${verbose}]
-# @(-) --[no]backupsRoot       display the root (non daily) of the DBMS backup path [${backupsRoot}]
-# @(-) --[no]backupsDir        display the root of the daily DBMS backup path [${backupsDir}]
+# @(-) --[no]backupsRoot       display the root of the DBMS backups [${backupsRoot}]
+# @(-) --[no]backupsPeriodic   display the periodic root of the DBMS backups [${backupsPeriodic}]
 # @(-) --[no]archivesRoot      display the root (non daily) of the DBMS archive path [${archivesRoot}]
 # @(-) --[no]archivesDir       display the root of the daily DBMS archive path [${archivesDir}]
 # @(-) --service=<name>        optional service name [${service}]
@@ -43,7 +43,7 @@ my $defaults = {
 	dummy => 'no',
 	verbose => 'no',
 	backupsRoot => 'no',
-	backupsDir => 'no',
+	backupsPeriodic => 'no',
 	archivesRoot => 'no',
 	archivesDir => 'no',
 	service => ''
@@ -51,6 +51,7 @@ my $defaults = {
 
 my $opt_backupsRoot = false;
 my $opt_backupsDir = false;
+my $opt_backupsPeriodic = false;
 my $opt_archivesRoot = false;
 my $opt_archivesDir = false;
 my $opt_service = $defaults->{service};
@@ -80,6 +81,7 @@ sub listArchivesroot {
 
 # -------------------------------------------------------------------------------------------------
 # list backupsDir value - e.g. 'C:\INLINGUA\SQLBackups\240101\WS12DEV1'
+# obsoleted as of v4.8
 
 sub listBackupsdir {
 	my $dir = $jsonable->var([ 'DBMS', 'backupsDir' ]) || $jsonable->var([ 'DBMS', 'backupsRoot' ]) || TTP::tempDir();
@@ -91,8 +93,18 @@ sub listBackupsdir {
 # -------------------------------------------------------------------------------------------------
 # list backupsRoot value - e.g. 'C:\INLINGUA\SQLBackups'
 
-sub listBackupsroot {
-	my $dir = $jsonable->var([ 'DBMS', 'backupsRoot' ]) || TTP::tempDir();
+sub listBackupsPeriodic {
+	my $dir = TTP::dbmsBackupsPeriodic();
+	my $str = "backupsPeriodic: $dir";
+	msgVerbose( "returning '$str'" );
+	print " $str".EOL;
+}
+
+# -------------------------------------------------------------------------------------------------
+# list backupsRoot value - e.g. 'C:\INLINGUA\SQLBackups'
+
+sub listBackupsRoot {
+	my $dir = TTP::dbmsBackupsRoot();
 	my $str = "backupsRoot: $dir";
 	msgVerbose( "returning '$str'" );
 	print " $str".EOL;
@@ -109,6 +121,7 @@ if( !GetOptions(
 	"verbose!"			=> sub { $ep->runner()->verbose( @_ ); },
 	"backupsRoot!"		=> \$opt_backupsRoot,
 	"backupsDir!"		=> \$opt_backupsDir,
+	"backupsPeriodic!"	=> \$opt_backupsPeriodic,
 	"archivesRoot!"		=> \$opt_archivesRoot,
 	"archivesDir!"		=> \$opt_archivesDir,
 	"service=s"			=> \$opt_service )){
@@ -127,6 +140,7 @@ msgVerbose( "got dummy='".( $ep->runner()->dummy() ? 'true':'false' )."'" );
 msgVerbose( "got verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got backupsRoot='".( $opt_backupsRoot ? 'true':'false' )."'" );
 msgVerbose( "got backupsDir='".( $opt_backupsDir ? 'true':'false' )."'" );
+msgVerbose( "got backupsPeriodic='".( $opt_backupsPeriodic ? 'true':'false' )."'" );
 msgVerbose( "got archivesRoot='".( $opt_archivesRoot ? 'true':'false' )."'" );
 msgVerbose( "got archivesDir='".( $opt_archivesDir ? 'true':'false' )."'" );
 msgVerbose( "got service='$opt_service'" );
@@ -143,11 +157,15 @@ if( $opt_service ){
 # warn if no option has been requested
 msgWarn( "none of '--backupsRoot', '--backupsDir', '--archivesRoot' or '--archivesDir' options has been requested, nothing to do" ) if !$opt_backupsRoot && !$opt_backupsDir && !$opt_archivesRoot && !$opt_archivesDir;
 
+# deprecated options
+msgWarn( "'--backupsDir' option is deprecated in favor of '--backupsPeriodic'. You should update your configurations and/or your code." ) if $opt_backupsDir;
+
 if( !TTP::errs()){
 	listArchivesroot() if $opt_archivesRoot;
 	listArchivesdir() if $opt_archivesDir;
-	listBackupsroot() if $opt_backupsRoot;
+	listBackupsRoot() if $opt_backupsRoot;
 	listBackupsdir() if $opt_backupsDir;
+	listBackupsPerioduic() if $opt_backupsPeriodic;
 }
 
 TTP::exit();

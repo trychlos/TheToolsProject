@@ -27,7 +27,6 @@
 |      | 2024- 4-14 | node-monitor-daemon.pl is moved to libexec/daemons |
 |      | 2024- 4-17 | mqtt-monitor-daemon.pl is moved to libexec/daemons |
 |      | 2024- 4-17 | at the moment, still exists backup-monitor-daemon in site tree - to be evaluated |
-|  108 | 2024- 4-20 | site.schema for DBMS |
 |  109 | 2024- 4-20 | site.schema for executionReports |
 |  110 | 2024- 4-20 | site.schema for moveDir |
 |  111 | 2024- 4-20 | site.schema for telemetry |
@@ -295,6 +294,8 @@
 |      | 2024- 4-18 | done |
 |  107 | 2024- 4-19 | ttp.pl vars -key knownA,knownB,unknown returns knownA,knownB but should return undef |
 |      | 2024- 4-19 | fixed |
+|  108 | 2024- 4-20 | site.schema for DBMS |
+|      | 2024- 4-21 | done |
 
 ---
 P. Wieser

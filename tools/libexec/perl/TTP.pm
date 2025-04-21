@@ -253,6 +253,28 @@ sub commandExec {
 	return $result;
 }
 
+# ------------------------------------------------------------------------------------------------
+# (I):
+# - none
+# (O):
+# - returns the 'backups.periodicDir' directory, which may be undef very early in the bootstrap process
+#   and at least not definitive while the node has not been instanciated/loaded/evaluated
+
+sub dbmsBackupsPeriodic {
+	return TTP::Path::dbmsBackupsPeriodic();
+}
+
+# ------------------------------------------------------------------------------------------------
+# (I):
+# - none
+# (O):
+# - returns the 'backups.rootDir' directory, which may be undef very early in the bootstrap process
+#   and at least not definitive while the node has not been instanciated/loaded/evaluated
+
+sub dbmsBackupsRoot {
+	return TTP::Path::dbmsBackupsRoot();
+}
+
 # -------------------------------------------------------------------------------------------------
 # Display an array of hashes as a (sql-type) table
 # (I):

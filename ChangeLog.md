@@ -17,6 +17,9 @@
     - Fix TTP::RunnerVerb->run() command when no verb is available
     - Have a test suite with an almost fixed architecture
     - Homogeneize and fix 'use if' sentences
+    - Deprecate 'DBMS.backupsRoot' in favor of 'DBMS.backups.rootDir', 'DBMS.backupsDir' in favor of 'DBMS.backups.periodicDir' (todo #108)
+    - Define new TTP::dbmsBackupsPeriodic() and TTP::dbmsBackupsRoot()
+    - Deprecate TTP::Path::dbmsBackupsDir() in favor of TTP::Path::dbmsBackupsPeriodic()
 
 ### 4.7.2
 

@@ -92,8 +92,10 @@
 		},
 
 		"DBMS": {
-			"backupsDir": "[eval:File::Spec->catdir( TTP::var([ 'DBMS', 'backupsRoot' ]), Time::Moment->now->strftime( '%y%m%d' ), TTP::nodeName())]",
-			"backupsRoot": "[eval:File::Spec->catdir( TTP::vars([ 'site', 'rootDir' ]), 'dailySQLBackups' )]",
+			"backups": {
+				"periodicDir": "[eval:File::Spec->catdir( TTP::dbmsBackupsRoot(), Time::Moment->now->strftime( '%y%m%d' ), TTP::nodeName())]",
+				"rootDir": "[eval:File::Spec->catdir( TTP::vars([ 'site', 'rootDir' ]), 'dailyBackups' )]"
+			},
 			"instance": "MSSQLSERVER",
 			"byInstance": {
 				"MSSQLSERVER": {
