@@ -30,7 +30,6 @@ use warnings;
 use Data::Dumper;
 use Path::Tiny qw( path );
 
-use TTP;
 use TTP::Constants qw( :all );
 use TTP::Message qw( :all );
 

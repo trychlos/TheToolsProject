@@ -11,6 +11,8 @@
     - DBMS no more uses TTP::SqlServer but only dynamically loads it
     - TTP::SqlServer only uses Win32::SqlServer on MSWin32 platforms
     - Check that each Perl module is loaded through its canonical name
+    - Remove unused 'use' or 'require' sentences
+    - Update ttp.sh code to syupport the test suite
 
 ### 4.7.2
 
