@@ -13,6 +13,7 @@
     - Check that each Perl module is loaded through its canonical name
     - Remove unused 'use' or 'require' sentences
     - Update ttp.sh code to syupport the test suite
+    - Check sh and perl bootstrapping processes
 
 ### 4.7.2
 

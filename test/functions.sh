@@ -19,6 +19,10 @@
 # Shell common functions
 
 color_blue() {
+    printf "\033[1;34m${1}\033[0m\n"
+}
+
+color_cyan() {
     printf "\033[0;36m${1}\033[0m\n"
 }
 
@@ -28,7 +32,7 @@ color_red() {
 
 ender(){
     color_blue "[${thisbase}] ${_count_total} total counted tests, among them ${_count_notok} failed"
-    echo "${_count_total}-${_count_ok}-${_count_notok}" > "${_fic_results}"
+    echo "${_count_total}-${_count_ok}-${_count_notok}-${_count_skipped}" > "${_fic_results}"
 }
 
 _fic_results="${1}"
@@ -46,3 +50,4 @@ fi
 let -i _count_total=0
 let -i _count_ok=0
 let -i _count_notok=0
+let -i _count_skipped=0
