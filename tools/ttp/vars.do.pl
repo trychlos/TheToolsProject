@@ -104,6 +104,7 @@ sub listLogsCommands {
 
 # -------------------------------------------------------------------------------------------------
 # list logsDaily value - e.g. 'C:\INLINGUA\Logs\240201'
+# obsoleted as of v4.7
 
 sub listLogsdaily {
 	my $str = "logsDaily: ".TTP::logsDaily();
@@ -212,8 +213,10 @@ msgVerbose( "got alertsDir='".( $opt_alertsDir ? 'true':'false' )."'" );
 @opt_keys= split( /,/, join( ',', @opt_keys ));
 msgVerbose( "got keys='".join( ',', @opt_keys )."'" );
 
+# removed options
 msgErr( "'--nodesRoot' option is deprecated and not replaced. You should update your configurations and/or your code." ) if $opt_nodeRoot;
 
+# deprecated options
 msgWarn( "'--logsDaily' option is deprecated in favor of '--logsPeriodic'. You should update your configurations and/or your code." ) if $opt_logsDaily;
 
 if( !TTP::errs()){

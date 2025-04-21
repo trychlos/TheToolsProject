@@ -263,30 +263,69 @@ sub dbmsArchivesRoot {
 # (O):
 # the current DBMS backups directory, making sure the dir exists
 # the dir can be defined in toops.json, or overriden in host configuration
+
 sub dbmsBackupsDir {
+	TTP::Message::msgWarn( __PACKAGE__."::dbmsBackupsDir() is deprecated in favor of ".__PACKAGE__."dbmsBackupsPeriodic(). You should update your code." );
+	return dbmsBackupsPeriodic( @_ );
+}
+
+# ------------------------------------------------------------------------------------------------
+# (I):
+# - an optional options hash with following keys:
+#   > config: host configuration (useful when searching for a remote host)
+# (O):
+# the current DBMS backups directory, making sure the dir exists
+# the dir can be defined in toops.json, or overriden in host configuration
+
+sub dbmsBackupsPeriodic {
 	my ( $opts ) = @_;
 	$opts //= {};
-	my $dir = $ep->var( [ 'DBMS', 'backupsDir' ], $opts );
-	if( defined $dir && length $dir ){
-		makeDirExist( $dir );
-	} else {
-		TTP::Message::msgWarn( "'backupsDir' is not defined in toops.json nor in host configuration" );
+	my $dir;
+	my $node = $ep ? $ep->node() : undef;
+	if( $node ){
+		$dir = $ep->var([ 'DBMS', 'backups', 'periodicDir' ], $opts );
+		if( !$dir ){
+			$dir = $ep->var([ 'DBMS', 'backupsDir' ], $opts );
+			if( $dir ){
+				$ep->{_warnings} //= {};
+				if( !$ep->{_warnings}{backupsdir} ){
+					msgWarn( "'DBMS.backupsDir' property is deprecated in favor of 'DBMS.backups.periodicDir'. You should update your configurations." );
+					$ep->{_warnings}{backupsdir} = true;
+				}
+			}
+		}
 	}
-	return $dir;
+	if( $dir ){
+		makeDirExist( $dir );
+	}
+	return $dir || TTP::Path::dbmsBackupsRoot();
 }
 
 # ------------------------------------------------------------------------------------------------
 # (O):
 # the root the the DBMS backups directories, making sure the dir exists
 # the root can be defined in toops.json, or overriden in host configuration
+
 sub dbmsBackupsRoot {
-	my $dir = $ep->var([ 'DBMS', 'backupsRoot' ]);
-	if( defined $dir && length $dir ){
-		makeDirExist( $dir );
-	} else {
-		TTP::Message::msgWarn( "'backupsRoot' is not defined in toops.json nor in host configuration" );
+	my $dir;
+	my $node = $ep ? $ep->node() : undef;
+	if( $node ){
+		$dir = $ep->var([ 'DBMS', 'backups', 'rootDir' ]);
+		if( !$dir ){
+			$dir = $ep->var([ 'DBMS', 'backupsRoot' ]);
+			if( $dir ){
+				$ep->{_warnings} //= {};
+				if( !$ep->{_warnings}{backupsroot} ){
+					msgWarn( "'DBMS.backupsRoot' property is deprecated in favor of 'DBMS.backups.rootDir'. You should update your configurations." );
+					$ep->{_warnings}{backupsroot} = true;
+				}
+			}
+		}
 	}
-	return $dir;
+	if( $dir ){
+		makeDirExist( $dir );
+	}
+	return $dir || TTP::tempDir();
 }
 
 # ------------------------------------------------------------------------------------------------
@@ -387,13 +426,13 @@ sub logsCommands {
 #   and at least not definitive while the node has not been instanciated/loaded/evaluated
 
 sub logsMain {
-	my $dir;
+	my $file;
 	my $node = $ep ? $ep->node() : undef;
 	if( $node ){
-		$dir = $ep->var([ 'logs', 'mainFile' ]);
-		if( !$dir ){
-			$dir = $ep->var( 'logsMain' );
-			if( $dir ){
+		$file = $ep->var([ 'logs', 'mainFile' ]);
+		if( !$file ){
+			$file = $ep->var( 'logsMain' );
+			if( $file ){
 				$ep->{_warnings} //= {};
 				if( !$ep->{_warnings}{logsmain} ){
 					msgWarn( "'logsMain' property is deprecated in favor of 'logs.mainFile'. You should update your configurations." );
@@ -401,8 +440,11 @@ sub logsMain {
 				}
 			}
 		}
+		if( !$file ){
+			$file = File::Spec->catfile( TTP::Path::logsCommands(), 'main.log' );
+		}
 	}
-	return $dir || File::Spec->catfile( TTP::Path::logsCommands(), 'main.log' );
+	return $file;
 }
 
 # ------------------------------------------------------------------------------------------------
@@ -443,7 +485,7 @@ sub logsPeriodic {
 #   and at least not definitive while the node has not been instanciated/loaded/evaluated
 
 sub logsRoot {
-	my $dir;
+	my $dir = undef;
 	my $node = $ep ? $ep->node() : undef;
 	if( $node ){
 		$dir = $ep->var([ 'logs', 'rootDir' ]);
@@ -457,8 +499,12 @@ sub logsRoot {
 				}
 			}
 		}
+		if( !$dir ){
+			TTP::Message::msgWarn( "'logs.rootDir' is not defined in site nor in node configurations" );
+			$dir = TTP::tempDir();
+		}
 	}
-	return $dir || TTP::tempDir();
+	return $dir;
 }
 
 # -------------------------------------------------------------------------------------------------

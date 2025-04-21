@@ -351,6 +351,45 @@
                     }
 
                 },
+                "DBMS": {
+                    "description": "Common configuration for DBMS.",
+                    "type": "object",
+                    "properties": {
+                        "backups": {
+                            "description": "The configurations of the backups.",
+                            "type": "object",
+                            "properties": {
+                                "periodicDir": {
+                                    "description_array": [
+                                        "The periodic, by time, root directory of the backups tree.",
+                                        "Rationale: having a per-day or per-week or per-month backups tree is the easiest way in order to periodically purge the backups.",
+                                        "This is not mandatory at all, and the default is to stick to the 'backups.rootDir' value.",
+                                        "This 'backups.periodicDir' directory can be got by the user via the 'dbms.pl vars --backupsPeriodic' command."
+                                    ],
+                                    "type": "string",
+                                    "default": "[eval:TTP::backupsRoot()]"
+                                },
+                                "rootDir": {
+                                    "description_array": [
+                                        "The root directory of the backups tree.",
+                                        "This 'backups.rootDir' directory can be got by the user via the 'dbms.pl vars --backupsRoot' command."
+                                    ],
+                                    "type": "string",
+                                    "default": "[eval:TTP::tempDir()]"
+                                }
+        
+                            }
+                        },
+                        "backupsDir": {
+                            "description": "The periodic, by time, root directory of the backups tree. Deprecated in favor of 'backups.periodicDir' in v4.8.",
+                            "deprecated": true
+                        },
+                        "backupsRoot": {
+                            "description": "The root directory of the backups tree. Deprecated in favor of 'backups.rootDir' in v4.8.",
+                            "deprecated": true
+                        }
+                    }
+                },
                 "deployments": {
                     "description_array": [
                         "When deploying from a development TTP layer to a pull reference, and from this pull reference to other machines of the parc.",
