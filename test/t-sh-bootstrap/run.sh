@@ -117,5 +117,4 @@ else
 fi
 
 rm -fr "${thisdir}/work"
-
 ender
