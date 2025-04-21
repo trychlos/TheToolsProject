@@ -39,6 +39,8 @@ use Carp;
 use Config;
 use Data::Dumper;
 use Role::Tiny::With;
+
+use TTP;
 use vars::global qw( $ep );
 
 with 'TTP::IEnableable', 'TTP::IFindable', 'TTP::IJSONable';
@@ -140,13 +142,13 @@ sub var {
 				msgErr( __PACKAGE__."::var() expects node be provided either by name or as a 'TTP::Node', found '$ref'" );
 			}
 		} else {
-			my $nodeObj = TTP::Node->new( $ep, { node => $node });
+			my $nodeObj = TTP::Node->new( $self->ep(), { node => $node });
 			if( $nodeObj->loaded()){
 				$jsonable = $nodeObj;
 			}
 		}
 	} else {
-		$jsonable = $ep->node();
+		$jsonable = $self->ep()->node();
 	}
 	if( $jsonable ){
 		# search for the service definition in the node
@@ -162,7 +164,7 @@ sub var {
 		}
 		# last search for a default value at site level
 		if( !defined( $value )){
-			$value = $ep->site()->var( \@args );
+			$value = $self->ep()->site()->var( \@args );
 		}
 	}
 	return $value;

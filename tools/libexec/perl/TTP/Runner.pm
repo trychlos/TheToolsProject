@@ -35,7 +35,6 @@ use Data::Dumper;
 use Getopt::Long;
 use Role::Tiny::With;
 use Try::Tiny;
-use vars::global qw( $ep );
 
 with 'TTP::IHelpable', 'TTP::IOptionable', 'TTP::IRunnable';
 

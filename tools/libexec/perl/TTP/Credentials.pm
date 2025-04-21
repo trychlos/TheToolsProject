@@ -27,9 +27,10 @@ use warnings;
 
 use Data::Dumper;
 use File::Spec;
-use vars::global qw( $ep );
 
 use TTP;
+use vars::global qw( $ep );
+
 use TTP::Constants qw( :all );
 use TTP::Finder;
 use TTP::Message qw( :all );

@@ -31,7 +31,7 @@ use Data::Dumper;
 use File::Spec;
 use Path::Tiny;
 use Time::Moment;
-use if $Config{osname} eq 'MSWin32', use Win32::SqlServer qw( :DEFAULT :consts );
+use if $Config{osname} eq 'MSWin32', "Win32::SqlServer qw( :DEFAULT :consts )";
 
 use TTP;
 use TTP::Constants qw( :all );
@@ -114,11 +114,16 @@ sub apiExecSqlCommand {
 	msgErr( __PACKAGE__."::apiExecSqlCommand() command is mandatory, but not specified" ) if !$parms || !$parms->{command};
 	if( !TTP::errs()){
 		msgVerbose( __PACKAGE__."::apiExecSqlCommand() entering with instance='".$dbms->instance()."' sql='$parms->{command}'" );
-		my $resultStyle = Win32::SqlServer::SINGLESET;
-		$resultStyle = Win32::SqlServer::MULTISET if $parms->{opts} && $parms->{opts}{multiple};
-		my $colinfoStyle = Win32::SqlServer::COLINFO_NONE;
-		$colinfoStyle = Win32::SqlServer::COLINFO_FULL if $parms->{opts} && $parms->{opts}{columns};
-		my $rowStyle = Win32::SqlServer::HASH;
+		my $resultStyle = undef;
+		my $colinfoStyle = undef;
+		my $rowStyle = undef;
+		if( $Config{osname} eq "MSWin32" ){
+			$resultStyle = Win32::SqlServer::SINGLESET;
+			$resultStyle = Win32::SqlServer::MULTISET if $parms->{opts} && $parms->{opts}{multiple};
+			$colinfoStyle = Win32::SqlServer::COLINFO_NONE;
+			$colinfoStyle = Win32::SqlServer::COLINFO_FULL if $parms->{opts} && $parms->{opts}{columns};
+			$rowStyle = Win32::SqlServer::HASH;
+		}
 		my $opts = {
 			resultStyle => $resultStyle,
 			colinfoStyle => $colinfoStyle,

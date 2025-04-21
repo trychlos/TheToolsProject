@@ -89,7 +89,6 @@ sub new {
 	} else {
 		print STDERR "(ERR) ".__PACKAGE__."::new() 'ep' EntryPoint is not defined but is mandatory".EOL;
 		TTP::stackTrace();
-		print "after stackTrace".EOL;
 	}
 
 	# let the roles insert their own code at that time

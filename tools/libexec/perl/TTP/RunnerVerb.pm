@@ -39,11 +39,12 @@ use Data::Dumper;
 use Getopt::Long;
 use Role::Tiny::With;
 use Try::Tiny;
+
+use TTP;
 use vars::global qw( $ep );
 
 with 'TTP::IFindable';
 
-use TTP;
 use TTP::Constants qw( :all );
 use TTP::Message qw( :all );
 
@@ -322,22 +323,6 @@ sub DESTROY {
 ### as a class method 'TTP::Package->method()' or as a global function 'TTP::Package::method()',
 ### the former being preferred (hence the writing inside of the 'Class methods' block which brings
 ### the class as first argument).
-
-# -------------------------------------------------------------------------------------------------
-# instanciates and run the command
-# (I):
-# - the TTP EntryPoint
-# (O):
-# - the newly instanciated RunnerVerb
-
-sub runCommand {
-	my ( $ep ) = @_;
-	print STDERR __PACKAGE__."::run() ep=".ref( $ep ).EOL if $ENV{TTP_DEBUG};
-
-	my $command = TTP::RunnerVerb->new( $ep );
-	$command->run();
-	return $command;
-}
 
 1;
 

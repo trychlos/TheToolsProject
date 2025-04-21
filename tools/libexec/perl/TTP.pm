@@ -904,7 +904,8 @@ sub runCommand {
 	print STDERR Dumper( @ARGV ) if $ENV{TTP_DEBUG};
 	$ep = TTP::EP->new();
 	$ep->bootstrap();
-	my $command = TTP::RunnerVerb::runCommand( $ep );
+	my $command = TTP::RunnerVerb->new( $ep );
+	$command->run();
 	return $command;
 }
 

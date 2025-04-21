@@ -289,7 +289,7 @@ sub _metrics {
 
 	# running since x.xxxxx sec.
 	my $since = sprintf( "%.5f", $self->runnableStarted()->delta_microseconds( Time::Moment->now ) / 1000000 );
-	my $rc = TTP::Metric->new( $ep, {
+	my $rc = TTP::Metric->new( $self->ep(), {
 		name => 'ttp_daemon_since',
 		value => $since,
 		type => 'gauge',
@@ -318,7 +318,7 @@ sub _metrics_mswin32_memory {
 	my $proc = get_first_item_of_ole_collection( $processes );
 	my $metric = $proc->{WorkingSetSize} / 1024;
 
-	my $rc = TTP::Metric->new( $ep, {
+	my $rc = TTP::Metric->new( $self->ep(), {
 		name => 'ttp_daemon_memory_KB',
 		value => sprintf( "%.1f", $metric ),
 		type => 'gauge',
@@ -341,7 +341,7 @@ sub _metrics_mswin32_page_faults {
 	my $proc = get_first_item_of_ole_collection( $processes );
 	my $metric = $proc->{PageFaults};
 
-	my $rc = TTP::Metric->new( $ep, {
+	my $rc = TTP::Metric->new( $self->ep(), {
 		name => 'ttp_daemon_page_faults_count',
 		value => $metric,
 		type => 'gauge',
@@ -363,7 +363,7 @@ sub _metrics_mswin32_page_file_usage {
 	my $proc = get_first_item_of_ole_collection( $processes );
 	my $metric = $proc->{PageFileUsage};
 
-	my $rc = TTP::Metric->new( $ep, {
+	my $rc = TTP::Metric->new( $self->ep(), {
 		name => 'ttp_daemon_page_file_usage_KB',
 		value => sprintf( "%.1f", $metric ),
 		type => 'gauge',
@@ -719,8 +719,8 @@ sub listen {
 	# -> the daemon config
 	$self->config()->evaluate();
 	# -> toops+site and execution host configurations
-	$ep->site()->evaluate();
-	$ep->node()->evaluate();
+	$self->ep()->site()->evaluate();
+	$self->ep()->node()->evaluate();
 
 	my $client = $self->{_socket}->accept();
 	my $result = undef;
@@ -851,7 +851,7 @@ sub telemetryLabels {
 	my ( $self ) = @_;
 
 	my $labels = [ "daemon=".$self->name() ];
-	my $env = $ep->node()->environment();
+	my $env = $self->ep()->node()->environment();
 	push( @{$labels}, "environment=$env" ) if $env;
 	push( @{$labels}, "command=".$self->command());
 	# get only the first other (the second) qualifier
@@ -948,7 +948,7 @@ sub terminating {
 sub topic {
 	my ( $self ) = @_;
 
-	my $topic = $ep->node()->name();
+	my $topic = $self->ep()->node()->name();
 	$topic .= "/daemon";
 	$topic .= "/".$self->name();
 

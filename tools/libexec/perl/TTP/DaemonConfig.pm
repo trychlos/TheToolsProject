@@ -37,11 +37,12 @@ use warnings;
 
 use Data::Dumper;
 use Role::Tiny::With;
-use vars::global qw( $ep );
 
 with 'TTP::IEnableable', 'TTP::IAcceptable', 'TTP::IFindable', 'TTP::IJSONable';
 
 use TTP;
+use vars::global qw( $ep );
+
 use TTP::Constants qw( :all );
 use TTP::Finder;
 use TTP::Message qw( :all );
@@ -108,7 +109,7 @@ sub _loadConfig {
 		my $checkConfig = true;
 		$checkConfig = $args->{checkConfig} if exists $args->{checkConfig};
 		if( $checkConfig ){
-			my $msgRef = $ep->runner()->dummy() ? \&msgWarn : \&msgErr;
+			my $msgRef = $self->ep()->runner()->dummy() ? \&msgWarn : \&msgErr;
 			# must have a valid listening interval
 			my $listeningInterval = $self->listeningInterval();
 			$msgRef->( "$args->{jsonPath}: daemon configuration doesn't define a valid 'listeningInterval' value, found '".( $listeningInterval ? $listeningInterval : '(undef)' )."'" ) if !$listeningInterval || $listeningInterval < MIN_LISTEN_INTERVAL;

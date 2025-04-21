@@ -40,10 +40,8 @@ use utf8;
 use warnings;
 
 use Data::Dumper;
-use vars::global qw( $ep );
 
 use TTP::Constants qw( :all );
-use TTP::Message qw( :all );
 
 ### https://metacpan.org/pod/Role::Tiny
 ### All subs created after importing Role::Tiny will be considered methods to be composed.
