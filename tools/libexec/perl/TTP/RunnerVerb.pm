@@ -61,7 +61,7 @@ my $Const = {
 		'TTP'
 	],
 	verbSed => '\.do\.pl$|\.do\.ksh$',
-	verbSufixes => {
+	verbSuffixes => {
 		perl => '.do.pl',
 		sh => '.do.ksh'
 	},
@@ -122,7 +122,7 @@ sub _getVerbs {
 	# get all available verbs
 	my $findable = {
 		dirs => [ $self->runnableBNameShort() ],
-		glob => '*'.$Const->{verbSufixes}{$self->runnableRunMode()}
+		glob => '*'.$Const->{verbSuffixes}{$self->runnableRunMode()}
 	};
 	my $verbs = $self->find( $findable );
 	# get only unique available verbs
@@ -227,7 +227,7 @@ sub run {
 
 			# search for the verb
 			my $findable = {
-				dirs => [ $self->runnableBNameShort(), $verb.$Const->{verbSufixes}{$self->runnableRunMode()} ],
+				dirs => [ $self->runnableBNameShort(), $verb.$Const->{verbSuffixes}{$self->runnableRunMode()} ],
 				wantsAll => false
 			};
 			$self->{_verb}{path} = $self->find( $findable );
@@ -244,7 +244,7 @@ sub run {
 					msgErr( "do $self->{_verb}{path}: ".( $! || $@ ));
 				}
 			} else {
-				msgErr( "script not found or not readable in [$ENV{TTP_ROOTS}]: '$verb$Const->{verbSufix}'" );
+				msgErr( "script not found or not readable in [$ENV{TTP_ROOTS}]: '$verb$Const->{verbSuffixes}{$self->runnableRunMode()}'" );
 				msgErr( "is it possible that '$verb' be not a valid verb ?" );
 			}
 		} else {
