@@ -16,7 +16,7 @@
 # along with TheToolsProject; see the file COPYING. If not,
 # see <http://www.gnu.org/licenses/>.
 #
-# A package dediccated to Microsoft SQL-Server
+# A package dedicated to Microsoft SQL-Server
 
 package TTP::SqlServer;
 die __PACKAGE__ . " must be loaded as TTP::SqlServer\n" unless __PACKAGE__ eq 'TTP::SqlServer';
