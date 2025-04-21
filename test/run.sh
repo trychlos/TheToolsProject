@@ -70,8 +70,9 @@ _ferrors="$(mktemp)"
     #t-ttp-load \
     #t-sh-bootstrap \
     #t-ttp-bootstrap \
+    #t-pl-commands \
 for _d in \
-    t-ttp-bootstrap \
+    t-pl-commands \
         ; do
     (( _count_total += 1 ))
     if [ -x "${thisdir}/${_d}/run.sh" ]; then

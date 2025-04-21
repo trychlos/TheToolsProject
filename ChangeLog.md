@@ -15,6 +15,7 @@
     - Update ttp.sh code to syupport the test suite
     - Check sh and perl bootstrapping processes
     - Fix TTP::RunnerVerb->run() command when no verb is available
+    - Have a test suite with an almost fixed architecture
 
 ### 4.7.2
 
