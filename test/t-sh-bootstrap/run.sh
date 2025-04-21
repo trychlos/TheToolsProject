@@ -31,25 +31,26 @@ _toolsdir="$(dirname $(dirname "${thisdir}"))/tools"
 color_blue "[${thisbase}] checking sh bootstrapping"
 
 # dynamically build a working equivalent of /etc/profile.d/ttp.sh
-rm -fr "${thisdir}/work"
-mkdir "${thisdir}/work"
-cat <<! >"${thisdir}/work/ttp.sh"
-. "${_toolsdir}/libexec/sh/bootstrap" "${thisdir}/work"
+_workdir="$(mktemp -d)"
+rm -fr "${_workdir}"
+mkdir "${_workdir}"
+cat <<! >"${_workdir}/ttp.sh"
+. "${_toolsdir}/libexec/sh/bootstrap" "${_workdir}"
 !
 
 # dynamically build a ttp.conf to address this TTP's project and a site configuration tree
-cat <<! >"${thisdir}/work/ttp.conf"
+cat <<! >"${_workdir}/ttp.conf"
 # this is a comment - must be ignored by sh/bootstrap
 ${_toolsdir}
-${thisdir}/work
+${_workdir}
 !
 
 # must have at least empty site.json and node.json
-mkdir -p "${thisdir}/work/etc/ttp"
-echo "{}" > "${thisdir}/work/etc/ttp/site.json"
+mkdir -p "${_workdir}/etc/ttp"
+echo "{}" > "${_workdir}/etc/ttp/site.json"
 
-mkdir -p "${thisdir}/work/etc/nodes"
-echo "{}" > "${thisdir}/work/etc/nodes/$(hostname).json"
+mkdir -p "${_workdir}/etc/nodes"
+echo "{}" > "${_workdir}/etc/nodes/$(hostname).json"
 
 # after having sourced the dynamically built ttp.sh, we expect to have our environment variables set
 unset TTP_ROOTS
@@ -58,13 +59,13 @@ export PATH="/bin:/sbin:/usr/bin:/usr/sbin:$HOME/bin:$HOME/local/bin"
 initPath="${PATH}"
 unset FPATH
 unset PERL5LIB
-. "${thisdir}/work/ttp.sh"
+. "${_workdir}/ttp.sh"
 #set | grep -E '^TTP|^PATH|^FPATH|^PERL5'
 
 # must have TTP_ROOTS=this_tools_dir:this_work_dir
 echo -n "  [${thisbase}] got TTP_ROOTS=${TTP_ROOTS}... "
 (( _count_total+=1 ))
-if [ "${TTP_ROOTS}" = "${_toolsdir}:${thisdir}/work" ]; then
+if [ "${TTP_ROOTS}" = "${_toolsdir}:${_workdir}" ]; then
     echo "OK"
     (( _count_ok+=1 ))
 else
@@ -75,7 +76,7 @@ fi
 # must have this TTP_ROOT bin appended to PATH
 echo -n "  [${thisbase}] got PATH=${PATH}... "
 (( _count_total+=1 ))
-if [ "${PATH}" = "${initPath}:${_toolsdir}/bin:${thisdir}/work/bin" ]; then
+if [ "${PATH}" = "${initPath}:${_toolsdir}/bin:${_workdir}/bin" ]; then
     echo "OK"
     (( _count_ok+=1 ))
 else
@@ -86,7 +87,7 @@ fi
 # must have FPATH set to libexec/sh functions
 echo -n "  [${thisbase}] got FPATH=${FPATH}... "
 (( _count_total+=1 ))
-if [ "${FPATH}" = "${_toolsdir}/libexec/sh:${thisdir}/work/libexec/sh" ]; then
+if [ "${FPATH}" = "${_toolsdir}/libexec/sh:${_workdir}/libexec/sh" ]; then
     echo "OK"
     (( _count_ok+=1 ))
 else
@@ -97,7 +98,7 @@ fi
 # must have PERL5LIB set to libexec/perl modules
 echo -n "  [${thisbase}] got PERL5LIB=${PERL5LIB}... "
 (( _count_total+=1 ))
-if [ "${PERL5LIB}" = "${_toolsdir}/libexec/perl:${thisdir}/work/libexec/perl" ]; then
+if [ "${PERL5LIB}" = "${_toolsdir}/libexec/perl:${_workdir}/libexec/perl" ]; then
     echo "OK"
     (( _count_ok+=1 ))
 else
@@ -116,5 +117,5 @@ else
     (( _count_notok+=1 ))
 fi
 
-rm -fr "${thisdir}/work"
+rm -fr "${_workdir}"
 ender

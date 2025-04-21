@@ -31,15 +31,16 @@ _toolsdir="$(dirname $(dirname "${thisdir}"))/tools"
 color_blue "[${thisbase}] checking TTP bootstrapping"
 
 # dynamically build a working environment
-rm -fr "${thisdir}/work"
-mkdir -p "${thisdir}/work/etc/ttp"
-mkdir -p "${thisdir}/work/etc/nodes"
+_workdir="$(mktemp -d)"
+rm -fr "${_workdir}"
+mkdir -p "${_workdir}/etc/ttp"
+mkdir -p "${_workdir}/etc/nodes"
 
-export TTP_ROOTS="${_toolsdir}:${thisdir}/work"
+export TTP_ROOTS="${_toolsdir}:${_workdir}"
 export TTP_NODE=$(hostname)
-export PATH="/bin:/sbin:/usr/bin:/usr/sbin:$HOME/bin:$HOME/local/bin:${_toolsdir}/bin:${thisdir}/work/bin"
-export FPATH="${_toolsdir}/libexec/sh:${thisdir}/work/libexec/sh"
-export PERL5LIB="${_toolsdir}/libexec/perl:${thisdir}/work/libexec/perl"
+export PATH="/bin:/sbin:/usr/bin:/usr/sbin:$HOME/bin:$HOME/local/bin:${_toolsdir}/bin:${_workdir}/bin"
+export FPATH="${_toolsdir}/libexec/sh:${_workdir}/libexec/sh"
+export PERL5LIB="${_toolsdir}/libexec/perl:${_workdir}/libexec/perl"
 
 # without site.json, we expect an error message (and only that)
 _fout="$(mktemp)"
@@ -78,7 +79,7 @@ else
 fi
 
 # create an empty site.json, and expect error message for absent node.json
-echo "{}" > "${thisdir}/work/etc/ttp/site.json"
+echo "{}" > "${_workdir}/etc/ttp/site.json"
 rm -f "${_fout}"
 rm -f "${_ferr}"
 ttp.pl 1>${_fout} 2>${_ferr}
@@ -115,7 +116,7 @@ else
 fi
 
 # create an empty site.json and node.json, and expect a standard output
-echo "{}" > "${thisdir}/work/etc/nodes/$(hostname).json"
+echo "{}" > "${_workdir}/etc/nodes/$(hostname).json"
 rm -f "${_fout}"
 rm -f "${_ferr}"
 ttp.pl 1>${_fout} 2>${_ferr}
@@ -152,7 +153,7 @@ else
 fi
 
 # create a malformed site.json
-echo "azerty" > "${thisdir}/work/etc/ttp/site.json"
+echo "azerty" > "${_workdir}/etc/ttp/site.json"
 rm -f "${_fout}"
 rm -f "${_ferr}"
 ttp.pl 1>${_fout} 2>${_ferr}
@@ -189,7 +190,7 @@ else
 fi
 
 # create a wellformed site.json with unexpected keys
-echo "{ \"key\": \"value\" }" > "${thisdir}/work/etc/ttp/site.json"
+echo "{ \"key\": \"value\" }" > "${_workdir}/etc/ttp/site.json"
 rm -f "${_fout}"
 rm -f "${_ferr}"
 ttp.pl 1>${_fout} 2>${_ferr}
@@ -226,8 +227,8 @@ else
 fi
 
 # create a malformed node.json
-echo "{}" > "${thisdir}/work/etc/ttp/site.json"
-echo "azerty" > "${thisdir}/work/etc/nodes/$(hostname).json"
+echo "{}" > "${_workdir}/etc/ttp/site.json"
+echo "azerty" > "${_workdir}/etc/nodes/$(hostname).json"
 rm -f "${_fout}"
 rm -f "${_ferr}"
 ttp.pl 1>${_fout} 2>${_ferr}
@@ -265,11 +266,11 @@ fi
 
 # check that all accepted site.json actually work
 # list from TTP::Site::$Const->{finder}{dirs}
-rm -f "${thisdir}/work/etc/ttp/site.json"
-echo "{}" > "${thisdir}/work/etc/nodes/$(hostname).json"
+rm -f "${_workdir}/etc/ttp/site.json"
+echo "{}" > "${_workdir}/etc/nodes/$(hostname).json"
 for _site_json in etc/site.json etc/toops.json etc/ttp.json etc/toops/site.json etc/toops/toops.json etc/toops/ttp.json etc/ttp/toops.json etc/ttp/ttp.json; do
-    mkdir -p "${thisdir}/work/$(dirname "${_site_json}")"
-    echo "{}" > "${thisdir}/work/${_site_json}"
+    mkdir -p "${_workdir}/$(dirname "${_site_json}")"
+    echo "{}" > "${_workdir}/${_site_json}"
     rm -f "${_fout}"
     rm -f "${_ferr}"
     echo -n "  [${thisbase}] checking that '${_site_json}' is accepted... "
@@ -289,5 +290,5 @@ done
 
 rm -f "${_fout}"
 rm -f "${_ferr}"
-rm -fr "${thisdir}/work"
+rm -fr "${_workdir}"
 ender
