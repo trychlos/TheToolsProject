@@ -31,7 +31,6 @@ use strict;
 use utf8;
 use warnings;
 
-use Carp;
 use Data::Dumper;
 
 use TTP::Constants qw( :all );
