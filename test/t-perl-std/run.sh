@@ -31,10 +31,10 @@ thisbase="$(basename "${thisdir}")"
 MSWin32="Win32::Console::ANSI Win32::OLE Win32::SqlServer"
 
 _toolsdir="$(dirname $(dirname "${thisdir}"))/tools"
-echo "[${thisbase}] checking for standard Perl modules in '${_toolsdir}'... "
+color_blue "[${thisbase}] checking for standard Perl modules in '${_toolsdir}'"
 
 for _mod in $(find "${_toolsdir}" -type f -name '*.p?' -exec grep -E '^use |^\s*require ' {} \; | awk '{ print $2 }' | grep -vE 'TTP|base|constant|if|open|overload|strict|utf8|warnings' | sed -e 's|;\s*$||' | sort -u); do
-    echo -n "[${thisbase}] testing ${_mod} "
+    echo -n "  [${thisbase}] testing ${_mod}... "
     perl -e "use ${_mod};" 1>/dev/null 2>&1
     _rc=$?
     (( _count_total+=1 ))
@@ -45,7 +45,6 @@ for _mod in $(find "${_toolsdir}" -type f -name '*.p?' -exec grep -E '^use |^\s*
 
     else
         color_red "NOT OK"
-        #perl -e "use ${_mod};" 2>&1 | tee -a "${_fic_errors}"
         perl -e "use ${_mod};" 1>>"${_fic_errors}" 2>&1
         (( _count_notok+=1 ))
     fi

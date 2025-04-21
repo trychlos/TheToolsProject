@@ -28,7 +28,7 @@ thisbase="$(basename "${thisdir}")"
 . "$(dirname "${thisdir}")/functions.sh"
 
 _toolsdir="$(dirname $(dirname "${thisdir}"))/tools"
-echo "[${thisbase}] checking that TTP Perl modules are rightly use'd or require'd... "
+color_blue "[${thisbase}] checking that TTP Perl modules are rightly use'd or require'd"
 
 for _line in $(grep -RP '^\s*(use|require)\s+TTP' "${_toolsdir}" | sed -e 's|\s|**|g'); do
     _line="$(echo "${_line}" | sed -e 's|\*\*| |g')"
@@ -38,7 +38,7 @@ for _line in $(grep -RP '^\s*(use|require)\s+TTP' "${_toolsdir}" | sed -e 's|\s|
     _used="$(echo "${_rest}" | awk '{ print $2 }')"
     _used_path="$(echo "${_toolsdir}/libexec/perl/$(echo "${_used}" | sed -e 's|::|/|g')".pm)"
 
-    echo -n "[${thisbase}] required from '${_includer}': ${_used}... "
+    echo -n "  [${thisbase}] required from '${_includer}': ${_used}... "
 
     if [ -r "${_used_path}" ]; then
         echo "OK"

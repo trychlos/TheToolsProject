@@ -28,25 +28,40 @@ thisbase="$(basename "${thisdir}")"
 . "$(dirname "${thisdir}")/functions.sh"
 
 _toolsdir="$(dirname $(dirname "${thisdir}"))/tools"
-echo "[${thisbase}] checking that TTP Perl modules are each individually loadable... "
+color_blue "[${thisbase}] checking that TTP Perl modules are each individually loadable"
+
+Node="TTP::IAcceptable TTP::IEnableable TTP::IFindable TTP::IJSONable"
+SqlServer="TTP::SqlServer"
 
 for _file in $(find "${_toolsdir}" -type f -name '*.pm' | sort -u); do
     _mod="$(echo "${_file}" | sed -e "s|${_toolsdir}/libexec/perl/||" -e 's|\.pm$||' -e 's|/|::|g')"
-    echo -n "[${thisbase}] use'ing ${_mod}... "
-    perl -e "use ${_mod};" 1>/dev/null 2>&1
-    _rc=$?
-    (( _count_total+=1 ))
+    echo -n "  [${thisbase}] use'ing ${_mod}... "
 
-    if [ ${_rc} -eq 0 ]; then
-        echo "OK"
-        (( _count_ok+=1 ))
+    if [ "${_mod}" = "TTP" -o "$(echo "${Node} ${SqlServer}" | grep -w "${_mod}")" = "" ]; then
+        perl -e "use ${_mod};" 1>/dev/null 2>&1
+        _rc=$?
 
-    else
-        color_red "NOT OK"
-        #perl -e "use ${_mod};" 2>&1 | tee -a "${_fic_errors}"
-        perl -e "use ${_mod};" 1>>"${_fic_errors}" 2>&1
-        (( _count_notok+=1 ))
+        if [ ${_rc} -eq 0 ]; then
+            echo "OK"
+            (( _count_ok+=1 ))
+
+        else
+            color_red "NOT OK"
+            #perl -e "use ${_mod};" 2>&1 | tee -a "${_fic_errors}"
+            perl -e "use ${_mod};" 1>>"${_fic_errors}" 2>&1
+            (( _count_notok+=1 ))
+        fi
+
+    elif [ "$(echo "${Node}" | grep -w "${_mod}")" != "" ]; then
+        color_cyan "skipped as use'd by Node/Site"
+        (( _count_skipped+=1 ))
+
+    elif [ "$(echo "${SqlServer}" | grep -w "${_mod}")" != "" ]; then
+        color_cyan "skipped as use'd by (Win32) SqlServer"
+        (( _count_skipped+=1 ))
     fi
+
+    (( _count_total+=1 ))
 done
 
 ender

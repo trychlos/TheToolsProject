@@ -434,6 +434,7 @@ sub new {
 
 	# unable to find and load the node configuration file ?
 	# this is an unrecoverable error unless otherwise specified
+	# Caution: do not change these error messages as they are checked in test suite
 	} else {
 		my $abort = true;
 		$abort = $args->{abortOnError} if exists $args->{abortOnError};
