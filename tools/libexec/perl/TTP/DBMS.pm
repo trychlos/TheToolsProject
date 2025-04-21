@@ -39,7 +39,6 @@ use TTP;
 use TTP::Constants qw( :all );
 use TTP::Message qw( :all );
 use TTP::Path;
-use TTP::SqlServer;
 
 ### Private methods
 
