@@ -24,12 +24,13 @@ use strict;
 use utf8;
 use warnings;
 
+use Config;
 use Capture::Tiny qw( :all );
 use Data::Dumper;
 use File::Spec;
 use Path::Tiny;
 use Time::Moment;
-use Win32::SqlServer qw( :DEFAULT :consts );
+use if $Config{osname} eq 'MSWin32', use Win32::SqlServer qw( :DEFAULT :consts );
 
 use TTP;
 use TTP::Constants qw( :all );

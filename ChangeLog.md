@@ -8,6 +8,8 @@
 
     - Define new verb daemon.pl hup (todo #99), thus bumping minor candidate version number
     - TTP::RunnerDaemon honors 'hup' command
+    - DBMS no more uses TTP::SqlServer but only dynamically loads it
+    - TTP::SqlServer only uses Win32::SqlServer on MSWin32 platforms
 
 ### 4.7.2
 
