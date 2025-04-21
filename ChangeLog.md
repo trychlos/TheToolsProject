@@ -14,6 +14,7 @@
     - Remove unused 'use' or 'require' sentences
     - Update ttp.sh code to syupport the test suite
     - Check sh and perl bootstrapping processes
+    - Fix TTP::RunnerVerb->run() command when no verb is available
 
 ### 4.7.2
 

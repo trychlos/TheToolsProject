@@ -32,10 +32,12 @@
 |  110 | 2024- 4-20 | site.schema for moveDir |
 |  111 | 2024- 4-20 | site.schema for telemetry |
 |  112 | 2024- 4-20 | service.schema |
-|  113 | 2024- 4-20 | integration of service in site |
-|  114 | 2024- 4-20 | integration of service in node |
+|  113 | 2024- 4-20 | integration of service's schema in site |
+|  114 | 2024- 4-20 | integration of service's schema in node |
 |  115 | 2024- 4-20 | test infrastructure |
-|  116 |  |  |
+|  116 | 2024- 4-21 | have ttp.sh list |
+|  117 | 2024- 4-21 | <command>.pl help should be formatted like ttp.pl list -commands (i.e. with a count at the end) + update the test suite accordingly |
+|  118 |  |  |
 
 ---
 ## Done
