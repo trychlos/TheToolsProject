@@ -7,6 +7,7 @@
 # @(-) --[no]mqtt              limit to metrics published on the MQTT bus [${mqtt}]
 # @(-) --[no]http              limit to metrics published on the PushGateway [${http}]
 # @(-) --[no]text              limit to metrics published on the TextFile collector [${text}]
+# @(-) --[no]server            get metrics from the server [${server}]
 # @(-) --limit=<limit>         only list first <limit> metric [${limit}]
 #
 # The Tools Project - Tools System and Working Paradigm for IT Production
@@ -45,19 +46,21 @@ my $defaults = {
 	mqtt => 'no',
 	http => 'no',
 	text => 'no',
+	server => 'no',
 	limit => -1
 };
 
 my $opt_mqtt = false;
 my $opt_http = false;
 my $opt_text = false;
+my $opt_server = false;
 my $opt_limit = $defaults->{limit};
 
 # -------------------------------------------------------------------------------------------------
 # list metrics published on the PushGateway
 
-sub doListPush {
-	msgOut( "listing metrics published on the PushGateway..." );
+sub doListHttp {
+	msgOut( "listing metrics published on the HTTP PushGateway..." );
 	my $count = 0;
 	my $groups = {};
 	my $var = $ep->var([ 'Telemetry', 'withHttp', 'enabled' ]);
@@ -154,6 +157,27 @@ sub _parse {
 	return scalar( keys %{$groups} );
 }
 
+# -------------------------------------------------------------------------------------------------
+# list metrics published on the MQTT bus
+
+sub doListMqtt {
+	msgOut( "listing metrics published on the MQTT bus..." );
+}
+
+# -------------------------------------------------------------------------------------------------
+# get metrics from the server
+
+sub doListServer {
+	msgOut( "listing metrics published on the Prometheus server..." );
+}
+
+# -------------------------------------------------------------------------------------------------
+# list metrics published through the TextFile Collector
+
+sub doListText {
+	msgOut( "listing metrics published on the MQTT bus..." );
+}
+
 # =================================================================================================
 # MAIN
 # =================================================================================================
@@ -166,6 +190,7 @@ if( !GetOptions(
 	"mqtt!"				=> \$opt_mqtt,
 	"http!"				=> \$opt_http,
 	"text!"				=> \$opt_text,
+	"server!"			=> \$opt_server,
 	"limit=i"			=> \$opt_limit )){
 
 		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
@@ -183,12 +208,16 @@ msgVerbose( "got verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got mqtt='".( $opt_mqtt ? 'true':'false' )."'" );
 msgVerbose( "got http='".( $opt_http ? 'true':'false' )."'" );
 msgVerbose( "got text='".( $opt_text ? 'true':'false' )."'" );
+msgVerbose( "got server='".( $opt_server ? 'true':'false' )."'" );
 msgVerbose( "got limit='$opt_limit'" );
 
-msgWarn( "at least one of '--mqtt', '--http' or '--text' options should be specified" ) if !$opt_mqtt && !$opt_http && !$opt_text;
+msgWarn( "at least one of '--mqtt', '--http', '--text' or '--server' options should be specified" ) if !$opt_mqtt && !$opt_http && !$opt_text && !$opt_server;
 
 if( !TTP::errs()){
-	#doListPush() if $opt_push;
+	doListMqtt() if $opt_mqtt;
+	doListHttp() if $opt_http;
+	doListText() if $opt_text;
+	doListServer() if $opt_server;
 }
 
 TTP::exit();
