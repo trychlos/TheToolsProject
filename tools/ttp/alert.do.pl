@@ -66,22 +66,22 @@ my $opt_listLevels = false;
 my $opt_options = $defaults->{options};
 
 my $opt_file = TTP::var([ 'alerts', 'withFile', 'default' ]);
-$opt_file = true if !defined $opt_file;
+$opt_file = false if !defined $opt_file;
 $defaults->{file} = $opt_file ? 'yes' : 'no';
 my $opt_file_set = false;
 
 my $opt_mqtt = TTP::var([ 'alerts', 'withMqtt', 'default' ]);
-$opt_mqtt = true if !defined $opt_mqtt;
+$opt_mqtt = false if !defined $opt_mqtt;
 $defaults->{mqtt} = $opt_mqtt ? 'yes' : 'no';
 my $opt_mqtt_set = false;
 
 my $opt_smtp = TTP::var([ 'alerts', 'withSmtp', 'default' ]);
-$opt_smtp = true if !defined $opt_smtp;
+$opt_smtp = false if !defined $opt_smtp;
 $defaults->{smtp} = $opt_smtp ? 'yes' : 'no';
 my $opt_smtp_set = false;
 
 my $opt_sms = TTP::var([ 'alerts', 'withSms', 'default' ]);
-$opt_sms = true if !defined $opt_sms;
+$opt_sms = false if !defined $opt_sms;
 $defaults->{sms} = $opt_sms ? 'yes' : 'no';
 my $opt_sms_set = false;
 
