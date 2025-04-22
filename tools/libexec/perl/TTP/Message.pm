@@ -189,7 +189,7 @@ sub knownLevels {
 # - the message to be printed (usually the command to be run in dummy mode)
 
 sub msgDummy {
-	if( $ep->bootstrapped() && $ep->runner() && $ep->runner()->dummy()){
+	if( $ep->runner() && $ep->runner()->dummy()){
 		_printMsg({
 			msg => shift,
 			level => DUMMY,
@@ -211,14 +211,12 @@ sub msgDummy {
 sub msgErr {
 	my ( $msg, $opts ) = @_;
 	$opts //= {};
-	if( $ep->bootstrapped()){
-		# send the message
-		_printMsg({
-			msg => $msg,
-			level => ERR,
-			handle => \*STDERR
-		});
-	}
+	# send the message
+	_printMsg({
+		msg => $msg,
+		level => ERR,
+		handle => \*STDERR
+	});
 	my $increment = true;
 	$increment = $opts->{incErr} if exists $opts->{incErr};
 	$ep->runner()->runnableErrInc() if $ep && $ep->runner() and $increment;
@@ -235,19 +233,17 @@ sub msgErr {
 sub msgLog {
 	my ( $msg, $opts ) = @_;
 	$opts //= {};
-	if( $ep->bootstrapped()){
-		my $ref = ref( $msg );
-		if( $ref eq 'ARRAY' ){
-			foreach my $line ( split( /[\r\n]/, @{$msg} )){
-				chomp $line;
-				msgLog( $line );
-			}
-		} elsif( !$ref ){
-			_msgLogAppend( _msgPrefix().$msg, $opts );
-		} else {
-			msgWarn( __PACKAGE__."::msgLog() unmanaged type '$ref' for '$msg'" );
-			TTP::stackTrace();
+	my $ref = ref( $msg );
+	if( $ref eq 'ARRAY' ){
+		foreach my $line ( split( /[\r\n]/, @{$msg} )){
+			chomp $line;
+			msgLog( $line );
 		}
+	} elsif( !$ref ){
+		_msgLogAppend( _msgPrefix().$msg, $opts );
+	} else {
+		msgWarn( __PACKAGE__."::msgLog() unmanaged type '$ref' for '$msg'" );
+		TTP::stackTrace();
 	}
 }
 
@@ -263,19 +259,21 @@ sub msgLog {
 
 sub _msgLogAppend {
 	my ( $msg, $opts ) = @_;
-	require TTP::Path;
-	$opts //= {};
-	my $logFile = $opts->{logFile} || TTP::logsMain();
-	print STDERR __PACKAGE__."::_msgLogAppend() msg='$msg' opts=".TTP::chompDumper( $opts )." logFile='".( $logFile ? $logFile : '(undef)' )."'".EOL if $ENV{TTP_DEBUG};
-	if( $logFile ){
-		my $host = TTP::nodeName() || '-';
-		my $username = $ENV{LOGNAME} || $ENV{USER} || $ENV{USERNAME} || 'unknown'; #getpwuid( $< );
-		my $line = Time::Moment->now->strftime( '%Y-%m-%d %H:%M:%S.%6N %:z' )." $host $$ $username $msg";
-		# make sure the directory exists
-		my ( $vol, $dir, $f ) = File::Spec->splitpath( $logFile );
-		my $logdir = File::Spec->catpath( $vol, $dir );
-		TTP::Path::makeDirExist( $logdir, { allowVerbose => false });
-		path( $logFile )->append_utf8( $line.EOL );
+	if( $ep->bootstrapped()){
+		require TTP::Path;
+		$opts //= {};
+		my $logFile = $opts->{logFile} || TTP::logsMain();
+		print STDERR __PACKAGE__."::_msgLogAppend() msg='$msg' opts=".TTP::chompDumper( $opts )." logFile='".( $logFile ? $logFile : '(undef)' )."'".EOL if $ENV{TTP_DEBUG};
+		if( $logFile ){
+			my $host = TTP::nodeName() || '-';
+			my $username = $ENV{LOGNAME} || $ENV{USER} || $ENV{USERNAME} || 'unknown'; #getpwuid( $< );
+			my $line = Time::Moment->now->strftime( '%Y-%m-%d %H:%M:%S.%6N %:z' )." $host $$ $username $msg";
+			# make sure the directory exists
+			my ( $vol, $dir, $f ) = File::Spec->splitpath( $logFile );
+			my $logdir = File::Spec->catpath( $vol, $dir );
+			TTP::Path::makeDirExist( $logdir, { allowVerbose => false });
+			path( $logFile )->append_utf8( $line.EOL );
+		}
 	}
 }
 
@@ -285,11 +283,9 @@ sub _msgLogAppend {
 # - the message to be outputed
 
 sub msgOut {
-	if( $ep->bootstrapped()){
-		_printMsg({
-			msg => shift
-		});
-	}
+	_printMsg({
+		msg => shift
+	});
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -310,16 +306,14 @@ sub _msgPrefix {
 
 sub msgVerbose {
 	my $msg = shift;
-	if( $ep->bootstrapped()){
-		# be verbose to console ?
-		my $verbose = false;
-		$verbose = $ep->runner()->verbose() if $ep->runner();
-		_printMsg({
-			msg => $msg,
-			level => VERBOSE,
-			withConsole => $verbose
-		});
-	}
+	# be verbose to console ?
+	my $verbose = false;
+	$verbose = $ep->runner()->verbose() if $ep->runner();
+	_printMsg({
+		msg => $msg,
+		level => VERBOSE,
+		withConsole => $verbose
+	});
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -328,12 +322,10 @@ sub msgVerbose {
 # - the single warning message
 
 sub msgWarn {
-	if( $ep->bootstrapped()){
-		_printMsg({
-			msg => shift,
-			level => WARN
-		});
-	}
+	_printMsg({
+		msg => shift,
+		level => WARN
+	});
 }
 
 # -------------------------------------------------------------------------------------------------
