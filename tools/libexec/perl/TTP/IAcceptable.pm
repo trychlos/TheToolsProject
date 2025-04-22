@@ -105,7 +105,7 @@ sub _accept_run {
 		}
 	}
 
-	#print STDERR __PACKAGE__."::_accept_run() accepted=".( $accepted ? "true" : "false" ).EOL if $ENV{TTP_DEBUG};
+	msgDebug( __PACKAGE__."::_accept_run() accepted=".( $accepted ? "true" : "false" ));
 	$self->accepted( $accepted );
 }
 

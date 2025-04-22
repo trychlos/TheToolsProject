@@ -125,7 +125,7 @@ sub var {
 	my ( $self, $keys ) = @_;
 	my @newKeys = ref $keys eq 'ARRAY' ? @{$keys} : ( $keys );
 	unshift( @newKeys, $Const->{prefix} );
-	print STDERR __PACKAGE__."::var() keys=[ ".join( ', ', @newKeys )." ]".EOL if $ENV{TTP_DEBUG};
+	msgDebug( __PACKAGE__."::var() keys=[ ".join( ', ', @newKeys )." ]" );
 	my $value = $self->TTP::IJSONable::var( \@newKeys, $self->jsonData());
 	return $value;
 }
@@ -160,7 +160,7 @@ sub new {
 	$args //= {};
 	my $self = $class->SUPER::new( $ep );
 	bless $self, $class;
-	print STDERR __PACKAGE__."::new()".EOL if $ENV{TTP_DEBUG};
+	msgDebug( __PACKAGE__."::new()" );
 
 	# try to load and evaluate the JSON configuration file with the list of allowed ending paths
 	#  specs here is a ref to an array of arrays which have to be successively tested (so an array

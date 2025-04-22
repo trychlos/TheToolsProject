@@ -363,7 +363,7 @@
                                         "This 'backups.periodicDir' directory can be got by the user via the 'dbms.pl vars --backupsPeriodic' command."
                                     ],
                                     "type": "string",
-                                    "default": "[eval:TTP::backupsRoot()]"
+                                    "default": "[eval:TTP::dbmsBackupsRoot()]"
                                 },
                                 "rootDir": {
                                     "description_array": [

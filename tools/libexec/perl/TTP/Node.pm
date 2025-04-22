@@ -88,7 +88,7 @@ sub _hostname {
 		my @a = split( /\./, $name );
 		$name = $a[0];
 	}
-	print STDERR __PACKAGE__."::_hostname() returns '$name'".EOL if $ENV{TTP_DEBUG};
+	msgDebug( __PACKAGE__."::_hostname() returns '$name'" );
 	return $name;
 }
 
@@ -102,9 +102,9 @@ sub _hostname {
 
 sub _rootMountPoints {
 	my $list = [];
-	print STDERR __PACKAGE__."::_rootMountPoints() osname '".$Config{osname}."'".EOL if $ENV{TTP_DEBUG};
+	msgDebug( __PACKAGE__."::_rootMountPoints() osname='$Config{osname}'" );
 	my $command = $Const->{mountPoints}{$Config{osname}}{command};
-	print STDERR __PACKAGE__."::_rootMountPoints() command \"".$command."\"".EOL if $ENV{TTP_DEBUG};
+	msgDebug( __PACKAGE__."::_rootMountPoints() command='$command'" );
 	if( $command ){
 		my @out = `$command`;
 		foreach my $path ( @out ){
@@ -115,7 +115,7 @@ sub _rootMountPoints {
 			# so we must restrict our list to paths which only two elements, second being not empty
 			#print STDERR "path=$path directories='$directories' dirs=[ ".join( ', ', @dirs )." ] scalar=".(scalar( @dirs )).EOL;
 			if( scalar( @dirs ) == 2 && !$dirs[0] && $dirs[1] ){
-				print STDERR __PACKAGE__."::_rootMountPoints() found '".$path."'".EOL if $ENV{TTP_DEBUG};
+				msgDebug( __PACKAGE__."::_rootMountPoints() found path='$path'" );
 				push( @{$list}, $path ) ;
 			}
 		}
@@ -251,11 +251,11 @@ sub services {
 
 sub var {
 	my ( $self, $keys ) = @_;
-	print STDERR __PACKAGE__."::var() keys=".( ref( $keys ) ? "[ ".join( ', ', @{$keys} )." ]" : "'$keys'" ).EOL if $ENV{TTP_DEBUG};
+	msgDebug( __PACKAGE__."::var() keys=".( ref( $keys ) ? "[ ".join( ', ', @{$keys} )." ]" : "'$keys'" ));
 	my $value = $self->TTP::IJSONable::var( $keys );
-	print STDERR __PACKAGE__."::var() Node.value='".( $value || '(undef)' )."'".EOL if $ENV{TTP_DEBUG};
+	msgDebug( __PACKAGE__."::var() from Node value=".( $value ? "'$value'" : '(undef)' ));
 	$value = $self->ep()->site()->var( $keys ) if !defined( $value );
-	print STDERR __PACKAGE__."::var() Site.value='".( $value || '(undef)' )."'".EOL if $ENV{TTP_DEBUG};
+	msgDebug( __PACKAGE__."::var() from Site value=".( $value ? "'$value'" : '(undef)' ));
 	return $value;
 }
 
@@ -272,20 +272,20 @@ sub var {
 sub enum {
 	my ( $class ) = @_;
 	$class = ref( $class ) || $class;
-	print STDERR __PACKAGE__."::enum()".EOL if $ENV{TTP_DEBUG};
+	msgDebug( __PACKAGE__."::enum()" );
 
 	my $availables = [];
 
 	# start with available logical machines if implemented in this site
 	my $logicalRe = $ep->site()->var([ 'nodes', 'logicals', 'regexp' ]);
-	print STDERR __PACKAGE__."::enum() logicalRe='".( $logicalRe || '' )."'".EOL if $ENV{TTP_DEBUG};
+	msgDebug( __PACKAGE__."::enum() logicalRe=".( $logicalRe ? "'$logicalRe'" : '(undef)' ));
 	if( $logicalRe ){
 		my $mounteds = _rootMountPoints();
-		print STDERR __PACKAGE__."::enum() mounteds ".Dumper( $mounteds ) if $ENV{TTP_DEBUG};
+		msgDebug( __PACKAGE__."::enum() mounteds=".TTP::chompDumper( $mounteds ));
 		foreach my $mount( @${mounteds} ){
 			my $candidate = $class->_enumTestForRe( $mount, $logicalRe );
 			if( $candidate ){
-				print STDERR __PACKAGE__."::enum() candidate '".$candidate."'".EOL if $ENV{TTP_DEBUG};
+				msgDebug( __PACKAGE__."::enum() candidate='$candidate'" );
 				my $node = TTP::Node->new( $ep, { node => $candidate, abortOnError => false });
 				if( $node ){
 					push( @{$availables}, $node->name());
@@ -300,7 +300,7 @@ sub enum {
 		push( @{$availables}, $node->name());
 	}
 
-	print STDERR __PACKAGE__."::enum() returning [ ".( join( ', ', @${availables} ))." ]".EOL if $ENV{TTP_DEBUG};
+	msgDebug( __PACKAGE__."::enum() returning [ ".( join( ', ', @${availables} ))." ]" );
 	return $availables;
 }
 
@@ -315,7 +315,7 @@ sub enum {
 sub _enumTestForRe {
 	my ( $class, $mount, $res ) = @_;
 	$class = ref( $class ) || $class;
-	print STDERR __PACKAGE__."::_enumTestForRe() mount='".$mount."' res='".( $res || '' )."'".EOL if $ENV{TTP_DEBUG};
+	msgDebug( __PACKAGE__."::_enumTestForRe() mount='$mount' res=".( $res ? "'$res'" : '(undef)' ));
 
 	my $candidate = undef;
 	$candidate = $class->_enumTestSingle( $mount, $res );
@@ -336,7 +336,7 @@ sub _enumTestForRe {
 sub _enumTestSingle {
 	my ( $class, $mount, $re ) = @_;
 	$class = ref( $class ) || $class;
-	print STDERR __PACKAGE__."::_enumTestSingle() mount='".$mount."' re='".( $re || '' )."'".EOL if $ENV{TTP_DEBUG};
+	msgDebug( __PACKAGE__."::_enumTestSingle() mount='$mount' re=".( $re ? "'$re'" : '(undef)' ));
 
 	my $candidate = undef;
 
@@ -357,7 +357,7 @@ sub _enumTestSingle {
 sub findCandidate {
 	my ( $class ) = @_;
 	$class = ref( $class ) || $class;
-	print STDERR __PACKAGE__."::findCandidate()".EOL if $ENV{TTP_DEBUG};
+	msgDebug( __PACKAGE__."::findCandidate()" );
 
 	my $nodes = $class->enum();
 
@@ -410,7 +410,7 @@ sub new {
 	$args //= {};
 	my $self = $class->SUPER::new( $ep, $args );
 	bless $self, $class;
-	print STDERR __PACKAGE__."::new() candidate='".( $args->{node} || '' )."' abortOnError=".( $args->{abortOnError} ? 'true' : 'false' ).EOL if $ENV{TTP_DEBUG};
+	msgDebug( __PACKAGE__."::new() candidate=".( $args->{node} ? "'$args->{node}'" : '(undef)' )." abortOnError=".( $args->{abortOnError} ? 'true' : 'false' ));
 
 	# of which node are we talking about ?
 	my $node = $args->{node} || $ENV{TTP_NODE} || $self->_hostname();
@@ -444,7 +444,7 @@ sub new {
 			exit( 1 );
 		} else {
 			$self = undef;
-			print STDERR __PACKAGE__."::new() an invalid JSON configuration is detected".EOL if $ENV{TTP_DEBUG};
+			msgErr( "an invalid JSON configuration is detected" );
 		}
 	}
 
