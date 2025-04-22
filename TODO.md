@@ -28,8 +28,10 @@
 |      | 2024- 4-17 | mqtt-monitor-daemon.pl is moved to libexec/daemons |
 |      | 2024- 4-17 | at the moment, still exists backup-monitor-daemon in site tree - to be evaluated |
 |  109 | 2024- 4-20 | site.schema for executionReports |
+|      | 2024- 4-22 | done - has to be honored |
 |  110 | 2024- 4-20 | site.schema for moveDir |
 |  111 | 2024- 4-20 | site.schema for telemetry |
+|      | 2024- 4-22 | done - has to be honored |
 |  112 | 2024- 4-20 | service.schema |
 |  113 | 2024- 4-20 | integration of service's schema in site |
 |  114 | 2024- 4-20 | integration of service's schema in node |

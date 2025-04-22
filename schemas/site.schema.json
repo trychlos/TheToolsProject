@@ -52,11 +52,11 @@
                         "- stamp: automatically added by the 'ttp.pl alert' command as an ISO 8601 date and time.",
                         "Media have common properties:",
                         "- enabled: whether this medium is enabled; will be fully ignored when disabled; defaulting to true (enabled).",
-                        "- default: whether this medium is a default for 'ttp.pl alert' command; defaulting to true (default).",
+                        "- default: whether this medium is a default for 'ttp.pl alert' command; defaulting to false.",
                         "- command: either a single string, or an object 'command.byOS.<osname>; defaulting dependant of the exact used medium.",
-                        "  Provided commands have access to <EMITTER>, <LEVEL>, <TITLE>, <MESSAGE>, <STAMP>, <OPTIONS> and <JSON> macros.",
-                        "  The <JSON> macro is resolved with a stringified version of the alert JSON data.",
-                        "When specifying a command, either a simple string or as a 'byOS' object, you should take care that the specified command will not",
+                        "  Provided commands have access to <EMITTER>, <LEVEL>, <TITLE>, <MESSAGE>, <STAMP>, <OPTIONS> and <JSON> macros,",
+                        "  the <JSON> macro being resolved with a stringified version of the alert JSON data.",
+                        "When specifying a command, either as a simple string or as a 'byOS' object, you should take care that the specified command will not",
                         "inherit of '--dummy' or '--verbose' options of the parent command. Be cautious about what you exactly want."
                     ],
                     "type": "object",
@@ -78,7 +78,7 @@
                                 "command": {
                                     "description_array": [
                                         "The command to be used to create the JSON alert file.",
-                                        "The default command creates an 'alert-yyyymmddhhmisscccccc.json' file in the drop directory."
+                                        "The default command creates an 'alert-yyyymmddhhmisscccccc.json' file in the below dropDir directory."
                                     ],
                                     "type": [
                                         "string",
@@ -92,11 +92,7 @@
                                     "default": true
                                 },
                                 "dropDir": {
-                                    "description_array": [
-                                        "The directory where alert files must be created.",
-                                        "Though the default is just the OS temporary directory, you, as a site administrator, should rather define a dedicated directory,",
-                                        "so that you will be able to use the alerts-monitor-daemon to monitor the alerts."
-                                    ],
+                                    "description": "The directory where alert files must be created.",
                                     "type": "string",
                                     "default": "[eval:File::Spec->catdir( TTP::tempDir(), 'TTP', 'alerts' )]"
                                 }
@@ -437,6 +433,91 @@
                             "type": "array",
                             "items": "string",
                             "default": []
+                        }
+                    }
+                },
+                "executionReports": {
+                    "description_array": [
+                        "The configuration of execution reports.",
+                        "Media have common properties:",
+                        "- enabled: whether this medium is enabled; will be fully ignored when disabled; defaulting to true (enabled).",
+                        "- default: whether this medium is a default for execution reports; defaulting to false.",
+                        "- command: either a single string, or an object 'command.byOS.<osname>; defaulting dependant of the exact used medium.",
+                        "  Provided commands have access to <STAMP>, <OPTIONS> and <JSON> macros,",
+                        "  the <JSON> macro being resolved with a stringified version of the execution report JSON data.",
+                        "When specifying a command, either as a simple string or as a 'byOS' object, you should take care that the specified command will not",
+                        "inherit of '--dummy' or '--verbose' options of the parent command. Be cautious about what you exactly want."
+                    ],
+                    "type": "object",
+                    "properties": {
+                        "withFile": {
+                            "description": "The configuration of the file-based execution reports.",
+                            "type": "object",
+                            "properties": {
+                                "default": {
+                                    "description": "Whether file-based is a default of the execution reports.",
+                                    "type": "boolean",
+                                    "default": false
+                                },
+                                "enabled": {
+                                    "description": "Whether file-based execution reports is an enabled capability of the site.",
+                                    "type": "boolean",
+                                    "default": true
+                                },
+                                "command": {
+                                    "description_array": [
+                                        "The command to be used to create the JSON execution report file.",
+                                        "The default command creates an 'report-yyyymmddhhmisscccccc.json' file in the below dropDir directory."
+                                    ],
+                                    "type": [
+                                        "string",
+                                        "object"
+                                    ],
+                                    "default": "ttp.pl writejson into below dropDir"
+                                },
+                                "prettyJson": {
+                                    "description": "Whether the JSON string should be prettified.",
+                                    "type": "boolean",
+                                    "default": true
+                                },
+                                "dropDir": {
+                                    "description": "The directory where execution report files must be created.",
+                                    "type": "string",
+                                    "default": "[eval:File::Spec->catdir( TTP::tempDir(), 'TTP', 'executionReports' )]"
+                                }
+                            }
+                        },
+                        "withMqtt": {
+                            "description": "The configuration of the MQTT-based execution reports.",
+                            "type": "object",
+                            "properties": {
+                                "default": {
+                                    "description": "Whether MQTT-based is a default of the execution reports.",
+                                    "type": "boolean",
+                                    "default": false
+                                },
+                                "enabled": {
+                                    "description": "Whether MQTT-based execution reports is an enabled capability of the site.",
+                                    "type": "boolean",
+                                    "default": true
+                                },
+                                "command": {
+                                    "description_array": [
+                                        "The command to be used to create the MQTT-based execution report topics.",
+                                        ""
+                                    ],
+                                    "type": [
+                                        "string",
+                                        "object"
+                                    ],
+                                    "default": "mqtt.pl publish -topic <TOPIC> -payload \"<JSON>\""
+                                },
+                                "topic": {
+                                    "description": "A command which echoes the topic on stdout.",
+                                    "type": "string",
+                                    "default": ""
+                                }
+                            }
                         }
                     }
                 },

@@ -11,6 +11,7 @@
 # @(-) --[no]diff              operate a differential backup [${diff}]
 # @(-) --[no]compress          compress the outputed backup [${compress}]
 # @(-) --output=<filename>     target filename [${output}]
+# @(-) --[no]report            whether an execution report should be provided [${report}]
 #
 # @(@) Note 1: remind that differential backup is the difference of the current state and the last full backup.
 # @(@) Note 2: the default output filename is computed as:
@@ -55,7 +56,8 @@ my $defaults = {
 	full => 'no',
 	diff => 'no',
 	compress => 'no',
-	output => 'DEFAUT'
+	output => 'DEFAUT',
+	report => 'yes'
 };
 
 my $opt_service = $defaults->{service};
@@ -66,6 +68,7 @@ my $opt_full = false;
 my $opt_diff = false;
 my $opt_compress = false;
 my $opt_output = '';
+my $opt_report = true;
 
 # may be overriden by the service if specified
 my $jsonable = $ep->node();
@@ -97,24 +100,26 @@ sub doBackup {
 			output => ( $res->{status} ? $res->{output} : "" ),
 			compress => $opt_compress
 		};
-		TTP::executionReport({
-			file => {
-				data => $data
-			},
-			mqtt => {
-				topic => $ep->node()->name()."/executionReport/".$ep->runner()->command().'/'.$ep->runner()->verb()."/$opt_instance/$db",
-				data => $data,
-				options => "-retain",
-				excludes => [
-					'instance',
-					'database',
-					'cmdline',
-					'command',
-					'verb',
-					'host'
-				]
-			}
-		});
+		if( $opt_report ){
+			TTP::executionReport({
+				file => {
+					data => $data
+				},
+				mqtt => {
+					topic => $ep->node()->name()."/executionReport/".$ep->runner()->command().'/'.$ep->runner()->verb()."/$opt_instance/$db",
+					data => $data,
+					options => "-retain",
+					excludes => [
+						'instance',
+						'database',
+						'cmdline',
+						'command',
+						'verb',
+						'host'
+					]
+				}
+			});
+		}
 		$asked += 1;
 		$count += 1 if $res->{status};
 	}
@@ -145,7 +150,8 @@ if( !GetOptions(
 	"full!"				=> \$opt_full,
 	"diff!"				=> \$opt_diff,
 	"compress!"			=> \$opt_compress,
-	"output=s"			=> \$opt_output )){
+	"output=s"			=> \$opt_output,
+	"report!"			=> \$opt_report )){
 
 		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
@@ -167,6 +173,7 @@ msgVerbose( "got full='".( $opt_full ? 'true':'false' )."'" );
 msgVerbose( "got diff='".( $opt_diff ? 'true':'false' )."'" );
 msgVerbose( "got compress='".( $opt_compress ? 'true':'false' )."'" );
 msgVerbose( "got output='$opt_output'" );
+msgVerbose( "got report='".( $opt_report ? 'true':'false' )."'" );
 
 # must have either -service or -instance options
 # compute instance from service
