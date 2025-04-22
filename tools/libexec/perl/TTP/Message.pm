@@ -189,7 +189,7 @@ sub knownLevels {
 # - the message to be printed (usually the command to be run in dummy mode)
 
 sub msgDummy {
-	if( $ep && $ep->runner() && $ep->runner()->dummy()){
+	if( $ep->bootstrapped() && $ep->runner() && $ep->runner()->dummy()){
 		_printMsg({
 			msg => shift,
 			level => DUMMY,
@@ -211,12 +211,14 @@ sub msgDummy {
 sub msgErr {
 	my ( $msg, $opts ) = @_;
 	$opts //= {};
-	# send the message
-	_printMsg({
-		msg => $msg,
-		level => ERR,
-		handle => \*STDERR
-	});
+	if( $ep->bootstrapped()){
+		# send the message
+		_printMsg({
+			msg => $msg,
+			level => ERR,
+			handle => \*STDERR
+		});
+	}
 	my $increment = true;
 	$increment = $opts->{incErr} if exists $opts->{incErr};
 	$ep->runner()->runnableErrInc() if $ep && $ep->runner() and $increment;
@@ -233,17 +235,19 @@ sub msgErr {
 sub msgLog {
 	my ( $msg, $opts ) = @_;
 	$opts //= {};
-	my $ref = ref( $msg );
-	if( $ref eq 'ARRAY' ){
-		foreach my $line ( split( /[\r\n]/, @{$msg} )){
-			chomp $line;
-			msgLog( $line );
+	if( $ep->bootstrapped()){
+		my $ref = ref( $msg );
+		if( $ref eq 'ARRAY' ){
+			foreach my $line ( split( /[\r\n]/, @{$msg} )){
+				chomp $line;
+				msgLog( $line );
+			}
+		} elsif( !$ref ){
+			_msgLogAppend( _msgPrefix().$msg, $opts );
+		} else {
+			msgWarn( __PACKAGE__."::msgLog() unmanaged type '$ref' for '$msg'" );
+			TTP::stackTrace();
 		}
-	} elsif( !$ref ){
-		_msgLogAppend( _msgPrefix().$msg, $opts );
-	} else {
-		msgWarn( __PACKAGE__."::msgLog() unmanaged type '$ref' for '$msg'" );
-		TTP::stackTrace();
 	}
 }
 
@@ -281,9 +285,11 @@ sub _msgLogAppend {
 # - the message to be outputed
 
 sub msgOut {
-	_printMsg({
-		msg => shift
-	});
+	if( $ep->bootstrapped()){
+		_printMsg({
+			msg => shift
+		});
+	}
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -291,7 +297,7 @@ sub msgOut {
 
 sub _msgPrefix {
 	my $prefix = '';
-	if( $ep && $ep->runner()){
+	if( $ep->runner()){
 		$prefix .= "[".join( ' ', @{$ep->runner()->runnableQualifiers()} )."] ";
 	}
 	return $prefix;
@@ -304,14 +310,16 @@ sub _msgPrefix {
 
 sub msgVerbose {
 	my $msg = shift;
-	# be verbose to console ?
-	my $verbose = false;
-	$verbose = $ep->runner()->verbose() if $ep && $ep->runner();
-	_printMsg({
-		msg => $msg,
-		level => VERBOSE,
-		withConsole => $verbose
-	});
+	if( $ep->bootstrapped()){
+		# be verbose to console ?
+		my $verbose = false;
+		$verbose = $ep->runner()->verbose() if $ep->runner();
+		_printMsg({
+			msg => $msg,
+			level => VERBOSE,
+			withConsole => $verbose
+		});
+	}
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -320,10 +328,12 @@ sub msgVerbose {
 # - the single warning message
 
 sub msgWarn {
-	_printMsg({
-		msg => shift,
-		level => WARN
-	});
+	if( $ep->bootstrapped()){
+		_printMsg({
+			msg => shift,
+			level => WARN
+		});
+	}
 }
 
 # -------------------------------------------------------------------------------------------------
