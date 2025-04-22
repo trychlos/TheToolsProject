@@ -422,7 +422,7 @@ if( $opt_listLevels ){
 
 	# at least one medium must be specified
 	if( !$opt_file && !$opt_mqtt && !$opt_smtp && !$opt_sms ){
-		msgErr( "at least one of '--file', '--mqtt', '--smtp' or '--sms' options must be specified" );
+		msgWarn( "at least one of '--file', '--mqtt', '--smtp' or '--sms' options should be specified" );
 	}
 }
 
