@@ -725,7 +725,7 @@ sub jsonOutput {
 
 sub jsonRead {
 	my ( $path, $opts ) = @_;
-	stackTrace() if !$path;
+	TTP::stackTrace() if !$path;
 	$opts //= {};
 	msgVerbose( "jsonRead() path='$path'" );
 	my $result = undef;
@@ -964,11 +964,21 @@ sub runExtern {
 # print a stack trace
 # https://stackoverflow.com/questions/229009/how-can-i-get-a-call-stack-listing-in-perl
 # to be called for code errors
+# (I):
+# - an optional options hash with following keys:
+#   > exit: whether to exit after the stack trace, defaulting to true
 
 sub stackTrace {
+	my ( $opts ) = @_;
+	$opts //= {};
+	$opts->{exit} = true if !exists $opts->{exit};
 	my $trace = Devel::StackTrace->new;
 	print $trace->as_string;
-	TTP::exit( 1 );
+	if( $opts->{exit} ){
+		TTP::exit( 1 );
+	} else {
+		print STDERR "-- End of stack trace".EOL if $ENV{TTP_DEBUG};
+	}
 }
 
 # ------------------------------------------------------------------------------------------------

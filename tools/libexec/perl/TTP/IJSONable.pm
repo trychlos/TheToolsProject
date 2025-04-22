@@ -218,7 +218,7 @@ sub jsonData {
 sub jsonLoad {
 	my ( $self, $args ) = @_;
 	$args //= {};
-	print STDERR __PACKAGE__."::jsonLoad() self='".ref( $self )."'".EOL if $ENV{TTP_DEBUG};
+	print STDERR __PACKAGE__."::jsonLoad() self='".ref( $self )."' args=".TTP::chompDumper( $args ).EOL if $ENV{TTP_DEBUG};
 
 	# keep the passed-in args
 	$self->{_ijsonable}{args} = \%{$args};
