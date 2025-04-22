@@ -938,7 +938,7 @@ sub random {
 
 sub runCommand {
 	require TTP::RunnerVerb;
-	print STDERR Dumper( @ARGV ) if $ENV{TTP_DEBUG};
+	print STDERR "@ARGV=".TTP::chompDumper( @ARGV ).EOL if $ENV{TTP_DEBUG};
 	$ep = TTP::EP->new();
 	$ep->bootstrap();
 	my $command = TTP::RunnerVerb->new( $ep );
@@ -953,7 +953,7 @@ sub runCommand {
 
 sub runExtern {
 	require TTP::RunnerExtern;
-	print STDERR Dumper( @ARGV ) if $ENV{TTP_DEBUG};
+	print STDERR "@ARGV=".TTP::chompDumper( @ARGV ).EOL if $ENV{TTP_DEBUG};
 	$ep = TTP::EP->new();
 	$ep->bootstrap();
 	my $command = TTP::RunnerExtern->new( $ep );
