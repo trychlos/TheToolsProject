@@ -22,6 +22,7 @@
     - Deprecate TTP::Path::dbmsBackupsDir() in favor of TTP::Path::dbmsBackupsPeriodic()
     - Change the default default values of ttp.pl alerts from true to false, keeping default enabled to true
     - Define the default default values of telemetry.pl publish to false, having default enabled to true
+    - dbms.pl backup and dbms.pl restore have and honor '--report' option
 
 ### 4.7.2
 

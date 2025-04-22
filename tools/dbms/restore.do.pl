@@ -9,6 +9,7 @@
 # @(-) --full=<filename>       restore from this full backup [${full}]
 # @(-) --diff=<filename>       restore with this differential backup [${diff}]
 # @(-) --[no]verifyonly        only check the backup restorability [${verifyonly}]
+# @(-) --[no]report            whether an execution report should be provided [${report}]
 #
 # @(@) Note 1: you must at least provide a full backup to restore, and may also provide an additional differential backup file.
 # @(@) Note 2: target database is mandatory unless you only want a backup restorability check, in which case '--dummy' option is not honored.
@@ -47,7 +48,8 @@ my $defaults = {
 	database => '',
 	full => '',
 	diff => '',
-	verifyonly => 'no'
+	verifyonly => 'no',
+	report => 'yes'
 };
 
 my $opt_instance = $defaults->{instance};
@@ -56,6 +58,7 @@ my $opt_database = $defaults->{database};
 my $opt_full = $defaults->{full};
 my $opt_diff = $defaults->{diff};
 my $opt_verifyonly = false;
+my $opt_report = true;
 
 my $dbms = undef;
 
@@ -92,24 +95,27 @@ sub doRestore {
 			msgOut( "executing '$cmd'" );
 			`$cmd`;
 		}
-		TTP::executionReport({
-			file => {
-				data => $data
-			},
-			mqtt => {
-				data => $data,
-				topic => $ep->node()->name().'/executionReport/'.$ep->runner()->command().'/'.$ep->runner()->verb()."/$opt_instance/$opt_database",
-				options => "-retain",
-				excludes => [
-					'instance',
-					'database',
-					'cmdline',
-					'command',
-					'verb',
-					'host'
-				]
-			}
-		});
+		# honors --report option
+		if( $opt_report ){
+			TTP::executionReport({
+				file => {
+					data => $data
+				},
+				mqtt => {
+					data => $data,
+					topic => $ep->node()->name().'/executionReport/'.$ep->runner()->command().'/'.$ep->runner()->verb()."/$opt_instance/$opt_database",
+					options => "-retain",
+					excludes => [
+						'instance',
+						'database',
+						'cmdline',
+						'command',
+						'verb',
+						'host'
+					]
+				}
+			});
+		}
 	}
 	if( $res ){
 		msgOut( "success" );
@@ -135,7 +141,8 @@ if( !GetOptions(
 	"database=s"		=> \$opt_database,
 	"full=s"			=> \$opt_full,
 	"diff=s"			=> \$opt_diff,
-	"verifyonly!"		=> \$opt_verifyonly )){
+	"verifyonly!"		=> \$opt_verifyonly,
+	"report!"			=> \$opt_report )){
 
 		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
@@ -155,6 +162,7 @@ msgVerbose( "got database='$opt_database'" );
 msgVerbose( "got full='$opt_full'" );
 msgVerbose( "got diff='$opt_diff'" );
 msgVerbose( "got verifyonly='".( $opt_verifyonly ? 'true':'false' )."'" );
+msgVerbose( "got report='".( $opt_report ? 'true':'false' )."'" );
 
 msgErr( "'--instance' option is mandatory, but is not specified" ) if !$opt_instance;
 msgErr( "'--database' option is mandatory, but is not specified" ) if !$opt_database && !$opt_verifyonly;
