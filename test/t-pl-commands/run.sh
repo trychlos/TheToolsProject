@@ -67,7 +67,7 @@ echo -n "  [${thisbase}] verifying the count of commands... "
 let -i _count_lines=$(grep -v '^\[ttp.pl list] ' "${_fout}" | wc -l)
 let -i _count_verb=$(grep 'found command' "${_fout}" | awk '{ print $3 }')
 if [ ${_count_lines} -eq ${_count_verb} ]; then
-    echo "OK"
+    echo "found ${_count_lines} - OK"
     (( _count_ok += 1 ))
 else
     color_red "NOTOK"
@@ -89,9 +89,24 @@ for _command in $(grep -v '^\[ttp.pl list] ' "${_fout}" | sed -e 's|^\s*||' -e '
         echo "OK"
         (( _count_ok += 1 ))
 
+        echo -n "  [${thisbase}] verifying the count of '${_command}' verbs... "
+        (( _count_total+=1 ))
+        let -i _count_lines=$(grep -v "${_command}" "${_fout}" | wc -l)
+        let -i _count_verb=$(grep 'found verb' "${_fout}" | awk '{ print $2 }')
+        if [ ${_count_lines} -eq ${_count_verb} ]; then
+            echo "found ${_count_lines} - OK"
+            (( _count_ok += 1 ))
+        else
+            color_red "NOTOK"
+            (( _count_notok += 1 ))
+            cat "${_fout}" >> ${_fic_errors}
+            echo "count_lines=${_count_lines}" >> ${_fic_errors}
+            echo "count_verb=${_count_verb}" >> ${_fic_errors}
+        fi
+
         # and ask for help for each verb
         _fverb="$(mktemp)"
-        for _verb in $(grep -v "^${_command}:" "${_fout}" | sed -e 's|^s*||' -e 's|:.*$||'); do
+        for _verb in $(grep -v "${_command}" "${_fout}" | sed -e 's|^s*||' -e 's|:.*$||'); do
 
             echo -n "  [${thisbase}] checking that '${_command} ${_verb}' displays standard help... "
             (( _count_total+=1 ))

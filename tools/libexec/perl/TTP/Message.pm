@@ -337,7 +337,7 @@ sub msgWarn {
 
 sub _printMsg {
 	my ( $args ) = @_;
-	if( defined(  $ep )){
+	if( defined( $ep )){
 		$args //= {};
 		my $line = '';
 		my $configured = undef;

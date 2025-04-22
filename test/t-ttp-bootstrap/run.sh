@@ -42,11 +42,23 @@ export PATH="/bin:/sbin:/usr/bin:/usr/sbin:$HOME/bin:$HOME/local/bin:${_toolsdir
 export FPATH="${_toolsdir}/libexec/sh:${_workdir}/libexec/sh"
 export PERL5LIB="${_toolsdir}/libexec/perl:${_workdir}/libexec/perl"
 
+# dump stdout/stderr on demand
+f_display(){
+    echo "fout"
+    ls -l "${_fout}"
+    cat "${_fout}"
+    echo "ferr"
+    ls -l "${_ferr}"
+    cat "${_ferr}"
+    echo "end"
+}
+
 # without site.json, we expect an error message (and only that)
 _fout="$(mktemp)"
 _ferr="$(mktemp)"
 ttp.pl 1>${_fout} 2>${_ferr}
 _rc=$?
+#servf_display
 echo -n "  [${thisbase}] without any site.json, checking stdout is empty... "
 (( _count_total+=1 ))
 if [ -s "${_fout}" ]; then

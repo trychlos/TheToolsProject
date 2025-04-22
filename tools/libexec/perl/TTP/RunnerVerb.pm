@@ -96,6 +96,7 @@ sub _commandHelp {
 	# display each verb one-line help
 	my @verbs = $self->_getVerbs();
 	my $verbsHelp = {};
+	my $count = 0;
 	foreach my $it ( @verbs ){
 		my @fullHelp = $self->helpablePre( $it, { warnIfSeveral => false });
 		my ( $volume, $directories, $file ) = File::Spec->splitpath( $it );
@@ -107,8 +108,10 @@ sub _commandHelp {
 	# verbs are displayed alpha sorted
 	foreach my $it ( sort keys %{$verbsHelp} ){
 		print "  $it: $verbsHelp->{$it}".EOL;
+		$count += 1;
 	}
 
+	msgOut( "$count found verb(s)" );
 	return $self;
 }
 

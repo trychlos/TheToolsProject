@@ -430,6 +430,7 @@ sub logsCommands {
 #   and at least not definitive while the node has not been instanciated/loaded/evaluated
 
 sub logsMain {
+	print STDERR __PACKAGE__."::logsMain() entering".EOL if $ENV{TTP_DEBUG};
 	my $file;
 	my $node = $ep ? $ep->node() : undef;
 	if( $node ){
@@ -448,6 +449,7 @@ sub logsMain {
 			$file = File::Spec->catfile( TTP::Path::logsCommands(), 'main.log' );
 		}
 	}
+	print STDERR __PACKAGE__."::logsMain() returning with file='".( $file ? $file : '(undef)' )."'".EOL if $ENV{TTP_DEBUG};
 	return $file;
 }
 
@@ -487,6 +489,8 @@ sub logsPeriodic {
 # (O):
 # - returns the 'logs.rootDir' directory, which may be undef very early in the bootstrap process
 #   and at least not definitive while the node has not been instanciated/loaded/evaluated
+#
+##########      CAUTION: there is no way to call a msgXxxx() function from here!     ##########
 
 sub logsRoot {
 	my $dir = undef;
@@ -495,16 +499,16 @@ sub logsRoot {
 		$dir = $ep->var([ 'logs', 'rootDir' ]);
 		if( !$dir ){
 			$dir = $ep->var( 'logsRoot' );
-			if( $dir ){
-				$ep->{_warnings} //= {};
-				if( !$ep->{_warnings}{logsroot} ){
-					msgWarn( "'logsRoot' property is deprecated in favor of 'logs.rootDir'. You should update your configurations." );
-					$ep->{_warnings}{logsroot} = true;
-				}
-			}
+			#if( $dir ){
+			#	$ep->{_warnings} //= {};
+			#	if( !$ep->{_warnings}{logsroot} ){
+			#		msgWarn( "'logsRoot' property is deprecated in favor of 'logs.rootDir'. You should update your configurations." );
+			#		$ep->{_warnings}{logsroot} = true;
+			#	}
+			#}
 		}
 		if( !$dir ){
-			TTP::Message::msgWarn( "'logs.rootDir' is not defined in site nor in node configurations" );
+			#TTP::Message::msgWarn( "'logs.rootDir' is not defined in site nor in node configurations" );
 			$dir = File::Spec->catdir( TTP::tempDir(), 'TTP', 'logs' );
 		}
 	}

@@ -22,21 +22,19 @@
 # or:
 #     C:\> test\run.cmd
 #
-# Accepted command-line arguments:
-# -noerrs: do not display the errors
-#
 # Tests are executed with the current git branch.
 #
 # have to test:
 # - for Perl standard modules
 # - for Perl TTP modules
-# sh bootstrapping
+# - sh bootstrapping
+# - ttp bootstrapping
 # cmd bootstrapping
-# we do not have a site.json
-# we do not have a node.json
-# $ ttp.pl: gives a list exit=0
-# $ ttp.pl list: gives an help, exit=0
-# $ ttp.pl list -commands, gives a list, exit=0
+# - we do not have a site.json
+# - we do not have a node.json
+# - $ ttp.pl: gives a list exit=0
+# - $ ttp.pl list: gives an help, exit=0
+# - $ ttp.pl list -commands, gives a list, exit=0
 # $ ttp.pl push -noverb
 # $ ttp.pl vars -logsRoot
 # $ ttp.pl vars -key logs,rootDir
