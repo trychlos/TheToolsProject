@@ -1006,7 +1006,7 @@ sub DESTROY {
 
 sub bootstrap {
 	my ( $class ) = @_;
-	print STDERR __PACKAGE__."::bootstrap()".EOL if $ENV{TTP_DEBUG};
+	msgDebug( __PACKAGE__."::bootstrap()" );
 
 	$ep = TTP::EP->new();
 	$ep->bootstrap();
@@ -1025,7 +1025,7 @@ sub bootstrap {
 
 sub startDaemon {
 	my ( $class, $config ) = @_;
-	print STDERR __PACKAGE__."::startDaemon() config=".ref( $config ).EOL if $ENV{TTP_DEBUG};
+	msgDebug( __PACKAGE__."::startDaemon() config=".ref( $config ));
 
 	my $program = $config->execPath();
 	my $command = "perl $program -json ".$config->jsonPath()." -ignoreInt ".join( ' ', @ARGV );

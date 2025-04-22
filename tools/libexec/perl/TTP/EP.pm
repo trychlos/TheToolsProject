@@ -60,31 +60,34 @@ use TTP::Site;
 
 sub bootstrap {
 	my ( $self, $args ) = @_;
-	print STDERR __PACKAGE__."::bootstrap()".EOL if $ENV{TTP_DEBUG};
+	msgDebug( __PACKAGE__."::bootstrap()" );
 
 	# first identify, load, evaluate the site configuration - exit if error
 	# when first evaluating the site json, disable warnings so that we do not get flooded with
 	# 'use of uninitialized value' message when evaluating the json (because there is no host yet)
 	my $site = TTP::Site->new( $self );
-	print STDERR __PACKAGE__."::bootstrap() site instanciated".EOL if $ENV{TTP_DEBUG};
+	msgDebug( __PACKAGE__."::bootstrap() ".ref( $site )." instanciated" );
 	$self->{_site} = $site;
 	$site->evaluate({ warnOnUninitialized => false });
-	print STDERR __PACKAGE__."::bootstrap() site set and evaluated".EOL if $ENV{TTP_DEBUG};
+	msgDebug( __PACKAGE__."::bootstrap() ".ref( $site )." set and first evaluated" );
 
 	# identify current host and load its configuration
 	my $node = TTP::Node->new( $self );
-	print STDERR __PACKAGE__."::bootstrap() node instanciated".EOL if $ENV{TTP_DEBUG};
+	msgDebug( __PACKAGE__."::bootstrap() ".ref( $node )." instanciated" );
 	$self->{_node} = $node;
 	$node->evaluate();
-	print STDERR __PACKAGE__."::bootstrap() node set and evaluated".EOL if $ENV{TTP_DEBUG};
+	msgDebug( __PACKAGE__."::bootstrap() ".ref( $node )." set and first evaluated" );
 
 	# reevaluate the site when the node is set
 	$site->evaluate();
+	msgDebug( __PACKAGE__."::bootstrap() ".ref( $site )." last evaluated" );
 	# and reevaluate the node
 	$node->evaluate();
+	msgDebug( __PACKAGE__."::bootstrap() ".ref( $node )." last evaluated" );
 
 	# EntryPoint is bootstrapped
 	$self->{_bootstrapped} = true;
+	msgDebug( __PACKAGE__."::bootstrap() ".ref( $self )." bootstrapped" );
 
 	return  $self;
 }
@@ -123,7 +126,7 @@ sub runner {
 
 	if( defined( $runner )){
 		if( $runner->does( 'TTP::IRunnable' ) && $runner->does( 'TTP::IOptionable' )){
-			print STDERR __PACKAGE__."::runner() setting runner=".ref( $runner ).EOL if $ENV{TTP_DEBUG};
+			msgDebug( __PACKAGE__."::runner() setting runner=".ref( $runner ));
 			$self->{_running} = $runner;
 		} else {
 			msgErr( __PACKAGE__."::runner() expects both TTP::IRunnable and TTP::IOptionable" );
@@ -160,7 +163,7 @@ sub site {
 sub var {
 	my ( $self, $keys, $opts ) = @_;
 	$opts //= {};
-	print STDERR __PACKAGE__."::var() keys=".( ref( $keys ) eq 'ARRAY' ? ( "[ ".join( ', ', @{$keys} )." ]" ) : "'$keys'" ).", opts=".TTP::chompDumper( $opts ).EOL if $ENV{TTP_DEBUG};
+	msgDebug( __PACKAGE__."::var() keys=".( ref( $keys ) eq 'ARRAY' ? ( "[ ".join( ', ', @{$keys} )." ]" ) : "'$keys'" ).", opts=".TTP::chompDumper( $opts ));
 	my $value = undef;
 	# we may not have yet a current execution node, so accept that jsonable be undef
 	my $jsonable = $opts->{jsonable} || $self->node();
@@ -193,7 +196,7 @@ sub new {
 	$class = ref( $class ) || $class;
 	my $self = {};
 	bless $self, $class;
-	print STDERR __PACKAGE__."::new()".EOL if $ENV{TTP_DEBUG};
+	msgDebug( __PACKAGE__."::new()" );
 
 	return $self;
 }

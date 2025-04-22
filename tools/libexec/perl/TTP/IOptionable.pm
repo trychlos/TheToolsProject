@@ -42,6 +42,7 @@ use warnings;
 use Data::Dumper;
 
 use TTP::Constants qw( :all );
+use TTP::Message qw( :all );
 
 ### https://metacpan.org/pod/Role::Tiny
 ### All subs created after importing Role::Tiny will be considered methods to be composed.
@@ -167,16 +168,16 @@ after _newBase => sub {
 	$self->{_ioptionable}{dummy_set} = false;
 	$self->{_ioptionable}{verbose} = false;
 	$self->{_ioptionable}{verbose_set} = false;
-	print STDERR __PACKAGE__."::after_newBase() self=".ref( $self )." initialize IOptionable options to false".EOL if $ENV{TTP_DEBUG};
+	msgDebug( __PACKAGE__."::after_newBase() self=".ref( $self )." initialize IOptionable options to false" );
 
 	# Set the help flag to true if there are not enough arguments in the command-line
 	# the minimum count of arguments MUST be defined by the implementation class
-	print STDERR __PACKAGE__."::after_newBase() self=".ref( $self )." scalar \@ARGV=".( scalar( @ARGV )) if $ENV{TTP_DEBUG};
+	my $debug = __PACKAGE__."::after_newBase() self=".ref( $self )." scalar \@ARGV=".( scalar( @ARGV ));
 	if( scalar( @ARGV ) < $self->minArgsCount()){
 		$self->{_ioptionable}{help} = true;
-		print STDERR " set help=true" if $ENV{TTP_DEBUG};
+		$debug .= " => set help=true";
 	}
-	print STDERR EOL if $ENV{TTP_DEBUG};
+	msgDebug( $debug );
 };
 
 ### Global functions

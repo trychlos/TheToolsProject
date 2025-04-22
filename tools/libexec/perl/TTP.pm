@@ -548,7 +548,7 @@ sub _executionReportToMqtt {
 
 sub exit {
 	my $rc = shift || $ep->runner()->runnableErrs();
-	print STDERR __PACKAGE__."::exit() rc=$rc".EOL if $ENV{TTP_DEBUG};
+	msgDebug( __PACKAGE__."::exit() rc=$rc" );
 	if( $rc ){
 		msgErr( "exiting with code $rc" );
 	} else {
@@ -937,8 +937,8 @@ sub random {
 # and @ARGV the command-line arguments
 
 sub runCommand {
+	msgDebug( __PACKAGE__."::runCommand() \@ARGV=".TTP::chompDumper( @ARGV ));
 	require TTP::RunnerVerb;
-	print STDERR "@ARGV=".TTP::chompDumper( @ARGV ).EOL if $ENV{TTP_DEBUG};
 	$ep = TTP::EP->new();
 	$ep->bootstrap();
 	my $command = TTP::RunnerVerb->new( $ep );
@@ -952,8 +952,8 @@ sub runCommand {
 # and @ARGV the command-line arguments
 
 sub runExtern {
+	msgDebug( __PACKAGE__."::runCommand() \@ARGV=".TTP::chompDumper( @ARGV ));
 	require TTP::RunnerExtern;
-	print STDERR "@ARGV=".TTP::chompDumper( @ARGV ).EOL if $ENV{TTP_DEBUG};
 	$ep = TTP::EP->new();
 	$ep->bootstrap();
 	my $command = TTP::RunnerExtern->new( $ep );
@@ -977,7 +977,7 @@ sub stackTrace {
 	if( $opts->{exit} ){
 		TTP::exit( 1 );
 	} else {
-		print STDERR "-- End of stack trace".EOL if $ENV{TTP_DEBUG};
+		msgDebug( __PACKAGE__."::stackTrace() returning" );
 	}
 }
 

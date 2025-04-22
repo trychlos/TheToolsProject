@@ -215,7 +215,7 @@ after _newBase => sub {
 
 	# Starting with v4, TheToolsProject is merged with the sh version. If a 'ttp_me' environment variable
 	#  exists, then this perl is embedded into a sh run. So shift the command-line arguments
-	print STDERR "ttp_me='".( $ENV{ttp_me} || "" )."'".EOL if $ENV{TTP_DEBUG};
+	msgDebug( __PACKAGE__."after_newBase() ttp_me='".( $ENV{ttp_me} || "" )."'" );
 	$self->{_irunnable}{me} = $0;
 	if( $ENV{ttp_me} ){
 		$self->{_irunnable}{me} = shift @ARGV;

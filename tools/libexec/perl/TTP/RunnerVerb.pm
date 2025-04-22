@@ -218,7 +218,7 @@ sub minArgsCount {
 
 sub run {
 	my ( $self ) = @_;
-	print STDERR __PACKAGE__."::run() self=".ref( $self ).EOL if $ENV{TTP_DEBUG};
+	msgDebug( __PACKAGE__."::run() self=".ref( $self ));
 
 	try {
 		# first argument is supposed to be the verb

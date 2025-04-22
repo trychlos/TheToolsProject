@@ -65,6 +65,7 @@ Sub::Exporter::setup_exporter({
 		DUMMY
 		VERBOSE
 		
+		msgDebug
 		msgDummy
 		msgErr
 		msgLog
@@ -94,6 +95,9 @@ my $Const = {
 	CRIT => {
 	},
 	DEBUG => {
+		color => "light_gray",
+		marker => "(DBG)",
+		key => 'msgDebug'
 	},
 	DUMMY => {
 		color => "cyan",
@@ -184,12 +188,33 @@ sub knownLevels {
 }
 
 # -------------------------------------------------------------------------------------------------
+# debug message
+# (I):
+# - the message to be printed
+# (O):
+# - the message is printed on STDERR until TTP::EP has been bootstrapped - is logged after that
+
+sub msgDebug {
+	my ( $msg ) = @_;
+	if( $ENV{TTP_DEBUG} ){
+		# can be called very early, for example for a sh bootstrap
+		if( $ep && $ep->bootstrapped()){
+			print STDERR "$Const->{DEBUG}{marker} $msg".EOL;
+		} else {
+			msgLog( "$Const->{DEBUG}{marker} $msg" );
+		}
+	}
+}
+
+# -------------------------------------------------------------------------------------------------
 # dummy message
 # (I):
 # - the message to be printed (usually the command to be run in dummy mode)
+# (O):
+# - returns true to simulate a successful operation
 
 sub msgDummy {
-	if( $ep->runner() && $ep->runner()->dummy()){
+	if( $ep && $ep->runner() && $ep->runner()->dummy()){
 		_printMsg({
 			msg => shift,
 			level => DUMMY,
@@ -259,11 +284,11 @@ sub msgLog {
 
 sub _msgLogAppend {
 	my ( $msg, $opts ) = @_;
-	if( $ep->bootstrapped()){
+	if( $ep && $ep->bootstrapped()){
 		require TTP::Path;
 		$opts //= {};
 		my $logFile = $opts->{logFile} || TTP::logsMain();
-		print STDERR __PACKAGE__."::_msgLogAppend() msg='$msg' opts=".TTP::chompDumper( $opts )." logFile='".( $logFile ? $logFile : '(undef)' )."'".EOL if $ENV{TTP_DEBUG};
+		msgDebug( __PACKAGE__."::_msgLogAppend() msg='$msg' opts=".TTP::chompDumper( $opts )." logFile=".( $logFile ? "'$logFile'" : '(undef)' ));
 		if( $logFile ){
 			my $host = TTP::nodeName() || '-';
 			my $username = $ENV{LOGNAME} || $ENV{USER} || $ENV{USERNAME} || 'unknown'; #getpwuid( $< );
@@ -293,7 +318,7 @@ sub msgOut {
 
 sub _msgPrefix {
 	my $prefix = '';
-	if( $ep->runner()){
+	if( $ep && $ep->runner()){
 		$prefix .= "[".join( ' ', @{$ep->runner()->runnableQualifiers()} )."] ";
 	}
 	return $prefix;
@@ -308,7 +333,7 @@ sub msgVerbose {
 	my $msg = shift;
 	# be verbose to console ?
 	my $verbose = false;
-	$verbose = $ep->runner()->verbose() if $ep->runner();
+	$verbose = $ep->runner()->verbose() if $ep && $ep->runner();
 	_printMsg({
 		msg => $msg,
 		level => VERBOSE,
