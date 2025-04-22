@@ -1,10 +1,12 @@
-# @(#) list published metrics
+# @(#) list the published metrics
 #
 # @(-) --[no]help              print this message, and exit [${help}]
 # @(-) --[no]colored           color the output depending of the message level [${colored}]
 # @(-) --[no]dummy             dummy run (ignored here) [${dummy}]
 # @(-) --[no]verbose           run verbosely [${verbose}]
-# @(-) --[no]push              list metrics published on the PushGateway [${push}]
+# @(-) --[no]mqtt              limit to metrics published on the MQTT bus [${mqtt}]
+# @(-) --[no]http              limit to metrics published on the PushGateway [${http}]
+# @(-) --[no]text              limit to metrics published on the TextFile collector [${text}]
 # @(-) --limit=<limit>         only list first <limit> metric [${limit}]
 #
 # The Tools Project - Tools System and Working Paradigm for IT Production
@@ -40,11 +42,15 @@ my $defaults = {
 	colored => 'no',
 	dummy => 'no',
 	verbose => 'no',
-	push => 'no',
+	mqtt => 'no',
+	http => 'no',
+	text => 'no',
 	limit => -1
 };
 
-my $opt_push = false;
+my $opt_mqtt = false;
+my $opt_http = false;
+my $opt_text = false;
 my $opt_limit = $defaults->{limit};
 
 # -------------------------------------------------------------------------------------------------
@@ -157,7 +163,9 @@ if( !GetOptions(
 	"colored!"			=> sub { $ep->runner()->colored( @_ ); },
 	"dummy!"			=> sub { $ep->runner()->dummy( @_ ); },
 	"verbose!"			=> sub { $ep->runner()->verbose( @_ ); },
-	"push!"				=> \$opt_push,
+	"mqtt!"				=> \$opt_mqtt,
+	"http!"				=> \$opt_http,
+	"text!"				=> \$opt_text,
 	"limit=i"			=> \$opt_limit )){
 
 		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
@@ -172,13 +180,15 @@ if( $ep->runner()->help()){
 msgVerbose( "got colored='".( $ep->runner()->colored() ? 'true':'false' )."'" );
 msgVerbose( "got dummy='".( $ep->runner()->dummy() ? 'true':'false' )."'" );
 msgVerbose( "got verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
-msgVerbose( "got push='".( $opt_push ? 'true':'false' )."'" );
+msgVerbose( "got mqtt='".( $opt_mqtt ? 'true':'false' )."'" );
+msgVerbose( "got http='".( $opt_http ? 'true':'false' )."'" );
+msgVerbose( "got text='".( $opt_text ? 'true':'false' )."'" );
 msgVerbose( "got limit='$opt_limit'" );
 
-msgWarn( "will not list anything as '--push' option is not set" ) if !$opt_push;
+msgWarn( "at least one of '--mqtt', '--http' or '--text' options should be specified" ) if !$opt_mqtt && !$opt_http && !$opt_text;
 
 if( !TTP::errs()){
-	doListPush() if $opt_push;
+	#doListPush() if $opt_push;
 }
 
 TTP::exit();

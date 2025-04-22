@@ -782,6 +782,13 @@
                     ],
                     "type": "object",
                     "properties": {
+                        "server": {
+                            "description": "The configuration of the telemetry server.",
+                            "type": "object",
+                            "properties": {
+                                
+                            }
+                        },
                         "withMqtt": {
                             "description": "The messaging-based configuration of the telemetry, i.e. the configuration needed to publish telemetry to the MQTT bus.",
                             "type": "object",

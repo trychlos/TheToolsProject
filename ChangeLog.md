@@ -20,7 +20,8 @@
     - Deprecate 'DBMS.backupsRoot' in favor of 'DBMS.backups.rootDir', 'DBMS.backupsDir' in favor of 'DBMS.backups.periodicDir' (todo #108)
     - Define new TTP::dbmsBackupsPeriodic() and TTP::dbmsBackupsRoot()
     - Deprecate TTP::Path::dbmsBackupsDir() in favor of TTP::Path::dbmsBackupsPeriodic()
-    - Change the default default values of ttp.pl alerts from true to false
+    - Change the default default values of ttp.pl alerts from true to false, keeping default enabled to true
+    - Define the default default values of telemetry.pl publish to false, having default enabled to true
 
 ### 4.7.2
 
