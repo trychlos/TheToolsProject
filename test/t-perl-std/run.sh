@@ -17,7 +17,8 @@
 # along with TheToolsProject; see the file COPYING. If not,
 # see <http://www.gnu.org/licenses/>.
 #
-# Check that all use'd standard Perl modules are installed#
+# Check that all use'd standard Perl modules are installed
+#
 # (I):
 # - temp file where results counts are to be written
 # - temp file where error messages are to be written
