@@ -43,6 +43,7 @@ use utf8;
 use warnings;
 
 use TTP::Metric;
+use TTP::Telemetry;
 
 my $defaults = {
 	help => 'no',
@@ -70,17 +71,17 @@ my $opt_textPrefix = $defaults->{textPrefix};
 my @opt_prepends = ();
 my @opt_appends = ();
 
-my $opt_mqtt = getValue([ 'withMqtt', 'default' ]);
+my $opt_mqtt = TTP::Telemetry::getConfigurationValue([ 'withMqtt', 'default' ]);
 $opt_mqtt = false if !defined $opt_mqtt;
 $defaults->{mqtt} = $opt_mqtt ? 'yes' : 'no';
 my $opt_mqtt_set = false;
 
-my $opt_http = getValue([ 'withHttp', 'default' ]);
+my $opt_http = TTP::Telemetry::getConfigurationValue([ 'withHttp', 'default' ]);
 $opt_http = false if !defined $opt_http;
 $defaults->{http} = $opt_http ? 'yes' : 'no';
 my $opt_http_set = false;
 
-my $opt_text = getValue([ 'withText', 'default' ]);
+my $opt_text = TTP::Telemetry::getConfigurationValue([ 'withText', 'default' ]);
 $opt_text = false if !defined $opt_text;
 $defaults->{text} = $opt_text ? 'yes' : 'no';
 my $opt_text_set = false;
@@ -111,30 +112,6 @@ sub doPublish {
 	} else {
 		msgOut( "done" );
 	}
-}
-
-# -------------------------------------------------------------------------------------------------
-# get a configuration value
-# emitting a warning when the key is found under (deprecated) 'Telemetry'
-# (I):
-# - the list of searched keys as an array ref
-# (O):
-# - the found value or undef
-
-sub getValue {
-	my ( $keys ) = @_;
-	my @newKeys = @{$keys};
-	unshift( @newKeys, 'telemetry' );
-	my $value = TTP::var( \@newKeys );
-	if( !defined( $value )){
-		@newKeys = @{$keys};
-		unshift( @newKeys, 'Telemetry' );
-		$value = TTP::var( \@newKeys );
-		if( defined( $value )){
-			msgWarn( "'Telemetry' property is deprecated in favor of 'telemetry'. You should update your configurations." );
-		}
-	}
-	return $value;
 }
 
 # =================================================================================================
@@ -204,7 +181,7 @@ msgErr( "'--value' option is required, but is not specified" ) if !defined $opt_
 
 # disabled media are just ignored (or refused if option was explicit)
 if( $opt_mqtt ){
-	my $enabled = getValue([ 'withMqtt', 'enabled' ]);
+	my $enabled = TTP::Telemetry::getConfigurationValue([ 'withMqtt', 'enabled' ]);
 	$enabled = true if !defined $enabled;
 	if( !$enabled ){
 		if( $opt_mqtt_set ){
@@ -216,7 +193,7 @@ if( $opt_mqtt ){
 	}
 }
 if( $opt_http ){
-	my $enabled = getValue([ 'withHttp', 'enabled' ]);
+	my $enabled = TTP::Telemetry::getConfigurationValue([ 'withHttp', 'enabled' ]);
 	$enabled = true if !defined $enabled;
 	if( !$enabled ){
 		if( $opt_http_set ){
@@ -228,7 +205,7 @@ if( $opt_http ){
 	}
 }
 if( $opt_text ){
-	my $enabled = getValue([ 'withText', 'enabled' ]);
+	my $enabled = TTP::Telemetry::getConfigurationValue([ 'withText', 'enabled' ]);
 	$enabled = true if !defined $enabled;
 	if( !$enabled ){
 		if( $opt_text_set ){
@@ -253,6 +230,7 @@ foreach my $label ( @opt_appends ){
 		msgErr( "label '$label' doesn't appear of the 'name=value' form" );
 	}
 }
+
 msgWarn( "at least one of '--mqtt', '--http' or '--text' options should be specified" ) if !$opt_mqtt && !$opt_http && !$opt_text;
 
 if( !TTP::errs()){
