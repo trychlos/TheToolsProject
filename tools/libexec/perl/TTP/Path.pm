@@ -305,6 +305,7 @@ sub dbmsBackupsPeriodic {
 # (O):
 # the root the the DBMS backups directories, making sure the dir exists
 # the root can be defined in toops.json, or overriden in host configuration
+# may return undef in the early stage of the bootstrapping process
 
 sub dbmsBackupsRoot {
 	my $dir;
@@ -321,11 +322,14 @@ sub dbmsBackupsRoot {
 				}
 			}
 		}
+		if( !$dir ){
+			$dir = File::Spec->catdir( TTP::tempDir(), 'TTP', 'backups' );
+		}
 	}
 	if( $dir ){
 		makeDirExist( $dir );
 	}
-	return $dir || TTP::tempDir();
+	return $dir;
 }
 
 # ------------------------------------------------------------------------------------------------
@@ -501,7 +505,7 @@ sub logsRoot {
 		}
 		if( !$dir ){
 			TTP::Message::msgWarn( "'logs.rootDir' is not defined in site nor in node configurations" );
-			$dir = TTP::tempDir();
+			$dir = File::Spec->catdir( TTP::tempDir(), 'TTP', 'logs' );
 		}
 	}
 	return $dir;

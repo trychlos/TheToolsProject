@@ -375,7 +375,7 @@
                                         "This 'backups.rootDir' directory can be got by the user via the 'dbms.pl vars --backupsRoot' command."
                                     ],
                                     "type": "string",
-                                    "default": "[eval:TTP::tempDir()]"
+                                    "default": "[eval:File::Spec->catdir( TTP::tempDir(), 'TTP', 'backups' )]"
                                 }
         
                             }
@@ -776,17 +776,33 @@
                 },
                 "telemetry": {
                     "description_array": [
+                        "The configuration of the telemetry.",
                         "Starting with its v3.0 version, TheToolsProject has chosen Prometheus ecosystem to host its telemetry, while keeping the capability",
                         "to have a messaging-based (MQTT) telemetry. Prometheus let us sent our telemetry either via the PushGateway or via the TextFileCollector.",
-                        "These three medias are both configurable here."
-                    ],
+                        "These three medias are both configurable here.",
+                        "Prometheus defines its metrics as an object with following properties:",
+                        "- a name,",
+                        "- a numeric value,",
+                        "- an optional help line,",
+                        "- an optional list of labels defined as \"name\"=\"value\".",
+                        "Please note that, while the list of labels is unordered from Prometheus point of view, and so unordered in HTTP PushGateway and text TextFile collector,",
+                        "it is ordered from MQTT point of view because they are parts of the built topic.",
+                        "The following macros are available to the 'telemetry.pl' verbs:",
+                        "- <NAME>: the metric name, always 'ttp_'-prefixed,",
+                        "- <VALUE>: the metric value,",
+                        "- <HELP>: the metric help line,",
+                        "- <LABELS>: the provided (ordered) labels as a comma-separated string."
+    ],
                     "type": "object",
                     "properties": {
                         "server": {
                             "description": "The configuration of the telemetry server.",
                             "type": "object",
                             "properties": {
-                                
+                                "url": {
+                                    "description": "The URL of the Prometheus server",
+                                    "type": "string"
+                                }
                             }
                         },
                         "withMqtt": {

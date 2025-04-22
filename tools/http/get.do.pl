@@ -1,4 +1,4 @@
-# @(#) run a GET on a HTTP endpoint
+# @(#) run a GET on a HTTP/HTTPS endpoint
 #
 # @(-) --[no]help              print this message, and exit [${help}]
 # @(-) --[no]colored           color the output depending of the message level [${colored}]
@@ -20,11 +20,13 @@
 # @(-) --prepend=<name=value>  label to be prepended to the telemetry metrics, may be specified several times or as a comma-separated list [${prepend}]
 # @(-) --append=<name=value>   label to be appended to the telemetry metrics, may be specified several times or as a comma-separated list [${append}]
 # @(-) --service=<service>     an optional service name to be inserted in the MQTT topic [${service}]
+# @(-) --username=<username>   an optional username [${username}]
+# @(-) --password=<password>   the corresponding password [${password}]
+# @(-) --pwdkeys=<pwdkeys>     a comma-separated list of the keys to get the password from credentials [${pwdkeys}]
 #
 # @(@) Among other uses, this verb is notably used to check which machine answers to a given URL in an architecture which wants take advantage of
-# @(@) IP Failover system. But, in such a system, all physical hosts are configured with this FO IP, and so would answer to this IP is the request
-# @(@) originates from this same physical host.
-# @(@) In order to get accurate result, this verb must so be run from outside of the involved physical hosts.
+# @(@) IP Failover system. But, in such a system, all physical hosts are configured with this FO IP, and so answers are seen as originating from
+# @(@) this same physical host. In order to get accurate result in such a case, this verb must so be run from outside of the involved physical hosts.
 # @(@) '--epoch' option let the verb publish an epoch-based telemetry. This is very specific to the use of the telemetry by Grafana in order
 # @(@) to be able to both identify the last live node, and to set a status on this last live node to current or not.
 #
@@ -77,7 +79,10 @@ my $defaults = {
 	textPrefix => '',
 	prepend => '',
 	append => '',
-	service => ''
+	service => '',
+	username => '',
+	password => '',
+	pwdkeys => ''
 };
 
 my $opt_url = $defaults->{url};
@@ -97,6 +102,9 @@ my $opt_textPrefix = $defaults->{textPrefix};
 my @opt_prepends = ();
 my @opt_appends = ();
 my $opt_service = $defaults->{service};
+my $opt_username = $defaults->{username};
+my $opt_password = $defaults->{password};
+my $opt_pwdkeys = $defaults->{pwdkeys};
 
 # -------------------------------------------------------------------------------------------------
 # request the url
@@ -225,7 +233,10 @@ if( !GetOptions(
 	"textPrefix=s"		=> \$opt_textPrefix,
 	"prepend=s@"		=> \@opt_prepends,
 	"append=s@"			=> \@opt_appends,
-	"service=s"			=> \$opt_service )){
+	"service=s"			=> \$opt_service,
+	"username=s"		=> \$opt_username,
+	"password=s"		=> \$opt_password,
+	"pwdkeys=s"			=> \$opt_pwdkeys )){
 
 		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
@@ -258,6 +269,9 @@ msgVerbose( "got prepends='".join( ',', @opt_prepends )."'" );
 @opt_appends = split( /,/, join( ',', @opt_appends ));
 msgVerbose( "got appends='".join( ',', @opt_appends )."'" );
 msgVerbose( "got service='$opt_service'" );
+msgVerbose( "got username='$opt_username'" );
+msgVerbose( "got password='$opt_password'" );
+msgVerbose( "got pwdkeys='$opt_pwdkeys'" );
 
 # url is mandatory
 msgErr( "url is required, but is not specified" ) if !$opt_url;

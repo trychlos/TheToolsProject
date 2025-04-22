@@ -76,7 +76,7 @@ my $Const = {
 
 sub alertsDir {
 	msgWarn( "TTP::alertsDir() is deprecated in favor of TTP:alertsFileDropdir(). You should update your code." );
-	return alertsFileDropdir();
+	return TTP::alertsFileDropdir();
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -87,7 +87,7 @@ sub alertsDir {
 # - returns the alertsdir
 
 sub alertsFileDropdir {
-	my $dir = $ep->var([ 'alerts', 'withFile', 'dropDir' ]) || tempDir();
+	my $dir = $ep->var([ 'alerts', 'withFile', 'dropDir' ]) || File::Spec->catdir( TTP::tempDir(), 'TTP', 'alerts' );
 	return $dir;
 }
 
