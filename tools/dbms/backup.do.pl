@@ -100,6 +100,7 @@ sub doBackup {
 			output => ( $res->{status} ? $res->{output} : "" ),
 			compress => $opt_compress
 		};
+		# honors --report option
 		if( $opt_report ){
 			TTP::executionReport({
 				file => {
