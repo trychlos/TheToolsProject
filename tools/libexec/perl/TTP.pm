@@ -92,6 +92,21 @@ sub alertsFileDropdir {
 }
 
 # -------------------------------------------------------------------------------------------------
+# returns a Dumper of the data, without terminating end-of-line
+# (I):
+# - the data to be dumped
+# (O):
+# - the data as an expanded string
+
+sub chompDumper {
+	my ( $data ) = @_;
+	my $str = Dumper( $data );
+	$str =~ s/^\$VAR[0-9]+\s+=\s*//;
+	chomp $str;
+	return $str;
+}
+
+# -------------------------------------------------------------------------------------------------
 # Read from configuration either a command as a string or as a byOS-command.
 # We are searching for a 'command' property below the provided keys.
 # This command may be a simple string or an object 'command.byOS.<OSname>'.

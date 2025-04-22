@@ -60,6 +60,7 @@ use TTP::Site;
 
 sub bootstrap {
 	my ( $self, $args ) = @_;
+	print STDERR __PACKAGE__."::bootstrap()".EOL if $ENV{TTP_DEBUG};
 
 	# first identify, load, evaluate the site configuration - exit if error
 	# when first evaluating the site json, disable warnings so that we do not get flooded with
@@ -146,7 +147,7 @@ sub site {
 sub var {
 	my ( $self, $keys, $opts ) = @_;
 	$opts //= {};
-	print STDERR __PACKAGE__."::var() keys=".( ref( $keys ) eq 'ARRAY' ? ( "[ ".join( ', ', @{$keys} )." ]" ) : "'$keys'" ).", opts=".Dumper( $opts ) if $ENV{TTP_DEBUG};
+	print STDERR __PACKAGE__."::var() keys=".( ref( $keys ) eq 'ARRAY' ? ( "[ ".join( ', ', @{$keys} )." ]" ) : "'$keys'" ).", opts=".TTP::chompDumper( $opts ).EOL if $ENV{TTP_DEBUG};
 	my $value = undef;
 	# we may not have yet a current execution node, so accept that jsonable be undef
 	my $jsonable = $opts->{jsonable} || $self->node();
@@ -179,6 +180,7 @@ sub new {
 	$class = ref( $class ) || $class;
 	my $self = {};
 	bless $self, $class;
+	print STDERR __PACKAGE__."::new()".EOL if $ENV{TTP_DEBUG};
 
 	return $self;
 }

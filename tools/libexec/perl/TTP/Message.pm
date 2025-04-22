@@ -262,7 +262,7 @@ sub _msgLogAppend {
 	require TTP::Path;
 	$opts //= {};
 	my $logFile = $opts->{logFile} || TTP::logsMain();
-	print STDERR __PACKAGE__."::_msgLogAppend() msg='$msg' opts=".Dumper( $opts )." logFile='".( $logFile ? $logFile : '(undef)' )."'".EOL if $ENV{TTP_DEBUG};
+	print STDERR __PACKAGE__."::_msgLogAppend() msg='$msg' opts=".TTP::chompDumper( $opts )." logFile='".( $logFile ? $logFile : '(undef)' )."'".EOL if $ENV{TTP_DEBUG};
 	if( $logFile ){
 		my $host = TTP::nodeName() || '-';
 		my $username = $ENV{LOGNAME} || $ENV{USER} || $ENV{USERNAME} || 'unknown'; #getpwuid( $< );
