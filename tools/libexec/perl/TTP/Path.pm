@@ -416,8 +416,11 @@ sub logsCommands {
 				}
 			}
 		}
+		if( !$dir ){
+			$dir = TTP::Path::logsPeriodic();
+		}
 	}
-	return $dir || TTP::Path::logsPeriodic();
+	return $dir;
 }
 
 # ------------------------------------------------------------------------------------------------
@@ -477,8 +480,11 @@ sub logsPeriodic {
 				}
 			}
 		}
+		if( !$dir ){
+			$dir = TTP::Path::logsRoot();
+		}
 	}
-	return $dir || TTP::Path::logsRoot();
+	return $dir;
 }
 
 # ------------------------------------------------------------------------------------------------
