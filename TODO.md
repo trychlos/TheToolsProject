@@ -39,7 +39,7 @@
 |  116 | 2024- 4-21 | have ttp.sh list |
 |  117 | 2024- 4-21 | <command>.pl help should be formatted like ttp.pl list -commands (i.e. with a count at the end) + update the test suite accordingly |
 |  118 | 2024- 4-21 | logs dirs, backups dirs and others should accept <NODE> macros when overriden in a <node>.json (or even when in site.json) |
-|      | 2024- 4-22 | we already have a TTP::nodeName() function available in [eval:..] macros |
+|      | 2024- 4-22 | nb: we already have a TTP::nodeName() function available in [eval:..] macros |
 |  119 |  |  |
 
 ---

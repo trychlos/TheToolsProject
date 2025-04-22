@@ -31,7 +31,7 @@ color_red() {
 }
 
 ender(){
-    color_blue "[${thisbase}] ${_count_total} total counted tests, among them ${_count_notok} failed"
+    color_blue "[${thisbase}] ${_count_total} counted tests, among them ${_count_notok} failed"
     echo "${_count_total}-${_count_ok}-${_count_notok}-${_count_skipped}" > "${_fic_results}"
 }
 
