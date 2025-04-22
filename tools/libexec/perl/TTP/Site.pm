@@ -160,6 +160,7 @@ sub new {
 	$args //= {};
 	my $self = $class->SUPER::new( $ep );
 	bless $self, $class;
+	print STDERR __PACKAGE__."::new()".EOL if $ENV{TTP_DEBUG};
 
 	# try to load and evaluate the JSON configuration file with the list of allowed ending paths
 	#  specs here is a ref to an array of arrays which have to be successively tested (so an array

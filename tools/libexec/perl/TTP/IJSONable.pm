@@ -173,6 +173,7 @@ sub _evaluatePrint {
 sub evaluate {
 	my ( $self, $opts ) = @_;
 	$opts //= {};
+	print STDERR __PACKAGE__."::evaluate() self='".ref( $self )."'".EOL if $ENV{TTP_DEBUG};
 
 	$self->{_ijsonable}{evaluated} = $self->{_ijsonable}{raw};
 	$self->{_ijsonable}{evaluated} = $self->_evaluate( $self->{_ijsonable}{raw}, $opts );
@@ -217,7 +218,7 @@ sub jsonData {
 sub jsonLoad {
 	my ( $self, $args ) = @_;
 	$args //= {};
-	#print Dumper( $args );
+	print STDERR __PACKAGE__."::jsonLoad() self='".ref( $self )."'".EOL if $ENV{TTP_DEBUG};
 
 	# keep the passed-in args
 	$self->{_ijsonable}{args} = \%{$args};
