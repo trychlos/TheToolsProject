@@ -83,7 +83,20 @@ sub bootstrap {
 	# and reevaluate the node
 	$node->evaluate();
 
+	# EntryPoint is bootstrapped
+	$self->{_bootstrapped} = true;
+
 	return  $self;
+}
+
+# -------------------------------------------------------------------------------------------------
+# (O):
+# - whether the entryPoint is bootstrapped: true|falsy
+
+sub bootstrapped {
+	my ( $self ) = @_;
+
+	return $self->{_bootstrapped};
 }
 
 # -------------------------------------------------------------------------------------------------
