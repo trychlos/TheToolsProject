@@ -35,26 +35,26 @@
 		"alerts": {
 			"withFile": {
 				"enabled": true,
-				"default": true,
+				"default": false,
 				"dropDir": "[eval:File::Spec->catdir( TTP::logsRoot(), Time::Moment->now->strftime( '%y%m%d' ), 'Alerts' )]",
 				"command": "ttp.pl writejson -file [eval:File::Spec->catfile( TTP::alertsFileDropdir(), Time::Moment->now->strftime( '%Y%m%d%H%M%S%6N' ).'.json' )] -data \"<JSON>\" <OPTIONS>",
 				"prettyJson": true
 			},
 			"withMqtt": {
-				"default": true,
 				"enabled": true,
+				"default": false,
 				"command": "mqtt.pl publish -topic $topic -payload \"<JSON>\" <OPTIONS>",
 				"topic": "[eval:TTP::nodeName()]/alerts/[eval:Time::Moment->from_string( <STAMP> )->epoch()]"
 			},
 			"withSms" : {
 				"enabled": true,
-				"default": true,
+				"default": false,
 				"command": "",
 				"prettyJson": true
 			},
 			"withSmtp" : {
 				"enabled": true,
-				"default": true,
+				"default": false,
 				"command": "smtp.pl send -to alerts@example.com -subject <TITLE> -text <MESSAGE> <OPTIONS>",
 				"prettyJson": true
 			}
@@ -185,21 +185,21 @@
 
 		"telemetry": {
 			"withMqtt": {
-				"enabled": false,
+				"default": false,
 				"command": "mqtt.pl publish -topic <TOPIC> -payload \"<PAYLOAD>\""
 			},
 			"withHttp_comments": [
 				"The Prometheus PushGateway which is installed besides of the Prometheus server"
 			],
 			"withHttp": {
-				"enabled": false,
+				"default": false,
 				"url": "http://10.11.12.13:9091/metrics/job/telemetry/host/[eval:TTP::nodeName()]"
 			},
 			"withTextfile_comments": [
 				"The Prometheus TextFileCollector"
 			],
 			"withTextfile": {
-				"enabled": false,
+				"default": false,
 				"dropDir": "[eval:TTP::tempDir()]"
 			}
 		}

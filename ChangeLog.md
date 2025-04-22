@@ -20,6 +20,7 @@
     - Deprecate 'DBMS.backupsRoot' in favor of 'DBMS.backups.rootDir', 'DBMS.backupsDir' in favor of 'DBMS.backups.periodicDir' (todo #108)
     - Define new TTP::dbmsBackupsPeriodic() and TTP::dbmsBackupsRoot()
     - Deprecate TTP::Path::dbmsBackupsDir() in favor of TTP::Path::dbmsBackupsPeriodic()
+    - Change the default default values of ttp.pl alerts from true to false
 
 ### 4.7.2
 

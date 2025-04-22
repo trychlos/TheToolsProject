@@ -68,7 +68,7 @@
                                 "default": {
                                     "description": "Whether creating an alert file is a default of the 'ttp.pl alert' command.",
                                     "type": "boolean",
-                                    "default": true
+                                    "default": false
                                 },
                                 "enabled": {
                                     "description": "Whether creating an alert file is an enabled capability of the site.",
@@ -109,7 +109,7 @@
                                 "default": {
                                     "description": "Whether publishing alerts to MQTT is a default of the 'ttp.pl alert' command.",
                                     "type": "boolean",
-                                    "default": true
+                                    "default": false
                                 },
                                 "enabled": {
                                     "description": "Whether publishing alerts to MQTT is an enabled capability of the site.",
@@ -138,7 +138,7 @@
                                 "default": {
                                     "description": "Whether publishing alerts by SMS is a default of the 'ttp.pl alert' command.",
                                     "type": "boolean",
-                                    "default": true
+                                    "default": false
                                 },
                                 "enabled": {
                                     "description": "Whether publishing alerts by SMS is an enabled capability of the site.",
@@ -179,7 +179,7 @@
                                 "default": {
                                     "description": "Whether publishing alerts by email is a default of the 'ttp.pl alert' command.",
                                     "type": "boolean",
-                                    "default": true
+                                    "default": false
                                 },
                                 "enabled": {
                                     "description": "Whether publishing alerts by email is an enabled capability of the site.",
@@ -783,13 +783,13 @@
                     "type": "object",
                     "properties": {
                         "withMqtt": {
-                            "description": "The messaging-based configuration of the telemetry.",
+                            "description": "The messaging-based configuration of the telemetry, i.e. the configuration needed to publish telemetry to the MQTT bus.",
                             "type": "object",
                             "properties": {
                                 "default": {
                                     "description": "Whether the messaging-based telemetry is a default of the 'telemetry.pl publish' command.",
                                     "type": "boolean",
-                                    "default": true
+                                    "default": false
                                 },
                                 "command": {
                                     "description": "The command to be run to publish a telemetry on the MQTT bus.",
@@ -813,17 +813,32 @@
                             }
                         },
                         "withHttp": {
-                            "description": "The HTTP-based configuration of the telemetry.",
+                            "description": "The HTTP-based configuration of the telemetry, which addresses the Prometheus PushGateway nstalled besides of the Prometheus server.",
                             "type": "object",
                             "properties": {
                                 "default": {
                                     "description": "Whether the HTTP-based telemetry is a default of the 'telemetry.pl publish' command.",
                                     "type": "boolean",
-                                    "default": true
+                                    "default": false
                                 },
-                                "url": {
-                                    "description": "The based URL of the HTTP PushGateway.",
-                                    "type": "string"
+                                "command": {
+                                    "description": "The command to be run to publish a telemetry to the HTTP gateway.",
+                                    "type": [
+                                        "object",
+                                        "string"
+                                    ],
+                                    "properties": {
+                                        "byOS": {
+                                            "description": "Let a command be specific to the running OS.",
+                                            "type": "object",
+                                            "patternProperties": {
+                                                "^.*$": {
+                                                    "description": "The OS name as reported by Perl-Config, the value being the command to be applied for this OS.",
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         },
@@ -834,9 +849,9 @@
                                 "default": {
                                     "description": "Whether the text-based telemetry is a default of the 'telemetry.pl publish' command.",
                                     "type": "boolean",
-                                    "default": true
+                                    "default": false
                                 },
-                                "url": {
+                                "dropDir": {
                                     "description": "The based URL of the HTTP PushGateway.",
                                     "type": "string"
                                 }
