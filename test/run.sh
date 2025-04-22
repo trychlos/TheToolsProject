@@ -70,6 +70,13 @@ _ferrors="$(mktemp)"
     #t-ttp-bootstrap \
     #t-pl-commands \
 for _d in \
+    t-perl \
+    t-ksh \
+    t-perl-std \
+    t-ttp-case \
+    t-ttp-load \
+    t-sh-bootstrap \
+    t-ttp-bootstrap \
     t-pl-commands \
         ; do
     (( _count_total += 1 ))
