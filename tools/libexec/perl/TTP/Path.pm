@@ -294,8 +294,11 @@ sub dbmsBackupsPeriodic {
 				}
 			}
 		}
+		if( !$dir ){
+			$dir = dbmsBackupsRoot();
+		}
 	}
-	if( $dir ){
+	if( $dir && $ep->bootstrapped()){
 		makeDirExist( $dir );
 	}
 	return $dir || TTP::Path::dbmsBackupsRoot();
@@ -326,7 +329,7 @@ sub dbmsBackupsRoot {
 			$dir = File::Spec->catdir( TTP::tempDir(), 'TTP', 'backups' );
 		}
 	}
-	if( $dir ){
+	if( $dir && $ep->bootstrapped()){
 		makeDirExist( $dir );
 	}
 	return $dir;
