@@ -53,11 +53,8 @@ my $defaults = {
 	value => '',
 	description => '',
 	type => 'untyped',
-	mqtt => 'no',
 	mqttPrefix => '',
-	http => 'no',
 	httpPrefix => '',
-	text => 'no',
 	textPrefix => '',
 	prepend => '',
 	append => ''
@@ -67,18 +64,26 @@ my $opt_metric = $defaults->{metric};
 my $opt_value = undef;
 my $opt_description = $defaults->{description};
 my $opt_type = $defaults->{type};
-my $opt_mqtt = TTP::var([ 'Telemetry', 'withMqtt', 'enabled' ]);
 my $opt_mqttPrefix = $defaults->{mqttPrefix};
-my $opt_http = TTP::var([ 'Telemetry', 'withHttp', 'enabled' ]);
 my $opt_httpPrefix = $defaults->{httpPrefix};
-my $opt_text = TTP::var([ 'Telemetry', 'withText', 'enabled' ]);
 my $opt_textPrefix = $defaults->{textPrefix};
 my @opt_prepends = ();
 my @opt_appends = ();
 
+my $opt_mqtt = getValue([ 'withMqtt', 'default' ]);
+$opt_mqtt = false if !defined $opt_mqtt;
 $defaults->{mqtt} = $opt_mqtt ? 'yes' : 'no';
+my $opt_mqtt_set = false;
+
+my $opt_http = getValue([ 'withHttp', 'default' ]);
+$opt_http = false if !defined $opt_http;
 $defaults->{http} = $opt_http ? 'yes' : 'no';
+my $opt_http_set = false;
+
+my $opt_text = getValue([ 'withText', 'default' ]);
+$opt_text = false if !defined $opt_text;
 $defaults->{text} = $opt_text ? 'yes' : 'no';
+my $opt_text_set = false;
 
 # -------------------------------------------------------------------------------------------------
 # create and publish the desired metric
@@ -108,6 +113,30 @@ sub doPublish {
 	}
 }
 
+# -------------------------------------------------------------------------------------------------
+# get a configuration value
+# emitting a warning when the key is found under (deprecated) 'Telemetry'
+# (I):
+# - the list of searched keys as an array ref
+# (O):
+# - the found value or undef
+
+sub getValue {
+	my ( $keys ) = @_;
+	my @newKeys = @{$keys};
+	unshift( @newKeys, 'telemetry' );
+	my $value = TTP::var( \@newKeys );
+	if( !defined( $value )){
+		@newKeys = @{$keys};
+		unshift( @newKeys, 'Telemetry' );
+		$value = TTP::var( \@newKeys );
+		if( defined( $value )){
+			msgWarn( "'Telemetry' property is deprecated in favor of 'telemetry'. You should update your configurations." );
+		}
+	}
+	return $value;
+}
+
 # =================================================================================================
 # MAIN
 # =================================================================================================
@@ -121,11 +150,23 @@ if( !GetOptions(
 	"value=s"			=> \$opt_value,
 	"description=s"		=> \$opt_description,
 	"type=s"			=> \$opt_type,
-	"mqtt!"				=> \$opt_mqtt,
+	"mqtt!"				=> sub {
+		my ( $name, $value ) = @_;
+		$opt_mqtt = $value;
+		$opt_mqtt_set = true;
+	},
 	"mqttPrefix=s"		=> \$opt_mqttPrefix,
-	"http!"				=> \$opt_http,
+	"http!"				=> sub {
+		my ( $name, $value ) = @_;
+		$opt_http = $value;
+		$opt_http_set = true;
+	},
 	"httpPrefix=s"		=> \$opt_httpPrefix,
-	"text!"				=> \$opt_text,
+	"text!"				=> sub {
+		my ( $name, $value ) = @_;
+		$opt_text = $value;
+		$opt_text_set = true;
+	},
 	"textPrefix=s"		=> \$opt_textPrefix,
 	"prepend=s@"		=> \@opt_prepends,
 	"append=s@"			=> \@opt_appends )){
@@ -161,6 +202,44 @@ msgVerbose( "got appends='".join( ',', @opt_appends )."'" );
 msgErr( "'--metric' option is required, but is not specified" ) if !$opt_metric;
 msgErr( "'--value' option is required, but is not specified" ) if !defined $opt_value;
 
+# disabled media are just ignored (or refused if option was explicit)
+if( $opt_mqtt ){
+	my $enabled = getValue([ 'withMqtt', 'enabled' ]);
+	$enabled = true if !defined $enabled;
+	if( !$enabled ){
+		if( $opt_mqtt_set ){
+			msgErr( "MQTT telemetry is disabled, --mqtt option is not valid" );
+		} else {
+			msgWarn( "MQTT telemetry is disabled and thus ignored" );
+			$opt_mqtt = false;
+		}
+	}
+}
+if( $opt_http ){
+	my $enabled = getValue([ 'withHttp', 'enabled' ]);
+	$enabled = true if !defined $enabled;
+	if( !$enabled ){
+		if( $opt_http_set ){
+			msgErr( "HTTP PushGateway telemetry is disabled, --http option is not valid" );
+		} else {
+			msgWarn( "HTTP PushGateway telemetry is disabled and thus ignored" );
+			$opt_http = false;
+		}
+	}
+}
+if( $opt_text ){
+	my $enabled = getValue([ 'withText', 'enabled' ]);
+	$enabled = true if !defined $enabled;
+	if( !$enabled ){
+		if( $opt_text_set ){
+			msgErr( "TextFile Collector telemetry is disabled, --text option is not valid" );
+		} else {
+			msgWarn( "TextFile Collector telemetry is disabled and thus ignored" );
+			$opt_text = false;
+		}
+	}
+}
+
 # if labels are specified, check that each one is of the 'name=value' form
 foreach my $label ( @opt_prepends ){
 	my @words = split( /=/, $label );
@@ -174,7 +253,7 @@ foreach my $label ( @opt_appends ){
 		msgErr( "label '$label' doesn't appear of the 'name=value' form" );
 	}
 }
-msgWarn( "do not publish anything as neither '--mqtt', '--http' nor '--text' are set" ) if !$opt_mqtt && !$opt_http && !$opt_text;
+msgWarn( "at least one of '--mqtt', '--http' or '--text' options should be specified" ) if !$opt_mqtt && !$opt_http && !$opt_text;
 
 if( !TTP::errs()){
 	doPublish() if $opt_mqtt || $opt_http || $opt_text;

@@ -98,7 +98,7 @@
                                         "so that you will be able to use the alerts-monitor-daemon to monitor the alerts."
                                     ],
                                     "type": "string",
-                                    "default": "[eval:TTP::tempDir()]"
+                                    "default": "[eval:File::Spec->catdir( TTP::tempDir(), 'TTP', 'alerts' )]"
                                 }
                             }
                         },
@@ -476,7 +476,7 @@
                                 "This 'logs.rootDir' directory can be got by the user via the 'ttp.pl vars --logsRoot' command."
                             ],
                             "type": "string",
-                            "default": "[eval:TTP::tempDir()]"
+                            "default": "[eval:File::Spec->catdir( TTP::tempDir(), 'TTP', 'logs' )]"
                         }
                     }
                 },
@@ -791,6 +791,11 @@
                                     "type": "boolean",
                                     "default": false
                                 },
+                                "enabled": {
+                                    "description": "Whether publishing a telemtry to the MQTT bus is an enabled capability of the site.",
+                                    "type": "boolean",
+                                    "default": true
+                                },
                                 "command": {
                                     "description": "The command to be run to publish a telemetry on the MQTT bus.",
                                     "type": [
@@ -820,6 +825,11 @@
                                     "description": "Whether the HTTP-based telemetry is a default of the 'telemetry.pl publish' command.",
                                     "type": "boolean",
                                     "default": false
+                                },
+                                "enabled": {
+                                    "description": "Whether publishing a telemtry to the HTTP gateway is an enabled capability of the site.",
+                                    "type": "boolean",
+                                    "default": true
                                 },
                                 "command": {
                                     "description": "The command to be run to publish a telemetry to the HTTP gateway.",
@@ -851,9 +861,15 @@
                                     "type": "boolean",
                                     "default": false
                                 },
+                                "enabled": {
+                                    "description": "Whether publishing a telemetry through the textfile collector is an enabled capability of the site.",
+                                    "type": "boolean",
+                                    "default": true
+                                },
                                 "dropDir": {
-                                    "description": "The based URL of the HTTP PushGateway.",
-                                    "type": "string"
+                                    "description": "The path to the directory of the TextFile collector.",
+                                    "type": "string",
+                                    "default": "[eval:File::Spec->catdir( TTP::tempDir(), 'TTP', 'collector' )]"
                                 }
                             }
                         }
