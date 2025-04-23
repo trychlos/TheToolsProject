@@ -972,6 +972,7 @@ sub new {
 	$args //= {};
 	my $self = $class->SUPER::new( $ep, $args );
 	bless $self, $class;
+	msgDebug( __PACKAGE__."::new()" );
 
 	$self->{_initialized} = false;
 	$self->{_terminating} = false;
@@ -1006,7 +1007,7 @@ sub DESTROY {
 
 sub bootstrap {
 	my ( $class ) = @_;
-	msgDebug( __PACKAGE__."::bootstrap()" );
+	msgDebug( __PACKAGE__."::bootstrap() \@ARGV=".TTP::chompDumper( @ARGV ));
 
 	$ep = TTP::EP->new();
 	$ep->bootstrap();
