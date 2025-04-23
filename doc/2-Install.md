@@ -120,7 +120,7 @@ As root, create `/etc/profile.d/ttp.sh`, which will address the drop-in director
 
 ```sh
   $ cat /etc/profile.d/ttp.sh
-# Address the installed (standard) version of The Tools Project
+# Address the installed (standard) version of TheToolsProject
 . /opt/TTP/tools/libexec/sh/bootstrap
 ```
 
@@ -140,7 +140,7 @@ Install in `/etc/ttp.d` default drop-in directory a configuration to address the
 /etc/ttp.d/site.conf
     $
     $ cat /etc/ttp.d/TTP.conf
-# Address the installed (standard) version of The Tools Project
+# Address the installed (standard) version of TheToolsProject
 /opt/TTP/tools
     $
     $ cat /etc/ttp.d/site.conf

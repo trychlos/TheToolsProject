@@ -27,7 +27,7 @@ thisdir="$(cd "$(dirname "$0")"; pwd)"
 thisbase="$(basename "${thisdir}")"
 . "$(dirname "${thisdir}")/functions.sh"
 
-_toolsdir="$(dirname $(dirname "${thisdir}"))/tools"
+_toolsdir="$(toolsdir)"
 color_blue "[${thisbase}] checking that TTP Perl modules are rightly use'd or require'd"
 
 for _line in $(grep -RP '^\s*(use|require)\s+TTP' "${_toolsdir}" | sed -e 's|\s|**|g'); do

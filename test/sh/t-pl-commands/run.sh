@@ -27,7 +27,7 @@ thisdir="$(cd "$(dirname "$0")"; pwd)"
 thisbase="$(basename "${thisdir}")"
 . "$(dirname "${thisdir}")/functions.sh"
 
-_toolsdir="$(dirname $(dirname "${thisdir}"))/tools"
+_toolsdir="$(toolsdir)"
 color_blue "[${thisbase}] checking TTP standard commands and verbs helps"
 
 # dynamically build a working environment

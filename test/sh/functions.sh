@@ -35,6 +35,10 @@ ender(){
     echo "${_count_total}-${_count_ok}-${_count_notok}-${_count_skipped}" > "${_fic_results}"
 }
 
+toolsdir(){
+    echo "$(dirname $(dirname $(dirname "${thisdir}")))/tools"
+}
+
 _fic_results="${1}"
 if [ -z "${_fic_results}" ]; then
     echo "[${thisbase}] expected results temporary file as arg 1, not found" 1>&2

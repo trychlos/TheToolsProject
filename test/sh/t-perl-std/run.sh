@@ -31,7 +31,7 @@ thisbase="$(basename "${thisdir}")"
 # some modules depend of the running OS
 MSWin32="Win32::Console::ANSI Win32::OLE Win32::SqlServer"
 
-_toolsdir="$(dirname $(dirname "${thisdir}"))/tools"
+_toolsdir="$(toolsdir)"
 color_blue "[${thisbase}] checking for standard Perl modules in '${_toolsdir}'"
 
 for _mod in $(find "${_toolsdir}" -type f -name '*.p?' -exec grep -E '^use |^\s*require ' {} \; | awk '{ print $2 }' | grep -vE 'TTP|base|constant|if|open|overload|strict|utf8|warnings' | sed -e 's|;\s*$||' | sort -u); do
