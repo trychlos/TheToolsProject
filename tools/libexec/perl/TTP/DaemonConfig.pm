@@ -93,7 +93,6 @@ sub _loadConfig {
 	my ( $self, $args ) = @_;
 	$args //= {};
 
-	my $loaded = false;
 	my $acceptable = {
 		accept => sub { return $self->enabled( @_ ); },
 		opts => {
@@ -101,13 +100,14 @@ sub _loadConfig {
 		}
 	};
 	# IJSONable role takes care of validating the acceptability and the enable-ity
-	$loaded = $self->jsonLoad({ path => $args->{jsonPath}, acceptable => $acceptable });
+	my $loaded = $self->jsonLoad({ path => $args->{jsonPath}, acceptable => $acceptable });
 	# evaluate the data if success
 	if( $loaded ){
 		$self->evaluate();
+		msgDebug( __PACKAGE__."::_loadConfig() evaluated to ".TTP::chompDumper( $self->jsonData()));
 
 		my $checkConfig = true;
-		$checkConfig = $args->{checkConfig} if exists $args->{checkConfig};
+		$checkConfig = $args->{checkConfig} if defined $args->{checkConfig};
 		if( $checkConfig ){
 			my $msgRef = $self->ep()->runner()->dummy() ? \&msgWarn : \&msgErr;
 			# must have a valid listening interval
@@ -422,6 +422,7 @@ sub new {
 	$args //= {};
 	my $self = $class->SUPER::new( $ep, $args );
 	bless $self, $class;
+	msgDebug( __PACKAGE__."::new() jsonPath='$args->{jsonPath}' checkConfig=".( $args->{checkConfig} ? 'true' : 'false' ));
 
 	# if a path is specified, then we try to load it
 	# IJSONable role takes care of validating the acceptability and the enable-ity
