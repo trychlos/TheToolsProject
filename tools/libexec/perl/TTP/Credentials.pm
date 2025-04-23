@@ -54,21 +54,6 @@ my $Const = {
 };
 
 # ------------------------------------------------------------------------------------------------
-# Returns the first found file in credentials directories
-# (I):
-# - the file specs to be searched for
-# (O):
-# - the object found at the given address, or undef
-
-sub find {
-	my ( $file ) = @_;
-	my $finder = TTP::Finder->new( $ep );
-	my $credentialsFinder = TTP::Credentials::finder();
-	my $res = $finder->find({ dirs => [ $credentialsFinder->{dirs}, $file ]});
-	return $res && ref( $res ) eq 'ARRAY' ? $res->[0] : undef;
-}
-
-# ------------------------------------------------------------------------------------------------
 # Returns the full specifications to find the credentials configuration files
 # It is dynamically updated with 'credentials.dirs' variable if any.
 # (I):
@@ -100,28 +85,15 @@ sub finder {
 
 sub get {
 	my ( $keys ) = @_;
-	my $credentialsFinder = TTP::Credentials::finder();
-	return getWithFiles( $keys, $credentialsFinder->{files} );
-}
-
-# ------------------------------------------------------------------------------------------------
-# Returns the found credentials
-# Note that we first search in toops/host configuration, and then in a dedicated credentials JSON file with the same key
-# (I):
-# - an array ref of the keys to be read
-# - an array ref of the files to be searched for
-# (O):
-# - the object found at the given address, or undef
-
-sub getWithFiles {
-	my ( $keys, $files ) = @_;
 	my $res = undef;
+
 	if( ref( $keys ) ne 'ARRAY' ){
 		msgErr( __PACKAGE__."::get() expects an array, found '".ref( $keys )."'" );
+
 	} else {
 		my $finder = TTP::Finder->new( $ep );
 
-		# first look in the TTP/host configurations
+		# first look in the TTP/node configurations
 		$res = $ep->var( $keys );
 
 		# prepare a finder for the credentials

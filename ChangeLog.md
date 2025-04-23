@@ -8,6 +8,7 @@
 
     - Fix DaemonConfig->messagingEnabled() method calls
     - Improve RunnerDaemon debug messages
+    - Remove dead code from TTP::Credentials
 
 ### 4.8.0
 
