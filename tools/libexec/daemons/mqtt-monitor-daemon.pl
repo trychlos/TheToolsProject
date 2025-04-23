@@ -206,10 +206,10 @@ sub doMatched {
 
 	# whether to log the message to an appended file
 	my $toLog = false;
-	$toLog = $config->{toLog}{enabled} if exists $config->{toLog} && exists $config->{toLog}{enabled};
+	$toLog = $config->{toLog}{enabled} if defined $config->{toLog} && defined $config->{toLog}{enabled};
 	if( $toLog ){
 		my $logFile = File::Spec->catfile( TTP::logsCommands(), $daemon->name().'.log' );
-		$logFile = $config->{toLog}{filename} if exists $config->{toLog} && exists $config->{toLog}{filename};
+		$logFile = $config->{toLog}{filename} if defined $config->{toLog} && defined $config->{toLog}{filename};
 		$logFile = replaceMacros( $logFile, {
 			TOPIC => $topic,
 			PAYLOAD => $payload
@@ -222,7 +222,7 @@ sub doMatched {
 
 	# whether to print to stdout
 	my $toStdout = false;
-	$toStdout = $config->{toStdout}{enabled} if exists $config->{toStdout} && exists $config->{toStdout}{enabled};
+	$toStdout = $config->{toStdout}{enabled} if defined $config->{toStdout} && defined $config->{toStdout}{enabled};
 	if( $toStdout ){
 		print STDOUT Time::Moment->now->strftime( '%Y-%m-%d %H:%M:%S.%6N %:z' )." $topic $payload".EOL;
 		$stats->{$key}{toStdout} += 1;
@@ -232,7 +232,7 @@ sub doMatched {
 
 	# whether to print to stderr
 	my $toStderr = false;
-	$toStderr = $config->{toStderr}{enabled} if exists $config->{toStderr} && exists $config->{toStderr}{enabled};
+	$toStderr = $config->{toStderr}{enabled} if defined $config->{toStderr} && defined $config->{toStderr}{enabled};
 	if( $toStderr ){
 		print STDERR Time::Moment->now->strftime( '%Y-%m-%d %H:%M:%S.%6N %:z' )." $topic $payload".EOL;
 		$stats->{$key}{toStderr} += 1;
@@ -242,10 +242,10 @@ sub doMatched {
 
 	# whether to create a new file
 	my $toFile = false;
-	$toFile = $config->{toFile}{enabled} if exists $config->{toFile} && exists $config->{toFile}{enabled};
+	$toFile = $config->{toFile}{enabled} if defined $config->{toFile} && defined $config->{toFile}{enabled};
 	if( $toFile ){
 		my $destFile = File::Spec->catfile( File::Spec->catdir( TTP::logsCommands(), $daemon->name()), '<TOPIC>'.Time::Moment->now->strftime( '%y%m%d%H%M%S%6N' ).'.log' );
-		$destFile = $config->{toFile}{filename} if exists $config->{toFile} && exists $config->{toFile}{filename};
+		$destFile = $config->{toFile}{filename} if defined $config->{toFile} && defined $config->{toFile}{filename};
 		$destFile = replaceMacros( $destFile, {
 			TOPIC => $topic,
 			PAYLOAD => $payload
@@ -268,7 +268,7 @@ sub doMatched {
 			foreach my $do ( @{$actions} ){
 				$totalCount += 1;
 				my $enabled = false;
-				$enabled = $do->{enabled} if exists $do->{enabled};
+				$enabled = $do->{enabled} if defined $do->{enabled};
 				if( $enabled ){
 					$enabledCount += 1;
 					my $jsonable = TTP::JSONable->new( $ep, $do );

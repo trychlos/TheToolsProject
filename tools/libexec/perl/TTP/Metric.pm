@@ -189,11 +189,11 @@ sub props {
 	$args //= {};
 
 	# set the provided values
-	$self->help( $args->{help} ) if exists $args->{help};
-	$self->name( $args->{name} ) if exists $args->{name};
-	$self->type( $args->{type} ) if exists $args->{type};
-	$self->value( $args->{value} ) if exists $args->{value};
-	$self->labels( $args->{labels} ) if exists $args->{labels};
+	$self->help( $args->{help} ) if defined $args->{help};
+	$self->name( $args->{name} ) if defined $args->{name};
+	$self->type( $args->{type} ) if defined $args->{type};
+	$self->value( $args->{value} ) if defined $args->{value};
+	$self->labels( $args->{labels} ) if defined $args->{labels};
 
 	return $self;
 }
@@ -218,19 +218,19 @@ sub publish {
 	my $result = {};
 
 	my $mqtt = false;
-	$mqtt = $args->{mqtt} if exists $args->{mqtt};
+	$mqtt = $args->{mqtt} if defined $args->{mqtt};
 	my $mqttPrefix = '';
 	$mqttPrefix = $args->{mqttPrefix} if defined $args->{mqttPrefix};
 	$result->{mqtt} = $self->_mqtt_publish( $mqttPrefix ) if $mqtt;
 
 	my $http = false;
-	$http = $args->{http} if exists $args->{http};
+	$http = $args->{http} if defined $args->{http};
 	my $httpPrefix = '';
 	$httpPrefix = $args->{httpPrefix} if defined $args->{httpPrefix};
 	$result->{http} = $self->_http_publish( $httpPrefix ) if $http && $self->type_check();
 
 	my $text = false;
-	$text = $args->{text} if exists $args->{text};
+	$text = $args->{text} if defined $args->{text};
 	my $textPrefix = '';
 	$textPrefix = $args->{textPrefix} if defined $args->{textPrefix};
 	$result->{text} = $self->_text_publish( $textPrefix ) if $text && $self->type_check();

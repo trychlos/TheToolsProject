@@ -98,7 +98,7 @@ sub computeDefaultBackupFilename {
 	my $output = undef;
 	msgErr( __PACKAGE__."::computeDefaultBackupFilename() database is mandatory, but is not specified" ) if !$parms->{database};
 	my $mode = 'full';
-	$mode = $parms->{mode} if exists $parms->{mode};
+	$mode = $parms->{mode} if defined $parms->{mode};
 	msgErr( __PACKAGE__."::computeDefaultBackupFilename() mode must be 'full' or 'diff', found '$mode'" ) if $mode ne 'full' and $mode ne 'diff';
 	# compute the dir and make sure it exists
 	my $node = $self->ep()->node();
@@ -164,7 +164,7 @@ sub execSqlCommand {
 	if( $result && $result->{ok} ){
 		# tabular output if asked for
 		my $tabular = true;
-		$tabular = $opts->{tabular} if exists $opts->{tabular};
+		$tabular = $opts->{tabular} if defined $opts->{tabular};
 		if( $tabular ){
 			TTP::displayTabular( $result->{result} );
 		} else {
@@ -172,7 +172,7 @@ sub execSqlCommand {
 		}
 		# json output if asked for
 		my $json = '';
-		$json = $opts->{json} if exists $opts->{json};
+		$json = $opts->{json} if defined $opts->{json};
 		if( $json ){
 			TTP::jsonOutput( $result->{result}, $json );
 		} else {
@@ -181,7 +181,7 @@ sub execSqlCommand {
 		# columns names output if asked for
 		# pwi 2024-12-23 doesn't work in Win23::SQLServer so ignored at the moment
 		#my $columns = '';
-		#$columns = $opts->{columns} if exists $opts->{columns};
+		#$columns = $opts->{columns} if defined $opts->{columns};
 		#if( $columns ){
 		#	$self->columnsOutput( $command, $columns );
 		#} else {

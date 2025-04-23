@@ -67,7 +67,7 @@ sub doListJSON {
 		my $daemonConfig = TTP::DaemonConfig->new( $ep, { jsonPath => $it, checkConfig => $opt_check });
 		if( $daemonConfig->jsonLoaded()){
 			my $name = $daemonConfig->name();
-			$kepts->{$name} = $it if !exists( $kepts->{$name} );
+			$kepts->{$name} = $it if !defined( $kepts->{$name} );
 		}
 	}
 	# and list in ascii order

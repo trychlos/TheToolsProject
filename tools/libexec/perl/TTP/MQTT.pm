@@ -90,7 +90,7 @@ sub connect {
 				my $topic = $args->{will}{topic} || '';
 				my $payload = $args->{will}{payload} || '';
 				my $retain = false;
-				$retain = $args->{will}{retain} if exists $args->{will}{retain};
+				$retain = $args->{will}{retain} if defined $args->{will}{retain};
 				$mqtt->last_will( $topic, $payload, $retain );
 				$mqtt->{ttpLastWill} = {
 					topic => $topic,

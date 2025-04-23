@@ -84,7 +84,7 @@ sub apiBackupDatabase {
 			$options .= ", DIFFERENTIAL";
 			$label = "Differential";
 		}
-		$options .= ", COMPRESSION" if exists $parms->{compress} && $parms->{compress};
+		$options .= ", COMPRESSION" if defined $parms->{compress} && $parms->{compress};
 		$parms->{sql} = "USE master; BACKUP DATABASE $parms->{database} TO DISK='$parms->{output}' WITH $options, NAME='$parms->{database} $label Backup $tstring';";
 		msgVerbose( __PACKAGE__."::apiBackupDatabase() sql='$parms->{sql}'" );
 		$result = _sqlExec( $dbms, $parms->{sql} );
@@ -211,7 +211,7 @@ sub apiRestoreDatabase {
 	my ( $me, $dbms, $parms ) = @_;
 	my $result = { ok => false };
 	my $verifyonly = false;
-	$verifyonly = $parms->{verifyonly} if exists $parms->{verifyonly};
+	$verifyonly = $parms->{verifyonly} if defined $parms->{verifyonly};
 	msgErr( __PACKAGE__."::apiRestoreDatabase() database is mandatory, not specified" ) if !$parms->{database} && !$verifyonly;
 	msgErr( __PACKAGE__."::apiRestoreDatabase() full is mandatory, not specified" ) if !$parms->{full};
 	if( !TTP::errs()){
@@ -451,7 +451,7 @@ sub _sqlExec {
 			$res->{ok} = true;
 		} else {
 			my $printStdout = true;
-			$printStdout = $opts->{printStdout} if exists $opts->{printStdout};
+			$printStdout = $opts->{printStdout} if defined $opts->{printStdout};
 			my $colinfoStyle;
 			if( $opts->{colinfoStyle} ){
 				$colinfoStyle = $opts->{colinfoStyle};

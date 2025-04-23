@@ -95,7 +95,7 @@ sub _find_run {
 	$self->{_ifindable}{candidates} = [];
 	$self->{_ifindable}{accepted} = [];
 	$self->{_ifindable}{wantsAll} = true;
-	$self->{_ifindable}{wantsAll} = $args->{wantsAll} if exists $args->{wantsAll};
+	$self->{_ifindable}{wantsAll} = $args->{wantsAll} if defined $args->{wantsAll};
 	# iter on each root path
 	my @roots = split( /$Config{path_sep}/, $ENV{TTP_ROOTS} );
 	foreach my $it ( @roots ){
