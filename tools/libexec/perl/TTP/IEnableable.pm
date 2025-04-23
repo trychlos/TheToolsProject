@@ -68,14 +68,14 @@ sub enabled {
 			if( $opts->{type} eq 'JSON' ){
 				$enabled = true;
 				my $data = TTP::jsonRead( $obj );
-				$enabled = $data->{enabled} if exists $data->{enabled};
+				$enabled = $data->{enabled} if defined $data->{enabled};
 			}
 		}
 
 	# else this a the data content as a hash ref
 	} elsif( $ref eq 'HASH' ){
 		$enabled = true;
-		$enabled = $obj->{enabled} if exists $obj->{enabled};
+		$enabled = $obj->{enabled} if defined $obj->{enabled};
 
 	# else this is an unrecoverable error
 	} else {

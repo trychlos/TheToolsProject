@@ -69,7 +69,7 @@ sub getAnswerByPath {
 
 	my $answer = $api->get( path => $path );
 	my $printAnswer = false;
-	$printAnswer = $opts->{printAnswer} if exists $opts->{printAnswer};
+	$printAnswer = $opts->{printAnswer} if defined $opts->{printAnswer};
 	print Dumper( $answer ) if $printAnswer;
 
 	msgVerbose( "Ovh::getAnswerByPath() status=".$answer->status()." isSuccess='".( $answer->isSuccess() ? 'true' : 'false' )."'");

@@ -132,7 +132,7 @@ sub _getVerbs {
 	my $uniqs = {};
 	foreach my $it ( @{$verbs} ){
 		my ( $vol, $dirs, $file ) = File::Spec->splitpath( $it );
-		$uniqs->{$file} = $it if !exists( $uniqs->{$file} );
+		$uniqs->{$file} = $it if !defined( $uniqs->{$file} );
 	}
 	my @verbs = ();
 	# and display them in ascii order

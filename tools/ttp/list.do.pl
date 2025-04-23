@@ -64,7 +64,7 @@ sub listCommands {
 	my $uniqs = {};
 	foreach my $it ( @{$commands} ){
 		my ( $vol, $dirs, $file ) = File::Spec->splitpath( $it );
-		$uniqs->{$file} = $it if !exists( $uniqs->{$file} );
+		$uniqs->{$file} = $it if !defined( $uniqs->{$file} );
 	}
 	# and display them in ascii order
 	foreach my $it ( sort keys %{$uniqs} ){
@@ -94,7 +94,7 @@ sub listNodes {
 		my $name = $file;
 		$name =~ s/\.[^\.]+$//;
 		my $node = TTP::Node->new( $ep, { node => $name, abortOnError => false });
-		$uniqs->{$name} = $it if $node && !exists( $uniqs->{$name} );
+		$uniqs->{$name} = $it if $node && !defined( $uniqs->{$name} );
 	}
 	# and display them in ascii order
 	foreach my $it ( sort keys %{$uniqs} ){

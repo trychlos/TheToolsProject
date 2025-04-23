@@ -64,7 +64,7 @@ sub doPull {
 	# have pull share
 	my $fromData = $fromNode->jsonData();
 	my $pullShare = undef;
-	$pullShare = $fromData->{remoteShare} if exists $fromData->{remoteShare};
+	$pullShare = $fromData->{remoteShare} if defined $fromData->{remoteShare};
 	if( $pullShare ){
 		my ( $pull_vol, $pull_dirs, $pull_file ) = File::Spec->splitpath( $pullShare );
 		my $command = 'ttp.pl copydirs --sourcepath <SOURCE> --targetpath <TARGET> <OPTIONS>';

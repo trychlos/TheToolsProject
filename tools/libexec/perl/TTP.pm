@@ -457,7 +457,7 @@ sub _executionReportToFile {
 	my ( $args ) = @_;
 	my $res = false;
 	my $data = undef;
-	$data = $args->{data} if exists $args->{data};
+	$data = $args->{data} if defined $args->{data};
 	if( defined $data ){
 		$data = _executionReportCompleteData( $data );
 		my $command = $ep->var([ 'executionReports', 'withFile', 'command' ]);
@@ -499,13 +499,13 @@ sub _executionReportToMqtt {
 	my ( $args ) = @_;
 	my $res = false;
 	my $data = undef;
-	$data = $args->{data} if exists $args->{data};
+	$data = $args->{data} if defined $args->{data};
 	if( defined $data ){
 		$data = _executionReportCompleteData( $data );
 		my $topic = undef;
-		$topic = $args->{topic} if exists $args->{topic};
+		$topic = $args->{topic} if defined $args->{topic};
 		my $excludes = [];
-		$excludes = $args->{excludes} if exists $args->{excludes} && ref $args->{excludes} eq 'ARRAY' && scalar $args->{excludes} > 0;
+		$excludes = $args->{excludes} if defined $args->{excludes} && ref $args->{excludes} eq 'ARRAY' && scalar $args->{excludes} > 0;
 		if( $topic ){
 			my $dummy = $ep->runner()->dummy() ? "-dummy" : "-nodummy";
 			my $verbose = $ep->runner()->verbose() ? "-verbose" : "-noverbose";
@@ -745,7 +745,7 @@ sub jsonRead {
 		}
 	} elsif( $path ){
 		my $ignoreIfNotExist = false;
-		$ignoreIfNotExist = $opts->{ignoreIfNotExist} if exists $opts->{ignoreIfNotExist};
+		$ignoreIfNotExist = $opts->{ignoreIfNotExist} if defined $opts->{ignoreIfNotExist};
 		msgErr( "jsonRead() $path: not found or not readable" ) if !$ignoreIfNotExist;
 	} else {
 		msgErr( "jsonRead() expects a JSON path to be read" );
@@ -971,7 +971,7 @@ sub runExtern {
 sub stackTrace {
 	my ( $opts ) = @_;
 	$opts //= {};
-	$opts->{exit} = true if !exists $opts->{exit};
+	$opts->{exit} = true if !defined $opts->{exit};
 	my $trace = Devel::StackTrace->new;
 	print $trace->as_string;
 	if( $opts->{exit} ){

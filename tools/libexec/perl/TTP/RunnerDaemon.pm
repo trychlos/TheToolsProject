@@ -256,7 +256,7 @@ sub _initListener {
 	# Ctrl+C handling
 	if( !TTP::errs()){
 		my $ignoreInt = false;
-		$ignoreInt = $args->{ignoreInt} if exists $args->{ignoreInt};
+		$ignoreInt = $args->{ignoreInt} if defined $args->{ignoreInt};
 		$SIG{INT} = sub { 
 			if( $ignoreInt ){
 				msgVerbose( "INT (Ctrl+C) signal received, ignored" );
@@ -438,7 +438,7 @@ sub _mqtt_advertise {
 			if( $array ){
 				if( ref( $array ) eq 'ARRAY' ){
 					foreach my $it ( @{$array} ){
-						if( $it->{topic} && exists( $it->{payload} )){
+						if( $it->{topic} && defined( $it->{payload} )){
 							$self->_mqtt_publish( $it );
 						} else {
 							msgErr( __PACKAGE__."::_mqtt_advertise() expects a hash { topic, payload }, found $it" );
@@ -787,7 +787,7 @@ sub metricLabelAppend {
 	my ( $self, $name, $value ) = @_;
 
 	if( $name && defined $value ){
-		$self->{_labels} = [] if !exists $self->{_labels};
+		$self->{_labels} = [] if !defined $self->{_labels};
 		push( @{$self->{_labels}}, "$name=$value" );
 	} else {
 		msgErr( __PACKAGE__."::metricLabelAppend() got name='$name' value='$value'" );
@@ -866,7 +866,7 @@ sub telemetryLabels {
 	if( @qualifiers and scalar( @qualifiers ) >= 2 ){
 		push( @{$labels}, "qualifier=".$qualifiers[1] );
 	}
-	push( @{$labels}, @{$self->{_labels}} ) if exists $self->{_labels};
+	push( @{$labels}, @{$self->{_labels}} ) if defined $self->{_labels};
 	
 	return $labels;
 }

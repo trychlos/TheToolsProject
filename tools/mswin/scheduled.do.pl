@@ -67,7 +67,7 @@ sub doListTasks {
 	my $uniqs = {};
 	foreach my $it ( @tasks ){
 		my @words = split( /\s+/, $it );
-		if( !exists( $uniqs->{$words[1]} )){
+		if( !defined( $uniqs->{$words[1]} )){
 			$count += 1;
 			$uniqs->{$words[1]} = true;
 			print "  $words[1]".EOL;

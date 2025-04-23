@@ -209,9 +209,9 @@ sub enumerate {
 	$args //= {};
 	my $count = 0;
 	my $withHiddens = false;
-	$withHiddens = $args->{hidden} if exists $args->{hidden};
+	$withHiddens = $args->{hidden} if defined $args->{hidden};
 	my $node = $ep->node();
-	if( exists( $args->{node} )){
+	if( defined( $args->{node} )){
 		my $ref = ref( $args->{node} );
 		if( $ref ){
 			if( $ref eq 'TTP::Node' ){

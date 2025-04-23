@@ -142,7 +142,7 @@ sub _evaluatePrint {
 	# warnings pragma acts on its own block so have to eval in the two cases
 	# https://perldoc.perl.org/warnings
 	my $warnOnUninitialized = true;
-	$warnOnUninitialized = $opts->{warnOnUninitialized} if exists $opts->{warnOnUninitialized};
+	$warnOnUninitialized = $opts->{warnOnUninitialized} if defined $opts->{warnOnUninitialized};
 	if( $warnOnUninitialized ){
 		$result = eval $value;
 	} else {
@@ -397,7 +397,7 @@ EXT:	for( my $i=0 ; $i<scalar @{$keys} ; ++$i ){
 		if( $keys ){
 			if( defined( $base )){
 				if( ref( $base ) eq 'HASH' ){
-					if( exists( $base->{$keys} )){
+					if( defined( $base->{$keys} )){
 						$base = $base->{$keys};
 					} else {
 						$base = undef;

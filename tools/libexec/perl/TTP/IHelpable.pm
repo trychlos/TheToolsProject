@@ -67,24 +67,24 @@ sub _grepFileByRegex {
 	my @grepped = grep( /$regex/, @content );
 	# warn if grepped is empty ?
 	my $warnIfNone = true;
-	$warnIfNone = $opts->{warnIfNone} if exists $opts->{warnIfNone};
+	$warnIfNone = $opts->{warnIfNone} if defined $opts->{warnIfNone};
 	if( scalar @grepped == 0 ){
 		msgWarn( "'$filename' doesn't have any line with the searched content ('$regex')." ) if $warnIfNone;
 	} else {
 		# warn if there are several lines in the grepped result ?
 		my $warnIfSeveral = true;
-		$warnIfSeveral = $opts->{warnIfSeveral} if exists $opts->{warnIfSeveral};
+		$warnIfSeveral = $opts->{warnIfSeveral} if defined $opts->{warnIfSeveral};
 		if( scalar @grepped > 1 ){
 			msgWarn( "'$filename' has more than one line with the searched content ('$regex')." ) if $warnIfSeveral;
 		}
 	}
 	# replace the regex, and, if true, with what ?
 	my $replaceRegex = true;
-	$replaceRegex = $opts->{replaceRegex} if exists $opts->{replaceRegex};
+	$replaceRegex = $opts->{replaceRegex} if defined $opts->{replaceRegex};
 	if( $replaceRegex ){
 		my @temp = ();
 		my $replaceValue = '';
-		$replaceValue = $opts->{replaceValue} if exists $opts->{replaceValue};
+		$replaceValue = $opts->{replaceValue} if defined $opts->{replaceValue};
 		foreach my $line ( @grepped ){
 			$line =~ s/$regex/$replaceValue/;
 			push( @temp, $line );
@@ -105,7 +105,7 @@ sub helpableOneLine {
 	my ( $self, $command_path, $opts ) = @_;
 	$opts //= {};
 	my $prefix = '';
-	$prefix = $opts->{prefix} if exists( $opts->{prefix} );
+	$prefix = $opts->{prefix} if defined( $opts->{prefix} );
 	my ( $vol, $dirs, $bname ) = File::Spec->splitpath( $command_path );
 	my @help = $self->_grepFileByRegex( $command_path, $Const->{commentPre} );
 	print "$prefix$bname: $help[0]".EOL;

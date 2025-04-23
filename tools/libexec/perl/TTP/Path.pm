@@ -348,7 +348,7 @@ sub execReportsDir {
 	my $dir = $ep->var([ 'executionReports', 'withFile', 'dropDir' ], $opts );
 	if( defined $dir && length $dir ){
 		my $makeDirExist = true;
-		$makeDirExist = $opts->{makeDirExist} if exists $opts->{makeDirExist};
+		$makeDirExist = $opts->{makeDirExist} if defined $opts->{makeDirExist};
 		makeDirExist( $dir ) if $makeDirExist;
 	} else {
 		TTP::Message::msgWarn( "'executionReports/withFile/dropDir' is not defined in toops.json nor in host configuration" );
@@ -385,7 +385,7 @@ sub fromCommand {
 	}
 	if( !TTP::errs()){
 		my $makeDirExist = false;
-		$makeDirExist = $opts->{makeDirExist} if exists $opts->{makeDirExist};
+		$makeDirExist = $opts->{makeDirExist} if defined $opts->{makeDirExist};
 		if( $makeDirExist ){
 			my $rc = makeDirExist( $path );
 			$path = undef if !$rc;

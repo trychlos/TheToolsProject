@@ -40,7 +40,6 @@
 |  117 | 2024- 4-21 | <command>.pl help should be formatted like ttp.pl list -commands (i.e. with a count at the end) + update the test suite accordingly |
 |  118 | 2024- 4-21 | logs dirs, backups dirs and others should accept <NODE> macros when overriden in a <node>.json (or even when in site.json) |
 |      | 2024- 4-22 | nb: we already have a TTP::nodeName() function available in [eval:..] macros |
-|  120 | 2024- 4-23 | homogeneize "if exists" to "if defined" |
 |  121 |  |  |
 
 ---
@@ -304,6 +303,8 @@
 |  119 | 2024- 4-22 | print STDERR __PACKAGE__... if $ENV{TTP_DEBUG}; should be replaced by msgDebug() |
 |      |            |  itself either logging or print to STDERR dependent of TTP_DEBUG and ep->bootstrapped() |
 |      |            | msgLog() is so rather oriented to operations done, while msgDebug() is oriented to trace |
+|      | 2024- 4-23 | done |
+|  120 | 2024- 4-23 | homogeneize "if exists" to "if defined" |
 |      | 2024- 4-23 | done |
 
 ---

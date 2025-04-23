@@ -206,7 +206,7 @@ sub hasService {
 		my $services = $self->jsonData()->{Services} || {};
 		my $hash = $services->{$service};
 		my $enabled = $hash ? true : false;
-		$enabled = $hash->{enabled} if $hash && exists( $hash->{enabled} );
+		$enabled = $hash->{enabled} if $hash && defined( $hash->{enabled} );
 		$hasService = $hash && $enabled;
 	}
 
@@ -437,7 +437,7 @@ sub new {
 	# Caution: do not change these error messages as they are checked in test suite
 	} else {
 		my $abort = true;
-		$abort = $args->{abortOnError} if exists $args->{abortOnError};
+		$abort = $args->{abortOnError} if defined $args->{abortOnError};
 		if( $abort ){
 			msgErr( "Unable to find a valid execution node for '$node' in [ ".join( ', ', @{$finder->{dirs}} )." ]" );
 			msgErr( "Exiting with code 1" );

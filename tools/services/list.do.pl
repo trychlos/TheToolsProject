@@ -92,7 +92,7 @@ sub getDefinedWorktasks {
 	my ( $workload, $opts ) = @_;
 	$opts //= {};
 	my $displayHiddens = false;
-	$displayHiddens = $opts->{hidden} if exists $opts->{hidden};
+	$displayHiddens = $opts->{hidden} if defined $opts->{hidden};
 	my $command = "services.pl list -services -nocolored";
 	$command .= " -hidden" if $displayHiddens;
 	my $services = TTP::filter( `$command` );
@@ -116,7 +116,7 @@ sub getDefinedWorktasks {
 # sort tasks in their specified order, defaulting to the added service name
 sub _taskOrder {
 	my( $it ) = @_;
-	return exists $it->{order} ? $it->{order} : $it->{service};
+	return defined $it->{order} ? $it->{order} : $it->{service};
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -190,7 +190,7 @@ sub listWorkloadCommands {
 	my @list = getDefinedWorktasks( $opt_workload, { hidden => $opt_hidden });
 	my $count = 0;
 	foreach my $it ( @list ){
-		if( exists( $it->{commands} )){
+		if( defined( $it->{commands} )){
 			foreach my $command ( @{$it->{commands}} ){
 				log_print( " $command" );
 				$count += 1;
@@ -220,15 +220,15 @@ sub listWorkloadDetails {
 sub printWorkloadTask {
 	my ( $task ) = @_;
 	# if we have a name or label, make it the first line
-	if( exists( $task->{name} )){
+	if( defined( $task->{name} )){
 		log_print( "+ $task->{name}" );
-	} elsif( exists( $task->{label} )){
+	} elsif( defined( $task->{label} )){
 		log_print( "+ $task->{label}" );
 	} else {
 		log_print( "+ (unnamed)" );
 	}
 	# if we have both a name and an label, print the label now
-	if( exists( $task->{name} ) && exists( $task->{label} )){
+	if( defined( $task->{name} ) && defined( $task->{label} )){
 		log_print( "  $task->{label}" );
 	}
 	# print other keys
@@ -248,7 +248,7 @@ sub printWorkloadTaskData {
 	my ( $key, $value, $recData ) = @_;
 	my $type = ref( $value );
 	my $displayKey = true;
-	$displayKey = $recData->{displayKey} if exists $recData->{displayKey};
+	$displayKey = $recData->{displayKey} if defined $recData->{displayKey};
 	# simplest: a scalar value
 	if( !$type ){
 		if( $displayKey ){

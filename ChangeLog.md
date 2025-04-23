@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - Homogeneize 'if exists(...)' into 'if defined(...)
 
 ### 4.8.1
 

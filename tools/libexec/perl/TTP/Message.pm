@@ -243,7 +243,7 @@ sub msgErr {
 		handle => \*STDERR
 	});
 	my $increment = true;
-	$increment = $opts->{incErr} if exists $opts->{incErr};
+	$increment = $opts->{incErr} if defined $opts->{incErr};
 	$ep->runner()->runnableErrInc() if $ep && $ep->runner() and $increment;
 }
 
@@ -370,20 +370,20 @@ sub _printMsg {
 		my $configured = undef;
 		# have a prefix ?
 		my $withPrefix = true;
-		$withPrefix = $args->{withPrefix} if exists $args->{withPrefix};
+		$withPrefix = $args->{withPrefix} if defined $args->{withPrefix};
 		$line .= _msgPrefix() if $withPrefix;
 		# have a level marker ?
 		# the computed one can be empty, but never undef
 		my $level = INFO;
-		$level = $args->{level} if exists $args->{level};
+		$level = $args->{level} if defined $args->{level};
 		$line .= _printMsg_marker( $level );
-		$line .= $args->{msg} if exists $args->{msg};
+		$line .= $args->{msg} if defined $args->{msg};
 		# writes in log ?
 		# the computed one defaults to (hardcoded) true which hopefully covers all non-particular cases
 		_msgLogAppend( $line ) if _printMsg_withLog( $level );
 		# output to the console ?
 		my $withConsole = true;
-		$withConsole = $args->{withConsole} if exists $args->{withConsole};
+		$withConsole = $args->{withConsole} if defined $args->{withConsole};
 		if( $withConsole ){
 			# print a colored line ?
 			# global runtime option is only considered if not disabled in toops/host configuration
@@ -397,7 +397,7 @@ sub _printMsg {
 			}
 			# print on which handle ?
 			my $handle = \*STDOUT;
-			$handle = $args->{handle} if exists $args->{handle};
+			$handle = $args->{handle} if defined $args->{handle};
 			print $handle "$colorstart$line$colorend".EOL;
 		}
 	}
@@ -425,7 +425,7 @@ sub _printMsg_color {
 		}
 	}
 	if( !$color ){
-		$color = $Const->{$level}{color} if exists $Const->{$level}{color};
+		$color = $Const->{$level}{color} if defined $Const->{$level}{color};
 	}
 	return $color;
 }
@@ -452,7 +452,7 @@ sub _printMsg_marker {
 		}
 	}
 	if( !$marker ){
-		$marker = $Const->{$level}{marker} if exists $Const->{$level}{marker};
+		$marker = $Const->{$level}{marker} if defined $Const->{$level}{marker};
 	}
 	return $marker;
 }

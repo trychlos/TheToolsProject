@@ -97,7 +97,7 @@ sub send {
 
 			my $debug = $ep->var([ 'SMTPGateway', 'debug' ]);
 			$debug = false if !defined $debug;
-			$debug = $msg->{debug} if exists $msg->{debug};
+			$debug = $msg->{debug} if defined $msg->{debug};
 
 			# use Credentials package to manage username and password (if any)
 			my $username = TTP::Credentials::get([ 'SMTPGateway', 'username' ]);
