@@ -10,6 +10,7 @@
     - Improve RunnerDaemon debug messages
     - Remove dead code from TTP::Credentials
     - Improve DaemonConfig debug messages
+	- Prevent any filesystem access during IJSONable evaluation
 
 ### 4.8.0
 

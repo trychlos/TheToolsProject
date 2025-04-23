@@ -103,6 +103,16 @@ sub bootstrapped {
 }
 
 # -------------------------------------------------------------------------------------------------
+# (O):
+# - whether we are currently evaluating an IJSONable: true|false
+
+sub evaluating {
+	my ( $self ) = @_;
+
+	return $self->{_evaluating};
+}
+
+# -------------------------------------------------------------------------------------------------
 # Getter
 # (I):
 # - none
