@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.8.1-rc.0
+### 4.8.1
 
-    Release date: 
+    Release date: 2025- 4-23
 
     - Fix DaemonConfig->messagingEnabled() method calls
     - Improve RunnerDaemon debug messages
