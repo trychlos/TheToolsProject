@@ -362,7 +362,7 @@ if( TTP::errs()){
 	TTP::exit();
 }
 
-if( $daemon->messagingEnabled()){
+if( $daemon->config()->messagingEnabled()){
 	$daemon->messagingSub( \&mqttMessaging );
 	$daemon->disconnectSub( \&mqttDisconnect );
 }

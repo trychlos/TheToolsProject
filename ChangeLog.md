@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - Fix DaemonConfig->messagingEnabled() method calls
 
 ### 4.8.0
 
