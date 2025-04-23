@@ -105,6 +105,7 @@ sub _evaluateScalar {
 	my $ref = ref( $value );
 	my $evaluate = true;
 	if( $ref ){
+		print STDERR __PACKAGE__."::_evaluateScalar() scalar expected, but '$ref' found".EOL;
 		msgErr( __PACKAGE__."::_evaluateScalar() scalar expected, but '$ref' found" );
 		$evaluate = false;
 	}
@@ -117,10 +118,9 @@ sub _evaluateScalar {
 		/x;
 
 		# debug code
-		if( false ){
+		if( $ENV{TTP_EVAL} ){
 			my @matches = $result =~ /\[eval:($re)\]/g;
-			print "line='$result'".EOL;
-			print Dumper( @matches );
+			print STDERR __PACKAGE__."_evaluateScalar() line='$result' matches=".TTP::chompDumper( @matches ).EOL;
 		}
 
 		# this weird code to let us manage some level of pseudo recursivity
@@ -156,7 +156,7 @@ sub _evaluatePrint {
 	# to emit a warning ?
 	#msgWarn( "something is wrong with '$value' as evaluation result is undefined" ) if !defined $result;
 	$result = $result || '(undef)';
-	#print __PACKAGE__."::_evaluatePrint() value='$value' result='$result'".EOL;
+	print STDERR __PACKAGE__."::_evaluatePrint() value='$value' result='$result'".EOL if $ENV{TTP_EVAL};
 	return $result;
 }
 
@@ -174,10 +174,16 @@ sub evaluate {
 	my ( $self, $opts ) = @_;
 	$opts //= {};
 	msgDebug( __PACKAGE__."::evaluate() self=".ref( $self ));
+	$self->ep()->{_evaluating} = true;
 
-	$self->{_ijsonable}{evaluated} = $self->{_ijsonable}{raw};
-	$self->{_ijsonable}{evaluated} = $self->_evaluate( $self->{_ijsonable}{raw}, $opts );
+	print STDERR __PACKAGE__."::evaluate() self=".ref( $self )." raw=".TTP::chompDumper( $self->{_ijsonable}{raw} ).EOL if $ENV{TTP_EVAL};
 
+	$self->{_ijsonable}{evaluated} = \%{$self->{_ijsonable}{raw}};
+	$self->{_ijsonable}{evaluated} = $self->_evaluate( $self->{_ijsonable}{evaluated}, $opts );
+
+	print STDERR __PACKAGE__."::evaluate() self=".ref( $self )." evaluated=".TTP::chompDumper( $self->{_ijsonable}{evaluated} ).EOL if $ENV{TTP_EVAL};
+
+	$self->ep()->{_evaluating} = false;
 	return $self;
 }
 
