@@ -52,7 +52,7 @@
 #
 # tests for daemons
 
-thisdir="$( cd "$(dirname "$0")"; pwd)"
+thisdir="$(cd "$(dirname "$0")"; pwd)"
 let -i _count_total=0
 let -i _count_ok=0
 let -i _count_notok=0
@@ -70,14 +70,7 @@ _ferrors="$(mktemp)"
     #t-ttp-bootstrap \
     #t-pl-commands \
 for _d in \
-    t-perl \
-    t-ksh \
-    t-perl-std \
-    t-ttp-case \
-    t-ttp-load \
     t-sh-bootstrap \
-    t-ttp-bootstrap \
-    t-pl-commands \
         ; do
     (( _count_total += 1 ))
     if [ -x "${thisdir}/${_d}/run.sh" ]; then

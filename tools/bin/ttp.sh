@@ -62,7 +62,8 @@
 # (ksh being the only known shell to be able to autoload its functions,
 #  typical sh-like shells, e.g. bash, would else fail)
 
-if [ "${0:0:1}" == "-" -o "${0}" == "${SHELL}" -o "${0##*/}" == "${SHELL##*/}" -o "${0#${0%??????????????????????????}}" == "test/t-sh-bootstrap/run.sh" ]; then
+if [ "${0:0:1}" == "-" -o "${0}" == "${SHELL}" -o "${0##*/}" == "${SHELL##*/}" -o "${ttp_test}" == "t-sh-bootstrap" ]; then
+	unset ttp_test
 	[ "${1}" == "switch" ] && {
 		. $(echo "${FPATH}" | tr ':' '\n' | while read _dir; do [[ -f "${_dir}/switch" ]] && echo "${_dir}" && break; done)/switch "$(which ttp.sh 2>/dev/null)" "${@}";
 		return $?;

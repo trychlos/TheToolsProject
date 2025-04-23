@@ -27,7 +27,7 @@ thisdir="$(cd "$(dirname "$0")"; pwd)"
 thisbase="$(basename "${thisdir}")"
 . "$(dirname "${thisdir}")/functions.sh"
 
-_toolsdir="$(dirname $(dirname "${thisdir}"))/tools"
+_toolsdir="$(toolsdir)"
 color_blue "[${thisbase}] checking that TTP Perl modules are each individually loadable"
 
 Node="TTP::IAcceptable TTP::IEnableable TTP::IFindable TTP::IJSONable"

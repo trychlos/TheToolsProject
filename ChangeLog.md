@@ -7,6 +7,7 @@
     Release date: 
 
     - Homogeneize 'if exists(...)' into 'if defined(...)
+    - Isolate sh-oriented test suite in its own directory tree
 
 ### 4.8.1
 

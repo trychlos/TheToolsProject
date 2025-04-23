@@ -27,7 +27,7 @@ thisdir="$(cd "$(dirname "$0")"; pwd)"
 thisbase="$(basename "${thisdir}")"
 . "$(dirname "${thisdir}")/functions.sh"
 
-_toolsdir="$(dirname $(dirname "${thisdir}"))/tools"
+_toolsdir="$(toolsdir)"
 color_blue "[${thisbase}] checking sh bootstrapping"
 
 # dynamically build a working equivalent of /etc/profile.d/ttp.sh
@@ -35,6 +35,7 @@ _workdir="$(mktemp -d)"
 rm -fr "${_workdir}"
 mkdir "${_workdir}"
 cat <<! >"${_workdir}/ttp.sh"
+# this is the canonical bootstrapping command-line
 . "${_toolsdir}/libexec/sh/bootstrap" "${_workdir}"
 !
 
@@ -59,7 +60,7 @@ export PATH="/bin:/sbin:/usr/bin:/usr/sbin:$HOME/bin:$HOME/local/bin"
 initPath="${PATH}"
 unset FPATH
 unset PERL5LIB
-. "${_workdir}/ttp.sh"
+ttp_test="${thisbase}" . "${_workdir}/ttp.sh"
 #set | grep -E '^TTP|^PATH|^FPATH|^PERL5'
 
 # must have TTP_ROOTS=this_tools_dir:this_work_dir
