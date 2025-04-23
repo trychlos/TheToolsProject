@@ -2,6 +2,12 @@
 
 ## ChangeLog
 
+### 4.8.2-rc.0
+
+    Release date: 
+
+    - 
+
 ### 4.8.1
 
     Release date: 2025- 4-23
