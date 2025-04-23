@@ -217,12 +217,17 @@ sub _initListener {
 	my ( $self, $args ) = @_;
 
 	my $listeningPort = $self->config()->listeningPort();
+	msgVerbose( "listeningPort='$listeningPort'" );
+
 	my $listeningInterval = $self->config()->listeningInterval();
+	msgVerbose( "listeningInterval='$listeningInterval'" );
+
 	my $messagingInterval = $self->config()->messagingInterval();
-	msgVerbose( "listeningPort='$listeningPort' listeningInterval='$listeningInterval' messagingInterval='$messagingInterval'" );
+	msgVerbose( "messagingInterval='$messagingInterval'" );
 
 	my $httpingInterval = $self->config()->httpingInterval();
 	msgVerbose( "httpingInterval='$httpingInterval'" );
+
 	my $textingInterval = $self->config()->textingInterval();
 	msgVerbose( "textingInterval='$textingInterval'" );
 
@@ -714,6 +719,7 @@ sub doCommand {
 sub listen {
 	my ( $self, $commands ) = @_;
 	$commands //= {};
+	msgDebug( __PACKAGE__."::listen()" );
 
 	# before anything else, reevalute our configurations
 	# -> the daemon config
@@ -816,6 +822,7 @@ sub name {
 sub run {
 	my ( $self, $args ) = @_;
 	$args //= {};
+	msgDebug( __PACKAGE__."::run() jsonPath='$args->{jsonPath}' ignoreInt=".( $args->{ignoreInt} ? 'true' : 'false' ));
 
 	my $loaded = false;
 
