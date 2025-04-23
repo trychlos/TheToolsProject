@@ -298,6 +298,7 @@ sub new {
 	$class = ref( $class ) || $class;
 	my $self = $class->SUPER::new( $ep );
 	bless $self, $class;
+	msgDebug( __PACKAGE__."::new()" );
 
 	# make sure the command is not a reserved word
 	my $command = $self->runnableBNameShort();

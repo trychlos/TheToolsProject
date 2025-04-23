@@ -88,6 +88,7 @@ sub new {
 	$class = ref( $class ) || $class;
 	my $self = $class->SUPER::new( $ep );
 	bless $self, $class;
+	msgDebug( __PACKAGE__."::new()" );
 
 	return $self;
 }
