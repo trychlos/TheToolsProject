@@ -40,7 +40,8 @@
 |  116 | 2024- 4-21 | have ttp.sh list |
 |  118 | 2024- 4-21 | logs dirs, backups dirs and others should accept <NODE> macros when overriden in a <node>.json (or even when in site.json) |
 |      | 2024- 4-22 | nb: we already have a TTP::nodeName() function available in [eval:..] macros |
-|  121 |  |  |
+|  121 | 2024- 4-24 | seems that daemons MQTT status is incomplete ? |
+|  122 |  |  |
 
 ---
 ## Done

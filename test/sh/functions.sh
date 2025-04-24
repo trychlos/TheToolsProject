@@ -18,14 +18,17 @@
 #
 # Shell common functions
 
+# header and footer of each dir test
 color_blue() {
     printf "\033[1;34m${1}\033[0m\n"
 }
 
+# add-on messages on individual tests
 color_cyan() {
     printf "\033[0;36m${1}\033[0m\n"
 }
 
+# errors
 color_red() {
     printf "\033[0;31m${1}\033[0m\n"
 }

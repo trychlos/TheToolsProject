@@ -17,7 +17,7 @@
 # along with TheToolsProject; see the file COPYING. If not,
 # see <http://www.gnu.org/licenses/>.
 #
-# Check that TTP Perl modules are there, not mispelled, loadable
+# Check that TTP Perl modules are each individually loadable
 #
 # (I):
 # - temp file where results counts are to be written

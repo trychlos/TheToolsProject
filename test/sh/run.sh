@@ -72,7 +72,6 @@ _ferrors="$(mktemp)"
 for _d in \
     t-sh-bootstrap \
         ; do
-    (( _count_total += 1 ))
     if [ -x "${thisdir}/${_d}/run.sh" ]; then
         "${thisdir}/${_d}/run.sh" "${_fcounts}" "${_ferrors}"
         _results="$(cat "${_fcounts}")"
@@ -85,7 +84,9 @@ for _d in \
         _skipped="$(echo "${_results}" | cut -d- -f4)"
         (( _count_skipped += ${_skipped} ))
     else
-        echo "${_d}: no run.sh available, passing"
+        (( _count_total += 1 ))
+        (( _count_skipped += 1 ))
+        echo "[run.sh] ${_d}: no run.sh available, passing"
     fi
 done
 
