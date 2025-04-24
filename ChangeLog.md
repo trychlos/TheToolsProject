@@ -2,13 +2,14 @@
 
 ## ChangeLog
 
-### 4.8.2-rc.0
+### 4.9.0-rc.0
 
     Release date: 
 
     - Homogeneize 'if exists(...)' into 'if defined(...)
     - Isolate sh-oriented test suite in its own directory tree
 	- Creates cmd-oriented test suite
+	- Define libexec/cmd/bootstrap.cmd, thumping minor candidate version number
 
 ### 4.8.1
 
