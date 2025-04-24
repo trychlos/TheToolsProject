@@ -9,7 +9,7 @@
     - Homogeneize 'if exists(...)' into 'if defined(...)
     - Isolate sh-oriented test suite in its own directory tree
 	- Creates cmd-oriented test suite
-	- Define libexec/cmd/bootstrap.cmd, thumping minor candidate version number
+	- Define libexec/cmd/bootstrap.cmd, thus bumping minor candidate version number
 	- Define t-cmd-bootstrap test
 	- Define t-ttp-boostrap test
 	- Define t-pl-commands test
