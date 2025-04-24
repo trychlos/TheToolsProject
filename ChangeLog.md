@@ -8,6 +8,7 @@
 
     - Homogeneize 'if exists(...)' into 'if defined(...)
     - Isolate sh-oriented test suite in its own directory tree
+	- Creates cmd-oriented test suite
 
 ### 4.8.1
 
