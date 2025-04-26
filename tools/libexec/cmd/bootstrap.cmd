@@ -112,9 +112,16 @@
 	)
 
 	REM Force environment refresh so new CMD windows see updated vars
-	RUNDLL32.EXE USER32.DLL,UpdatePerUserSystemParameters ,1 ,True
+	rem NB: This is supposed to force-refresh the environment in some contexts.
+	rem NB- But it often doesn't affect Explorer or existing processes reliably.
+	rem RUNDLL32.EXE USER32.DLL,UpdatePerUserSystemParameters ,1 ,True
+
+	rem ultimately restart explorer
+	taskkill /f /im explorer.exe
+	start explorer.exe
 	exit /b
 
 :setVar
+	set "%1=%~2"
 	reg add "HKCU\Environment" /v %1 /t REG_EXPAND_SZ /d "%~2" /f
 	exit /b
