@@ -76,6 +76,11 @@
 		set "TTP_ROOTS=!append_roots!"
 	)
 
+	REM update PATH from TTP_ROOTS
+	for %%D in (%TTP_ROOTS:;= %) do (
+		set "PATH=!PATH!;%%D\bin"
+	)
+
 	REM Build PERL5LIB from TTP_ROOTS
 	set "PERL5LIB="
 	for %%D in (%TTP_ROOTS:;= %) do (
@@ -91,17 +96,25 @@
 		set "TTP_NODE=%COMPUTERNAME%"
 	)
 
-	REM Export and show
-	set TTP_ROOTS=%TTP_ROOTS%
-	set PERL5LIB=%PERL5LIB%
-	set TTP_NODE=%TTP_NODE%
-
-	@echo TTP_ROOTS: %TTP_ROOTS%
-	@echo PERL5LIB : %PERL5LIB%
-	@echo TTP_NODE : %TTP_NODE%
+	rem logs
+	rem @echo " "  >>C:\TEMP\bootstrap.log
+	rem @echo %DATE% %TIME%  >>C:\TEMP\bootstrap.log
+	rem @echo TTP_ROOTS: %TTP_ROOTS% >>C:\TEMP\bootstrap.log
+	rem @echo PATH: %PATH% >>C:\TEMP\bootstrap.log
+	rem @echo PERL5LIB : %PERL5LIB%  >>C:\TEMP\bootstrap.log
+	rem @echo TTP_NODE : %TTP_NODE%  >>C:\TEMP\bootstrap.log
 
 	endlocal & (
-		set "TTP_ROOTS=%TTP_ROOTS%"
-		set "PERL5LIB=%PERL5LIB%"
-		set "TTP_NODE=%TTP_NODE%"
+		call :setVar TTP_ROOTS "%TTP_ROOTS%"
+		call :setVar TTP_NODE "%TTP_NODE%"
+		call :setVar PERL5LIB "%PERL5LIB%"
+		call :setVar PATH "%PATH%"
 	)
+
+	REM Force environment refresh so new CMD windows see updated vars
+	RUNDLL32.EXE USER32.DLL,UpdatePerUserSystemParameters ,1 ,True
+	exit /b
+
+:setVar
+	reg add "HKCU\Environment" /v %1 /t REG_EXPAND_SZ /d "%~2" /f
+	exit /b
