@@ -174,7 +174,7 @@ These three environment variables are mandatory for TTP to work. The site integr
 
 #### bootstrap.cmd
 
-As of v4.9, TTP provides a `(TTP_ROOT)\libexec\cmd\bootstrap.cmd` which mimics the sh-based bootstrap behavior by reading and interepting the `*.conf` files it finds in a predefined (though modifiable) list of directories, an dbuilding with them the `TTP_ROOTS` variable, along with corresponding `PATH` and `PERL5LIB`.
+As of v4.9, TTP provides a `(TTP_ROOT)\libexec\cmd\bootstrap.cmd` which mimics the sh-based bootstrap behavior by reading and interepting the `*.conf` files it finds in a predefined (though modifiable) list of directories, and building with them the `TTP_ROOTS` variable, along with corresponding `PATH` and `PERL5LIB`.
 
 Predefined list of directories are:
 
@@ -186,15 +186,17 @@ This predefined list can be replaced by providing another list as `bootstrap.cmd
 
 Each `.conf` file found in these directories is interpreted, considering that lines starting with `#` are comments and must be ignored. Other non-blank lines are expected to be path to a `TTP_ROOT` directory, and is appended to current `TTP_ROOTS`. If the line is prepended with a dash (`-`), then the path is prepended to `TTP_ROOTS`.
 
-Unfortunately, it is very difficult in Windows to set environment variables at run time, as `explorer.exe`, which manages the user's environment, is started very early in the login session, and not at all in a scheduled task.
-
 Though killing and restarting `explorer.exe` could work, it often fails due to explorer not correctly restarting.
 
-Note also that unless you are working inside of a Windows domain, the group policy logon doesn't work either.
+Please note that, unless you are working inside of a Windows domain, the group policy logon doesn't work. Only a task scheduled to run at any user logon can run reliably.
 
-Only a task scheduled to run at any user logon can run reliably, unfortunately still leaving with restart explorer weird behavior.
+#### IMPORTANT NOTE
 
-Example: say that the site integrator has decided to install:
+__As a site integrator, you have to choose one of the two above strategies. It is useless and counterproductive to implement both as the bootstrap.cmd commes as an add-on to system environment variables.__
+
+#### Example
+
+Say that the site integrator has decided to install:
 
 - the drop-in in `C:\ProgramData\ttp.d`
 
@@ -220,4 +222,4 @@ C:\ProgramData\Site
 
 ---
 P. Wieser
-- Last updated on 2025, Apr. 4th
+- Last updated on 2025, Apr. 29th

@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.9.0-rc.0
+### 4.9.0
 
-    Release date: 
+    Release date: 2025- 4-29
 
     - Homogeneize 'if exists(...)' into 'if defined(...)
     - Isolate sh-oriented test suite in its own directory tree
@@ -281,4 +281,4 @@
 
 ---
 P. Wieser
-- Last updated on 2025, Apr. 23th
+- Last updated on 2025, Apr. 29th
