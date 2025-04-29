@@ -52,12 +52,15 @@
 	rem after having bootstrapped, we expect to have our environment variables set
 	set TTP_ROOTS=
 	set TTP_NODE=
-	set PATH=%originalPath%
 	set PERL5LIB=
+	rem during development, may happen to have an empty path (oop's) so have at least the minimum required (make sure we have reg.exe)
+	set "PATH=%PATH%;%SystemRoot%\system32"
+	for /F "tokens=2,*" %%T in ('reg query "HKLM\System\CurrentControlSet\Control\Session Manager\Environment" /v PATH') do call set "PATH=%%~U"
+	set "systemPath=%PATH%"
 	call %toolsdir%\libexec\cmd\bootstrap.cmd %tempdir%
 
 	rem expects TTP_ROOTS=toolsdir;tempdir
-	for /f "tokens=3" %%i in ('reg query HKCU\Environment /v TTP_ROOTS') do set TTP_ROOTS=%%i
+	for /f "tokens=2,*" %%i in ('reg query HKCU\Environment /v TTP_ROOTS') do call set "TTP_ROOTS=%%~j"
     <NUL set /P=%BS%  [%testbase%] got TTP_ROOTS="!TTP_ROOTS!"... 
 	set /A test_total+=1
 	if "%TTP_ROOTS%" == "%toolsdir%;%tempdir%" (
@@ -69,7 +72,7 @@
 	)
 
 	rem expects PERL5LIB=toolsdir;tempdir with libexec\perl subdirs
-	for /f "tokens=3" %%i in ('reg query HKCU\Environment /v PERL5LIB') do set PERL5LIB=%%i
+	for /f "tokens=2,*" %%i in ('reg query HKCU\Environment /v PERL5LIB') do call set "PERL5LIB=%%~j"
     <NUL set /P=%BS%  [%testbase%] got PERL5LIB="!PERL5LIB!"... 
 	set /A test_total+=1
 	if "%PERL5LIB%" == "%toolsdir%\libexec\perl;%tempdir%\libexec\perl" (
@@ -81,19 +84,19 @@
 	)
 
 	rem expects PATH=toolsdir;tempdir with bin subdir
-	for /f "tokens=3" %%i in ('reg query HKCU\Environment /v PATH') do set PATH=%%i
+	for /f "tokens=2,*" %%i in ('reg query HKCU\Environment /v PATH') do call set "PATH=%%~j"
     <NUL set /P=%BS%  [%testbase%] got PATH="!PATH!"... 
 	set /A test_total+=1
-	if "%PATH%" == "%originalPath%;%toolsdir%\bin;%tempdir%\bin" (
+	if "%PATH%" == "%systemPath%;%toolsdir%\bin;%tempdir%\bin" (
 		echo OK
 		set /A test_ok+=1
-	) else (*
+	) else (
 		call %maindir%\functions.cmd color_red "NOT OK"
 		set /A test_notok+=1
 	)
 
 	rem expects TTP_NODE be set
-	for /f "tokens=3" %%i in ('reg query HKCU\Environment /v TTP_NODE') do set TTP_NODE=%%i
+	for /f "tokens=2,*" %%i in ('reg query HKCU\Environment /v TTP_NODE') do call set "TTP_NODE=%%~j"
     <NUL set /P=%BS%  [%testbase%] got TTP_NODE="!TTP_NODE!"... 
 	set /A test_total+=1
 	if not "%TTP_NODE%" == "" (

@@ -35,7 +35,6 @@
 	set "TTP_ROOTS="
 	set "prepend_roots="
 	set "append_roots="
-	set "originalPath=%PATH%"
 
 	REM Load .conf files from specified directories
 	for %%D in (%config_dirs%) do (
@@ -78,19 +77,28 @@
 	)
 
 	REM update PATH from TTP_ROOTS
+	rem during development, may happen to have an empty path (oop's) so have at least the minimum required (make sure we have reg.exe)
+	set "PATH=%PATH%;%SystemRoot%\system32"
+	for /F "tokens=2,*" %%T in ('reg query "HKLM\System\CurrentControlSet\Control\Session Manager\Environment" /v PATH') do call set "PATH=%%~U"
+	rem @echo before PATH=%PATH%
 	for %%D in (%TTP_ROOTS:;= %) do (
-		set "PATH=!PATH!;%%D\bin"
+		call :addPart PATH %%D\bin
 	)
+	rem @echo after PATH=%PATH%
 
-	REM Build PERL5LIB from TTP_ROOTS
-	set "PERL5LIB="
+	REM Update PERL5LIB from TTP_ROOTS
+	set PERL5LIB=
+	for /F "tokens=2,*" %%T in ('reg query "HKLM\System\CurrentControlSet\Control\Session Manager\Environment" /v PERL5LIB 2^>nul') do call set "PERL5LIB=%%~U"
+	rem @echo before PERL5LIB=%PERL5LIB%
 	for %%D in (%TTP_ROOTS:;= %) do (
+		call :addPart PERL5LIB %%D\libexec\perl
 		if defined PERL5LIB (
-			set "PERL5LIB=!PERL5LIB!;%%D\libexec\perl"
+			call :addPart PERL5LIB %%D\libexec\perl
 		) else (
 			set "PERL5LIB=%%D\libexec\perl"
 		)
 	)
+	rem @echo after PERL5LIB=%PERL5LIB%
 
 	REM Set TTP_NODE if not defined
 	if not defined TTP_NODE (
@@ -110,7 +118,6 @@
 		call :setVar TTP_NODE "%TTP_NODE%"
 		call :setVar PERL5LIB "%PERL5LIB%"
 		call :setVar PATH "%PATH%"
-		call :setVar originalPath "%originalPath%"
 	)
 
 	REM Force environment refresh so new CMD windows see updated vars
@@ -126,7 +133,25 @@
 
 	exit /b
 
+	rem add an element to a variable if not already exists
+	rem this is a very simple function which just tries to match the exact provided part
+	rem 1. variable name
+	rem 2. part to add if not already exists
+:addPart
+	set name=%1
+	rem @echo name=%name%
+	rem @echo value=!%name%!
+	set "value=!%name%!"
+	set "part=%2"
+	if not "!value!" == "!value:%part%=!" (
+		rem echo %part% is already in all
+	) else (
+		set "%1=!value!;%2"
+	)
+	exit /b
+
+	rem set an environment variable both in the current session and in the registry (user environment)
 :setVar
 	set "%1=%~2"
-	reg add "HKCU\Environment" /v %1 /t REG_EXPAND_SZ /d "%~2" /f
+	reg add "HKCU\Environment" /v %1 /t REG_EXPAND_SZ /d "%~2" /f 1>nul
 	exit /b
