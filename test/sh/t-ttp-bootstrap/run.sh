@@ -59,7 +59,7 @@ _ferr="$(mktemp)"
 ttp.pl 1>${_fout} 2>${_ferr}
 _rc=$?
 #servf_display
-echo -n "  [${thisbase}] without any site.json, checking stdout is empty... "
+echo -n "  [${thisbase}] without any site.json, checking that stdout is empty... "
 (( _count_total+=1 ))
 if [ -s "${_fout}" ]; then
     color_red "NOTOK"
@@ -96,7 +96,7 @@ rm -f "${_fout}"
 rm -f "${_ferr}"
 ttp.pl 1>${_fout} 2>${_ferr}
 _rc=$?
-echo -n "  [${thisbase}] without any <node>.json, checking stdout is empty... "
+echo -n "  [${thisbase}] without any <node>.json, checking that stdout is empty... "
 (( _count_total+=1 ))
 if [ -s "${_fout}" ]; then
     color_red "NOTOK"
@@ -277,7 +277,7 @@ else
 fi
 
 # check that all accepted site.json actually work
-# list from TTP::Site::$Const->{finder}{dirs}
+# list from TTP::Site::$Const->{finder}{dirs} - nb: etc/ttp/site.json has already been tested
 rm -f "${_workdir}/etc/ttp/site.json"
 echo "{}" > "${_workdir}/etc/nodes/$(hostname).json"
 for _site_json in etc/site.json etc/toops.json etc/ttp.json etc/toops/site.json etc/toops/toops.json etc/toops/ttp.json etc/ttp/toops.json etc/ttp/ttp.json; do

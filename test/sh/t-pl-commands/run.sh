@@ -17,7 +17,7 @@
 # along with TheToolsProject; see the file COPYING. If not,
 # see <http://www.gnu.org/licenses/>.
 #
-# Check for TTP bootstrapping when site.json or node.json are not present
+# Check for all commands and verbs standard options
 #
 # (I):
 # - temp file where results counts are to be written
@@ -28,7 +28,7 @@ thisbase="$(basename "${thisdir}")"
 . "$(dirname "${thisdir}")/functions.sh"
 
 _toolsdir="$(toolsdir)"
-color_blue "[${thisbase}] checking TTP standard commands and verbs helps"
+color_blue "[${thisbase}] checking TTP standard commands and verbs options"
 
 # dynamically build a working environment
 _workdir="$(mktemp -d)"

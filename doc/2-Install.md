@@ -154,15 +154,53 @@ We suggest that each configuration file should address one __TTP__ tree even if 
 
 ### cmd-based OS (any windows-like)
 
-Say that the site integrator has decided to install:
+Like sh-based TTP, the cmd-based flavor must be bootstrapped one way or another. As of v4.9, the site integrator has two ways to initialize TTP:
+
+- first is the historical way, and is just setting environment variables at the machine level in the registry,
+
+- second is new as of v4.9, and tries to mimic the sh-based behavior. Note however that it can have some unpredictable side effects, and is not really suggested!
+
+#### Setting environment variables
+
+TTP needs following environment variables, which must be set in any user environment:
+
+- `TTP_ROOTS` a semi-colon-separated (`;`) of each TTP tree, in the order they should be considered
+
+- `PATH` must be updated accordingly with each `(TTP_ROOT)\bin` directory
+
+- `PERL5LIB` must be updated accordingly with each `(TTP_ROOT)\libexec\perl` directory.
+
+These three environment variables are mandatory for TTP to work. The site integrator can also set `TTP_NODE` variable, which defaults to `%COMPUTERNAME%`.
+
+#### bootstrap.cmd
+
+As of v4.9, TTP provides a `(TTP_ROOT)\libexec\cmd\bootstrap.cmd` which mimics the sh-based bootstrap behavior by reading and interepting the `*.conf` files it finds in a predefined (though modifiable) list of directories, an dbuilding with them the `TTP_ROOTS` variable, along with corresponding `PATH` and `PERL5LIB`.
+
+Predefined list of directories are:
+
+- `C:\ProgramData\ttp.d`
+
+- `%USERPROFILE\.ttp.d`.
+
+This predefined list can be replaced by providing another list as `bootstrap.cmd` command-line arguments.
+
+Each `.conf` file found in these directories is interpreted, considering that lines starting with `#` are comments and must be ignored. Other non-blank lines are expected to be path to a `TTP_ROOT` directory, and is appended to current `TTP_ROOTS`. If the line is prepended with a dash (`-`), then the path is prepended to `TTP_ROOTS`.
+
+Unfortunately, it is very difficult in Windows to set environment variables at run time, as `explorer.exe`, which manages the user's environment, is started very early in the login session, and not at all in a scheduled task.
+
+Though killing and restarting `explorer.exe` could work, it often fails due to explorer not correctly restarting.
+
+Note also that unless you are working inside of a Windows domain, the group policy logon doesn't work either.
+
+Only a task scheduled to run at any user logon can run reliably, unfortunately still leaving with restart explorer weird behavior.
+
+Example: say that the site integrator has decided to install:
 
 - the drop-in in `C:\ProgramData\ttp.d`
 
 - __TheToolsProject__ released scripts, commands and verbs in `C:\ProgramData\TTP`
 
 - the site configuration in `C:\ProgramData\Site`.
-
-As an administrator, edit the [Local Group Policy](gpedit.msc), and add a logon script to User Configuration, addressing the drop-in directory:
 
 ```sh
   C:\TheToolsProject\TTP\libexec\bootstrap\cmd_bootstrap C:\ProgramData\ttp.d
@@ -179,32 +217,6 @@ C:\ProgramData\TTP
 # Address site configuration
 C:\ProgramData\Site
 ```
-
-Both shell-based and Perl-based bootstrap processes do:
-
-- identify the current running execution node and set a TTP_NODE user environment variable
-
-- update the `PATH` variable to add the found __TTP__ layers (in C order)
-
-- in shell-based flavor, update the `FPATH` variable to address the Korn-shell functions
-
-- in Perl-based flavor, update the `PERL5LIB` variable to address the Perl modules.
-
-## Per-user configuration
-
-As the site integrator must define the available __TTP__ layers, every user can define its own layer, for example to write and test a new verb.
-
-The bootstrapping process reads first the user configuration, and then the site one, adding successively found tree path to the list of TTP_ROOT's. This way, the user configuration takes precedence over the site-wide configuration.
-
-As an exception to this rule, the path is prepended to the built list when it is prefixed by a dash (`-`).
-
-### Shell-based OS (any unix-like)
-
-The bootstrap process reads any `.conf` file dropped in `HOME/.ttp.d/` directory.
-
-### cmd-based OS (any windows-like)
-
-The bootstrap process reads any `.conf` file dropped in `USERPROFILE/.ttp.d/` directory.
 
 ---
 P. Wieser
