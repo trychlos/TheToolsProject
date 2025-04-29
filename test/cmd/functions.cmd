@@ -34,9 +34,42 @@
 	powershell write-host -foreground Red %~1
 	exit /b
 
+	rem count lines in file
+:countLines
+	for /f "usebackq" %%a in (`type %1 ^| find "" /v /c`) do set countLines=%%a
+	exit /b
+
+	rem count (WAR) lines in file
+:countWarnings
+	for /f "usebackq" %%a in (`type %1 ^| find "(WAR) " /c`) do set countLines=%%a
+	exit /b
+
+	rem delete a full directory tree, and its content, including the top directory
+:deleteTree
+	rem del /s /f /q %1\*.*
+	rem for /f %%f in ('dir /ad /b %1\') do rd /s /q %1\%%f
+	rmdir /s /q "%1" 1>nul 2>nul
+	exit /b
+
+	rem create a unique temp directory in %tempdir%
+	rem expect a first argument to add to the name
+:getTempDir
+	set "tempdir=%TEMP%\dir-%1-%RANDOM%.tmp"
+	if exist "%tempdir%" goto :getTempDir
+	mkdir %tempdir%
+	exit /b
+
+	rem create a unique temp file
+	rem expect a first argument to add to the name
+:getTempFile
+	set "tempfile=%TEMP%\file-%1-%RANDOM%.tmp"
+	if exist "%tempfile%" goto :getTempFile
+	exit /b
+
 :ender
     call :color_blue "[%testbase%] %test_total% counted tests, among them %test_notok% failed"
     rem echo %test_total%-%test_ok%-%test_notok%-%test_skipped% > "%tempCounts%"
+	echo [%testbase%] ending >>%mainErrors%
 	exit /b
 
 	rem initialize a test
@@ -50,4 +83,5 @@
 	for /F %%i in ("%testdir%") do set testbase=%%~nxi
 	rem display the header of the test
     call :color_blue "[%testbase%] %~2"
+	echo [%testbase%] starting >>%mainErrors%
 	exit /b

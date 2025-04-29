@@ -35,7 +35,7 @@
 	set "TTP_ROOTS="
 	set "prepend_roots="
 	set "append_roots="
-	set "original_Path=%PATH%"
+	set "originalPath=%PATH%"
 
 	REM Load .conf files from specified directories
 	for %%D in (%config_dirs%) do (
@@ -110,7 +110,7 @@
 		call :setVar TTP_NODE "%TTP_NODE%"
 		call :setVar PERL5LIB "%PERL5LIB%"
 		call :setVar PATH "%PATH%"
-		call :setVar original_Path "%original_Path%"
+		call :setVar originalPath "%originalPath%"
 	)
 
 	REM Force environment refresh so new CMD windows see updated vars
@@ -119,7 +119,7 @@
 	RUNDLL32.EXE USER32.DLL,UpdatePerUserSystemParameters ,1 ,True
 
 	rem ultimately restart explorer
-	rem most probably an effect of laws of murphy: while killing the explorer works fine, re-starting it as often unwanted side effects
+	rem most probably an effect of laws of murphy: while killing the explorer works fine, re-starting it has often unwanted and unpredictable side effects
 	rem e.g. not starting at all! so just give up with this option
 	rem taskkill /f /im explorer.exe
 	rem start explorer.exe
