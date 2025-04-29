@@ -43,6 +43,7 @@
 	rem https://stackoverflow.com/questions/27802376/create-unique-file-name-windows-batch
 	rem https://ss64.com/nt/setlocal.html
 	setlocal EnableDelayedExpansion
+	setlocal EnableExtensions 
 
 	rem get the path of this script without the trailing slash
 	set maindir=%~dp0
@@ -58,9 +59,9 @@
 	set main_skipped=0
 
 	rem create temp files
-	call :getTempFile errors
+	call %maindir%\functions.cmd getTempFile errors
 	set mainErrors=%tempFile%
-	echo " " > %mainErrors%
+	echo > %mainErrors%
 	
 	rem https://stackoverflow.com/questions/9864620/in-batch-how-do-i-create-spaces-at-the-beginning-of-a-input-prompt-string
 	::define a variable containing a single backspace character
@@ -68,7 +69,7 @@
 
 	rem List of test directories
 	rem set test_dirs=t-perl t-perl-std t-ttp-case t-ttp-load t-cmd-bootstrap t-ttp-bootstrap t-pl-commands
-	set test_dirs=t-cmd-bootstrap
+	set test_dirs=t-ttp-bootstrap
 
 	for %%D in (%test_dirs%) do (
 		if exist %maindir%\%%D\run.cmd (
@@ -100,16 +101,8 @@
 		)
 	)
 
-	del %TEMP%\errors-* 2>NUL
+	del /f /q %mainErrors%
 	endlocal
-	exit /b
-
-	rem create a unique temporary file with a given radical
-:getTempFile
-	set "lockFile=%TEMP%\%1-%~nx0_%TIME::=.%.lock"
-	set "tempFile=%lockFile%.temp"
-	9>&2 2>nul (2>&9 8>"%lockFile%" call :getTempFile %*) || goto :getTempFileOut
-:getTempFileOut
 	exit /b
 
 :toolsdir
