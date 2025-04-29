@@ -10,6 +10,9 @@
     - Isolate sh-oriented test suite in its own directory tree
 	- Creates cmd-oriented test suite
 	- Define libexec/cmd/bootstrap.cmd, thumping minor candidate version number
+	- Define t-cmd-bootstrap test
+	- Define t-ttp-boostrap test
+	- Define t-pl-commands test
 
 ### 4.8.1
 

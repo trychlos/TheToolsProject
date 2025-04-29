@@ -68,8 +68,7 @@
 	for /f %%A in ('"prompt $H &echo on &for %%B in (1) do rem"') do set BS=%%A
 
 	rem List of test directories
-	rem set test_dirs=t-perl t-perl-std t-ttp-case t-ttp-load t-cmd-bootstrap t-ttp-bootstrap t-pl-commands
-	set test_dirs=t-cmd-bootstrap
+	set test_dirs=t-perl t-perl-std t-ttp-case t-ttp-load t-cmd-bootstrap t-ttp-bootstrap t-pl-commands
 
 	for %%D in (%test_dirs%) do (
 		if exist %maindir%\%%D\run.cmd (
@@ -95,7 +94,7 @@
 	echo [run.cmd] counted !main_total! total tests, among them !main_skipped! skipped, and !main_notok! failed
 
 	if !main_notok! gtr 0 (
-		echo Error summary:
+		@echo Error summary:
 		for /f "usebackq delims=" %%L in ("%mainErrors%") do (
 			<NUL set /P=%BS%   %%L
 		)
