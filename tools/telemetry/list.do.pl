@@ -38,6 +38,8 @@ use HTTP::Request;
 use LWP::UserAgent;
 use URI::Split qw( uri_split uri_join );
 
+use TTP::Telemetry;
+
 my $defaults = {
 	help => 'no',
 	colored => 'no',
@@ -63,11 +65,9 @@ sub doListHttp {
 	msgOut( "listing metrics published on the HTTP PushGateway..." );
 	my $count = 0;
 	my $groups = {};
-	my $var = $ep->var([ 'Telemetry', 'withHttp', 'enabled' ]);
-	my $enabled = defined( $var ) ? $var : false;
+	my $enabled = TTP::Telemetry::isHttpEnabled();
 	if( $enabled ){
-		$var = $ep->var([ 'Telemetry', 'withHttp', 'url' ]);
-		my $url = defined( $var ) ? $var : undef;
+		my $url = TTP::Telemetry::getConfigurationValue([ 'withHttp', 'url' ]);
 		if( $url ){
 			# get the host part only
 			my ( $scheme, $auth, $path, $query, $frag ) = uri_split( $url );

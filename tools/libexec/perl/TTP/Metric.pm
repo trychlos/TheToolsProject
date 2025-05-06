@@ -246,13 +246,9 @@ sub _http_publish {
 	my $res = 0;
 
 	my $ep = $self->ep();
-	my $var = $ep->var([ 'telemetry', 'withHttp', 'enabled' ]);
-	msgVerbose( "_http_publish: enabled_var=$enabled" );
-	my $enabled = defined( $var ) ? $var : true;
-	msgVerbose( "_http_publish: enabled_computed=$enabled" );
+	my $enabled = TTP::Telemetry::isHttpEnabled();
 	if( $enabled ){
-		$var = $ep->var([ 'telemetry', 'withHttp', 'url' ]);
-		my $url = defined( $var ) ? $var : undef;
+		my $url = TTP::Telemetry::getConfigurationValue([ 'withHttp', 'url' ]);
 		if( $url ){
 			my $name = $self->name();
 			if( $name ){
@@ -321,11 +317,9 @@ sub _mqtt_publish {
 	my $res = 0;
 
 	my $ep = $self->ep();
-	my $var = $ep->var([ 'telemetry', 'withMqtt', 'enabled' ]);
-	my $enabled = defined( $var ) ? $var : true;
+	my $enabled = TTP::Telemetry::isMqttEnabled();
 	if( $enabled ){
-		$var = $ep->var([ 'telemetry', 'withMqtt', 'command' ]);
-		my $command = defined( $var ) ? $var : undef;
+		my $command = TTP::Telemetry::getConfigurationValue([ 'withMqtt', 'command' ]);
 		if( $command ){
 			my $name = $self->name();
 			if( $name ){
@@ -381,11 +375,9 @@ sub _text_publish {
 	my $res = 0;
 
 	my $ep = $self->ep();
-	my $var = $ep->var([ 'telemetry', 'withText', 'enabled' ]);
-	my $enabled = defined( $var ) ? $var : true;
+	my $enabled = TTP::Telemetry::isTextEnabled();
 	if( $enabled ){
-		$var = $ep->var([ 'telemetry', 'withText', 'dropDir' ]);
-		my $dropdir = defined( $var ) ? $var : undef;
+		my $dropdir = TTP::Telemetry::getConfigurationValue([ 'withText', 'dropDir' ]);
 		if( $dropdir ){
 			my $name = $self->name();
 			if( $name ){
