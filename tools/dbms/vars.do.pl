@@ -84,7 +84,7 @@ sub listArchivesroot {
 # obsoleted as of v4.8
 
 sub listBackupsdir {
-	my $dir = $jsonable->var([ 'DBMS', 'backupsDir' ]) || $jsonable->var([ 'DBMS', 'backupsRoot' ]) || TTP::tempDir();
+	my $dir = TTP::dbmsBackupsPeriodic();
 	my $str = "backupsDir: $dir";
 	msgVerbose( "returning '$str'" );
 	print " $str".EOL;
@@ -154,18 +154,18 @@ if( $opt_service ){
 	}
 }
 
-# warn if no option has been requested
-msgWarn( "none of '--backupsRoot', '--backupsDir', '--archivesRoot' or '--archivesDir' options has been requested, nothing to do" ) if !$opt_backupsRoot && !$opt_backupsDir && !$opt_archivesRoot && !$opt_archivesDir;
-
 # deprecated options
 msgWarn( "'--backupsDir' option is deprecated in favor of '--backupsPeriodic'. You should update your configurations and/or your code." ) if $opt_backupsDir;
+
+# warn if no option has been requested
+msgWarn( "none of '--backupsRoot', '--backupsPeriodic', '--archivesRoot' or '--archivesDir' options has been requested, nothing to do" ) if !$opt_backupsRoot && !$opt_backupsDir && !$opt_backupsPeriodic && !$opt_archivesRoot && !$opt_archivesDir;
 
 if( !TTP::errs()){
 	listArchivesroot() if $opt_archivesRoot;
 	listArchivesdir() if $opt_archivesDir;
 	listBackupsRoot() if $opt_backupsRoot;
 	listBackupsdir() if $opt_backupsDir;
-	listBackupsPerioduic() if $opt_backupsPeriodic;
+	listBackupsPeriodic() if $opt_backupsPeriodic;
 }
 
 TTP::exit();

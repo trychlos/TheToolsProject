@@ -102,7 +102,7 @@ sub computeDefaultBackupFilename {
 	msgErr( __PACKAGE__."::computeDefaultBackupFilename() mode must be 'full' or 'diff', found '$mode'" ) if $mode ne 'full' and $mode ne 'diff';
 	# compute the dir and make sure it exists
 	my $node = $self->ep()->node();
-	my $backupDir = $node->var([ 'DBMS', 'backupsDir' ]) || $node->var([ 'DBMS', 'backupsRoot' ]) || TTP::tempDir();;
+	my $backupDir = TTP::dbmsBackupsPeriodic();
 	TTP::Path::makeDirExist( $backupDir );
 	# compute the filename
 	my $fname = $node->name().'-'.$self->instance()."-$parms->{database}-".( Time::Moment->now->strftime( '%y%m%d-%H%M%S' ))."-$mode.backup";

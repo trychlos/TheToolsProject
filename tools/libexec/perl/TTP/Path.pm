@@ -264,19 +264,6 @@ sub dbmsArchivesRoot {
 # the current DBMS backups directory, making sure the dir exists
 # the dir can be defined in toops.json, or overriden in host configuration
 
-sub dbmsBackupsDir {
-	TTP::Message::msgWarn( __PACKAGE__."::dbmsBackupsDir() is deprecated in favor of ".__PACKAGE__."dbmsBackupsPeriodic(). You should update your code." );
-	return dbmsBackupsPeriodic( @_ );
-}
-
-# ------------------------------------------------------------------------------------------------
-# (I):
-# - an optional options hash with following keys:
-#   > config: host configuration (useful when searching for a remote host)
-# (O):
-# the current DBMS backups directory, making sure the dir exists
-# the dir can be defined in toops.json, or overriden in host configuration
-
 sub dbmsBackupsPeriodic {
 	my ( $opts ) = @_;
 	$opts //= {};
