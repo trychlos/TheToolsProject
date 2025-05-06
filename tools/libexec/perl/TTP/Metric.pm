@@ -246,12 +246,12 @@ sub _http_publish {
 	my $res = 0;
 
 	my $ep = $self->ep();
-	my $var = $ep->var([ 'Telemetry', 'withHttp', 'enabled' ]);
+	my $var = $ep->var([ 'telemetry', 'withHttp', 'enabled' ]);
 	msgVerbose( "_http_publish: enabled_var=$enabled" );
 	my $enabled = defined( $var ) ? $var : true;
 	msgVerbose( "_http_publish: enabled_computed=$enabled" );
 	if( $enabled ){
-		$var = $ep->var([ 'Telemetry', 'withHttp', 'url' ]);
+		$var = $ep->var([ 'telemetry', 'withHttp', 'url' ]);
 		my $url = defined( $var ) ? $var : undef;
 		if( $url ){
 			my $name = $self->name();
@@ -321,10 +321,10 @@ sub _mqtt_publish {
 	my $res = 0;
 
 	my $ep = $self->ep();
-	my $var = $ep->var([ 'Telemetry', 'withMqtt', 'enabled' ]);
+	my $var = $ep->var([ 'telemetry', 'withMqtt', 'enabled' ]);
 	my $enabled = defined( $var ) ? $var : true;
 	if( $enabled ){
-		$var = $ep->var([ 'Telemetry', 'withMqtt', 'command' ]);
+		$var = $ep->var([ 'telemetry', 'withMqtt', 'command' ]);
 		my $command = defined( $var ) ? $var : undef;
 		if( $command ){
 			my $name = $self->name();
@@ -381,10 +381,10 @@ sub _text_publish {
 	my $res = 0;
 
 	my $ep = $self->ep();
-	my $var = $ep->var([ 'Telemetry', 'withText', 'enabled' ]);
+	my $var = $ep->var([ 'telemetry', 'withText', 'enabled' ]);
 	my $enabled = defined( $var ) ? $var : true;
 	if( $enabled ){
-		$var = $ep->var([ 'Telemetry', 'withText', 'dropDir' ]);
+		$var = $ep->var([ 'telemetry', 'withText', 'dropDir' ]);
 		my $dropdir = defined( $var ) ? $var : undef;
 		if( $dropdir ){
 			my $name = $self->name();
