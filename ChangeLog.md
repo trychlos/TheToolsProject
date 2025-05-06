@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.9.1-rc.0
+### 4.9.1
 
-    Release date: 
+    Release date: 2025- 5- 6
 
     - dbms.pl vars deprecated listBackupsdir() uses TTP::dbmsBackupsPeriodic() instead of recomputing the var
     - dbms.pl vars fix call to listBackupsPeriodic()
