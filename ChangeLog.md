@@ -7,6 +7,7 @@
     Release date: 
 
     - TTP::Metric enabled default value is true
+    - TTP::Metric replace 'Telemetry' obsoleted value with 'telemetry'
 
 ### 4.9.1
 
