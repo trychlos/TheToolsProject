@@ -13,6 +13,8 @@
     - Make project name and copyright notice consistent among all files (todo #133, #134)
     - Remove unused ttp.pl test verb (todo #131)
 
+    - TTP::Metric enabled default value is true
+
 ### 4.9.1
 
     Release date: 2025- 5- 6
