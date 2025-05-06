@@ -6,11 +6,14 @@
 
     Release date: 
 
+<<<<<<< HEAD
     - TTP::Metric enabled default value is true
     - TTP::Metric replace 'Telemetry' obsoleted value with 'telemetry'
     - Define new TTP::Telemetry::isHttpEnabled() isMqttEnabled() and isTextEnabled() functions
     - TTP::Metric has labelled error codes
 
+=======
+>>>>>>> 86c896f (Post-release minimal version bump)
 ### 4.9.1
 
     Release date: 2025- 5- 6
