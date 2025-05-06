@@ -6,6 +6,8 @@
 
     Release date: 
 
+    - TTP::Metric enabled default value is true
+
 ### 4.9.1
 
     Release date: 2025- 5- 6
