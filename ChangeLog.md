@@ -8,6 +8,7 @@
 
     - TTP::Metric enabled default value is true
     - TTP::Metric replace 'Telemetry' obsoleted value with 'telemetry'
+    - Define new TTP::Telemetry::isHttpEnabled() isMqttEnabled() and isTextEnabled() functions
 
 ### 4.9.1
 
