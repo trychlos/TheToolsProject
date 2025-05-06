@@ -39,4 +39,43 @@ sub getConfigurationValue {
 	return $value;
 }
 
+# -------------------------------------------------------------------------------------------------
+# Whether the HTTP-based telemetry is enabled in this site
+# (I):
+# - none
+# (O):
+# - true|false
+
+sub isHttpEnabled {
+	my $enabled = getConfigurationValue([ 'withHttp', 'enabled' ]);
+	$enabled = true if !defined $enabled;
+	return $enabled;
+}
+
+# -------------------------------------------------------------------------------------------------
+# Whether the MQTT-based telemetry is enabled in this site
+# (I):
+# - none
+# (O):
+# - true|false
+
+sub isMqttEnabled {
+	my $enabled = getConfigurationValue([ 'withMqtt', 'enabled' ]);
+	$enabled = true if !defined $enabled;
+	return $enabled;
+}
+
+# -------------------------------------------------------------------------------------------------
+# Whether the text-based telemetry is enabled in this site
+# (I):
+# - none
+# (O):
+# - true|false
+
+sub isTextEnabled {
+	my $enabled = getConfigurationValue([ 'withText', 'enabled' ]);
+	$enabled = true if !defined $enabled;
+	return $enabled;
+}
+
 1;
