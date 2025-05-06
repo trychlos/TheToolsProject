@@ -91,7 +91,22 @@ my $Const = {
 	labelValueRE => '[^/]*',
 	# names must match this regex
 	# https://prometheus.io/docs/concepts/data_model/
-	nameRE => '^[a-zA-Z_:][a-zA-Z0-9_:]*$'
+	nameRE => '^[a-zA-Z_:][a-zA-Z0-9_:]*$',
+	# the error codes as labels
+	errorLabels => [
+		'OK',
+		'MQTT_DISABLED_BY_CONFIGURATION',
+		'HTTP_DISABLED_BY_CONFIGURATION',
+		'TEXT_DISABLED_BY_CONFIGURATION',
+		'VALUE_UNAVAILABLE',
+		'VALUE_UNSUITED',
+		'NAME_UNAVAILABLE',
+		'MQTT_NOCOMMAND',
+		'MQTT_COMMAND_ERROR',
+		'HTTP_NOURL',
+		'HTTP_REQUEST_ERROR',
+		'TEXT_NODROPDIR'
+	]
 };
 
 ### Private methods
@@ -304,7 +319,7 @@ sub _http_publish {
 		$res = HTTP_DISABLED_BY_CONFIGURATION;
 	}
 
-	msgVerbose( __PACKAGE__."::_http_publish() returning res='$res'" );
+	msgVerbose( __PACKAGE__."::_http_publish() returning res='$res' ($Const->{errorLabels}[$res])" );
 	return $res;
 }
 
@@ -362,7 +377,7 @@ sub _mqtt_publish {
 		$res = MQTT_DISABLED_BY_CONFIGURATION;
 	}
 
-	msgVerbose( __PACKAGE__."::_mqtt_publish() returning res='$res'" );
+	msgVerbose( __PACKAGE__."::_mqtt_publish() returning res='$res' ($Const->{errorLabels}[$res])" );
 	return $res;
 }
 
@@ -407,7 +422,7 @@ sub _text_publish {
 		$res = TEXT_DISABLED_BY_CONFIGURATION;
 	}
 
-	msgVerbose( __PACKAGE__."::_text_publish() returning res='$res'" );
+	msgVerbose( __PACKAGE__."::_text_publish() returning res='$res' ($Const->{errorLabels}[$res])" );
 	return $res;
 }
 
