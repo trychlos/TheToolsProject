@@ -17,7 +17,10 @@
 |      | 2025- 1-20 | daemon.pl command done |
 |      | 2025- 4-10 | should build an inventory of what should be done, and what can be done |
 |   54 | 2025- 1-19 | verbs should have an internal telemetry for the memory they consume, the execution elapsed time |
+|      | 2025- 4-29 | have to define the telemetry to get and how and where to publish it |
 |   55 | 2025- 2-17 | daemon.pl status should have an option to publish to mqtt too |
+|      | 2025- 4-29 | the daemon itself is already able to publish its status to MQTT - is it relevant to have this option |
+|      | 2025- 4-29 | yes, the option is relevant, for consistency first, and to publish status to MQTT if the daemon has disabled it |
 |   57 | 2025- 2-17 | daemon.pl status should have an option to publish to text too |
 |   59 | 2025- 2-18 | Daemon.pm: metrics for the daemon are windows-specific: re-code for unix'es |
 |      | 2025- 4-14 | mswin32 metrics are isolated |
@@ -35,15 +38,25 @@
 |  112 | 2024- 4-20 | service.schema |
 |  113 | 2024- 4-20 | integration of service's schema in site |
 |  114 | 2024- 4-20 | integration of service's schema in node |
-|  115 | 2024- 4-20 | test infrastructure |
-|      | 2024- 4-22 | began with sh/ |
-|      | 2024- 4-24 | began with cmd/ |
 |  116 | 2024- 4-21 | have ttp.sh list |
+|      | 2024- 4-29 | ttp.pl list list available (.pl) commands and nodes - what should be the goal of ttp.sh list ? |
 |  118 | 2024- 4-21 | logs dirs, backups dirs and others should accept <NODE> macros when overriden in a <node>.json (or even when in site.json) |
 |      | 2024- 4-22 | nb: we already have a TTP::nodeName() function available in [eval:..] macros |
-|  121 | 2024- 4-24 | seems that daemons MQTT status is incomplete ? |
 |  122 | 2024- 4-26 | daemon.pl start should default to refuse to start a daemon several times |
-|  123 |  |  |
+|  123 | 2024- 4-29 | have a test for alerts-monitor-daemon |
+|  124 | 2024- 4-29 | have a test for mqtt-monitor-daemon |
+|  125 | 2024- 4-29 | have a test for node-monitor-daemon |
+|  126 | 2024- 4-29 | have a test for each of ttp.pl vars variables |
+|  127 | 2024- 4-29 | have a test for each of daemons.pl vars variables |
+|  128 | 2024- 4-29 | have a test for each of dbms.pl vars variables |
+|  129 | 2024- 4-29 | have a test for each of services.pl vars variables |
+|  130 | 2024- 4-29 | RunnerDaemon->run() takes a 'listener' argument which is never used - is there a use case ? or remove the code |
+|  131 | 2024- 4-29 | remove unused ttp.pl test |
+|  132 | 2024- 4-29 | review ttp.pl movedirs vs. ttp.pl purgedirs vs. ttp.pl copydirs |
+|  133 | 2024- 4-29 | change "The Tools Project" mentions with "TheToolsProject" |
+|  134 | 2024- 4-29 | check all copyright mentions ane make sure they are consistent |
+|  135 | 2024- 4-29 | ttp.sh switch doesn't display help - but shouldn't it ? |
+|  136 |  |  |
 
 ---
 ## Done
@@ -303,6 +316,10 @@
 |      | 2024- 4-19 | fixed |
 |  108 | 2024- 4-20 | site.schema for DBMS |
 |      | 2024- 4-21 | done |
+|  115 | 2024- 4-20 | test infrastructure |
+|      | 2024- 4-22 | began with sh/ |
+|      | 2024- 4-24 | began with cmd/ |
+|      | 2024- 4-29 | said done: we have a sh-based and a cmd-based test infrastructures, both at the same level of tests |
 |  117 | 2024- 4-21 | <command>.pl help should be formatted like ttp.pl list -commands (i.e. with a count at the end) + update the test suite accordingly |
 |      | 2024- 4-22 | done |
 |  119 | 2024- 4-22 | print STDERR __PACKAGE__... if $ENV{TTP_DEBUG}; should be replaced by msgDebug() |
@@ -311,6 +328,8 @@
 |      | 2024- 4-23 | done |
 |  120 | 2024- 4-23 | homogeneize "if exists" to "if defined" |
 |      | 2024- 4-23 | done |
+|  121 | 2024- 4-24 | seems that daemons MQTT status is incomplete ? |
+|      | 2024- 4-29 | auto-fixed |
 
 ---
 P. Wieser
