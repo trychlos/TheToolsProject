@@ -467,7 +467,7 @@
                                 "command": {
                                     "description_array": [
                                         "The command to be used to create the JSON execution report file.",
-                                        "The default command creates an 'report-yyyymmddhhmisscccccc.json' file in the below dropDir directory."
+                                        "The default command creates a 'report-yyyymmddhhmisscccccc.json' file in the below dropDir directory."
                                     ],
                                     "type": [
                                         "string",
@@ -504,7 +504,7 @@
                                 "command": {
                                     "description_array": [
                                         "The command to be used to create the MQTT-based execution report topics.",
-                                        ""
+                                        "The command has access to <TOPIC> macro."
                                     ],
                                     "type": [
                                         "string",
