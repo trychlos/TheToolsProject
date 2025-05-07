@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.9.2-rc.0
+### 4.9.2
 
-    Release date: 
+    Release date: 2025- 5- 7
 
     - TTP::Metric enabled default value is true
     - TTP::Metric replace 'Telemetry' obsoleted value with 'telemetry'
