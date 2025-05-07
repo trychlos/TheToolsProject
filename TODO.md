@@ -52,7 +52,6 @@
 |  128 | 2024- 4-29 | have a test for each of dbms.pl vars variables |
 |  129 | 2024- 4-29 | have a test for each of services.pl vars variables |
 |  130 | 2024- 4-29 | RunnerDaemon->run() takes a 'listener' argument which is never used - is there a use case ? or remove the code |
-|  131 | 2024- 4-29 | remove unused ttp.pl test |
 |  132 | 2024- 4-29 | review ttp.pl movedirs vs. ttp.pl purgedirs vs. ttp.pl copydirs |
 |  135 | 2024- 4-29 | ttp.sh switch doesn't display help - but shouldn't it ? |
 |  136 |  |  |
@@ -331,6 +330,8 @@
 |      | 2024- 4-23 | done |
 |  121 | 2024- 4-24 | seems that daemons MQTT status is incomplete ? |
 |      | 2024- 4-29 | auto-fixed |
+|  131 | 2024- 4-29 | remove unused ttp.pl test |
+|      | 2024- 5- 7 | done |
 |  133 | 2024- 4-29 | change "TheToolsProject" mentions with "TheToolsProject" |
 |      | 2024- 5- 7 | done |
 |  134 | 2024- 4-29 | check all copyright mentions and make sure they are consistent |
