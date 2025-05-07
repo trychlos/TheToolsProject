@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.9.3-rc.0
+### 4.9.3
 
-    Release date: 
+    Release date: 2025- 5- 7
 
     - TTP::Metric has missing 'use TTP::Telemetry;'
     - ttp.sh switch displays its help when run without argument (todo #135)
@@ -311,4 +311,4 @@
 
 ---
 P. Wieser
-- Last updated on 2025, Apr. 29th
+- Last updated on 2025, May 7th
