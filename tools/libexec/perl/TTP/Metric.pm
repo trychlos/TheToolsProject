@@ -60,6 +60,7 @@ use URI::Escape;
 
 use TTP::Constants qw( :all );
 use TTP::Message qw( :all );
+use TTP::Telemetry;
 
 use constant {
 	MQTT_DISABLED_BY_CONFIGURATION => 1,
