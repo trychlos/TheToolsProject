@@ -1,4 +1,4 @@
-# The Tools Project - Tools System and Working Paradigm for IT Production
+# TheToolsProject - Tools System and Working Paradigm for IT Production
 
 ## Summary
 
@@ -76,7 +76,7 @@ You should get an answer like:
 
 ```sh
 C:\>ttp.pl
-ttp.pl: The Tools Project Management
+ttp.pl: TheToolsProject Management
   alert: send an alert
   copydirs: copy directories from a source to a target
   list: list various TTP objects
@@ -98,8 +98,8 @@ Go on by examining the answers to a `ttp.sh list` (resp. `ttp.pl list`) command.
 
 ```sh
 $ ttp.sh list
-ttp.sh: The Tools Project (TTP) management
-  list: list various informations about The Tools Project
+ttp.sh: TheToolsProject (TTP) management
+  list: list various informations about TheToolsProject
       This verb lists:
       - the available commands,
       - the registered execution nodes, maybe for a specified environment
@@ -128,7 +128,7 @@ or
 
 ```sh
 C:\>ttp.pl list
-ttp.pl: The Tools Project Management
+ttp.pl: TheToolsProject Management
   list: list various TTP objects
     Usage: ttp.pl list [options]
     where available options are:
@@ -157,7 +157,7 @@ $ ttp.sh list -commands
  oracle.sh: Oracle DBMS management
  packaging.sh: Packaging and repositories management
  svn.sh: Subversion management
- ttp.sh: The Tools Project (TTP) management
+ ttp.sh: TheToolsProject (TTP) management
 [ttp.sh list] 9 displayed command(s)
 ```
 
@@ -175,7 +175,7 @@ C:\>ttp.pl list -commands
  services.pl: Services Management
  smtp.pl: SMTP Comunications
  telemetry.pl: Telemetry Services
- ttp.pl: The Tools Project Management
+ ttp.pl: TheToolsProject Management
 [ttp.pl list] 10 found command(s)
 ```
 

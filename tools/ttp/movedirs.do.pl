@@ -17,7 +17,7 @@
 # @(@) In this situation, it can be convenient to just skip the first step of the creation of the target directory in order to prevent some weird error messages
 # @(@) like, for example, the well-known "Insufficient system resources exist to complete the requested service" Win32 message...
 #
-# The Tools Project - Tools System and Working Paradigm for IT Production
+# TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
 # Copyright (©) 2023-2025 PWI Consulting
 #

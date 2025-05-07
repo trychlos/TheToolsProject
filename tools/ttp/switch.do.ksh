@@ -11,7 +11,7 @@
 # @(@) It has the unique particularity of having to be executed 'in-process', i.e. with the dot notation: ". ttp.sh switch --node <name>".
 # @(@) It is most often run from profile initialization as ". ttp.sh switch --default".
 #
-# The Tools Project - Tools System and Working Paradigm for IT Production
+# TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 2003-2021 Pierre Wieser (see AUTHORS)
 #
 # TheToolsProject is free software; you can redistribute it and/or
@@ -43,7 +43,7 @@
 # pwi 2002- 6-24 consider site.ini configuration file
 # gma 2004- 4-30 use bspNodeEnum function
 # fsl 2005- 3-11 fix bug when determining if a logical exists
-# pwi 2006-10-27 the tools become The Tools Project, released under GPL
+# pwi 2006-10-27 the tools become TheToolsProject, released under GPL
 # pwi 2017- 6-21 publish the release at last
 # pwi 2025- 2- 7 merge shell-based and Perl-based flavors to make TheToolsProject available both on shell-based and cmd-based OSes
 # pwi 2025- 4- 3 starting with v4, VERBOSE environment variable is replaced with TTP_DEBUG

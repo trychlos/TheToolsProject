@@ -1,4 +1,4 @@
-# The Tools Project - Tools System and Working Paradigm for IT Production
+# TheToolsProject - Tools System and Working Paradigm for IT Production
 
 ## Summary
 
@@ -42,7 +42,7 @@ __TheToolsProject__ maje sure no one inadvertently executes a command in another
 
 - the commands are agnostic between environments;
 
-This is very important and a great added value of The Tools Project, so let emphasize this:
+This is very important and a great added value of TheToolsProject, so let emphasize this:
 
     All comands written in the applications scripts are environment-agnostic: they do not change when the script is moved from an environment to another.
 
@@ -133,7 +133,7 @@ Example:
    [toto@local ~] $ ttp.sh list -commands
    [ttp.sh list] displaying available commands...
      svn.sh: Subversion management
-     ttp.sh: The Tools Project (TTP) management
+     ttp.sh: TheToolsProject (TTP) management
 ```
 
 ---

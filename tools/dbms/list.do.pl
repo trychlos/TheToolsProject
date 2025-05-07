@@ -16,7 +16,7 @@
 # @(@)   dbms.pl list -instance <instance> -listdb displays the list of databases in the named instance on this node
 # @(@)   dbms.pl list -instance <instance> -database <database> -listtables displays the list of tables in the named database in the named instance on this node
 #
-# The Tools Project - Tools System and Working Paradigm for IT Production
+# TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
 # Copyright (©) 2023-2025 PWI Consulting
 #

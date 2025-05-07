@@ -1,4 +1,4 @@
-# The Tools Project - Tools System and Working Paradigm for IT Production
+# TheToolsProject - Tools System and Working Paradigm for IT Production
 
 ## Summary
 
@@ -95,7 +95,7 @@ And, as these scripts are primarly production tools, they all log what they do, 
 
 ## Maintenability and versions concurrency
 
-Starting with v2, several versions of The Tools Project can be made available simultaneously.
+Starting with v2, several versions of TheToolsProject can be made available simultaneously.
 
 This has two main benefits:
 

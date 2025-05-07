@@ -11,7 +11,7 @@
 # @(@) Each separate daemon is characterized by its own JSON properties which uniquely identifies it from the TTP point of view.
 # @(@) This script accepts other options, after a '--' double dash, which will be passed to the run daemon program.
 #
-# The Tools Project - Tools System and Working Paradigm for IT Production
+# TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
 # Copyright (©) 2023-2025 PWI Consulting
 #

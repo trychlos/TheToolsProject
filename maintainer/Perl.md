@@ -1,4 +1,4 @@
-# The Tools Project - Tools System and Working Paradigm for IT Production
+# TheToolsProject - Tools System and Working Paradigm for IT Production
 
 ## Identifying the Perl modules to be installed
 
