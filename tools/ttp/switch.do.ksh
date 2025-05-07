@@ -12,7 +12,8 @@
 # @(@) It is most often run from profile initialization as ". ttp.sh switch --default".
 #
 # TheToolsProject - Tools System and Working Paradigm for IT Production
-# Copyright (©) 2003-2021 Pierre Wieser (see AUTHORS)
+# Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
+# Copyright (©) 2023-2025 PWI Consulting
 #
 # TheToolsProject is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
