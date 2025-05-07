@@ -7,6 +7,7 @@
     Release date: 
 
     - TTP::Metric has missing 'use TTP::Telemetry;'
+    - ttp.sh switch displays its help when run without argument (todo #135)
 
 ### 4.9.2
 

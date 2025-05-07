@@ -30,6 +30,7 @@
 # pwi 2021-12-28 prefix verbose messages
 # pwi 2025- 4- 3 starting with v4, VERBOSE environment variable is replaced with TTP_DEBUG
 # pwi 2025- 4- 9 output to stderr to not override switch behavior
+# pwi 2025- 5- 7 thanks to Perl flavor, there is no more need to verbosely exit
 
 # This function must be defined using the name() syntax in order
 # to share traps with the caller process (cf. man (1) ksh).
@@ -37,8 +38,6 @@
 trap_exit()
 {
 	[ "${TTP_DEBUG}" = "1" ] && echo "trap_exit()" >&2
-
-	[ "${opt_verbose}" = "yes" -o ${ttp_code} -gt 0 ] && msgVerbose "exiting with code ${ttp_code}" 1>&2
 
 	exit ${ttp_code}
 }
