@@ -4,7 +4,7 @@
     "title": "Node",
     "description_array": [
 		"The '<node>.json' configuration file is the per-node configuration file for TheToolsProject. Each involved node must have its own <node>.json configuration file.",
-		"It is searched for among (hardcoded) 'etc/nodes/<node.json' and 'etc/machines/<node>.json' in each path of TTP_ROOTS environment variable.",
+		"It is searched for among (hardcoded) 'etc/nodes/<node>.json' and 'etc/machines/<node>.json' in each path of TTP_ROOTS environment variable.",
 		"The first found wins.",
 		"",
 		"Windows notes:",
@@ -13,8 +13,9 @@
 		"Dynamic values:",
 		" May make use - in values only - of parameters between square brackets as [eval:...]",
 		" 'eval' may be prefixed with an underscore in order to delay the eval (e.g. if it refers to another dynamic variable which needs to be resolved first).",
-       "",
-        "Unless otherwise specified, below values take their default value from global site.json."
+        "",
+        "Unless otherwise specified, below values take their default value from global site.json.",
+        "Most of commands here accept a <NODE> macro which is evaluated as TTP::nodeName()."
     ],
     "type": "object",
     "properties": {

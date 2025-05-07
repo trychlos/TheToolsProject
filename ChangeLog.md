@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - Define service.schema.json (todo #112)
 
 ### 4.9.3
 
