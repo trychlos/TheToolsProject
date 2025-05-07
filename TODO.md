@@ -31,6 +31,7 @@
 |      | 2025- 4-17 | at the moment, still exists backup-monitor-daemon in site tree - to be evaluated |
 |  109 | 2025- 4-20 | site.schema for executionReports |
 |      | 2025- 4-22 | done - has to be honored |
+|      | 2025- 5- 7 | TTP::executionReport() honors 'enabled' configuration |
 |  110 | 2025- 4-20 | site.schema for moveDir |
 |  111 | 2025- 4-20 | site.schema for telemetry |
 |      | 2025- 4-22 | done - has to be honored |

@@ -395,7 +395,7 @@ sub errs {
 # - we do not want have here some code for each and every possible medium a caller may want use a day or another
 # - as soon as we can have either a JSON file or a MQTT message, or even both of these medias, we can also have
 #   any redirection from these medias to another one (e.g. scan the execution report JSON files and do something
-#   when a new one is detected, or listen to the MQTT bus and suibscribe to interesting topics, and so on...).
+#   when a new one is detected, or listen to the MQTT bus and subscribe to interesting topics, and so on...).
 # Each medium is only evaluated if and only if:
 # - the corresponding 'enabled' option is 'true' for the considered host
 # - and the relevant options are provided by the caller. 
@@ -418,11 +418,13 @@ sub executionReport {
 	my ( $args ) = @_;
 	# write JSON file if configuration enables that and relevant arguments are provided
 	my $enabled = $ep->var([ 'executionReports', 'withFile', 'enabled' ]);
+	$enabled = true if !defined $enabled;
 	if( $enabled && $args->{file} ){
 		_executionReportToFile( $args->{file} );
 	}
 	# publish MQTT message if configuration enables that and relevant arguments are provided
 	$enabled = $ep->var([ 'executionReports', 'withMqtt', 'enabled' ]);
+	$enabled = true if !defined $enabled;
 	if( $enabled && $args->{mqtt} ){
 		_executionReportToMqtt( $args->{mqtt} );
 	}

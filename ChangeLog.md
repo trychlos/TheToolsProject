@@ -9,6 +9,7 @@
     - TTP::Metric has missing 'use TTP::Telemetry;'
     - ttp.sh switch displays its help when run without argument (todo #135)
     - dbms.pl verbs emphasize that '--instance' is a Sql Server specific option (todo #138)
+    - TTP::executionReport() honors 'enabled' configuration default value (todo #109)
 
 ### 4.9.2
 
@@ -20,7 +21,6 @@
     - TTP::Metric has labelled error codes
     - Make project name and copyright notice consistent among all files (todo #133, #134)
     - Remove unused ttp.pl test verb (todo #131)
-
     - TTP::Metric enabled default value is true
 
 ### 4.9.1
