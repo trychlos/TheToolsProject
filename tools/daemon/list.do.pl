@@ -11,7 +11,7 @@
 # @(@) (if '--check' option has been set). Please be conscious that any of these two options may so return a different
 # @(@) result set of the one returned by the standard (default) run.
 #
-# The Tools Project - Tools System and Working Paradigm for IT Production
+# TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
 # Copyright (©) 2023-2025 PWI Consulting
 #

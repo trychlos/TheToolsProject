@@ -8,7 +8,7 @@
 #
 # @(@) The TTP test suite relies on a service which defines all the commands to be run and their expected result.
 #
-# The Tools Project - Tools System and Working Paradigm for IT Production
+# TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
 # Copyright (©) 2023-2025 PWI Consulting
 #

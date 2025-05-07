@@ -8,7 +8,7 @@
 # @(-) --dircmd=s              the command which will give the source path [${dircmd}]
 # @(-) --keep=s                count of to-be-kept directories [${keep}]
 #
-# The Tools Project - Tools System and Working Paradigm for IT Production
+# TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
 # Copyright (©) 2023-2025 PWI Consulting
 #

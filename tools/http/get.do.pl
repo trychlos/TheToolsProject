@@ -30,7 +30,7 @@
 # @(@) '--epoch' option let the verb publish an epoch-based telemetry. This is very specific to the use of the telemetry by Grafana in order
 # @(@) to be able to both identify the last live node, and to set a status on this last live node to current or not.
 #
-# The Tools Project - Tools System and Working Paradigm for IT Production
+# TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
 # Copyright (©) 2023-2025 PWI Consulting
 #

@@ -1,4 +1,4 @@
-# The Tools Project - Tools System and Working Paradigm for IT Production
+# TheToolsProject - Tools System and Working Paradigm for IT Production
 
 ## Summary
 
@@ -8,7 +8,7 @@
 
 [Default logical at login time](#default-logical-at-login-time)
 
-[Why do not install The Tools Project inside the logical tree ?](#why-do-not-install-the-tools-project-inside-the-logical-tree-)
+[Why do not install TheToolsProject inside the logical tree ?](#why-do-not-install-the-tools-project-inside-the-logical-tree-)
 
 ## Introduction
 
@@ -77,7 +77,7 @@ Note the leading dot, as this command is expected to modify the user environment
 
 This command is useless in a site which does not make use of the logical machine paradigm, but is still used internally by __TheToolsProject__ in remote executions.
 
-## Why do not install The Tools Project inside the logical tree ?
+## Why do not install TheToolsProject inside the logical tree ?
 
 The bootstrapping process at login time involves some __TTP__ code.
 
@@ -85,7 +85,7 @@ Adressing this code at login may fail if the logical machine is not present at t
 
 As another drawback, when the logical machine paradigm is used in a site, there is typically many more logical machines that hosts.
 
-Distributing a new version of The Tools Project may so be (much) longer.
+Distributing a new version of TheToolsProject may so be (much) longer.
 
 For these two reasons, it is always better to install __TheToolsProject__ either in the hosts, on in a centralized NFS place (or as a mix of the two solutions).
 

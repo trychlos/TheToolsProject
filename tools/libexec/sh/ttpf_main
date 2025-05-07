@@ -1,6 +1,6 @@
 # @(#) Core (main) function
 #
-# The Tools Project - Tools System and Working Paradigm for IT Production
+# TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
 # Copyright (©) 2023-2025 PWI Consulting
 #
@@ -40,7 +40,7 @@
 # pwi 2002- 2-28 tools are now installed on the physical host
 # pwi 2002- 5-17 set _GEC_VERBOSE and _GEC_DATE variables
 # pwi 2002- 6-22 remove shebang line
-# pwi 2006-10-27 tools become The Tools Project, released under GPL
+# pwi 2006-10-27 tools become TheToolsProject, released under GPL
 # pwi 2012- 7-12 tools target a virtual boxes environment
 # pwi 2013- 5- 1 Aix 6.1 port
 # pwi 2013- 6-27 logicals .ini file are found in ttp_nodesdir

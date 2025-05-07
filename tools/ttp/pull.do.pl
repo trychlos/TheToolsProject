@@ -11,7 +11,7 @@
 # @(@) Also be warned that this script deletes the destination before installing the refreshed version, and will not be able of that if
 # @(@) a user is inside of the tree (either through a file explorer or a command prompt).
 #
-# The Tools Project - Tools System and Working Paradigm for IT Production
+# TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
 # Copyright (©) 2023-2025 PWI Consulting
 #

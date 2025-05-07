@@ -20,7 +20,7 @@
 # @(@) This verb let you publish a metric to any enabled medium, among (MQTT-based) messaging system, or (http-based) Prometheus PushGateway or
 # @(@) (text-based) Prometheus TextFile Collector.
 #
-# The Tools Project - Tools System and Working Paradigm for IT Production
+# TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
 # Copyright (©) 2023-2025 PWI Consulting
 #
