@@ -50,6 +50,7 @@
 # pwi 2025- 4- 3 starting with v4, VERBOSE environment variable is replaced with TTP_DEBUG
 #                even if named 'switch.do.ksh', this script is ran from within a perl runtime environment embedded into a shell execution
 #                this is so actually a *perl* code
+# pwi 2025- 5- 7 when sourced without argument, let the verb display its error messages as stdout is gathered by sh/switch
 
 use strict;
 use utf8;
@@ -107,7 +108,7 @@ if( !GetOptions(
 		TTP::exit( 1 );
 }
 
-if( $ep->runner()->help()){
+if( $ep->runner()->help() && !$ENV{NOTTP} ){
 	$ep->runner()->displayHelp( $defaults );
 	TTP::exit();
 }
@@ -126,7 +127,9 @@ if( $opt_default && $opt_node ){
 	msgErr( "only one of '--default' and '--node=<node>' options must be specified" );
 }
 
-if( !TTP::errs()){
+if( TTP::errs()){
+	msgErr( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
+} else {
 	doFindNode();
 }
 if( !TTP::errs()){

@@ -149,6 +149,7 @@ sub runnablePath {
 
 sub runnablePushQualifier {
 	my ( $self, $qualifier ) = @_;
+	msgDebug( __PACKAGE__."::runnablePushQualifier() '$qualifier'" );
 
 	push( @{$self->{_irunnable}{qualifiers}}, $qualifier );
 
@@ -209,20 +210,18 @@ sub runnableStarted {
 after _newBase => sub {
 	my ( $self, $ep, $args ) = @_;
 	$args //= {};
-	#print __PACKAGE__."::new()".EOL;
-
 	$self->{_irunnable} //= {};
+	msgDebug( __PACKAGE__."::after_newBase() ttp_me='".( $ENV{ttp_me} || "" )."' \$0='$0' \@ARGV=[".join( ',', @ARGV )."]" );
 
 	# Starting with v4, TheToolsProject is merged with the sh version. If a 'ttp_me' environment variable
 	#  exists, then this perl is embedded into a sh run. So shift the command-line arguments
-	msgDebug( __PACKAGE__."after_newBase() ttp_me='".( $ENV{ttp_me} || "" )."'" );
 	$self->{_irunnable}{me} = $0;
 	if( $ENV{ttp_me} ){
 		$self->{_irunnable}{me} = shift @ARGV;
 		if( $ENV{ttp_me} eq "sh/ttpf_main" ){
 			$self->{_irunnable}{runMode} = "sh";
 		} else {
-			msgErr( __PACKAGE__."::after _newBase() $ENV{ttp_me}='".$ENV{ttp_me}." which is not managed" );
+			msgErr( __PACKAGE__."::after_newBase() $ENV{ttp_me}='".$ENV{ttp_me}." which is not managed" );
 		}
 	} else {
 			$self->{_irunnable}{runMode} = "perl";
@@ -243,7 +242,7 @@ after _newBase => sub {
 	$self->{_irunnable}{qualifiers} = [];
 	$self->runnablePushQualifier( $self->runnableBNameFull());
 
-	msgLog( "[] executing $0 ".join( ' ', @ARGV ));
+	msgLog( "[] executing $self->{_irunnable}{me} ".join( ' ', @ARGV ));
 	$ep->runner( $self );
 	$SIG{INT} = sub {
 		msgVerbose( "quitting on Ctrl+C keyboard interrupt" );

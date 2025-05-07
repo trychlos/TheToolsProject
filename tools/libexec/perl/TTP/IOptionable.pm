@@ -156,8 +156,8 @@ sub verbose {
 after _newBase => sub {
 	my ( $self, $ep, $args ) = @_;
 	$args //= {};
-
 	$self->{_ioptionable} //= {};
+	msgDebug( __PACKAGE__."::after_newBase() self=".ref( $self )." initialize IOptionable options to false" );
 
 	# initialize the standard options
 	$self->{_ioptionable}{help} = false;
@@ -168,7 +168,6 @@ after _newBase => sub {
 	$self->{_ioptionable}{dummy_set} = false;
 	$self->{_ioptionable}{verbose} = false;
 	$self->{_ioptionable}{verbose_set} = false;
-	msgDebug( __PACKAGE__."::after_newBase() self=".ref( $self )." initialize IOptionable options to false" );
 
 	# Set the help flag to true if there are not enough arguments in the command-line
 	# the minimum count of arguments MUST be defined by the implementation class

@@ -37,9 +37,6 @@
 |  112 | 2024- 4-20 | service.schema |
 |  113 | 2024- 4-20 | integration of service's schema in site |
 |  114 | 2024- 4-20 | integration of service's schema in node |
-|  116 | 2024- 4-21 | have ttp.sh list |
-|      | 2024- 4-29 | ttp.pl list list available (.pl) commands and nodes - what should be the goal of ttp.sh list ? |
-|      | 2024- 5- 6 | unless we have something to list, this item should be cancelled |
 |  118 | 2024- 4-21 | logs dirs, backups dirs and others should accept <NODE> macros when overriden in a <node>.json (or even when in site.json) |
 |      | 2024- 4-22 | nb: we already have a TTP::nodeName() function available in [eval:..] macros |
 |      | 2024- 5- 6 | at least telemetry and mqtt modules use this <NODE> macro |
@@ -53,7 +50,6 @@
 |  129 | 2024- 4-29 | have a test for each of services.pl vars variables |
 |  130 | 2024- 4-29 | RunnerDaemon->run() takes a 'listener' argument which is never used - is there a use case ? or remove the code |
 |  132 | 2024- 4-29 | review ttp.pl movedirs vs. ttp.pl purgedirs vs. ttp.pl copydirs |
-|  135 | 2024- 4-29 | ttp.sh switch doesn't display help - but shouldn't it ? |
 |  136 |  |  |
 
 ---
@@ -320,6 +316,10 @@
 |      | 2024- 4-22 | began with sh/ |
 |      | 2024- 4-24 | began with cmd/ |
 |      | 2024- 4-29 | said done: we have a sh-based and a cmd-based test infrastructures, both at the same level of tests |
+|  116 | 2024- 4-21 | have ttp.sh list |
+|      | 2024- 4-29 | ttp.pl list list available (.pl) commands and nodes - what should be the goal of ttp.sh list ? |
+|      | 2024- 5- 6 | unless we have something to list, this item should be cancelled |
+|      | 2024- 5- 7 | cancelled |
 |  117 | 2024- 4-21 | <command>.pl help should be formatted like ttp.pl list -commands (i.e. with a count at the end) + update the test suite accordingly |
 |      | 2024- 4-22 | done |
 |  119 | 2024- 4-22 | print STDERR __PACKAGE__... if $ENV{TTP_DEBUG}; should be replaced by msgDebug() |
@@ -336,6 +336,8 @@
 |      | 2024- 5- 7 | done |
 |  134 | 2024- 4-29 | check all copyright mentions and make sure they are consistent |
 |      | 2024- 5- 7 | done |
+|  135 | 2024- 4-29 | ttp.sh switch doesn't display help - but shouldn't it ? |
+|      | 2024- 5- 7 | fixed, . ttp.sh switch (sourced) still display error messages which is the wanted behavior |
 
 ---
 P. Wieser

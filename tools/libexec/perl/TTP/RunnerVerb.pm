@@ -206,7 +206,10 @@ sub displayHelp {
 sub minArgsCount {
 	my ( $self ) = @_;
 
-	return $Const->{minArgsCount};
+	# IOptionable is run before IRunnable
+	# so the @ARGV is shifted (if needed) after this method has been called
+	# so increment the minArgsCount if needed
+	return $ENV{ttp_me} && $ENV{ttp_me} eq "sh/ttpf_main" ? 1+$Const->{minArgsCount} : $Const->{minArgsCount};
 }
 
 # -------------------------------------------------------------------------------------------------
