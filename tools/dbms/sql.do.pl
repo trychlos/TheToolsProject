@@ -5,7 +5,7 @@
 # @(-) --[no]dummy             dummy run [${dummy}]
 # @(-) --[no]verbose           run verbosely [${verbose}]
 # @(-) --service=<name>        acts on the named service [${service}]
-# @(-) --instance=<name>       acts on the named instance [${instance}]
+# @(-) --instance=<name>       acts on the named Sql Server instance [${instance}]
 # @(-) --[no]stdin             whether the sql command has to be read from stdin [${stdin}]
 # @(-) --script=<filename>     the sql script filename [${script}]
 # @(-) --command=<command>     the sql command as a string [${command}]
