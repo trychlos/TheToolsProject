@@ -10,6 +10,7 @@
     - TTP::Metric replace 'Telemetry' obsoleted value with 'telemetry'
     - Define new TTP::Telemetry::isHttpEnabled() isMqttEnabled() and isTextEnabled() functions
     - TTP::Metric has labelled error codes
+    - Make project name and copyright notice consistent among all files (todo #133, #134)
 
 ### 4.9.1
 
