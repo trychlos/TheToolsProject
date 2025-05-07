@@ -35,7 +35,6 @@
 |  110 | 2025- 4-20 | site.schema for moveDir |
 |  111 | 2025- 4-20 | site.schema for telemetry |
 |      | 2025- 4-22 | done - has to be honored |
-|  112 | 2025- 4-20 | service.schema |
 |  113 | 2025- 4-20 | integration of service's schema in site |
 |  114 | 2025- 4-20 | integration of service's schema in node |
 |  118 | 2025- 4-21 | logs dirs, backups dirs and others should accept <NODE> macros when overriden in a <node>.json (or even when in site.json) |
@@ -318,6 +317,8 @@
 |      | 2025- 4-19 | fixed |
 |  108 | 2025- 4-20 | site.schema for DBMS |
 |      | 2025- 4-21 | done |
+|  112 | 2025- 4-20 | service.schema |
+|      | 2025- 5- 7 | created |
 |  115 | 2025- 4-20 | test infrastructure |
 |      | 2025- 4-22 | began with sh/ |
 |      | 2025- 4-24 | began with cmd/ |

@@ -1,0 +1,28 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "org.trychlos.TheToolsProject/schemas/service.schema.json",
+    "title": "Service",
+    "description_array": [
+		"The '<service>.json' configuration file is the per-service configuration file for TheToolsProject. Each involved service can have its own <service>.json configuration file.",
+		"It is searched for in (hardcoded) 'etc/services/<service>.json' in each path of TTP_ROOTS environment variable.",
+		"The first found wins.",
+		"",
+		"Windows notes:",
+		"- Take care of doubling your backslashes",
+		"",
+		"Dynamic values:",
+		" May make use - in values only - of parameters between square brackets as [eval:...]",
+		" 'eval' may be prefixed with an underscore in order to delay the eval (e.g. if it refers to another dynamic variable which needs to be resolved first).",
+        "",
+        "Unless otherwise specified, below values take their default value first from <node>.json and then from global site.json.",
+        "Most of commands here accept a <SERVICE> macro which is evaluated as the name of the service."
+    ],
+    "type": "object",
+    "properties": {
+        "enabled": {
+            "description": "Whether this JSON configuration must be considered.",
+            "type": "boolean",
+            "default": true
+        }
+    }
+}
