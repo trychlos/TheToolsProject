@@ -25,7 +25,7 @@
 #
 # @(@) Displayed lists are sorted in ASCII order, i.e. in [0-9A-Za-z] order.
 #
-# The Tools Project - Tools System and Working Paradigm for IT Production
+# TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
 # Copyright (©) 2023-2025 PWI Consulting
 #

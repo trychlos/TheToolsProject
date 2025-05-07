@@ -13,7 +13,7 @@
 # @(@) This script relies on the 'status/live' entry in the JSON configuration file.
 # @(@) *All* machines of the environment are scanned until a 'status/live' command has been found for the service.
 #
-# The Tools Project - Tools System and Working Paradigm for IT Production
+# TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
 # Copyright (©) 2023-2025 PWI Consulting
 #

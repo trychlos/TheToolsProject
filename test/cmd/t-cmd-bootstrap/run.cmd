@@ -1,5 +1,5 @@
 @echo off
-	rem The Tools Project - Tools System and Working Paradigm for IT Production
+	rem TheToolsProject - Tools System and Working Paradigm for IT Production
 	rem Copyright (C) 1998-2023 Pierre Wieser (see AUTHORS)
 	rem Copyright (C) 2023-2025 PWI Consulting
 	rem

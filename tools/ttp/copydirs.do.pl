@@ -15,7 +15,7 @@
 #
 # @(@) Both --exclude-dir and --exclude-file can be specified several times, and/or as a comma-separated list of values, and/or as globs.
 #
-# The Tools Project - Tools System and Working Paradigm for IT Production
+# TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
 # Copyright (©) 2023-2025 PWI Consulting
 #

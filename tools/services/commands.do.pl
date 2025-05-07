@@ -9,7 +9,7 @@
 #
 # @(@) The specified keys must eventually address an array of the to-be-executed commands or a single command string.
 #
-# The Tools Project - Tools System and Working Paradigm for IT Production
+# TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
 # Copyright (©) 2023-2025 PWI Consulting
 #

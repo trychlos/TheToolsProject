@@ -13,7 +13,7 @@
 # @(@) Please remind that each of these directories can be in the service definition of a node, or at the
 # @(@) node level, or also as a value of the service definition, eventually defaulting to a site-level value.
 #
-# The Tools Project - Tools System and Working Paradigm for IT Production
+# TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
 # Copyright (©) 2023-2025 PWI Consulting
 #

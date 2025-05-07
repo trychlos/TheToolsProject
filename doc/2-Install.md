@@ -1,4 +1,4 @@
-# The Tools Project - Tools System and Working Paradigm for IT Production
+# TheToolsProject - Tools System and Working Paradigm for IT Production
 
 ## Summary
 
@@ -212,7 +212,7 @@ And drop the two configuration files in the directory:
 
 ```sh
   C:\> type C:\ProgramData\ttp.d\TTP.conf
-# Address the installed (standard) version of The Tools Project
+# Address the installed (standard) version of TheToolsProject
 C:\ProgramData\TTP
   C:\>
   C:\> type C:\ProgramData\ttp.d\site.conf
