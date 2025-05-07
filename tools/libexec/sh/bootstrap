@@ -1,6 +1,6 @@
 # @(#) TTP bootstrapping for sh/bash/ksh
 #
-# The Tools Project - Tools System and Working Paradigm for IT Production
+# TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
 # Copyright (©) 2023-2025 PWI Consulting
 #
@@ -24,7 +24,7 @@
 #   bash- or korn-derived login shell, with the drop-in directory as
 #   unique parameter
 #
-#     # Bootstrap The Tools Project
+#     # Bootstrap TheToolsProject
 #     . /opt/TheToolsProject/libexec/sh/bootstrap/sh/bootstrap <drop-in-directory>
 #
 #   This shell function will:

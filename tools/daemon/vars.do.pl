@@ -7,7 +7,7 @@
 # @(-) --[no]confDirs          display the list of directories which may contain daemons configurations [${confDirs}]
 # @(-) --[no]execDirs          display the list of directories which may contain daemons executables [${execDirs}]
 #
-# The Tools Project - Tools System and Working Paradigm for IT Production
+# TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
 # Copyright (©) 2023-2025 PWI Consulting
 #

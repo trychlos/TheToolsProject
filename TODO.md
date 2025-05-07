@@ -1,4 +1,4 @@
-# The Tools Project - Tools System and Working Paradigm for IT Production
+# TheToolsProject - Tools System and Working Paradigm for IT Production
 
 ## Summary
 
@@ -12,7 +12,6 @@
 | ---: | :---       | :---                       |
 |    8 | 2024- 5- 2 | implements and honors text-based telemetry |
 |   49 | 2024- 5-11 | all functions should check the type of their arguments and call TTP::stackTrace() on coding error |
-|   52 | 2024- 5-17 | replace IP addresses by dns aliases to make easier the switch between live and backup productions (e.g. http gateway) |
 |   53 | 2025- 1-17 | have a timeout on movedirs and purgedirs at least, maybe on all verbs which needs a network access + alert when this timeout is reached |
 |      | 2025- 1-20 | daemon.pl command done |
 |      | 2025- 4-10 | should build an inventory of what should be done, and what can be done |
@@ -40,8 +39,10 @@
 |  114 | 2024- 4-20 | integration of service's schema in node |
 |  116 | 2024- 4-21 | have ttp.sh list |
 |      | 2024- 4-29 | ttp.pl list list available (.pl) commands and nodes - what should be the goal of ttp.sh list ? |
+|      | 2024- 5- 6 | unless we have something to list, this item should be cancelled |
 |  118 | 2024- 4-21 | logs dirs, backups dirs and others should accept <NODE> macros when overriden in a <node>.json (or even when in site.json) |
 |      | 2024- 4-22 | nb: we already have a TTP::nodeName() function available in [eval:..] macros |
+|      | 2024- 5- 6 | at least telemetry and mqtt modules use this <NODE> macro |
 |  122 | 2024- 4-26 | daemon.pl start should default to refuse to start a daemon several times |
 |  123 | 2024- 4-29 | have a test for alerts-monitor-daemon |
 |  124 | 2024- 4-29 | have a test for mqtt-monitor-daemon |
@@ -53,8 +54,7 @@
 |  130 | 2024- 4-29 | RunnerDaemon->run() takes a 'listener' argument which is never used - is there a use case ? or remove the code |
 |  131 | 2024- 4-29 | remove unused ttp.pl test |
 |  132 | 2024- 4-29 | review ttp.pl movedirs vs. ttp.pl purgedirs vs. ttp.pl copydirs |
-|  133 | 2024- 4-29 | change "The Tools Project" mentions with "TheToolsProject" |
-|  134 | 2024- 4-29 | check all copyright mentions ane make sure they are consistent |
+|  134 | 2024- 4-29 | check all copyright mentions and make sure they are consistent |
 |  135 | 2024- 4-29 | ttp.sh switch doesn't display help - but shouldn't it ? |
 |  136 |  |  |
 
@@ -202,6 +202,8 @@
 |      | 2024- 5-13 | fixed
 |   51 | 2024- 5-13 | replace <HOST> macros by <NODE>
 |      | 2024- 5-13 | done
+|   52 | 2024- 5-17 | replace IP addresses by dns aliases to make easier the switch between live and backup productions (e.g. http gateway) |
+|      | 2024- 5- 6 | cancelled as not a TTP todo item - but rather relative to the way we identify the nodes |
 |   56 | 2025- 2-17 | daemon.pl status should publish the same telemetries that Daemon.pm status advertising
 |      | 2025- 2-17 | done
 |   58 | 2025- 2-17 | all verbs: on arguments verbose, use 'got' instead of 'found'
@@ -330,6 +332,8 @@
 |      | 2024- 4-23 | done |
 |  121 | 2024- 4-24 | seems that daemons MQTT status is incomplete ? |
 |      | 2024- 4-29 | auto-fixed |
+|  133 | 2024- 4-29 | change "TheToolsProject" mentions with "TheToolsProject" |
+|      | 2024- 5- 7 | done |
 
 ---
 P. Wieser

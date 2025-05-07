@@ -1,4 +1,4 @@
-# The Tools Project - Tools System and Working Paradigm for IT Production
+# TheToolsProject - Tools System and Working Paradigm for IT Production
 
 ## Summary
 
@@ -77,7 +77,7 @@ You should get an answer like:
 
 ```sh
 C:\>ttp.pl
-ttp.pl: The Tools Project Management
+ttp.pl: TheToolsProject Management
   alert: send an alert
   copydirs: copy directories from a source to a target
   list: list various TTP objects
@@ -95,11 +95,41 @@ The `ttp.pl` command, when run without any argument, answers by providing the li
 
 And so do all available commands.
 
-Go on by examining the answers to a `ttp.pl list` command.
+Go on by examining the answers to a `ttp.sh list` (resp. `ttp.pl list`) command.
+
+```sh
+$ ttp.sh list
+ttp.sh: TheToolsProject (TTP) management
+  list: list various informations about TheToolsProject
+      This verb lists:
+      - the available commands,
+      - the registered execution nodes, maybe for a specified environment
+          --nodes [--environment=<identifier>]
+      - the services available on a node, maybe with their label:
+          --services [--node=<name>] [--label]
+      - the services defined in an environment:
+          --services -environment=<identifier> [--label]
+      - the TTP defined variables,
+    usage: ttp.sh list [options]
+    where options are:
+      --[no]help                   display this online help and gracefully exit [no]
+      --[no]verbose                verbose execution [no]
+      --[no]commands               display the list of available commands [no]
+      --[no]nodes                  display the registered nodes [no]
+      --environment=<identifier>   display nodes for this specific environment []
+      --[no]services               display defined services [no]
+      --[no]variables              display TTP defined variables [no]
+      --[no]counter                whether to display a data rows counter [yes]
+      --[no]csv                    display output in CSV format [no]
+      --[no]separator              (CSV output) separator [;]
+      --[no]headers                (CSV output) whether to display headers [yes]
+```
+
+or
 
 ```sh
 C:\>ttp.pl list
-ttp.pl: The Tools Project Management
+ttp.pl: TheToolsProject Management
   list: list various TTP objects
     Usage: ttp.pl list [options]
     where available options are:
@@ -118,6 +148,23 @@ And this is a general rule of __TheToolsProject__ (also known as __TTP__ by the 
 So go on with the available commands.
 
 ```sh
+$ ttp.sh list -commands
+[ttp.sh list] displaying available commands...
+ audio.sh: Audio management
+ cft.sh: Cross File Transfer (CFT) management
+ cmdb.sh: Configuration Management Database
+ ldap.sh: LDAP management
+ mysql.sh: MySQL management
+ oracle.sh: Oracle DBMS management
+ packaging.sh: Packaging and repositories management
+ svn.sh: Subversion management
+ ttp.sh: TheToolsProject (TTP) management
+[ttp.sh list] 9 displayed command(s)
+```
+
+or
+
+```sh
 C:\>ttp.pl list -commands
 [ttp.pl list] displaying available commands...
  daemon.pl: Daemon Management
@@ -129,7 +176,7 @@ C:\>ttp.pl list -commands
  services.pl: Services Management
  smtp.pl: SMTP Comunications
  telemetry.pl: Telemetry Services
- ttp.pl: The Tools Project Management
+ ttp.pl: TheToolsProject Management
 [ttp.pl list] 10 found command(s)
 ```
 

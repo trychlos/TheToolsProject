@@ -7,7 +7,7 @@
 # @(-) --[no]commands          list the available commands [${commands}]
 # @(-) --[no]nodes             list the known (defined) nodes [${nodes}]
 #
-# The Tools Project - Tools System and Working Paradigm for IT Production
+# TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
 # Copyright (©) 2023-2025 PWI Consulting
 #
