@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - TTP::Metric has missing 'use TTP::Telemetry;'
 
 ### 4.9.2
 
