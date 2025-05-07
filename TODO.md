@@ -24,33 +24,38 @@
 |   59 | 2025- 2-18 | Daemon.pm: metrics for the daemon are windows-specific: re-code for unix'es |
 |      | 2025- 4-14 | mswin32 metrics are isolated |
 |   61 | 2025- 4- 8 | ttp.pl writejson should should actually be ttp.pl filewrite as the json is provided as a string on input - so this is not dedicated to json |
-|   78 | 2024- 4-12 | some daemons should be moveable to libexec/daemons |
-|      | 2024- 4-14 | alerts-monitor-daemon.pl is moved to libexec/daemons |
-|      | 2024- 4-14 | node-monitor-daemon.pl is moved to libexec/daemons |
-|      | 2024- 4-17 | mqtt-monitor-daemon.pl is moved to libexec/daemons |
-|      | 2024- 4-17 | at the moment, still exists backup-monitor-daemon in site tree - to be evaluated |
-|  109 | 2024- 4-20 | site.schema for executionReports |
-|      | 2024- 4-22 | done - has to be honored |
-|  110 | 2024- 4-20 | site.schema for moveDir |
-|  111 | 2024- 4-20 | site.schema for telemetry |
-|      | 2024- 4-22 | done - has to be honored |
-|  112 | 2024- 4-20 | service.schema |
-|  113 | 2024- 4-20 | integration of service's schema in site |
-|  114 | 2024- 4-20 | integration of service's schema in node |
-|  118 | 2024- 4-21 | logs dirs, backups dirs and others should accept <NODE> macros when overriden in a <node>.json (or even when in site.json) |
-|      | 2024- 4-22 | nb: we already have a TTP::nodeName() function available in [eval:..] macros |
-|      | 2024- 5- 6 | at least telemetry and mqtt modules use this <NODE> macro |
-|  122 | 2024- 4-26 | daemon.pl start should default to refuse to start a daemon several times |
-|  123 | 2024- 4-29 | have a test for alerts-monitor-daemon |
-|  124 | 2024- 4-29 | have a test for mqtt-monitor-daemon |
-|  125 | 2024- 4-29 | have a test for node-monitor-daemon |
-|  126 | 2024- 4-29 | have a test for each of ttp.pl vars variables |
-|  127 | 2024- 4-29 | have a test for each of daemons.pl vars variables |
-|  128 | 2024- 4-29 | have a test for each of dbms.pl vars variables |
-|  129 | 2024- 4-29 | have a test for each of services.pl vars variables |
-|  130 | 2024- 4-29 | RunnerDaemon->run() takes a 'listener' argument which is never used - is there a use case ? or remove the code |
-|  132 | 2024- 4-29 | review ttp.pl movedirs vs. ttp.pl purgedirs vs. ttp.pl copydirs |
-|  136 |  |  |
+|   78 | 2025- 4-12 | some daemons should be moveable to libexec/daemons |
+|      | 2025- 4-14 | alerts-monitor-daemon.pl is moved to libexec/daemons |
+|      | 2025- 4-14 | node-monitor-daemon.pl is moved to libexec/daemons |
+|      | 2025- 4-17 | mqtt-monitor-daemon.pl is moved to libexec/daemons |
+|      | 2025- 4-17 | at the moment, still exists backup-monitor-daemon in site tree - to be evaluated |
+|  109 | 2025- 4-20 | site.schema for executionReports |
+|      | 2025- 4-22 | done - has to be honored |
+|  110 | 2025- 4-20 | site.schema for moveDir |
+|  111 | 2025- 4-20 | site.schema for telemetry |
+|      | 2025- 4-22 | done - has to be honored |
+|  112 | 2025- 4-20 | service.schema |
+|  113 | 2025- 4-20 | integration of service's schema in site |
+|  114 | 2025- 4-20 | integration of service's schema in node |
+|  118 | 2025- 4-21 | logs dirs, backups dirs and others should accept <NODE> macros when overriden in a <node>.json (or even when in site.json) |
+|      | 2025- 4-22 | nb: we already have a TTP::nodeName() function available in [eval:..] macros |
+|      | 2025- 5- 6 | at least telemetry and mqtt modules use this <NODE> macro |
+|  122 | 2025- 4-26 | daemon.pl start should default to refuse to start a daemon several times |
+|      | 2025- 5- 7 | the daemon itself should accept nonetheless to run in foreground |
+|  123 | 2025- 4-29 | have a test for alerts-monitor-daemon |
+|  124 | 2025- 4-29 | have a test for mqtt-monitor-daemon |
+|  125 | 2025- 4-29 | have a test for node-monitor-daemon |
+|  126 | 2025- 4-29 | have a test for each of ttp.pl vars variables |
+|  127 | 2025- 4-29 | have a test for each of daemons.pl vars variables |
+|  128 | 2025- 4-29 | have a test for each of dbms.pl vars variables |
+|  129 | 2025- 4-29 | have a test for each of services.pl vars variables |
+|  130 | 2025- 4-29 | RunnerDaemon->run() takes a 'listener' argument which is never used - is there a use case ? or remove the code |
+|  132 | 2025- 4-29 | review ttp.pl movedirs vs. ttp.pl purgedirs vs. ttp.pl copydirs |
+|  136 | 2025- 5- 7 | have mongodb backup/restore |
+|  137 | 2025- 5- 7 | have mariadb backup/restore |
+|  138 | 2025- 5- 7 | dbms.pl verbs should emphasize that --instance is a SqlServer-specific option and see how to either avoid or generalize that |
+|      | 2025- 5- 7 | emphasize is done - but not generalization |
+|  139 |  |  |
 
 ---
 ## Done
@@ -203,141 +208,141 @@
 |   58 | 2025- 2-17 | all verbs: on arguments verbose, use 'got' instead of 'found'
 |      | 2025- 2-18 | done
 |   60 | 2025- 4- 6 | replace Time::Piece with Time::Moment |
-|      | 2024- 4-11 | also homogeneize the date and time displays to the user to '2012-12-24 15:30:45.500 +01:00' - done |
-|   62 | 2024- 4- 9 | 'MQTTGateway.broker' should be deprecated in favor of 'MQTTGateway.host' for consistency reason |
+|      | 2025- 4-11 | also homogeneize the date and time displays to the user to '2012-12-24 15:30:45.500 +01:00' - done |
+|   62 | 2025- 4- 9 | 'MQTTGateway.broker' should be deprecated in favor of 'MQTTGateway.host' for consistency reason |
 |      | 2025- 2-18 | done
-|   63 | 2024- 4- 9 | replace all $running with $ep->runner() (a specific variable seems useless) |
-|      | 2024- 4-10 | done |
-|   64 | 2024- 4- 9 | when there is no execution node, trap_exit doesn't trigger sh/msgVerbose() on slim14 while triggering it in node93 - why ? |
-|      | 2024- 4-10 | msgOut/msgVerbose have been added back to the libexec/sh path - so cancelled |
-|   65 | 2024- 4- 9 | 'Environment' node property should be renamed 'environment |
-|      | 2024- 4-10 | done |
-|   66 | 2024- 4- 9 | 'environment.type' property should be renamed 'environment.id' |
-|      | 2024- 4-10 | done |
-|   67 | 2024- 4-10 | TheToolsProject/tools already includes an etc/ tree with samples - does we have also to have a site.samples/ tree ? |
-|      | 2024- 4-12 | decision: tools/etc only includes README filesn, while site.example includes samples |
-|      | 2024- 4-12 | done |
-|   68 | 2024- 4-10 | remove TTP::Path::toopsConfigurationPath() |
-|      | 2024- 4-11 | done |
-|   69 | 2024- 4-10 | remove TTP::Path::siteConfigurationsDir() |
-|      | 2024- 4-11 | done |
-|   70 | 2024- 4-10 | remove TTP::Path::servicesConfigurationsDir() |
-|      | 2024- 4-11 | done |
-|   71 | 2024- 4-10 | remove TTP::Path::serviceConfigurationPath() |
-|      | 2024- 4-11 | done |
-|   72 | 2024- 4-10 | remove TTP::Path::hostsConfigurationsDir() |
-|      | 2024- 4-11 | done |
-|   73 | 2024- 4-10 | remove TTP::Path::hostConfigurationPath() |
-|      | 2024- 4-11 | done |
-|   74 | 2024- 4-10 | TTP::Path::fromCommand() option should be 'makeDirExist' for consistency |
-|      | 2024- 4-11 | done |
-|   75 | 2024- 4-11 | fromCommand() appears both in TTP and in TTP::Path |
-|      | 2024- 4-11 | deduplicated to TTP::Path |
-|   76 | 2024- 4-10 | nodeRoot() should be siteRoot(), shouldn'it ? and so be removed from TTP |
-|      | 2024- 4-19 | whether a logical machine actually has or not a node 'root', aka the root mounted filesystem, it is never used in TTP code itself |
+|   63 | 2025- 4- 9 | replace all $running with $ep->runner() (a specific variable seems useless) |
+|      | 2025- 4-10 | done |
+|   64 | 2025- 4- 9 | when there is no execution node, trap_exit doesn't trigger sh/msgVerbose() on slim14 while triggering it in node93 - why ? |
+|      | 2025- 4-10 | msgOut/msgVerbose have been added back to the libexec/sh path - so cancelled |
+|   65 | 2025- 4- 9 | 'Environment' node property should be renamed 'environment |
+|      | 2025- 4-10 | done |
+|   66 | 2025- 4- 9 | 'environment.type' property should be renamed 'environment.id' |
+|      | 2025- 4-10 | done |
+|   67 | 2025- 4-10 | TheToolsProject/tools already includes an etc/ tree with samples - does we have also to have a site.samples/ tree ? |
+|      | 2025- 4-12 | decision: tools/etc only includes README filesn, while site.example includes samples |
+|      | 2025- 4-12 | done |
+|   68 | 2025- 4-10 | remove TTP::Path::toopsConfigurationPath() |
+|      | 2025- 4-11 | done |
+|   69 | 2025- 4-10 | remove TTP::Path::siteConfigurationsDir() |
+|      | 2025- 4-11 | done |
+|   70 | 2025- 4-10 | remove TTP::Path::servicesConfigurationsDir() |
+|      | 2025- 4-11 | done |
+|   71 | 2025- 4-10 | remove TTP::Path::serviceConfigurationPath() |
+|      | 2025- 4-11 | done |
+|   72 | 2025- 4-10 | remove TTP::Path::hostsConfigurationsDir() |
+|      | 2025- 4-11 | done |
+|   73 | 2025- 4-10 | remove TTP::Path::hostConfigurationPath() |
+|      | 2025- 4-11 | done |
+|   74 | 2025- 4-10 | TTP::Path::fromCommand() option should be 'makeDirExist' for consistency |
+|      | 2025- 4-11 | done |
+|   75 | 2025- 4-11 | fromCommand() appears both in TTP and in TTP::Path |
+|      | 2025- 4-11 | deduplicated to TTP::Path |
+|   76 | 2025- 4-10 | nodeRoot() should be siteRoot(), shouldn'it ? and so be removed from TTP |
+|      | 2025- 4-19 | whether a logical machine actually has or not a node 'root', aka the root mounted filesystem, it is never used in TTP code itself |
 |      |            | this is only used as a variable when computing directories |
 |      |            | as described in the 'site.schema.json', we allow to put any variable inside of the 'site' property object |
 |      |            | there is so no nodeRoot neither siteRoot (from TTP point of view) but just a site variable which can be get with 'ttp.pl var -key' command |
 |      |            | so just remove nodeRoot() |
-|   77 | 2024- 4-10 | add a comment on how to get site variables |
-|      | 2024- 4-12 | done |
-|   79 | 2024- 4-12 | let a node override a site variable |
-|      | 2024- 4-19 | this is already done and works well when the node json file is rightly addressed |
-|   80 | 2024- 4-13 | sufix should be renamed suffix |
-|      | 2024- 4-14 | done |
-|   81 | 2024- 4-13 | TTP::Daemon should check that listeningPort is OK |
-|      | 2024- 4-14 | done |
-|   82 | 2024- 4-13 | TTP::Daemon should check that listeningInterval is OK |
-|      | 2024- 4-14 | done |
-|   83 | 2024- 4-13 | TTP::Daemon mqtt_timeout() and messagingTimeout() are same function |
-|      | 2024- 4-14 | fixed |
-|   84 | 2024- 4-13 | [ttp.pl sizedir] (ERR) do C:\INLINGUA\TheToolsProject\tools\ttp\sizedir.do.pl: |
+|   77 | 2025- 4-10 | add a comment on how to get site variables |
+|      | 2025- 4-12 | done |
+|   79 | 2025- 4-12 | let a node override a site variable |
+|      | 2025- 4-19 | this is already done and works well when the node json file is rightly addressed |
+|   80 | 2025- 4-13 | sufix should be renamed suffix |
+|      | 2025- 4-14 | done |
+|   81 | 2025- 4-13 | TTP::Daemon should check that listeningPort is OK |
+|      | 2025- 4-14 | done |
+|   82 | 2025- 4-13 | TTP::Daemon should check that listeningInterval is OK |
+|      | 2025- 4-14 | done |
+|   83 | 2025- 4-13 | TTP::Daemon mqtt_timeout() and messagingTimeout() are same function |
+|      | 2025- 4-14 | fixed |
+|   84 | 2025- 4-13 | [ttp.pl sizedir] (ERR) do C:\INLINGUA\TheToolsProject\tools\ttp\sizedir.do.pl: |
 |      |            |  ... syntax error at C:\INLINGUA\TheToolsProject\tools\ttp\sizedir.do.pl line 197, near "TTP::Path::( " |
-|      | 2024- 4-13 | fixed |
-|   85 | 2024- 4-13 | [services.pl live] (ERR) do /mnt/ws12dev1/INLINGUA/dev/scripts/TheToolsProject/tools/services/live.do.pl: |
+|      | 2025- 4-13 | fixed |
+|   85 | 2025- 4-13 | [services.pl live] (ERR) do /mnt/ws12dev1/INLINGUA/dev/scripts/TheToolsProject/tools/services/live.do.pl: |
 |      |            | ... Can't call method "runner" on an undefined value at /mnt/ws12dev1/INLINGUA/dev/scripts/TheToolsProject/tools/services/live.do.pl line 129. |
-|      | 2024- 4-13 | fixed |
-|   86 | 2024- 4-13 | TTP::commandExec should have ( $command, { macros => {}} ) definition |
-|      | 2024- 4-14 | done |
-|   87 | 2024- 4-13 | logicals regular expression should be a single string as this is simpler and can still embed several re's |
-|      | 2024- 4-14 | done |
-|   88 | 2024- 4-14 | review classes hierarchy which should be something like Base -> Command -> Extern -> Daemon |
-|      | 2024- 4-14 | done |
-|   89 | 2024- 4-14 | daemonsDirs should be renamed to daemonsConfigDir and configurable in site.json |
-|      | 2024- 4-14 | renamed as daemonsConfDirs and described in site.schema.json |
-|   90 | 2024- 4-14 | also have daemonsExecDir and configurable in site.json |
-|      | 2024- 4-14 | defined as daemonsExecDirs() |
-|   91 | 2024- 4-15 | ttp.pl push and pull should have same level of verbosity |
-|      | 2024- 4-17 | done |
-|   92 | 2024- 4-15 | RunnerDaemon::dirs() and finder() should be qualified as in confDirs() and confFinder() |
-|      | 2024- 4-17 | obsolete |
-|   93 | 2024- 4-15 | RunnerCommand should be renamed RunnerVerb |
-|      | 2024- 4-17 | done |
-|   94 | 2024- 4-15 | TTP::run() should become TTP::runVerb() |
-|      | 2024- 4-17 | TTP::runCommand() as some sense when run from, e.g. daemon.pl, which is a command - cancelled  |
-|   95 | 2024- 4-15 | all getter on Dirs() should be in Path:: |
-|      | 2024- 4-19 | we are keeping in TTP the functions the user is used to call from its json configurations files |
+|      | 2025- 4-13 | fixed |
+|   86 | 2025- 4-13 | TTP::commandExec should have ( $command, { macros => {}} ) definition |
+|      | 2025- 4-14 | done |
+|   87 | 2025- 4-13 | logicals regular expression should be a single string as this is simpler and can still embed several re's |
+|      | 2025- 4-14 | done |
+|   88 | 2025- 4-14 | review classes hierarchy which should be something like Base -> Command -> Extern -> Daemon |
+|      | 2025- 4-14 | done |
+|   89 | 2025- 4-14 | daemonsDirs should be renamed to daemonsConfigDir and configurable in site.json |
+|      | 2025- 4-14 | renamed as daemonsConfDirs and described in site.schema.json |
+|   90 | 2025- 4-14 | also have daemonsExecDir and configurable in site.json |
+|      | 2025- 4-14 | defined as daemonsExecDirs() |
+|   91 | 2025- 4-15 | ttp.pl push and pull should have same level of verbosity |
+|      | 2025- 4-17 | done |
+|   92 | 2025- 4-15 | RunnerDaemon::dirs() and finder() should be qualified as in confDirs() and confFinder() |
+|      | 2025- 4-17 | obsolete |
+|   93 | 2025- 4-15 | RunnerCommand should be renamed RunnerVerb |
+|      | 2025- 4-17 | done |
+|   94 | 2025- 4-15 | TTP::run() should become TTP::runVerb() |
+|      | 2025- 4-17 | TTP::runCommand() as some sense when run from, e.g. daemon.pl, which is a command - cancelled  |
+|   95 | 2025- 4-15 | all getter on Dirs() should be in Path:: |
+|      | 2025- 4-19 | we are keeping in TTP the functions the user is used to call from its json configurations files |
 |      |            | there are two reasons: first it is shorter, and second we are not willing to expose the details of our internal modules |
 |      |            | but we are moving the actual code to the relevant internal module |
 |      |            | e.g. the user still can [eval:TTP::logsRoot()], which is redirected to TTP::Path::logsRoot(), which itself does the actual work |
-|   96 | 2024- 4-16 | rename nullByOS with nullByOs (like commandByOs) |
-|      | 2024- 4-17 | actually rather keep the byOS case |
-|      | 2024- 4-17 | commandByOs() is now named commandByOS() - done |
-|   97 | 2024- 4-16 | replace RunnerDaemon->startRun() with bootstrap() |
-|      | 2024- 4-17 | done in node-monitor-daemon.pl and alerts-monitor-daemon.pl |
-|   98 | 2024- 4-17 | remove TTP::Ports |
-|      | 2024- 4-17 | done |
-|   99 | 2024- 4-17 | daemons should have a HUP command to fully reload their config |
-|      | 2024- 4-20 | done |
-|  100 | 2024- 4-17 | review MQTT gateway schema so that the port number is part of the host address |
-|      | 2024- 4-18 | done |
-|  101 | 2024- 4-17 | review SMTP gateway schema so that the port number is part of the host address |
-|      | 2024- 4-18 | cancelled as our SMTP module tries to guess the port number - so better to keep it explicit if needed |
-|  102 | 2024- 4-17 | compare Node::hostname() vs TTP::host() |
-|      | 2024- 4-18 | Node->_hostname() is a private method which returns the operating system host name, which acts as the default for the node name |
-|      | 2024- 4-18 | Node->name() - which default to Node->_hostname() - is the canonical way of getting the node name |
-|      | 2024- 4-18 | TTP::nodeName() exists and should be kept, is redirected to $ep->node()->name(). Fine. |
-|      | 2024- 4-18 | TTP::host() is a duplicate of TTP::nodeName() - to be obsoleted |
-|      | 2024- 4-18 | done |
-|  103 | 2024- 4-17 | IRunnable qualifier should be an array of qualifiers |
-|      | 2024- 4-18 | done |
-|  104 | 2024- 4-17 | RunnerExtern should have the same type of bootstrap than RunnerDaemon |
-|      | 2024- 4-18 | cancelled: using TTP::runExtern() let the 'ep' global be correctly allocated |
-|  105 | 2024- 4-17 | each mqtt daemon connects to a single host: several hosts imply several daemons |
-|      | 2024- 4-18 | done |
-|  106 | 2024- 4-18 | Node->dirs() doesn't appear to be more relevant than DaemonConfig->confDirs() or execDirs() |
-|      | 2024- 4-18 | TTP::nodesDirs() is obsoleted (not used) - TTP::Node->dirs() is obsoleted too in favor of (updated) TTP::Node->finder() |
-|      | 2024- 4-18 | done |
-|  107 | 2024- 4-19 | ttp.pl vars -key knownA,knownB,unknown returns knownA,knownB but should return undef |
-|      | 2024- 4-19 | fixed |
-|  108 | 2024- 4-20 | site.schema for DBMS |
-|      | 2024- 4-21 | done |
-|  115 | 2024- 4-20 | test infrastructure |
-|      | 2024- 4-22 | began with sh/ |
-|      | 2024- 4-24 | began with cmd/ |
-|      | 2024- 4-29 | said done: we have a sh-based and a cmd-based test infrastructures, both at the same level of tests |
-|  116 | 2024- 4-21 | have ttp.sh list |
-|      | 2024- 4-29 | ttp.pl list list available (.pl) commands and nodes - what should be the goal of ttp.sh list ? |
-|      | 2024- 5- 6 | unless we have something to list, this item should be cancelled |
-|      | 2024- 5- 7 | cancelled |
-|  117 | 2024- 4-21 | <command>.pl help should be formatted like ttp.pl list -commands (i.e. with a count at the end) + update the test suite accordingly |
-|      | 2024- 4-22 | done |
-|  119 | 2024- 4-22 | print STDERR __PACKAGE__... if $ENV{TTP_DEBUG}; should be replaced by msgDebug() |
+|   96 | 2025- 4-16 | rename nullByOS with nullByOs (like commandByOs) |
+|      | 2025- 4-17 | actually rather keep the byOS case |
+|      | 2025- 4-17 | commandByOs() is now named commandByOS() - done |
+|   97 | 2025- 4-16 | replace RunnerDaemon->startRun() with bootstrap() |
+|      | 2025- 4-17 | done in node-monitor-daemon.pl and alerts-monitor-daemon.pl |
+|   98 | 2025- 4-17 | remove TTP::Ports |
+|      | 2025- 4-17 | done |
+|   99 | 2025- 4-17 | daemons should have a HUP command to fully reload their config |
+|      | 2025- 4-20 | done |
+|  100 | 2025- 4-17 | review MQTT gateway schema so that the port number is part of the host address |
+|      | 2025- 4-18 | done |
+|  101 | 2025- 4-17 | review SMTP gateway schema so that the port number is part of the host address |
+|      | 2025- 4-18 | cancelled as our SMTP module tries to guess the port number - so better to keep it explicit if needed |
+|  102 | 2025- 4-17 | compare Node::hostname() vs TTP::host() |
+|      | 2025- 4-18 | Node->_hostname() is a private method which returns the operating system host name, which acts as the default for the node name |
+|      | 2025- 4-18 | Node->name() - which default to Node->_hostname() - is the canonical way of getting the node name |
+|      | 2025- 4-18 | TTP::nodeName() exists and should be kept, is redirected to $ep->node()->name(). Fine. |
+|      | 2025- 4-18 | TTP::host() is a duplicate of TTP::nodeName() - to be obsoleted |
+|      | 2025- 4-18 | done |
+|  103 | 2025- 4-17 | IRunnable qualifier should be an array of qualifiers |
+|      | 2025- 4-18 | done |
+|  104 | 2025- 4-17 | RunnerExtern should have the same type of bootstrap than RunnerDaemon |
+|      | 2025- 4-18 | cancelled: using TTP::runExtern() let the 'ep' global be correctly allocated |
+|  105 | 2025- 4-17 | each mqtt daemon connects to a single host: several hosts imply several daemons |
+|      | 2025- 4-18 | done |
+|  106 | 2025- 4-18 | Node->dirs() doesn't appear to be more relevant than DaemonConfig->confDirs() or execDirs() |
+|      | 2025- 4-18 | TTP::nodesDirs() is obsoleted (not used) - TTP::Node->dirs() is obsoleted too in favor of (updated) TTP::Node->finder() |
+|      | 2025- 4-18 | done |
+|  107 | 2025- 4-19 | ttp.pl vars -key knownA,knownB,unknown returns knownA,knownB but should return undef |
+|      | 2025- 4-19 | fixed |
+|  108 | 2025- 4-20 | site.schema for DBMS |
+|      | 2025- 4-21 | done |
+|  115 | 2025- 4-20 | test infrastructure |
+|      | 2025- 4-22 | began with sh/ |
+|      | 2025- 4-24 | began with cmd/ |
+|      | 2025- 4-29 | said done: we have a sh-based and a cmd-based test infrastructures, both at the same level of tests |
+|  116 | 2025- 4-21 | have ttp.sh list |
+|      | 2025- 4-29 | ttp.pl list list available (.pl) commands and nodes - what should be the goal of ttp.sh list ? |
+|      | 2025- 5- 6 | unless we have something to list, this item should be cancelled |
+|      | 2025- 5- 7 | cancelled |
+|  117 | 2025- 4-21 | <command>.pl help should be formatted like ttp.pl list -commands (i.e. with a count at the end) + update the test suite accordingly |
+|      | 2025- 4-22 | done |
+|  119 | 2025- 4-22 | print STDERR __PACKAGE__... if $ENV{TTP_DEBUG}; should be replaced by msgDebug() |
 |      |            |  itself either logging or print to STDERR dependent of TTP_DEBUG and ep->bootstrapped() |
 |      |            | msgLog() is so rather oriented to operations done, while msgDebug() is oriented to trace |
-|      | 2024- 4-23 | done |
-|  120 | 2024- 4-23 | homogeneize "if exists" to "if defined" |
-|      | 2024- 4-23 | done |
-|  121 | 2024- 4-24 | seems that daemons MQTT status is incomplete ? |
-|      | 2024- 4-29 | auto-fixed |
-|  131 | 2024- 4-29 | remove unused ttp.pl test |
-|      | 2024- 5- 7 | done |
-|  133 | 2024- 4-29 | change "TheToolsProject" mentions with "TheToolsProject" |
-|      | 2024- 5- 7 | done |
-|  134 | 2024- 4-29 | check all copyright mentions and make sure they are consistent |
-|      | 2024- 5- 7 | done |
-|  135 | 2024- 4-29 | ttp.sh switch doesn't display help - but shouldn't it ? |
-|      | 2024- 5- 7 | fixed, . ttp.sh switch (sourced) still display error messages which is the wanted behavior |
+|      | 2025- 4-23 | done |
+|  120 | 2025- 4-23 | homogeneize "if exists" to "if defined" |
+|      | 2025- 4-23 | done |
+|  121 | 2025- 4-24 | seems that daemons MQTT status is incomplete ? |
+|      | 2025- 4-29 | auto-fixed |
+|  131 | 2025- 4-29 | remove unused ttp.pl test |
+|      | 2025- 5- 7 | done |
+|  133 | 2025- 4-29 | change "TheToolsProject" mentions with "TheToolsProject" |
+|      | 2025- 5- 7 | done |
+|  134 | 2025- 4-29 | check all copyright mentions and make sure they are consistent |
+|      | 2025- 5- 7 | done |
+|  135 | 2025- 4-29 | ttp.sh switch doesn't display help - but shouldn't it ? |
+|      | 2025- 5- 7 | fixed, . ttp.sh switch (sourced) still display error messages which is the wanted behavior |
 
 ---
 P. Wieser

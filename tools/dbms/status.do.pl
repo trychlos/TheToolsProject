@@ -5,7 +5,7 @@
 # @(-) --[no]dummy             dummy run (ignored here) [${dummy}]
 # @(-) --[no]verbose           run verbosely [${verbose}]
 # @(-) --service=<name>        acts on the named service [${service}]
-# @(-) --instance=<name>       acts on the named instance [${instance}]
+# @(-) --instance=<name>       acts on the named Sql Server instance [${instance}]
 # @(-) --database=<name>       database name [${database}]
 # @(-) --[no]state             get state [${state}]
 # @(-) --[no]mqtt              publish the metrics to the (MQTT-based) messaging system [${mqtt}]

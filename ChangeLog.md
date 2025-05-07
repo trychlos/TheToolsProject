@@ -8,6 +8,7 @@
 
     - TTP::Metric has missing 'use TTP::Telemetry;'
     - ttp.sh switch displays its help when run without argument (todo #135)
+    - dbms.pl verbs emphasize that '--instance' is a Sql Server specific option (todo #138)
 
 ### 4.9.2
 
