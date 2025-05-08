@@ -41,9 +41,7 @@ my $Const = {
 	finder => {
 		dirs => [
 			'etc/credentials',
-			'credentials',
-			'etc/private',
-			'private'
+			'etc/private'
 		],
 		files => [
 			'toops.json',
