@@ -23,7 +23,7 @@
 # - must at least be mentionned in each and every <node>.json which manage or participate to the service.
 # Note:
 # - Even if the node doesn't want override any service key, it still MUST define the service in the
-#   'Services' object of its own configuration file
+#   'services' object of its own configuration file
 
 package TTP::Service;
 die __PACKAGE__ . " must be loaded as TTP::Service\n" unless __PACKAGE__ eq 'TTP::Service';
@@ -54,8 +54,7 @@ my $Const = {
 	# even if this not too sexy in Win32, this is a standard and a common usage on Unix/Darwin platforms
 	finder => {
 		dirs => [
-			'etc/services',
-			'services'
+			'etc/services'
 		],
 		suffix => '.json'
 	}
@@ -172,23 +171,6 @@ sub var {
 
 ### Class methods
 
-# ------------------------------------------------------------------------------------------------
-# Returns the list of subdirectories of TTP_ROOTS in which we may find services configuration files
-# (I):
-# - none
-# (O):
-# - returns the list of subdirectories which may contain the JSON services configuration files as
-#   an array ref
-
-sub dirs {
-	my ( $class ) = @_;
-	$class = ref( $class ) || $class;
-
-	my $dirs = $ep->var( 'servicesDirs' ) || $class->finder()->{dirs};
-
-	return $dirs;
-}
-
 # -------------------------------------------------------------------------------------------------
 # Enumerate the services defined on the node
 # - in ascii-sorted order [0-9A-Za-z]
@@ -204,7 +186,7 @@ sub dirs {
 # (O):
 # - returns a count of enumerated services
 
-sub enumerate {
+sub enum {
 	my ( $class, $args ) = @_;
 	$args //= {};
 	my $count = 0;
@@ -243,16 +225,26 @@ sub enumerate {
 }
 
 # -------------------------------------------------------------------------------------------------
-# Returns the list of dirs where nodes are to be found
+# Returns the list of dirs where services JSON configurations are to be found
 # (I):
 # - none
 # (O):
-# - Returns the Const->{finder} specification as an array ref
+# - returns a ref to the finder, honoring 'services.confDirs' variable if any
 
 sub finder {
 	my ( $class ) = @_;
 
-	return $Const->{finder};
+	my %finder = %{$Const->{finder}};
+	my $dirs = $ep->var([ 'services', 'confDirs' ]);
+	if( !$dirs ){
+		$dirs = $ep->var( 'servicesDirs' );
+		if( $dirs ){
+			msgWarn( "'servicesDirs' property is deprecated in favor of 'services.confDirs'. You should update your configurations." );
+		}
+	}
+	$finder{dirs} = $dirs if $dirs;
+
+	return \%finder;
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -277,8 +269,9 @@ sub new {
 		$self->{_name} = $args->{service};
 
 		# allowed servicesDirs are configured at site-level
+		my $finder = $class->finder();
 		my $findable = {
-			dirs => [ $class->dirs(), $args->{service}.$class->finder()->{suffix} ],
+			dirs => [ $finder->{dirs}, $args->{service}.$finder->{suffix} ],
 			wantsAll => false
 		};
 		my $acceptable = {

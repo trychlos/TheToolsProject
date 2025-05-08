@@ -851,7 +851,7 @@ sub nodeName {
 # - returns the 'nodeRoot' directory - removed in v4.7
 
 sub nodeRoot {
-	msgErr( "TTP::nodeRoot() is deprecated and not replaczed. You should update your code." );
+	msgErr( "TTP::nodeRoot() is deprecated and not replaced. You should update your code." );
 	return undef;
 }
 

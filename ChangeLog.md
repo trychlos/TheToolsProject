@@ -8,6 +8,10 @@
 
     - Define service.schema.json (todo #112)
     - 'Services' configuration key is deprecated in favor of 'services', thus bumping minor candidate version number
+    - JSON configurations are now searched only in etc/ subdirectories
+    - 'servicesDirs' configuration is deprecated in favor of 'services.confDirs'
+    - Remove TTP::Service->dirs() obsolete class method
+    - Rename TTP::Service->enumerate() to TTP::Service->enum() to be consistent with TTP::Node
 
 ### 4.9.3
 
