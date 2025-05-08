@@ -348,13 +348,81 @@
 
                 },
                 "DBMS": {
-                    "description": "Common configuration for DBMS.",
+                    "description_array": [
+                        "Common configuration for DBMS.",
+                        "This configuration can be overriden not-only on a per-node basis (as most of the site configuration options), but also per service."
+                    ],
                     "type": "object",
                     "properties": {
                         "backups": {
                             "description": "The configurations of the backups.",
                             "type": "object",
                             "properties": {
+                                "executionReports": {
+                                    "description": "Override the 'TTP.executionReports' configuration options for the DBMS backups.",
+                                    "type": "object",
+                                    "properties": {
+                                        "withFile": {
+                                            "description": "The configuration of the file-based DBMS backups execution reports.",
+                                            "type": "object",
+                                            "properties": {
+                                                "default": {
+                                                    "description": "Whether the file-based execution report is a default for DBMS backups",
+                                                    "type": "boolean",
+                                                    "default": false
+                                                },
+                                                "command": {
+                                                    "description_array": [
+                                                        "The command to be used to create the JSON execution report file.",
+                                                        "The default command creates a 'report-yyyymmddhhmisscccccc.json' file in the below dropDir directory."
+                                                    ],
+                                                    "type": [
+                                                        "string",
+                                                        "object"
+                                                    ],
+                                                    "default": "ttp.pl writejson into below dropDir"
+                                                },
+                                                "prettyJson": {
+                                                    "description": "Whether the JSON string should be prettified.",
+                                                    "type": "boolean",
+                                                    "default": true
+                                                },
+                                                "dropDir": {
+                                                    "description": "The directory where execution report files must be created.",
+                                                    "type": "string",
+                                                    "default": "[eval:File::Spec->catdir( TTP::tempDir(), 'TTP', 'executionReports' )]"
+                                                }
+                                            }
+                                        },
+                                        "withMqtt": {
+                                            "description": "The configuration of the MQTT-based DBMS backups execution reports.",
+                                            "type": "object",
+                                            "properties": {
+                                                "default": {
+                                                    "description": "Whether MQTT-based is a default of the DBMS backups execution reports.",
+                                                    "type": "boolean",
+                                                    "default": false
+                                                },
+                                                "command": {
+                                                    "description_array": [
+                                                        "The command to be used to create the MQTT-based execution report topics.",
+                                                        "The command has access to <TOPIC> macro."
+                                                    ],
+                                                    "type": [
+                                                        "string",
+                                                        "object"
+                                                    ],
+                                                    "default": "mqtt.pl publish -topic <TOPIC> -payload \"<JSON>\""
+                                                },
+                                                "topic": {
+                                                    "description": "A command which echoes the topic on stdout.",
+                                                    "type": "string",
+                                                    "default": ""
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
                                 "periodicDir": {
                                     "description_array": [
                                         "The periodic, by time, root directory of the backups tree.",
@@ -446,7 +514,8 @@
                         "  Provided commands have access to <STAMP>, <OPTIONS> and <JSON> macros,",
                         "  the <JSON> macro being resolved with a stringified version of the execution report JSON data.",
                         "When specifying a command, either as a simple string or as a 'byOS' object, you should take care that the specified command will not",
-                        "inherit of '--dummy' or '--verbose' options of the parent command. Be cautious about what you exactly want."
+                        "inherit of '--dummy' or '--verbose' options of the parent command. Be cautious about what you exactly want.",
+                        "As of v4.9, only DBMS backup and restore operations provide execution reports."
                     ],
                     "type": "object",
                     "properties": {
