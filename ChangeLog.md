@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - Remove surrounding double quotes of commands and verbs counts
 
 ### 4.10.0
 
