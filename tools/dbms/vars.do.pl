@@ -7,7 +7,7 @@
 # @(-) --[no]backupsRoot       display the root of the DBMS backups [${backupsRoot}]
 # @(-) --[no]backupsPeriodic   display the periodic root of the DBMS backups [${backupsPeriodic}]
 # @(-) --[no]archivesRoot      display the root (non daily) of the DBMS archive path [${archivesRoot}]
-# @(-) --[no]archivesDir       display the root of the daily DBMS archive path [${archivesDir}]
+# @(-) --[no]archivesPeriodic  display the root of the periodic DBMS archive path [${archivesPeriodic}]
 # @(-) --service=<name>        optional service name [${service}]
 #
 # @(@) Please remind that each of these directories can be in the service definition of a node, or at the
@@ -45,7 +45,7 @@ my $defaults = {
 	backupsRoot => 'no',
 	backupsPeriodic => 'no',
 	archivesRoot => 'no',
-	archivesDir => 'no',
+	archivesPeriodic => 'no',
 	service => ''
 };
 
@@ -54,6 +54,7 @@ my $opt_backupsDir = false;
 my $opt_backupsPeriodic = false;
 my $opt_archivesRoot = false;
 my $opt_archivesDir = false;
+my $opt_archivesPeriodic = false;
 my $opt_service = $defaults->{service};
 
 # may be overriden by the service if specified
@@ -61,10 +62,21 @@ my $jsonable = $ep->node();;
 
 # -------------------------------------------------------------------------------------------------
 # list archivesDir value - e.g. '\\ftpback-rbx7-618.ovh.net\ns3153065.ip-51-91-25.eu\WS12DEV1\SQLBackups\240101'
+# obsoleted as of v4.10
 
 sub listArchivesdir {
-	my $dir = $jsonable->var([ 'DBMS', 'archivesDir' ]) || $jsonable->var([ 'DBMS', 'archivesRoot' ]) || TTP::tempDir();
+	my $dir = TTP::dbmsArchivesPeriodic();
 	my $str = "archivesDir: $dir";
+	msgVerbose( "returning '$str'" );
+	print " $str".EOL;
+}
+
+# -------------------------------------------------------------------------------------------------
+# list archivesPeriodic value - e.g. '\\ftpback-rbx7-618.ovh.net\ns3153065.ip-51-91-25.eu\WS12DEV1\SQLBackups\240101'
+
+sub listArchivesPeriodic {
+	my $dir = TTP::dbmsArchivesPeriodic();
+	my $str = "archivesPeriodic: $dir";
 	msgVerbose( "returning '$str'" );
 	print " $str".EOL;
 }
@@ -72,8 +84,8 @@ sub listArchivesdir {
 # -------------------------------------------------------------------------------------------------
 # list archivesRoot value - e.g. '\\ftpback-rbx7-618.ovh.net\ns3153065.ip-51-91-25.eu\WS12DEV1\SQLBackups'
 
-sub listArchivesroot {
-	my $dir = $jsonable->var([ 'DBMS', 'archivesRoot' ]) || TTP::tempDir();
+sub listArchivesRoot {
+	my $dir = TTP::dbmsArchivesRoot();
 	my $str = "archivesRoot: $dir";
 	msgVerbose( "returning '$str'" );
 	print " $str".EOL;
@@ -91,7 +103,7 @@ sub listBackupsdir {
 }
 
 # -------------------------------------------------------------------------------------------------
-# list backupsRoot value - e.g. 'C:\INLINGUA\SQLBackups'
+# list backupsPeriodic value - e.g. 'C:\INLINGUA\SQLBackups\240101\WS12DEV1'
 
 sub listBackupsPeriodic {
 	my $dir = TTP::dbmsBackupsPeriodic();
@@ -124,6 +136,7 @@ if( !GetOptions(
 	"backupsPeriodic!"	=> \$opt_backupsPeriodic,
 	"archivesRoot!"		=> \$opt_archivesRoot,
 	"archivesDir!"		=> \$opt_archivesDir,
+	"archivesPeriodic!"	=> \$opt_archivesPeriodic,
 	"service=s"			=> \$opt_service )){
 
 		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
@@ -143,6 +156,7 @@ msgVerbose( "got backupsDir='".( $opt_backupsDir ? 'true':'false' )."'" );
 msgVerbose( "got backupsPeriodic='".( $opt_backupsPeriodic ? 'true':'false' )."'" );
 msgVerbose( "got archivesRoot='".( $opt_archivesRoot ? 'true':'false' )."'" );
 msgVerbose( "got archivesDir='".( $opt_archivesDir ? 'true':'false' )."'" );
+msgVerbose( "got archivesPeriodic='".( $opt_archivesPeriodic ? 'true':'false' )."'" );
 msgVerbose( "got service='$opt_service'" );
 
 # if a service is specified, must be defined on the current node
@@ -156,13 +170,15 @@ if( $opt_service ){
 
 # deprecated options
 msgWarn( "'--backupsDir' option is deprecated in favor of '--backupsPeriodic'. You should update your configurations and/or your code." ) if $opt_backupsDir;
+msgWarn( "'--archivesDir' option is deprecated in favor of '--archivesPeriodic'. You should update your configurations and/or your code." ) if $opt_archivesDir;
 
 # warn if no option has been requested
-msgWarn( "none of '--backupsRoot', '--backupsPeriodic', '--archivesRoot' or '--archivesDir' options has been requested, nothing to do" ) if !$opt_backupsRoot && !$opt_backupsDir && !$opt_backupsPeriodic && !$opt_archivesRoot && !$opt_archivesDir;
+msgWarn( "none of '--backupsRoot', '--backupsPeriodic', '--archivesRoot' or '--archivesPeriodic' options has been requested, nothing to do" ) if !$opt_backupsRoot && !$opt_backupsDir && !$opt_backupsPeriodic && !$opt_archivesRoot && !$opt_archivesDir && !$opt_archivesPeriodic;
 
 if( !TTP::errs()){
-	listArchivesroot() if $opt_archivesRoot;
+	listArchivesRoot() if $opt_archivesRoot;
 	listArchivesdir() if $opt_archivesDir;
+	listArchivesPeriodic() if $opt_archivesPeriodic;
 	listBackupsRoot() if $opt_backupsRoot;
 	listBackupsdir() if $opt_backupsDir;
 	listBackupsPeriodic() if $opt_backupsPeriodic;
