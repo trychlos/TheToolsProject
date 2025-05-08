@@ -46,6 +46,109 @@
                 }
             }
         },
+        "Services": {
+            "description": "The services running (and managed) on this node. Deprecated in favor of 'services' in v4.10.",
+            "deprecated": true
+        },
+        "services": {
+            "description_array": [
+                "The services running (and managed) on this node.",
+                "Common configuration options of each service should be written in the <service>.json file, reserving this object for node-specific options."
+            ],
+            "type": "object",
+            "properties": {
+                "patternProperties": {
+                    "^.*$": {
+                        "description": "The service name.",
+                        "type": "string"
+                    }
+                },
+                "properties": {
+                    "hidden": {
+                        "description": "Whether this service is hidden from 'services.pl list --services' command result.",
+                        "type": "boolean",
+                        "default": false
+                    },
+                    "status": {
+                        "description": "The configuration needed to get or compute or determine the status of the service",
+                        "type": "object",
+                        "properties": {
+                            "monitor": {
+                                "description": "The configuration needed to monitor the service.",
+                                "type": "object",
+                                "properties": {
+                                    "commands": {
+                                        "description": "A list of the monitoring commands, either as strings or as by OS commands.",
+                                        "type": "array",
+                                        "items": [
+                                            "string",
+                                            "object"
+                                        ],
+                                        "properties": {
+                                            "byOS": {
+                                                "description": "Let a command be specific to the running OS.",
+                                                "type": "object",
+                                                "patternProperties": {
+                                                    "^.*$": {
+                                                        "description_array": [
+                                                            "The OS name as reported by Perl-Config, the value being the command to be applied for this OS."
+                                                        ],
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "workloads": {
+                        "description": "The configuration of each workload for this service.",
+                        "type": "object",
+                        "patternProperties": {
+                            "^.*$": {
+                                "description": "The workload name.",
+                                "type": "string"
+                            }
+                        },
+                        "properties": {
+                            "hidden": {
+                                "description": "Whether this workload is hidden from 'services.pl list --workloads' command result.",
+                                "type": "boolean",
+                                "default": false
+                            },
+                            "label": {
+                                "description": "A descriptive label for the workload",
+                                "type": "string"
+                            },
+                            "commands": {
+                                "description": "The commands of the workload, either as strings or as by OS commands.",
+                                "type": "array",
+                                "items": [
+                                    "string",
+                                    "object"
+                                ],
+                                "properties": {
+                                    "byOS": {
+                                        "description": "Let a command be specific to the running OS.",
+                                        "type": "object",
+                                        "patternProperties": {
+                                            "^.*$": {
+                                                "description_array": [
+                                                    "The OS name as reported by Perl-Config, the value being the command to be applied for this OS."
+                                                ],
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "status": {
             "description": "?",
             "type": "object",
