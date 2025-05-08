@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.10.0-rc.0
+### 4.10.0
 
-    Release date: 
+    Release date: 2025- 5- 8
 
     - Define service.schema.json (todo #112)
     - 'Services' configuration key is deprecated in favor of 'services', thus bumping minor candidate version number
