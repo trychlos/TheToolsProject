@@ -367,7 +367,7 @@
                                             "type": "object",
                                             "properties": {
                                                 "default": {
-                                                    "description": "Whether the file-based execution report is a default for DBMS backups",
+                                                    "description": "Whether the file-based execution report is a default for DBMS backups.",
                                                     "type": "boolean",
                                                     "default": false
                                                 },
@@ -452,20 +452,20 @@
                             "description": "The root directory of the backups tree. Deprecated in favor of 'backups.rootDir' in v4.8.",
                             "deprecated": true
                         },
-                        "restore": {
-                            "description": "The configurations of the backups.",
+                        "restores": {
+                            "description": "The configurations of the restores.",
                             "type": "object",
                             "properties": {
                                 "executionReports": {
-                                    "description": "Override the 'TTP.executionReports' configuration options for the DBMS backups.",
+                                    "description": "Override the 'TTP.executionReports' configuration options for the DBMS restores.",
                                     "type": "object",
                                     "properties": {
                                         "withFile": {
-                                            "description": "The configuration of the file-based DBMS backups execution reports.",
+                                            "description": "The configuration of the file-based DBMS restores execution reports.",
                                             "type": "object",
                                             "properties": {
                                                 "default": {
-                                                    "description": "Whether the file-based execution report is a default for DBMS backups",
+                                                    "description": "Whether the file-based execution report is a default for DBMS restores.",
                                                     "type": "boolean",
                                                     "default": false
                                                 },

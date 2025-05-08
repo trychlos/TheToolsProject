@@ -189,9 +189,9 @@ sub evaluate {
 	# warn only once
 	$services = $self->var([ 'Services' ]);
 	if( $services && scalar( keys %{$services} ) > 0 ){
-		if( !$self->{_servicesWarned} ){
+		if( !$ep->{_warnings}{services} ){
 			msgWarn( "'Services' property is deprecated in favor of 'services'. You should update your configurations." );
-			$self->{_servicesWarned} = true;
+			$ep->{_warnings}{services} = true;
 		}
 		foreach my $it ( keys %{$services} ){
 			TTP::substituteMacros( $self->var([ 'Services', $it ]), {

@@ -290,7 +290,6 @@ sub dbmsBackupsPeriodic {
 		if( !$dir ){
 			$dir = $ep->var([ 'DBMS', 'backupsDir' ], $opts );
 			if( $dir ){
-				$ep->{_warnings} //= {};
 				if( !$ep->{_warnings}{backupsdir} ){
 					msgWarn( "'DBMS.backupsDir' property is deprecated in favor of 'DBMS.backups.periodicDir'. You should update your configurations." );
 					$ep->{_warnings}{backupsdir} = true;
@@ -321,7 +320,6 @@ sub dbmsBackupsRoot {
 		if( !$dir ){
 			$dir = $ep->var([ 'DBMS', 'backupsRoot' ]);
 			if( $dir ){
-				$ep->{_warnings} //= {};
 				if( !$ep->{_warnings}{backupsroot} ){
 					msgWarn( "'DBMS.backupsRoot' property is deprecated in favor of 'DBMS.backups.rootDir'. You should update your configurations." );
 					$ep->{_warnings}{backupsroot} = true;
@@ -415,7 +413,6 @@ sub logsCommands {
 		if( !$dir ){
 			$dir = $ep->var( 'logsCommands' );
 			if( $dir ){
-				$ep->{_warnings} //= {};
 				if( !$ep->{_warnings}{logscommands} ){
 					msgWarn( "'logsCommands' property is deprecated in favor of 'logs.commandsDir'. You should update your configurations." );
 					$ep->{_warnings}{logscommands} = true;
@@ -447,7 +444,6 @@ sub logsMain {
 		if( !$file ){
 			$file = $ep->var( 'logsMain' );
 			if( $file ){
-				$ep->{_warnings} //= {};
 				if( !$ep->{_warnings}{logsmain} ){
 					msgWarn( "'logsMain' property is deprecated in favor of 'logs.mainFile'. You should update your configurations." );
 					$ep->{_warnings}{logsmain} = true;
@@ -479,7 +475,6 @@ sub logsPeriodic {
 		if( !$dir ){
 			$dir = $ep->var( 'logsDaily' );
 			if( $dir ){
-				$ep->{_warnings} //= {};
 				if( !$ep->{_warnings}{logsdaily} ){
 					msgWarn( "'logsDaily' property is deprecated in favor of 'logs.periodicDir'. You should update your configurations." );
 					$ep->{_warnings}{logsdaily} = true;
@@ -510,7 +505,6 @@ sub logsRoot {
 		if( !$dir ){
 			$dir = $ep->var( 'logsRoot' );
 			if( $dir ){
-				$ep->{_warnings} //= {};
 				if( !$ep->{_warnings}{logsroot} ){
 					msgWarn( "'logsRoot' property is deprecated in favor of 'logs.rootDir'. You should update your configurations." );
 					$ep->{_warnings}{logsroot} = true;

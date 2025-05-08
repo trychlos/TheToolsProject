@@ -414,7 +414,6 @@ sub _printMsg_color {
 		if( !$color ){
 			$color = $ep->var([ 'Message', $Const->{$level}{key}, 'color' ]) || '';
 			if( $color ){
-				$ep->{_warnings} //= {};
 				if( !$ep->{_warnings}{message} ){
 					msgWarn( "'Message' property is deprecated in favor of 'messages'. You should update your configurations." );
 					$ep->{_warnings}{message} = true;
@@ -441,7 +440,6 @@ sub _printMsg_marker {
 		if( !$marker ){
 			$marker = $ep->var([ 'Message', $Const->{$level}{key}, 'marker' ]) || '';
 			if( $marker ){
-				$ep->{_warnings} //= {};
 				if( !$ep->{_warnings}{message} ){
 					msgWarn( "'Message' property is deprecated in favor of 'messages'. You should update your configurations." );
 					$ep->{_warnings}{message} = true;
@@ -471,7 +469,6 @@ sub _printMsg_withColor {
 		if( !defined $value ){
 			$value = $ep->var([ 'Message', $Const->{$level}{key}, 'withColor' ]);
 			if( defined $value ){
-				$ep->{_warnings} //= {};
 				if( !$ep->{_warnings}{message} ){
 					msgWarn( "'Message' property is deprecated in favor of 'messages'. You should update your configurations." );
 					$ep->{_warnings}{message} = true;
@@ -497,7 +494,6 @@ sub _printMsg_withLog {
 		if( !defined $value ){
 			$value = $ep->var([ 'Message', $Const->{$level}{key}, 'withLog' ]);
 			if( defined $value ){
-				$ep->{_warnings} //= {};
 				if( !$ep->{_warnings}{message} ){
 					msgWarn( "'Message' property is deprecated in favor of 'messages'. You should update your configurations." );
 					$ep->{_warnings}{message} = true;
