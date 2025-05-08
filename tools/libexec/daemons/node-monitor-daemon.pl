@@ -138,13 +138,6 @@ sub configWorkerInterval {
 }
 
 # -------------------------------------------------------------------------------------------------
-# Returns the list (an array) of the services hosted in this node
-
-sub getServices {
-	return $ep->node()->services();
-}
-
-# -------------------------------------------------------------------------------------------------
 # Returns true if the given var has a non-empty 'commands' array
 # (I):
 # - a variable to be tested (should be an array as returned by TTP::commandByOS()
@@ -231,15 +224,15 @@ sub worker {
 	} else {
 		msgVerbose( "no commands found for node" );
 	}
-	# get the list of services hosted on this node
+	# get the list of (non-hidden) services hosted on this node
 	msgVerbose( "searching for monitoring commands at the services level" );
-	my $services = getServices();
+	my $services = TTP::Service->list();
 	# and run the same for each services
 	if( scalar( @{$services} )){
-		foreach my $service ( @{$services} ){
-			msgVerbose( "examining service $service" );
-			my $serviceKeys = [ 'Services', $service, @{$keys} ];
-			my $commands = TTP::commandByOS( $serviceKeys, { withCommands => true, jsonable => $ep->node() });
+		foreach my $serviceName ( @{$services} ){
+			msgVerbose( "examining service $serviceName" );
+			my $service = TTP::Service->new( $ep, { service => $serviceName });
+			my $commands = $service->commands( @{$keys} );
 			if( hasCommands( $commands )){
 				foreach my $cmd ( @{$commands} ){
 					msgVerbose( "found command='$cmd'" );
@@ -247,12 +240,12 @@ sub worker {
 						macros => {
 							NODE => $node->name(),
 							ENVIRONMENT => $node->environment(),
-							SERVICE => $service
+							SERVICE => $service->name()
 						}
 					});
 				}
 			} else {
-				msgVerbose( "no commands found for '$service'" );
+				msgVerbose( "no commands found for '$serviceName'" );
 			}
 		}
 	} else {

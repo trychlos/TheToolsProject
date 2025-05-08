@@ -12,6 +12,7 @@
     - 'servicesDirs' configuration is deprecated in favor of 'services.confDirs'
     - Remove TTP::Service->dirs() obsolete class method
     - Rename TTP::Service->enumerate() to TTP::Service->enum() to be consistent with TTP::Node
+    - Define new TTP::Service->list(), updating node-monitor-daemon.pl and services.pl list accordingly
 
 ### 4.9.3
 

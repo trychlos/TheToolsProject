@@ -164,21 +164,13 @@ sub listServiceMachines {
 
 sub listServices {
 	msgOut( "displaying services defined on ".$ep->node()->name()."..." );
-	my $list = [];
-	TTP::Service->enum({
-		cb => \&_listServices_cb,
-		hidden => $opt_hidden,
-		result => $list
+	my $list = TTP::Service->list({
+		hidden => $opt_hidden
 	});
 	foreach my $it ( @{$list} ){
 		log_print( " $it" );
 	}
 	msgOut( scalar @{$list}." found defined service(s)" );
-}
-
-sub _listServices_cb {
-	my ( $service, $args ) = @_;
-	push( @{$args->{result}}, $service->name());
 }
 
 # -------------------------------------------------------------------------------------------------
