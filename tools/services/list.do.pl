@@ -10,18 +10,18 @@
 # @(-) --[no]environment       display the environment to which this machine is attached [${environment}]
 # @(-) --service=<name>        display informations about the named service [${service}]
 # @(-) --[no]machines          list all the machines which define the named service [${machines}]
-# @(-) --type=<type>           restrict list to the machines attached to the specified environment [${type}]
+# @(-) --identifier=<id>       restrict list to the machines attached to the specified environment [${identifier}]
 # @(-) --workload=<name>       display informations about the named workload [${workload}]
 # @(-) --[no]details           list the tasks details [${details}]
 # @(-) --[no]commands          only list the commands for the named workload [${commands}]
 #
 # @(@) with:
-# @(@)   services.pl list -services [-hidden]                       list services defined on the current machine, plus maybe the hidden ones
-# @(@)   services.pl list -workloads [-hidden]                      list workloads defined on the current machine, plus maybe the hidden ones
-# @(@)   services.pl list -environment                              display the environnement of the current machine
-# @(@)   services.pl list -service <name> -machines [-type <env>]   list the machines where the named service is defined, maybe for the typed environment
-# @(@)   services.pl list -workload <name> -commands [-hidden]      list the commands attached to the named workload, plus maybe the hidden ones
-# @(@)   services.pl list -workload <name> -details [-hidden]       list the tasks details of the named workload, plus maybe the hidden ones
+# @(@)   services.pl list -services [-hidden]                             list services defined on the current machine, plus maybe the hidden ones
+# @(@)   services.pl list -workloads [-hidden]                            list workloads defined on the current machine, plus maybe the hidden ones
+# @(@)   services.pl list -environment                                    display the environnement of the current machine
+# @(@)   services.pl list -service <name> -machines [-identifier <env>]   list the machines where the named service is defined, maybe for the identified environment
+# @(@)   services.pl list -workload <name> -commands [-hidden]            list the commands attached to the named workload, plus maybe the hidden ones
+# @(@)   services.pl list -workload <name> -details [-hidden]             list the tasks details of the named workload, plus maybe the hidden ones
 #
 # @(@) Displayed lists are sorted in ASCII order, i.e. in [0-9A-Za-z] order.
 #
@@ -62,7 +62,7 @@ my $defaults = {
 	details => 'no',
 	service => '',
 	environment => 'no',
-	type => '',
+	identifier => '',
 	machines => 'no'
 };
 
@@ -74,7 +74,8 @@ my $opt_commands = false;
 my $opt_details = false;
 my $opt_service = $defaults->{service};
 my $opt_environment = false;
-my $opt_type = $defaults->{type};
+my $opt_identifier = $defaults->{identifier};
+my $opt_type = undef;
 my $opt_machines = false;
 
 # -------------------------------------------------------------------------------------------------
@@ -139,8 +140,8 @@ sub listEnvironment {
 # display the machines which provides the service, maybe in a specified environment type
 
 sub listServiceMachines {
-	if( $opt_type ){
-		msgOut( "displaying machines which provide '$opt_service' service in '$opt_type' environment..." );
+	if( $opt_identifier ){
+		msgOut( "displaying machines which provide '$opt_service' service in '$opt_identifier' environment..." );
 	} else {
 		msgOut( "displaying machines which provide '$opt_service' service..." );
 	}
@@ -151,7 +152,7 @@ sub listServiceMachines {
 	foreach my $host ( @{$hosts} ){
 		msgVerbose( "examining '$host'" );
 		my $node = TTP::Node->new( $ep, { node => $host });
-		if( $node && ( !$opt_type || $node->environment() eq $opt_type ) && $node->hasService( $opt_service )){
+		if( $node && ( !$opt_identifier || $node->environment() eq $opt_identifier ) && $node->hasService( $opt_service )){
 			log_print( " ".( $node->environment() || '' ).": $host" );
 			$count += 1;
 		}
@@ -319,6 +320,7 @@ if( !GetOptions(
 	"details!"			=> \$opt_details,
 	"service=s"			=> \$opt_service,
 	"environment!"		=> \$opt_environment,
+	"identifier=s"		=> \$opt_identifier,
 	"type=s"			=> \$opt_type,
 	"machines!"			=> \$opt_machines )){
 
@@ -342,7 +344,8 @@ msgVerbose( "got commands='".( $opt_commands ? 'true':'false' )."'" );
 msgVerbose( "got details='".( $opt_details ? 'true':'false' )."'" );
 msgVerbose( "got service='$opt_service'" );
 msgVerbose( "got environment='".( $opt_environment ? 'true':'false' )."'" );
-msgVerbose( "got type='$opt_type'" );
+msgVerbose( "got identifier='$opt_identifier'" );
+msgVerbose( "got type='".( $opt_type || '(undef)' )."'" );
 msgVerbose( "got machines='".( $opt_machines ? 'true':'false' )."'" );
 
 if( $opt_service && !$opt_machines ){
@@ -353,6 +356,14 @@ if( $opt_machines && !$opt_service ){
 }
 if( $opt_workload && !$opt_commands && !$opt_details ){
 	msgWarn( "a workload is named, but without any requested information" );
+}
+if( $opt_type ){
+	msgWarn( "'--type' option has been obsoleted in favor of '--identifier'. Please update your codes or configurations." );
+	if( $opt_identifier ){
+		msgErr( "'--type' and '--identifier' options should not be both specified" );
+	} else {
+		$opt_identifier = $opt_type;
+	}
 }
 
 if( !TTP::errs()){

@@ -13,6 +13,7 @@
     - Remove TTP::Service->dirs() obsolete class method
     - Rename TTP::Service->enumerate() to TTP::Service->enum() to be consistent with TTP::Node
     - Define new TTP::Service->list(), updating node-monitor-daemon.pl and services.pl list accordingly
+    - Obsolete 'services.pl list --type' in favor of 'services.pl --identifier' option to get consistent with 'environment.id' property
 
 ### 4.9.3
 

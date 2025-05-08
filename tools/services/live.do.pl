@@ -85,7 +85,7 @@ sub getLive {
 			# get all hosts for this service and this environment
 			my @hosts = ();
 			my @nexts;
-			$command = "services.pl list -service $opt_service -type $opt_environment -machines -nocolored $dummy $verbose";
+			$command = "services.pl list -service $opt_service -identifier $opt_environment -machines -nocolored $dummy $verbose";
 			msgVerbose( $command );
 			$stdout = `$command`;
 			$rc = $?;
