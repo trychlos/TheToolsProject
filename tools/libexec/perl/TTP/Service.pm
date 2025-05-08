@@ -274,9 +274,9 @@ sub enum {
 					$deprecated += 1;
 				}
 			}
-			if( $deprecated && !$node->{_servicesWarned} ){
+			if( $deprecated && !$ep->{_warnings}{services} ){
 				msgWarn( "'Services' property is deprecated in favor of 'services'. You should update your configurations." );
-				$node->{_servicesWarned} = true;
+				$ep->{_warnings}{services} = true;
 			}
 		} else {
 			msgErr( __PACKAGE__."::enumerate() expects a 'cb' callback code ref, not found" );

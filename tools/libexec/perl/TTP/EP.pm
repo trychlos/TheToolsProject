@@ -208,6 +208,8 @@ sub new {
 	bless $self, $class;
 	msgDebug( __PACKAGE__."::new()" );
 
+	$self->{_warnings} //= {};
+
 	return $self;
 }
 
