@@ -165,7 +165,7 @@ sub listServiceMachines {
 sub listServices {
 	msgOut( "displaying services defined on ".$ep->node()->name()."..." );
 	my $list = [];
-	TTP::Service->enumerate({
+	TTP::Service->enum({
 		cb => \&_listServices_cb,
 		hidden => $opt_hidden,
 		result => $list
@@ -279,7 +279,7 @@ sub listWorkloads {
 	msgOut( "displaying workloads used on ".$ep->node()->name()."..." );
 	my $list = {};
 	my $count = 0;
-	TTP::Service->enumerate({
+	TTP::Service->enum({
 		cb => \&_listWorkloads_cb,
 		hidden => $opt_hidden,
 		result => $list

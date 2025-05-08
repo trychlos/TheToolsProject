@@ -4,7 +4,7 @@
     "title": "Site",
     "description_array": [
 		"The 'site.json' configuration file is the global TTP configuration file for your site, and the first loaded by each command. It defines global TTP behavior.",
-		"It is searched for among (hardcoded) 'etc/ttp/site.json', 'etc/site.json', 'etc/ttp/toops.json' or 'etc/toops.json' in each path of TTP_ROOTS environment variable.",
+		"It is searched for among (hardcoded) 'etc/ttp/site.json', 'etc/toops/site.json', 'etc/site.json', 'etc/ttp/toops.json', 'etc/toops/toops.json', 'etc/toops.json', 'etc/ttp/ttp.json', 'etc/toops/ttp.json' or 'etc/ttp.json'  in each path of TTP_ROOTS environment variable.",
 		"The first found wins.",
 		"",
 		"Windows notes:",
@@ -870,6 +870,26 @@
                 },
                 "nodesDirs": {
                     "description": "List of subdirectories of TTP_ROOTS where we can find nodes JSON configuration files. Deprecated in favor of 'nodes.dirs' in v4.1.",
+                    "deprecated": true
+                },
+                "services": {
+                    "description": "General configuration of the services.",
+                    "type": "object",
+                    "properties": {
+                        "confDirs": {
+                            "description": "List of subdirectories of TTP_ROOTS where we can find services JSON configuration files. Not per-node overidable.",
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            },
+                            "default": [
+                                "etc/services"
+                            ]
+                        }
+                    }
+                },
+                "servicesDirs": {
+                    "description": "List of subdirectories of TTP_ROOTS where we can find services JSON configuration files. Deprecated in favor of 'services.confDirs' in v4.10.",
                     "deprecated": true
                 },
                 "SMTPGateway": {

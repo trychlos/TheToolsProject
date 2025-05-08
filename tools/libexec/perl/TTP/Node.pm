@@ -58,9 +58,7 @@ my $Const = {
 	finder => {
 		dirs => [
 			'etc/nodes',
-			'nodes',
-			'etc/machines',
-			'machines'
+			'etc/machines'
 		],
 		suffix => '.json'
 	}
@@ -179,11 +177,27 @@ sub evaluate {
 		'<NODE>' => $self->name()
 	});
 
-	my $services = $self->var([ 'Services' ]);
+	# 'services' is introduced in v4.10 to replace 'Services'
+	my $services = $self->var([ 'services' ]);
 	foreach my $it ( keys %{$services} ){
-		TTP::substituteMacros( $self->var([ 'Services', $it ]), {
+		TTP::substituteMacros( $self->var([ 'services', $it ]), {
 			'<SERVICE>' => $it
 		});
+	}
+
+	# 'Services' is deprecated in v4.10 in favor of 'services'
+	# warn only once
+	$services = $self->var([ 'Services' ]);
+	if( $services && scalar( keys %{$services} ) > 0 ){
+		if( !$self->{_servicesWarned} ){
+			msgWarn( "'Services' property is deprecated in favor of 'services'. You should update your configurations." );
+			$self->{_servicesWarned} = true;
+		}
+		foreach my $it ( keys %{$services} ){
+			TTP::substituteMacros( $self->var([ 'Services', $it ]), {
+				'<SERVICE>' => $it
+			});
+		}
 	}
 
 	return $self;
@@ -203,7 +217,7 @@ sub hasService {
 	if( !$service || ref( $service )){
 		msgErr( __PACKAGE__."::hasService() expects a service name be specified, found '".( $service || '(undef)' )."'" );
 	} else {
-		my $services = $self->jsonData()->{Services} || {};
+		my $services = $self->jsonData()->{services} || $self->jsonData()->{Services} || {};
 		my $hash = $services->{$service};
 		my $enabled = $hash ? true : false;
 		$enabled = $hash->{enabled} if $hash && defined( $hash->{enabled} );
@@ -236,7 +250,7 @@ sub name {
 sub services {
 	my ( $self ) = @_;
 
-	my @services = keys( %{$self->jsonData()->{Services} || {}} );
+	my @services = keys( %{$self->jsonData()->{services} || $self->jsonData()->{Services} || {}} );
 
 	return \@services;
 }
@@ -365,7 +379,7 @@ sub findCandidate {
 }
 
 # -------------------------------------------------------------------------------------------------
-# Returns the list of dirs where nodes are to be found
+# Returns the list of dirs where nodes JSON configurations are to be found
 # (I):
 # - none
 # (O):
@@ -384,7 +398,7 @@ sub finder {
 		} else {
 			$dirs = $ep->var( 'nodesDirs' );
 			if( $dirs ){
-				msgWarn( "'nodesDirs' property is deprecated in favor of 'nodes.dirs'. You should update your configurations." );
+				msgWarn( "'nodesDirs' property is deprecated in favor of 'nodes.confDirs'. You should update your configurations." );
 			}
 		}
 	}
