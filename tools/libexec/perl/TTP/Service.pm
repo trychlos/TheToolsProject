@@ -165,9 +165,6 @@ sub name {
 
 sub var {
 	my ( $self, $args, $node ) = @_;
-	# keep a copy of the provided arguments
-	my @args = @{$args};
-	my $name = $self->name();
 	my $value = undef;
 	my $jsonable = undef;
 	# do we have a provided node ?
@@ -189,19 +186,33 @@ sub var {
 		$jsonable = $self->ep()->node();
 	}
 	if( $jsonable ){
-		# search for the service definition in the node
-		unshift( @{$args}, 'Services', $name );
-		$value = $jsonable->var( $args );
-		# search as the value general to the node
+		# search for the 'services' definition in the node
+		my @args = @{$args};
+		unshift( @args, 'services', $self->name());
+		$value = $jsonable->var( \@args );
+		# search for the 'Services' definition in the node - obsoleted as of v4.10
 		if( !defined( $value )){
+			@args = @{$args};
+			unshift( @args, 'Services', $self->name());
+			$value = $jsonable->var( \@args );
+			if( defined( $value ) && !$ep->{_warnings}{services} ){
+				msgWarn( "'Services' property is deprecated in favor of 'services'. You should update your configurations." );
+				$ep->{_warnings}{services} = true;
+			}
+		}
+		# search as a value general to the node
+		if( !defined( $value )){
+			@args = @{$args};
 			$value = $jsonable->var( \@args );
 		}
-		# search in this service definition
-		if( !defined( $value )){
-			$value = $self->TTP::IJSONable::var( \@args ) if $self->jsonLoaded();
+		# search in this service definition (if it exists)
+		if( !defined( $value ) && $self->jsonLoaded()){
+			@args = @{$args};
+			$value = $self->TTP::IJSONable::var( \@args );
 		}
 		# last search for a default value at site level
 		if( !defined( $value )){
+			@args = @{$args};
 			$value = $self->ep()->site()->var( \@args );
 		}
 	}

@@ -35,11 +35,6 @@
 |  110 | 2025- 4-20 | site.schema for moveDir |
 |  111 | 2025- 4-20 | site.schema for telemetry |
 |      | 2025- 4-22 | done - has to be honored |
-|  113 | 2025- 4-20 | integration of service's schema in site |
-|  114 | 2025- 4-20 | integration of service's schema in node |
-|  118 | 2025- 4-21 | logs dirs, backups dirs and others should accept <NODE> macros when overriden in a <node>.json (or even when in site.json) |
-|      | 2025- 4-22 | nb: we already have a TTP::nodeName() function available in [eval:..] macros |
-|      | 2025- 5- 6 | at least telemetry and mqtt modules use this <NODE> macro |
 |  122 | 2025- 4-26 | daemon.pl start should default to refuse to start a daemon several times |
 |      | 2025- 5- 7 | the daemon itself should accept nonetheless to run in foreground |
 |  123 | 2025- 4-29 | have a test for alerts-monitor-daemon |
@@ -319,6 +314,11 @@
 |      | 2025- 4-21 | done |
 |  112 | 2025- 4-20 | service.schema |
 |      | 2025- 5- 7 | created |
+|  113 | 2025- 4-20 | integration of service's schema in site |
+|      | 2025- 5- 8 | unless - for example - in DBMS properties, services are not to be integrated at the site level |
+|      |            | but happens that services.pl vars already searches for the var in the node, then in the service and last in the site |
+|  114 | 2025- 4-20 | integration of service's schema in node |
+|      | 2025- 5- 8 | same than #113 |
 |  115 | 2025- 4-20 | test infrastructure |
 |      | 2025- 4-22 | began with sh/ |
 |      | 2025- 4-24 | began with cmd/ |
@@ -329,6 +329,10 @@
 |      | 2025- 5- 7 | cancelled |
 |  117 | 2025- 4-21 | <command>.pl help should be formatted like ttp.pl list -commands (i.e. with a count at the end) + update the test suite accordingly |
 |      | 2025- 4-22 | done |
+|  118 | 2025- 4-21 | logs dirs, backups dirs and others should accept <NODE> macros when overriden in a <node>.json (or even when in site.json) |
+|      | 2025- 4-22 | nb: we already have a TTP::nodeName() function available in [eval:..] macros |
+|      | 2025- 5- 6 | at least telemetry and mqtt modules use this <NODE> macro |
+|      | 2025- 5- 8 | happens that NODE and SERVICE macros are already evaluated - so fine |
 |  119 | 2025- 4-22 | print STDERR __PACKAGE__... if $ENV{TTP_DEBUG}; should be replaced by msgDebug() |
 |      |            |  itself either logging or print to STDERR dependent of TTP_DEBUG and ep->bootstrapped() |
 |      |            | msgLog() is so rather oriented to operations done, while msgDebug() is oriented to trace |
