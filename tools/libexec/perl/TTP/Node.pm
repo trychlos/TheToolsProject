@@ -241,21 +241,6 @@ sub name {
 }
 
 # -------------------------------------------------------------------------------------------------
-# Returns the list of service names defined in this node
-# (I):
-# - 
-# (O):
-# - returns an array, maybe empty
-
-sub services {
-	my ( $self ) = @_;
-
-	my @services = keys( %{$self->jsonData()->{services} || $self->jsonData()->{Services} || {}} );
-
-	return \@services;
-}
-
-# -------------------------------------------------------------------------------------------------
 # returns the content of a var, read from the node, defaulting to same from the site
 # (I):
 # - a reference to an array of keys to be read from (e.g. [ 'moveDir', 'byOS', 'MSWin32' ])
