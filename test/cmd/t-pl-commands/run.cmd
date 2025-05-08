@@ -82,7 +82,7 @@
 	for /f "usebackq" %%a in (`type %stdout% ^| find "[ttp.pl list]" /v /c`) do set countLines=%%a
 	for /f "usebackq tokens=3,*" %%a in (`type %stdout% ^| find "found command"`) do set countCommands=%%a
 	if %countLines% == %countCommands% (
-		echo "found %countCommands% - OK"
+		echo found %countCommands% - OK
 		set /A test_ok+=1
 	) else (
 		call %maindir%\functions.cmd color_red "NOT OK"
@@ -133,7 +133,7 @@
 	for /f "usebackq" %%a in (`type %stdout% ^| find "%_command%" /v /c`) do set countLines=%%a
 	for /f "usebackq tokens=2,*" %%a in (`type %stdout% ^| find "found verb"`) do set countVerbs=%%a
 	if %countLines% == %countVerbs% (
-		echo "found %countVerbs% - OK"
+		echo found %countVerbs% - OK
 		set /A test_ok+=1
 	) else (
 		call %maindir%\functions.cmd color_red "NOT OK"
