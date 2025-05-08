@@ -32,7 +32,8 @@
             "description_array": [
                 "The environment to which this machine is attached.",
                 "A machine is attached to at most one environment which, for example, determines the level of expected service quality.",
-			    "If this is not what you are searching for, maybe you could take a glance at the logical machine paradigm, unless you could be more interested by roles."
+			    "If this is not what you are searching for, maybe you could take a glance at the logical machine paradigm, unless you could be more interested by roles.",
+                "Please note too that services vs. nodes vs. environments should be determined so that a service + an environment identifies zero or one node only."
             ],
             "type": "object",
             "properties": {
