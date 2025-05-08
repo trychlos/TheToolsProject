@@ -272,6 +272,28 @@ sub commandExec {
 # (I):
 # - none
 # (O):
+# - returns the 'archives.periodicDir' directory, which may be undef very early in the bootstrap process
+#   and at least not definitive while the node has not been instanciated/loaded/evaluated
+
+sub dbmsArchivesPeriodic {
+	return TTP::Path::dbmsArchivesPeriodic();
+}
+
+# ------------------------------------------------------------------------------------------------
+# (I):
+# - none
+# (O):
+# - returns the 'archives.rootDir' directory, which may be undef very early in the bootstrap process
+#   and at least not definitive while the node has not been instanciated/loaded/evaluated
+
+sub dbmsArchivesRoot {
+	return TTP::Path::dbmsArchivesRoot();
+}
+
+# ------------------------------------------------------------------------------------------------
+# (I):
+# - none
+# (O):
 # - returns the 'backups.periodicDir' directory, which may be undef very early in the bootstrap process
 #   and at least not definitive while the node has not been instanciated/loaded/evaluated
 

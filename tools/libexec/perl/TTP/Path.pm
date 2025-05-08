@@ -252,10 +252,28 @@ sub copyFile {
 # (O):
 # the current DBMS archives directory, making sure the dir exists
 # the dir can be defined in toops.json, or overriden in host configuration
-sub dbmsArchivesDir {
-	my $dir = $ep->var([ 'DBMS', 'archivesDir' ]);
-	if( !defined $dir || !length $dir ){
-		TTP::Message::msgWarn( "'archivesDir' is not defined in toops.json nor in host configuration" );
+
+sub dbmsArchivesPeriodic {
+	my $dir;
+	my $node = $ep ? $ep->node() : undef;
+	if( $node ){
+		$dir = $ep->var([ 'DBMS', 'archives', 'periodicDir' ]);
+		if( !$dir ){
+			$dir = $ep->var([ 'DBMS', 'archivesDir' ]);
+			if( $dir ){
+				if( !$ep->{_warnings}{archivessdir} ){
+					msgWarn( "'DBMS.archivesDir' property is deprecated in favor of 'DBMS.archives.periodicDir'. You should update your configurations." );
+					$ep->{_warnings}{archivessdir} = true;
+				}
+			}
+		}
+		if( !$dir ){
+			TTP::Message::msgWarn( "'archives.periodicDir' is not defined in site.json nor in node configuration" );
+			$dir = dbmsArchivesRoot();
+		}
+	}
+	if( $dir && $ep->bootstrapped() && !$ep->evaluating()){
+		makeDirExist( $dir );
 	}
 	return $dir;
 }
@@ -264,10 +282,28 @@ sub dbmsArchivesDir {
 # (O):
 # the current DBMS archives root tree, making sure the dir exists
 # the dir can be defined in toops.json, or overriden in host configuration
+
 sub dbmsArchivesRoot {
-	my $dir = $ep->var([ 'DBMS', 'archivesRoot' ]);
-	if( !defined $dir || !length $dir ){
-		TTP::Message::msgWarn( "'archivesRoot' is not defined in toops.json nor in host configuration" );
+	my $dir;
+	my $node = $ep ? $ep->node() : undef;
+	if( $node ){
+		$dir = $ep->var([ 'DBMS', 'archives', 'rootDir' ]);
+		if( !$dir ){
+			$dir = $ep->var([ 'DBMS', 'archivesRoot' ]);
+			if( $dir ){
+				if( !$ep->{_warnings}{archivessroot} ){
+					msgWarn( "'DBMS.archivesRoot' property is deprecated in favor of 'DBMS.archives.rootDir'. You should update your configurations." );
+					$ep->{_warnings}{archivessroot} = true;
+				}
+			}
+		}
+		if( !$dir ){
+			TTP::Message::msgWarn( "'archives.rootDir' is not defined in site.json nor in node configuration" );
+			$dir = File::Spec->catdir( TTP::tempDir(), 'TTP', 'archives' );
+		}
+	}
+	if( $dir && $ep->bootstrapped() && !$ep->evaluating()){
+		makeDirExist( $dir );
 	}
 	return $dir;
 }
@@ -297,6 +333,7 @@ sub dbmsBackupsPeriodic {
 			}
 		}
 		if( !$dir ){
+			TTP::Message::msgWarn( "'backups.periodicDir' is not defined in site.json nor in node configuration" );
 			$dir = dbmsBackupsRoot();
 		}
 	}
@@ -327,6 +364,7 @@ sub dbmsBackupsRoot {
 			}
 		}
 		if( !$dir ){
+			TTP::Message::msgWarn( "'backups.rootDir' is not defined in site.json nor in node configuration" );
 			$dir = File::Spec->catdir( TTP::tempDir(), 'TTP', 'backups' );
 		}
 	}

@@ -352,6 +352,36 @@
                     ],
                     "type": "object",
                     "properties": {
+                        "archives": {
+                            "description": "The configuration of the DBMS archives.",
+                            "type": "object",
+                            "properties": {
+                                "periodicDir": {
+                                    "description_array": [
+                                        "The periodic, by time, root directory of the archives tree.",
+                                        "This 'archives.periodicDir' directory can be got by the user via the 'dbms.pl vars --archivesPeriodic' command."
+                                    ],
+                                    "type": "string",
+                                    "default": "[eval:TTP::dbmsArchivesPeriodic()]"
+                                },
+                                "rootDir": {
+                                    "description_array": [
+                                        "The root directory of the backups tree.",
+                                        "This 'archives.rootDir' directory can be got by the user via the 'dbms.pl vars --archivesRoot' command."
+                                    ],
+                                    "type": "string",
+                                    "default": "[eval:TTP::dbmsArchivesRoot()]"
+                                }
+                            }
+                        },
+                        "archivesDir": {
+                            "description": "The periodic, by time, root directory of the archives tree. Deprecated in favor of 'archives.periodicDir' in v4.10.",
+                            "deprecated": true
+                        },
+                        "archivesRoot": {
+                            "description": "The root directory of the archives tree. Deprecated in favor of 'archives.rootDir' in v4.10.",
+                            "deprecated": true
+                        },
                         "backups": {
                             "description": "The configurations of the backups.",
                             "type": "object",

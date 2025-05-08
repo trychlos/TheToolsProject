@@ -15,6 +15,7 @@
     - Define new TTP::Service->list(), updating node-monitor-daemon.pl and services.pl list accordingly
     - Obsolete 'services.pl list --type' in favor of 'services.pl --identifier' option to get consistent with 'environment.id' property
     - Credentials are now searched only in etc/ subdirectories
+    - Obsolete 'archivesRoot' and 'archivesDir' properties in favor of 'archives.periodicDic' and 'archives.rootDir'
 
 ### 4.9.3
 
