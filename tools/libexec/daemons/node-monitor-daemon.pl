@@ -49,6 +49,7 @@ use TTP;
 use TTP::Constants qw( :all );
 use TTP::Message qw( :all );
 use TTP::RunnerDaemon;
+use TTP::Service;
 use vars::global qw( $ep );
 
 my $daemon = TTP::RunnerDaemon->bootstrap();
