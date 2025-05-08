@@ -316,9 +316,7 @@
                             "items": "string",
                             "default": [
                                 "etc/credentials",
-                                "credentials",
-                                "etc/private",
-                                "private"
+                                "etc/private"
                             ]
                         }
                     }
