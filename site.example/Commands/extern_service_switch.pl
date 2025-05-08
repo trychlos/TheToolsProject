@@ -120,7 +120,7 @@ sub _obsoleteCode {
 		#    X: NS230134
 		#    X: WS12PROD1
 		# [services.pl list] 2 found machine(s)
-		$command = "services.pl list -nocolored -service $opt_service -type X -machines";
+		$command = "services.pl list -nocolored -service $opt_service -identifier X -machines";
 		msgVerbose( $command );
 		$stdout = `$command`;
 		$rc = $?;
