@@ -502,6 +502,8 @@ sub new {
 	if( $self->jsonLoad({ findable => $findable, acceptable => $acceptable })){
 		# keep node name if ok
 		$self->{_node} = $node;
+		# auto-evaluate at least once at instanciation time
+		$self->evaluate();
 
 	# unable to find and load the node configuration file ?
 	# this is an unrecoverable error unless otherwise specified
