@@ -64,9 +64,6 @@ my $objService = undef;
 # the DBMS object
 my $objDbms = undef;
 
-my $jsonable;
-my $opt_instance;
-
 # -------------------------------------------------------------------------------------------------
 # list the databases in the service
 
@@ -152,24 +149,17 @@ if( $opt_service ){
 	msgErr( "'--service' option is mandatory, not found" );
 }
 
-# if a database is specified must exists in the service
-#if( !TTP::errs() && $opt_database ){
-#	if( $opt_service ){
-#		my @databases = $objService->var([ 'DBMS', 'databases' ]);
-#		if( !grep( /$opt_database/, @databases )){
-#			msgErr( "database '$opt_database' in not defined in '$opt_service' service" );
-#		}
-#	} elsif( !$objDbms->databaseExists( $opt_database )){
-#		msgErr( "database '$opt_database' doesn't exist in '$opt_instance' instance" );
-#	}
-#}
-
 # --database and --listtables work together
 if( $opt_database && !$opt_listtables ){
 	msgErr( "'--database' option has been specified, but nothing has been asked to be done with. Did you miss '--listtables' option ?" );
 }
 if( !$opt_database && $opt_listtables ){
 	msgErr( "'--listtables' option has been specified, but '--database' is missing" );
+}
+
+# if a database is specified must exists in the service
+if( $opt_database && $objDbms && !$objDbms->databaseExists( $opt_database )){
+	msgErr( "database '$opt_database' doesn't exist in '$opt_service' instance" );
 }
 
 # should have something to do

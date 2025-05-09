@@ -213,10 +213,9 @@ sub getDatabases {
 		$databases = [];
 		my $res = $self->_sqlExec( "select name from master.sys.databases order by name" );
 		if( $res->{ok} ){
-			my $excludeSystemDatabases = $self->excludeSystemDatabases();
 			foreach my $it ( @{$res->{result}} ){
 				my $dbname = $it->{name};
-				if( !$excludeSystemDatabases || !grep( /^$dbname$/, @{$Const->{systemDatabases}} )){
+				if( !$self->dbFilteredBySystem( $dbname, $Const->{systemDatabases} ) && !$self->dbFilteredbyLimit( $dbname )){
 					push( @{$databases}, $dbname );
 				}
 			}
