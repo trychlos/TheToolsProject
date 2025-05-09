@@ -219,7 +219,7 @@ sub getProperties {
 # (I):
 # - an optional hosting node
 # (O):
-# - returns the hosting node, defaulting to the current execution node
+# - returns the hosting TTP::Node node, defaulting to the current execution node
 
 sub node {
 	my ( $self, $node ) = @_;

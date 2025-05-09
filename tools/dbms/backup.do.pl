@@ -5,7 +5,6 @@
 # @(-) --[no]dummy             dummy run [${dummy}]
 # @(-) --[no]verbose           run verbosely [${verbose}]
 # @(-) --service=<name>        service name [${service}]
-# @(-) --instance=<name>       Sql Server instance name [${instance}]
 # @(-) --database=<name>       database name [${database}]
 # @(-) --[no]full              operate a full backup [${full}]
 # @(-) --[no]diff              operate a differential backup [${diff}]
@@ -61,8 +60,6 @@ my $defaults = {
 };
 
 my $opt_service = $defaults->{service};
-my $opt_instance = '';
-my $opt_instance_set = false;
 my $opt_database = $defaults->{database};
 my $opt_full = false;
 my $opt_diff = false;
@@ -70,9 +67,12 @@ my $opt_compress = false;
 my $opt_output = '';
 my $opt_report = true;
 
-# may be overriden by the service if specified
-my $jsonable = $ep->node();
-my $dbms = undef;
+# the node which hosts the requested service
+my $objNode = undef;
+# the service object
+my $objService = undef;
+# the DBMS object
+my $objDbms = undef;
 
 # list of databases to be backuped
 my $databases = [];
@@ -85,8 +85,8 @@ sub doBackup {
 	my $count = 0;
 	my $asked = 0;
 	foreach my $db ( @{$databases} ){
-		msgOut( "backuping database '$opt_instance\\$db'" );
-		my $res = $dbms->backupDatabase({
+		msgOut( "backuping database '$opt_service\\$db'" );
+		my $res = $objDbms->backupDatabase({
 			database => $db,
 			output => $opt_output,
 			mode => $mode,
@@ -94,7 +94,7 @@ sub doBackup {
 		});
 		# retain last full and last diff
 		my $data = {
-			instance => $opt_instance,
+			service => $opt_service,
 			database => $db,
 			mode => $mode,
 			output => ( $res->{status} ? $res->{output} : "" ),
@@ -107,7 +107,7 @@ sub doBackup {
 					data => $data
 				},
 				mqtt => {
-					topic => $ep->node()->name()."/executionReport/".$ep->runner()->command().'/'.$ep->runner()->verb()."/$opt_instance/$db",
+					topic => $objNode->name()."/executionReport/".$ep->runner()->command().'/'.$ep->runner()->verb()."/$opt_service/$db",
 					data => $data,
 					options => "-retain",
 					excludes => [
@@ -142,11 +142,6 @@ if( !GetOptions(
 	"dummy!"			=> sub { $ep->runner()->dummy( @_ ); },
 	"verbose!"			=> sub { $ep->runner()->verbose( @_ ); },
 	"service=s"			=> \$opt_service,
-	"instance=s"		=> sub {
-		my( $opt_name, $opt_value ) = @_;
-		$opt_instance = $opt_value;
-		$opt_instance_set = true;
-	},
 	"database=s"		=> \$opt_database,
 	"full!"				=> \$opt_full,
 	"diff!"				=> \$opt_diff,
@@ -167,8 +162,6 @@ msgVerbose( "got colored='".( $ep->runner()->colored() ? 'true':'false' )."'" );
 msgVerbose( "got dummy='".( $ep->runner()->dummy() ? 'true':'false' )."'" );
 msgVerbose( "got verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got service='$opt_service'" );
-msgVerbose( "got instance='$opt_instance'" );
-msgVerbose( "got instance_set='".( $opt_instance_set ? 'true':'false' )."'" );
 msgVerbose( "got database='$opt_database'" );
 msgVerbose( "got full='".( $opt_full ? 'true':'false' )."'" );
 msgVerbose( "got diff='".( $opt_diff ? 'true':'false' )."'" );
@@ -176,45 +169,38 @@ msgVerbose( "got compress='".( $opt_compress ? 'true':'false' )."'" );
 msgVerbose( "got output='$opt_output'" );
 msgVerbose( "got report='".( $opt_report ? 'true':'false' )."'" );
 
-# must have either -service or -instance options
-# compute instance from service
-my $count = 0;
-$count += 1 if $opt_service;
-$count += 1 if $opt_instance_set;
-if( $count == 0 ){
-	msgErr( "must have one of '--service' or '--instance' option, none found" );
-} elsif( $count > 1 ){
-	msgErr( "must have one of '--service' or '--instance' option, both found" );
-} elsif( $opt_service ){
-	if( $jsonable->hasService( $opt_service )){
-		$jsonable = TTP::Service->new( $ep, { service => $opt_service });
-		$opt_instance = $jsonable->var([ 'DBMS', 'instance' ]);
-	} else {
-		msgErr( "service '$opt_service' if not defined on current execution node" ) ;
+# must have --service option
+# find the node which hosts this service in this same environment (should be at most one)
+# and check that the service is DBMS-aware
+if( $opt_service ){
+	$objNode = TTP::Node->findByService( $ep->node()->environment(), $opt_service );
+	if( $objNode ){
+		msgVerbose( "got hosting node='".$objNode->name()."'" );
+		$objService = TTP::Service->new( $ep, { service => $opt_service });
+		$objDbms = $objService->newDbms({ node => $objNode });
 	}
+} else {
+	msgErr( "'--service' option is mandatory, not found" );
 }
-
-# instanciates the DBMS class
-$dbms = TTP::DBMS->new( $ep, { instance => $opt_instance }) if !TTP::errs();
 
 # database(s) can be specified in the command-line, or can come from the service
 if( $opt_database ){
 	push( @{$databases}, $opt_database );
-} elsif( $opt_service ){
-	$databases = $jsonable->var([ 'DBMS', 'databases' ]);
+} elsif( $objDbms ){
+	$databases = $objDbms->getDatabases();
 	msgVerbose( "setting databases='".join( ', ', @{$databases} )."'" );
 }
 
 # all databases must exist in the instance
 if( scalar @{$databases} ){
 	foreach my $db ( @{$databases} ){
-		my $exists = $dbms->databaseExists( $db );
+		my $exists = $objDbms->databaseExists( $db );
 		if( !$exists ){
-			msgErr( "database '$db' doesn't exist in the '$opt_instance' instance" );
+			msgErr( "database '$db' doesn't exist in the '$opt_service' instance" );
 		}
 	}
 } else {
-	msgErr( "'--database' option is required (or '--service'), but none is specified" );
+	msgWarn( "no database found to be backuped, nothing will be done" );
 }
 
 # check for full or diff backup mode
