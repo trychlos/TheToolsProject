@@ -17,6 +17,7 @@
     - 'instance' property is removed from service.DBMS schema
     - Add dbms.pl list --properties option
     - Remove dbms.pl vars --service (unused) option
+    - TTP::Node->new() auto-evaluate the node at least once at instanciation time
 
 ### 4.10.1
 
