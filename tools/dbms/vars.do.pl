@@ -8,7 +8,6 @@
 # @(-) --[no]backupsPeriodic   display the periodic root of the DBMS backups [${backupsPeriodic}]
 # @(-) --[no]archivesRoot      display the root (non daily) of the DBMS archive path [${archivesRoot}]
 # @(-) --[no]archivesPeriodic  display the root of the periodic DBMS archive path [${archivesPeriodic}]
-# @(-) --service=<name>        optional service name [${service}]
 #
 # @(@) Please remind that each of these directories can be in the service definition of a node, or at the
 # @(@) node level, or also as a value of the service definition, eventually defaulting to a site-level value.
@@ -45,8 +44,7 @@ my $defaults = {
 	backupsRoot => 'no',
 	backupsPeriodic => 'no',
 	archivesRoot => 'no',
-	archivesPeriodic => 'no',
-	service => ''
+	archivesPeriodic => 'no'
 };
 
 my $opt_backupsRoot = false;
@@ -55,10 +53,6 @@ my $opt_backupsPeriodic = false;
 my $opt_archivesRoot = false;
 my $opt_archivesDir = false;
 my $opt_archivesPeriodic = false;
-my $opt_service = $defaults->{service};
-
-# may be overriden by the service if specified
-my $jsonable = $ep->node();;
 
 # -------------------------------------------------------------------------------------------------
 # list archivesDir value - e.g. '\\ftpback-rbx7-618.ovh.net\ns3153065.ip-51-91-25.eu\WS12DEV1\SQLBackups\240101'
@@ -136,8 +130,7 @@ if( !GetOptions(
 	"backupsPeriodic!"	=> \$opt_backupsPeriodic,
 	"archivesRoot!"		=> \$opt_archivesRoot,
 	"archivesDir!"		=> \$opt_archivesDir,
-	"archivesPeriodic!"	=> \$opt_archivesPeriodic,
-	"service=s"			=> \$opt_service )){
+	"archivesPeriodic!"	=> \$opt_archivesPeriodic )){
 
 		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
@@ -157,16 +150,6 @@ msgVerbose( "got backupsPeriodic='".( $opt_backupsPeriodic ? 'true':'false' )."'
 msgVerbose( "got archivesRoot='".( $opt_archivesRoot ? 'true':'false' )."'" );
 msgVerbose( "got archivesDir='".( $opt_archivesDir ? 'true':'false' )."'" );
 msgVerbose( "got archivesPeriodic='".( $opt_archivesPeriodic ? 'true':'false' )."'" );
-msgVerbose( "got service='$opt_service'" );
-
-# if a service is specified, must be defined on the current node
-if( $opt_service ){
-	if( $jsonable->hasService( $opt_service )){
-		$jsonable = TTP::Service->new( $ep, { service => $opt_service });
-	} else {
-		msgErr( "service '$opt_service' if not defined on current execution node" ) ;
-	}
-}
 
 # deprecated options
 msgWarn( "'--backupsDir' option is deprecated in favor of '--backupsPeriodic'. You should update your configurations and/or your code." ) if $opt_backupsDir;
