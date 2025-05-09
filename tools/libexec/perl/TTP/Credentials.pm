@@ -92,12 +92,8 @@ sub get {
 		msgErr( __PACKAGE__."::get() expects an array, found '".ref( $keys )."'" );
 
 	} else {
-		my $finder = TTP::Finder->new( $ep );
-
-		# first look in the TTP/node configurations
-		$res = $ep->var( $keys );
-
 		# prepare a finder for the credentials
+		my $finder = TTP::Finder->new( $ep );
 		my $credentialsFinder = TTP::Credentials::finder();
 
 		# if not found, looks at credentialsDirs/credentialsFiles
@@ -120,6 +116,10 @@ sub get {
 				$finder->evaluate();
 				$res = $ep->var( $keys, { jsonable => $finder });
 			}
+		}
+		# only last, looks at standard site/node configurations
+		if( !defined( $res )){
+			$res = $ep->var( $keys );
 		}
 	}
 
