@@ -7,6 +7,7 @@
     Release date: 
 
     - Remove surrounding double quotes of commands and verbs counts
+    - Fix node-monitor-daemon.pl array ref argument
 
 ### 4.10.0
 

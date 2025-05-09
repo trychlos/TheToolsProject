@@ -233,7 +233,7 @@ sub worker {
 		foreach my $serviceName ( @{$services} ){
 			msgVerbose( "examining service $serviceName" );
 			my $service = TTP::Service->new( $ep, { service => $serviceName });
-			my $commands = $service->commands( @{$keys} );
+			my $commands = $service->commands( $keys );
 			if( hasCommands( $commands )){
 				foreach my $cmd ( @{$commands} ){
 					msgVerbose( "found command='$cmd'" );
