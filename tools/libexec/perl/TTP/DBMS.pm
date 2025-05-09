@@ -72,6 +72,159 @@ sub _getCredentials {
 
 ### Public methods
 
+# ------------------------------------------------------------------------------------------------
+# Getter
+# (I):
+# - none
+# (O):
+# - whether listing the databases should exclude the system databases
+
+sub excludeSystemDatabases {
+	my ( $self ) = @_;
+
+	my $exclude = $self->service()->var([ 'DBMS', 'excludeSystemDatabases' ]);
+	$exclude = true if !defined $exclude;
+
+	return $exclude;
+}
+
+# -------------------------------------------------------------------------------------------------
+# returns the list of databases in this DBMS
+# this base method tries to returns the cached list of previously got databases, else returns undef
+# (I):
+# - none
+# (O):
+# - the list of databases in the instance as an array ref, may be empty, or undef if not yet cached
+
+sub getDatabases {
+	my ( $self ) = @_;
+
+	my $databases = $self->{_dbms}{databases};
+
+	return $databases;
+}
+
+# -------------------------------------------------------------------------------------------------
+# returns the list of tables in the database
+# (I):
+# - the database to list the tables from
+# (O):
+# - undef here
+
+sub getDatabaseTables {
+	my ( $self, $database ) = @_;
+
+	msgWarn( __PACKAGE__."::getDatabaseTables() should not run there" );
+
+	return undef;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Getter/Setter
+# (I):
+# - an optional hosting node
+# (O):
+# - returns the hosting node, defaulting to the current execution node
+
+sub node {
+	my ( $self, $node ) = @_;
+
+	if( defined( $node )){
+		my $ref = ref( $node );
+		if( $ref eq 'TTP::Node' ){
+			$self->{_dbms}{node} = $node;
+			msgVerbose( __PACKAGE__."::node() set hosting node='".$node->name()."'" );
+		} else {
+			msgErr( __PACKAGE__."::node() expects a TTP::Node, got '$ref'" );
+		}
+	}
+
+	return $self->{_dbms}{node};
+}
+
+# ------------------------------------------------------------------------------------------------
+# Getter
+# (I):
+# - none
+# (O):
+# - returns the TTP::Service this DBMS belongs to
+
+sub service {
+	my ( $self ) = @_;
+
+	return $self->{_dbms}{service};
+}
+
+# ------------------------------------------------------------------------------------------------
+# Getter
+# (I):
+# - none
+# (O):
+# - whether this DBMS instance is only bound to local connections, defaulting to true
+
+sub wantsLocal {
+	my ( $self ) = @_;
+
+	my $wantsLocal = $self->service()->var([ 'DBMS', 'wantsLocal' ]);
+	$wantsLocal = true if !defined $wantsLocal;
+
+	return $wantsLocal;
+}
+
+### Class methods
+
+# -------------------------------------------------------------------------------------------------
+# Constructor
+# (I):
+# - the TTP EP entry point
+# - an argument object with following keys:
+#   > service: the TTP::Service object this DBMS belongs to
+# (O):
+# - this object, or undef in case of an error
+
+sub new {
+	my ( $class, $ep, $args ) = @_;
+	$class = ref( $class ) || $class;
+	$args //= {};
+	my $self = $class->SUPER::new( $ep, $args );
+	bless $self, $class;
+
+	$self->{_dbms} = {};
+
+	if( $args->{service} ){
+		my $ref = ref( $args->{service} );
+		if( $ref eq 'TTP::Service' ){
+			$self->{_dbms}{service} = $args->{service};
+			msgVerbose( __PACKAGE__."::new() service='".$args->{service}->name()."'" );
+		} else {
+			msgErr( __PACKAGE__."::new() expects 'service' be a TTP::Service, got '$ref'" );
+			$self = undef;
+		}
+	} else {
+		msgErr( __PACKAGE__."::new() service argument is mandatory, but is not specified" );
+		$self = undef;
+	}
+
+	return $self;
+}
+
+# -------------------------------------------------------------------------------------------------
+# Destructor
+# (I):
+# - instance
+# (O):
+
+sub DESTROY {
+	my $self = shift;
+	$self->SUPER::DESTROY();
+	return;
+}
+
+### Global functions
+### Note for the developer: while a global function doesn't take any argument, it can be called both
+### as a class method 'TTP::Package->method()' or as a global function 'TTP::Package::method()',
+### the former being preferred (hence the writing inside of the 'Class methods' block).
+
 # -------------------------------------------------------------------------------------------------
 # Backup a database
 # (I):
@@ -219,60 +372,6 @@ sub execSqlCommand {
 }
 
 # -------------------------------------------------------------------------------------------------
-# returns the list of databases in this DBMS
-# this base method tries to returns the cached list of previously got databases, else returns undef
-# (I):
-# - none
-# (O):
-# - the list of databases in the instance as an array ref, may be empty, or undef if not yet cached
-
-sub getDatabases {
-	my ( $self ) = @_;
-
-	my $databases = $self->{_dbms}{databases};
-
-	return $databases;
-}
-
-# -------------------------------------------------------------------------------------------------
-# returns the list of tables in the databases
-# (I):
-# - the database to list the tables from
-# (O):
-# - the list of tables in the database as an array ref, ay be empty
-
-sub getDatabaseTables {
-	my ( $self, $database ) = @_;
-
-	my $result = $self->toPackage( 'apiGetDatabaseTables', { database => $database });
-
-	return $result->{output} || [];
-}
-
-# ------------------------------------------------------------------------------------------------
-# Getter/Setter
-# (I):
-# - an optional hosting node
-# (O):
-# - returns the hosting node, defaulting to the current execution node
-
-sub node {
-	my ( $self, $node ) = @_;
-
-	if( defined( $node )){
-		my $ref = ref( $node );
-		if( $ref eq 'TTP::Node' ){
-			$self->{_dbms}{node} = $node;
-			msgVerbose( __PACKAGE__."::node() set hosting node='".$node->name()."'" );
-		} else {
-			msgErr( __PACKAGE__."::node() expects a TTP::Node, got '$ref'" );
-		}
-	}
-
-	return $self->{_dbms}{node};
-}
-
-# -------------------------------------------------------------------------------------------------
 # Getter
 # (I):
 # - none
@@ -313,19 +412,6 @@ sub restoreDatabase {
 	return $result && $result->{ok};
 }
 
-# ------------------------------------------------------------------------------------------------
-# Getter
-# (I):
-# - none
-# (O):
-# - returns the TTP::Service this DBMS belongs to
-
-sub service {
-	my ( $self ) = @_;
-
-	return $self->{_dbms}{service};
-}
-
 # -------------------------------------------------------------------------------------------------
 # address a function in the package which deserves the instance
 #  and returns the result which is expected to be a hash with (at least) a 'ok' key, or undef
@@ -335,94 +421,24 @@ sub service {
 # (O):
 # - the result
 
-sub toPackage {
-	my ( $self, $fname, $parms ) = @_;
-	msgVerbose( __PACKAGE__."::toPackage() entering with fname='".( $fname || '(undef)' )."'" );
-	my $result = undef;
-	if( $fname ){
-		my $package = $self->package();
-		Module::Load::load( $package );
-		if( $package->can( $fname )){
-			$result = $package->$fname( $self, $parms );
-		} else {
-			msgWarn( __PACKAGE__."::toPackage() package '$package' says it cannot '$fname'" );
-		}
-	} else {
-		msgErr( __PACKAGE__."::toPackage() function name must be specified" );
-	}
-	msgVerbose( __PACKAGE__."::toPackage() returning with result='".( defined $result ? ( $result->{ok} ? 'true':'false' ) : '(undef)' )."'" );
-	return $result;
-}
-
-# ------------------------------------------------------------------------------------------------
-# Getter
-# (I):
-# - none
-# (O):
-# - whether this DBMS instance is only bound to local connections, defaulting to true
-
-sub wantsLocal {
-	my ( $self ) = @_;
-
-	my $wantsLocal = $self->service()->var([ 'DBMS', 'wantsLocal' ]);
-	$wantsLocal = true if !defined $wantsLocal;
-
-	return $wantsLocal;
-}
-
-### Class methods
-
-# -------------------------------------------------------------------------------------------------
-# Constructor
-# (I):
-# - the TTP EP entry point
-# - an argument object with following keys:
-#   > service: the TTP::Service object this DBMS belongs to
-# (O):
-# - this object, or undef in case of an error
-
-sub new {
-	my ( $class, $ep, $args ) = @_;
-	$class = ref( $class ) || $class;
-	$args //= {};
-	my $self = $class->SUPER::new( $ep, $args );
-	bless $self, $class;
-
-	$self->{_dbms} = {};
-
-	if( $args->{service} ){
-		my $ref = ref( $args->{service} );
-		if( $ref eq 'TTP::Service' ){
-			$self->{_dbms}{service} = $args->{service};
-			msgVerbose( __PACKAGE__."::new() service='".$args->{service}->name()."'" );
-		} else {
-			msgErr( __PACKAGE__."::new() expects 'service' be a TTP::Service, got '$ref'" );
-			$self = undef;
-		}
-	} else {
-		msgErr( __PACKAGE__."::new() service argument is mandatory, but is not specified" );
-		$self = undef;
-	}
-
-	return $self;
-}
-
-# -------------------------------------------------------------------------------------------------
-# Destructor
-# (I):
-# - instance
-# (O):
-
-sub DESTROY {
-	my $self = shift;
-	$self->SUPER::DESTROY();
-	return;
-}
-
-### Global functions
-### Note for the developer: while a global function doesn't take any argument, it can be called both
-### as a class method 'TTP::Package->method()' or as a global function 'TTP::Package::method()',
-### the former being preferred (hence the writing inside of the 'Class methods' block).
+#sub toPackage {
+#	my ( $self, $fname, $parms ) = @_;
+#	msgVerbose( __PACKAGE__."::toPackage() entering with fname='".( $fname || '(undef)' )."'" );
+#	my $result = undef;
+#	if( $fname ){
+#		my $package = $self->package();
+#		Module::Load::load( $package );
+#		if( $package->can( $fname )){
+#			$result = $package->$fname( $self, $parms );
+#		} else {
+#			msgWarn( __PACKAGE__."::toPackage() package '$package' says it cannot '$fname'" );
+#		}
+#	} else {
+#		msgErr( __PACKAGE__."::toPackage() function name must be specified" );
+#	}
+#	msgVerbose( __PACKAGE__."::toPackage() returning with result='".( defined $result ? ( $result->{ok} ? 'true':'false' ) : '(undef)' )."'" );
+#	return $result;
+#}
 
 1;
 

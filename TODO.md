@@ -50,7 +50,9 @@
 |  137 | 2025- 5- 7 | have mariadb backup/restore |
 |  138 | 2025- 5- 7 | dbms.pl verbs should emphasize that --instance is a SqlServer-specific option and see how to either avoid or generalize that |
 |      | 2025- 5- 7 | emphasize is done - but not generalization |
-|  139 |  |  |
+|      | 2025- 5- 9 | dbms.pl list no more have --instance option has useless for SqlServer |
+|  139 | 2025- 5- 9 | when accessing a service, should be able to specify a target node in the case where the service is available on several nodes in this environment |
+|  140 |  |  |
 
 ---
 ## Done

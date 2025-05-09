@@ -11,11 +11,6 @@
 # @(-) --[no]listtables        list the available tables of the named database [${listtables}]
 #
 # @(@) with:
-# @(@)   dbms.pl list -service <service> -listinstance displays the instance name for the named service on this node
-# @(@)   dbms.pl list -instance <instance> -listdb displays the list of databases in the named instance on this node
-# @(@)   dbms.pl list -instance <instance> -database <database> -listtables displays the list of tables in the named database in the named instance on this node
-#
-# @(@) with:
 # @(@)   'dbms.pl list -service <service> -properties' displays specific properties for this service
 # @(@)   'dbms.pl list -service <service> -listdb' displays the available databases for this service
 # @(@)   'dbms.pl list -service <service> -database <database> -listtables' displays the list of tables in the named database for this service
@@ -86,19 +81,10 @@ sub listDatabases {
 }
 
 # -------------------------------------------------------------------------------------------------
-# list the instance attached to this service in this node
-
-sub listInstance {
-	msgOut( "displaying instance for '$opt_service' service..." );
-	print " $opt_instance".EOL;
-	msgOut( "1 found instance" );
-}
-
-# -------------------------------------------------------------------------------------------------
 # list the tables in the database
 
 sub listTables {
-	msgOut( "displaying tables in '$opt_instance\\$opt_database'..." );
+	msgOut( "displaying tables in '$opt_service\\$opt_database'..." );
 	my $list = $objDbms->getDatabaseTables( $opt_database );
 	foreach my $it ( @{$list} ){
 		print " $it".EOL;
@@ -148,8 +134,6 @@ if( $opt_service ){
 		msgVerbose( "got hosting node='".$objNode->name()."'" );
 		$objService = TTP::Service->new( $ep, { service => $opt_service });
 		$objDbms = $objService->newDbms({ node => $objNode });
-	} else {
-		msgErr( "unable to find an hosting node for '$opt_service' service in this environment" ) ;
 	}
 } else {
 	msgErr( "'--service' option is mandatory, not found" );
@@ -182,7 +166,6 @@ if( !$opt_properties && !$opt_listdb && ( !$opt_database || !$opt_listtables )){
 
 if( !TTP::errs()){
 	listDatabases() if $opt_listdb;
-	#listInstance() if $opt_service && $opt_listinstance;
 	listTables() if $opt_database && $opt_listtables;
 }
 

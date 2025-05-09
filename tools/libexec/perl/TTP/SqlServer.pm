@@ -80,7 +80,8 @@ sub _connect {
 			#my $server = $dbms->ep()->node()->name()."\\".$instance;
 			# SQLServer 2008R2 doesn't like have a server connection string with MSSQLSERVER default instance
 			#$server = undef if $instance eq "MSSQLSERVER";
-			my $server = $self->node()->name();
+			my $server = $self->service()->var([ 'DBMS', 'host' ], $self->node()) || 'localhost:1433';
+			#my $server = $self->node()->name();
 			msgVerbose( __PACKAGE__."::_connect() calling sql_init with server='".( $server || '(undef)' )."', account='$account'..." );
 			$handle = Win32::SqlServer::sql_init( $server, $account, $passwd );
 			if( $handle && $handle->isconnected()){
@@ -214,9 +215,10 @@ sub getDatabases {
 		$databases = [];
 		my $res = $self->_sqlExec( "select name from master.sys.databases order by name" );
 		if( $res->{ok} ){
+			my $excludeSystemDatabases = $self->excludeSystemDatabases();
 			foreach my $it ( @{$res->{result}} ){
 				my $dbname = $it->{name};
-				if( !grep( /^$dbname$/, @{$Const->{systemDatabases}} )){
+				if( !$excludeSystemDatabases || !grep( /^$dbname$/, @{$Const->{systemDatabases}} )){
 					push( @{$databases}, $dbname );
 				}
 			}
@@ -226,6 +228,30 @@ sub getDatabases {
 	}
 
 	return $databases;
+}
+
+# ------------------------------------------------------------------------------------------------
+# returns the list of tables in the database
+# (I):
+# - the database to list the tables from
+# (O):
+# - the list of tables, which may be empty
+
+sub getDatabaseTables {
+	my ( $self, $database ) = @_;
+
+	my $tables = [];
+	my $res = $self->_sqlExec( "SELECT TABLE_SCHEMA,TABLE_NAME FROM $database.INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE' ORDER BY TABLE_SCHEMA,TABLE_NAME" );
+	if( $res->{ok} ){
+		foreach my $it ( @{$res->{result}} ){
+			if( !grep( /^$it->{TABLE_NAME}$/, @{$Const->{systemTables}} )){
+				push( @{$tables}, "$it->{TABLE_SCHEMA}.$it->{TABLE_NAME}" );
+			}
+		}
+		msgVerbose( __PACKAGE__."::getDatabaseTables() got ".scalar @{$tables}." table(s)" );
+	}
+
+	return $tables;
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -364,38 +390,6 @@ sub apiExecSqlCommand {
 		$result = _sqlExec( $dbms, $parms->{command}, $opts );
 	}
 	msgVerbose( __PACKAGE__."::apiExecSqlCommand() result='".( $result->{ok} ? 'true' : 'false' )."'" );
-	return $result;
-}
-
-# ------------------------------------------------------------------------------------------------
-# returns the list of tables in the database
-# (I):
-# - the DBMS instance
-# - a parms hash with following keys:
-#   > database: the database name
-# (O):
-# returns a hash with following keys:
-# - ok: true|false
-# - output: a ref to an array of output lines
-
-sub apiGetDatabaseTables {
-	my ( $me, $dbms, $parms ) = @_;
-	my $result = { ok => false, output => [] };
-	if( $parms->{database} ){
-		msgVerbose( __PACKAGE__."::apiGetDatabaseTables() entering with instance='".$dbms->instance()."', database='$parms->{database}'" );
-		my $sqlres = _sqlExec( $dbms,  "SELECT TABLE_SCHEMA,TABLE_NAME FROM $parms->{database}.INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE' ORDER BY TABLE_SCHEMA,TABLE_NAME" );
-		if( $sqlres->{ok} ){
-			foreach my $it ( @{$sqlres->{result}} ){
-				if( !grep( /^$it->{TABLE_NAME}$/, @{$Const->{systemTables}} )){
-					push( @{$result->{output}}, "$it->{TABLE_SCHEMA}.$it->{TABLE_NAME}" );
-				}
-			}
-			msgVerbose( __PACKAGE__."::apiGetDatabaseTables() found ".scalar @{$result->{output}}." tables" );
-		}
-	} else {
-		msgErr( __PACKAGE__."::apiGetDatabaseTables() database is mandatory, but not specified" );
-	}
-	msgVerbose( __PACKAGE__."::apiGetDatabaseTables() result='".( $result->{ok} ? 'true' : 'false' )."'" );
 	return $result;
 }
 
