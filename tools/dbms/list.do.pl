@@ -5,9 +5,10 @@
 # @(-) --[no]dummy             dummy run [${dummy}]
 # @(-) --[no]verbose           run verbosely [${verbose}]
 # @(-) --service=<name>        acts on the named service [${service}]
-# @(-) --[no]listdb            list the databases of the named instance [${listdb}]
+# @(-) --[no]properties        display specific properties of the named service [${properties}]
+# @(-) --[no]listdb            list the available databases on the named service [${listdb}]
 # @(-) --database=<name>       acts on the named database [${database}]
-# @(-) --[no]listtables        list the tables of the named database [${listtables}]
+# @(-) --[no]listtables        list the available tables of the named database [${listtables}]
 #
 # @(@) with:
 # @(@)   dbms.pl list -service <service> -listinstance displays the instance name for the named service on this node
@@ -15,8 +16,9 @@
 # @(@)   dbms.pl list -instance <instance> -database <database> -listtables displays the list of tables in the named database in the named instance on this node
 #
 # @(@) with:
-# @(@)   dbms.pl list -service <service> -listdb displays the available databases for this service
-# @(@)   dbms.pl list -service <service> -database <database> -listtables displays the list of tables in the named database for this service
+# @(@)   'dbms.pl list -service <service> -properties' displays specific properties for this service
+# @(@)   'dbms.pl list -service <service> -listdb' displays the available databases for this service
+# @(@)   'dbms.pl list -service <service> -database <database> -listtables' displays the list of tables in the named database for this service
 #
 # TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
@@ -40,7 +42,6 @@ use strict;
 use utf8;
 use warnings;
 
-use TTP::DBMS;
 use TTP::Service;
 
 my $defaults = {
@@ -49,33 +50,35 @@ my $defaults = {
 	dummy => 'no',
 	verbose => 'no',
 	service => '',
+	properties => 'no',
 	listdb => 'no',
 	database => '',
 	listtables => 'no'
 };
 
 my $opt_service = $defaults->{service};
+my $opt_properties = false;
 my $opt_listdb = false;
 my $opt_database = $defaults->{database};
 my $opt_listtables = false;
 
-# may be overriden by the service if specified
-my $serviceNode = undef;
-my $jsonable = $ep->node();
-my $dbms = undef;
+# the node which hosts the requested service
+my $objNode = undef;
+# the service object
+my $objService = undef;
+# the DBMS object
+my $objDbms = undef;
+
+my $jsonable;
+my $opt_instance;
 
 # -------------------------------------------------------------------------------------------------
-# list the databases in the instance or the service
+# list the databases in the service
 
 sub listDatabases {
 	my $databases = [];
-	if( $opt_service ){
-		msgOut( "displaying databases attached to '$opt_service' service..." );
-		$databases = $jsonable->var([ 'DBMS', 'databases' ]);
-	} else {
-		msgOut( "displaying databases in '$opt_instance' instance..." );
-		$databases = $dbms->getDatabases();
-	}
+	msgOut( "displaying databases attached to '$opt_service' service..." );
+	$databases = $objDbms->getDatabases() || [];
 	foreach my $db ( @{$databases} ){
 		print " $db".EOL;
 	}
@@ -96,7 +99,7 @@ sub listInstance {
 
 sub listTables {
 	msgOut( "displaying tables in '$opt_instance\\$opt_database'..." );
-	my $list = $dbms->getDatabaseTables( $opt_database );
+	my $list = $objDbms->getDatabaseTables( $opt_database );
 	foreach my $it ( @{$list} ){
 		print " $it".EOL;
 	}
@@ -113,6 +116,7 @@ if( !GetOptions(
 	"dummy!"			=> sub { $ep->runner()->dummy( @_ ); },
 	"verbose!"			=> sub { $ep->runner()->verbose( @_ ); },
 	"service=s"			=> \$opt_service,
+	"properties!"		=> \$opt_properties,
 	"listdb!"			=> \$opt_listdb,
 	"database=s"		=> \$opt_database,
 	"listtables!"		=> \$opt_listtables )){
@@ -130,42 +134,56 @@ msgVerbose( "got colored='".( $ep->runner()->colored() ? 'true':'false' )."'" );
 msgVerbose( "got dummy='".( $ep->runner()->dummy() ? 'true':'false' )."'" );
 msgVerbose( "got verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got service='$opt_service'" );
+msgVerbose( "got properties='".( $opt_properties ? 'true':'false' )."'" );
 msgVerbose( "got listdb='".( $opt_listdb ? 'true':'false' )."'" );
 msgVerbose( "got database='$opt_database'" );
 msgVerbose( "got listtables='".( $opt_listtables ? 'true':'false' )."'" );
 
 # must have --service option
 # find the node which hosts this service in this same environment (should be at most one)
+# anxd check that the service is DBMS-aware
 if( $opt_service ){
-	$serviceNode = TTP::Node->findByService( $ep->node()->environment(), $opt_service );
-	if( $jsonable->hasService( $opt_service )){
-		$jsonable = TTP::Service->new( $ep, { service => $opt_service });
+	$objNode = TTP::Node->findByService( $ep->node()->environment(), $opt_service );
+	if( $objNode ){
+		msgVerbose( "got hosting node='".$objNode->name()."'" );
+		$objService = TTP::Service->new( $ep, { service => $opt_service });
+		$objDbms = $objService->newDbms({ node => $objNode });
 	} else {
-		msgErr( "service '$opt_service' if not defined on current execution node" ) ;
+		msgErr( "unable to find an hosting node for '$opt_service' service in this environment" ) ;
 	}
 } else {
 	msgErr( "'--service' option is mandatory, not found" );
 }
 
-# instanciates the DBMS class
-$dbms = TTP::DBMS->new( $ep, { instance => $opt_instance }) if !TTP::errs();
+# if a database is specified must exists in the service
+#if( !TTP::errs() && $opt_database ){
+#	if( $opt_service ){
+#		my @databases = $objService->var([ 'DBMS', 'databases' ]);
+#		if( !grep( /$opt_database/, @databases )){
+#			msgErr( "database '$opt_database' in not defined in '$opt_service' service" );
+#		}
+#	} elsif( !$objDbms->databaseExists( $opt_database )){
+#		msgErr( "database '$opt_database' doesn't exist in '$opt_instance' instance" );
+#	}
+#}
 
-# if a database is specified must exists in the service or in the instance
-if( !TTP::errs() && $opt_database ){
-	if( $opt_service ){
-		my @databases = $jsonable->var([ 'DBMS', 'databases' ]);
-		if( !grep( /$opt_database/, @databases )){
-			msgErr( "database '$opt_database' in not defined in '$opt_service' service" );
-		}
-	} elsif( !$dbms->databaseExists( $opt_database )){
-		msgErr( "database '$opt_database' doesn't exist in '$opt_instance' instance" );
-	}
+# --database and --listtables work together
+if( $opt_database && !$opt_listtables ){
+	msgErr( "'--database' option has been specified, but nothing has been asked to be done with. Did you miss '--listtables' option ?" );
+}
+if( !$opt_database && $opt_listtables ){
+	msgErr( "'--listtables' option has been specified, but '--database' is missing" );
+}
+
+# should have something to do
+if( !$opt_properties && !$opt_listdb && ( !$opt_database || !$opt_listtables )){
+	msgWarn( "neither '--properties', or '--listdb' or '--listtables' options have been specified, nothing to do" );
 }
 
 if( !TTP::errs()){
-	listDatabases() if $opt_instance && $opt_listdb;
-	listInstance() if $opt_service && $opt_listinstance;
-	listTables() if $opt_instance && $opt_database && $opt_listtables;
+	listDatabases() if $opt_listdb;
+	#listInstance() if $opt_service && $opt_listinstance;
+	listTables() if $opt_database && $opt_listtables;
 }
 
 TTP::exit();

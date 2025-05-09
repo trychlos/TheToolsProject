@@ -9,6 +9,7 @@
     - site.example/backup-monitor-daemon takes advantage of TTP::Node->hasService() method
     - Improve TTP::Node->hasService() method to take advantage of TTP::Service->list()
     - Define new TTP::Node->list() class method to get all available nodes, thus bumping minor candidate version number
+    - Transform TTP::MongoDB and TTP::SqlServer into TTP::DBMS-derived classes
 
 ### 4.10.1
 

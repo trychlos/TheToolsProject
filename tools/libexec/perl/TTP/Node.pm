@@ -345,6 +345,33 @@ sub _enumTestSingle {
 }
 
 # ------------------------------------------------------------------------------------------------
+# Returns the first available node which host the named service in the specified environment
+# there should be at most one candidate node, though we do not check that here
+# (I):
+# - environment identifier
+# - service name
+# (O):
+# - the first found node as a TTP::Node instance
+
+sub findByService {
+	my ( $class, $environment, $service ) = @_;
+	$class = ref( $class ) || $class;
+	msgDebug( __PACKAGE__."::findByService() environment='$environment' service='$service'" );
+
+	my $found = undef;
+	my $nodes = $class->list();
+	foreach my $name ( @{$nodes} ){
+		my $candidate = $class->new( $ep, { node => $name });
+		if( $candidate && $candidate->hasService( $service ) && $candidate->environment() eq $environment ){
+			$found = $candidate;
+			last;
+		}
+	}
+
+	return $found;
+}
+
+# ------------------------------------------------------------------------------------------------
 # Returns the first available node candidate on this host
 # (I):
 # - none
@@ -474,7 +501,7 @@ sub new {
 			exit( 1 );
 		} else {
 			$self = undef;
-			msgErr( "an invalid JSON configuration has been detected for '$node'" );
+			msgWarn( "an invalid JSON configuration has been detected for '$node'" );
 		}
 	}
 

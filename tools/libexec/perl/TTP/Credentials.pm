@@ -78,11 +78,14 @@ sub finder {
 # Note that we first search in toops/host configuration, and then in a dedicated credentials JSON file with the same key
 # (I):
 # - an array ref of the keys to be read
+# - an optional options hash with following keys:
+#   > jsonable: the IJSONable (expects a TTP::Node) to search for, defaulting to current execution node
 # (O):
 # - the object found at the given address, or undef
 
 sub get {
-	my ( $keys ) = @_;
+	my ( $keys, $opts ) = @_;
+	$opts //= {};
 	my $res = undef;
 
 	if( ref( $keys ) ne 'ARRAY' ){
@@ -109,7 +112,7 @@ sub get {
 		}
 		# if not found, looks at credentials/<host>.json
 		if( !defined( $res )){
-			my $node = $ep->node()->name();
+			my $node = $opts->{jsonable} ? $opts->{jsonable}->name() : $ep->node()->name();
 			if( $finder->jsonLoad({ findable => {
 				dirs => [ $credentialsFinder->{dirs}, "$node.json" ],
 				wantsAll => false
@@ -119,6 +122,7 @@ sub get {
 			}
 		}
 	}
+
 	return $res;
 }
 

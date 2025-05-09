@@ -76,6 +76,11 @@
                     "description": "The Perl TTP package to be use'd when working with this DBMS service.",
                     "type": "string",
                     "default": ""
+                },
+                "wantsLocal": {
+                    "description": "Whether this DBMS instance is bound only to local connections.",
+                    "type": "boolean",
+                    "default": true
                 }
             }
         },

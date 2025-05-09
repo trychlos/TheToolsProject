@@ -21,6 +21,9 @@
 package TTP::SqlServer;
 die __PACKAGE__ . " must be loaded as TTP::SqlServer\n" unless __PACKAGE__ eq 'TTP::SqlServer';
 
+use base qw( TTP::DBMS );
+our $VERSION = '1.00';
+
 use strict;
 use utf8;
 use warnings;
@@ -135,33 +138,6 @@ sub apiExecSqlCommand {
 	return $result;
 }
 
-# -------------------------------------------------------------------------------------------------
-# get and returns the list of databases in the instance
-# (I):
-# - the DBMS instance
-# (O):
-# returns a hash with following keys:
-# - ok: true|false
-# - output: a ref to an array of output lines
-
-sub apiGetInstanceDatabases {
-	my ( $me, $dbms ) = @_;
-	my $result = { ok => false, output => [] };
-	msgVerbose( __PACKAGE__."::apiGetInstanceDatabases() entering with instance='".$dbms->instance()."'" );
-	my $sqlres = _sqlExec( $dbms, "select name from master.sys.databases order by name" );
-	if( $sqlres->{ok} ){
-		foreach( @{$sqlres->{result}} ){
-			my $dbname = $_->{'name'};
-			if( !grep( /^$dbname$/, @{$Const->{systemDatabases}} )){
-				push( @{$result->{output}}, $dbname );
-			}
-		}
-		msgVerbose( __PACKAGE__."::apiGetInstanceDatabases() found ".scalar @{$result->{output}}." databases" );
-	}
-	msgVerbose( __PACKAGE__."::apiGetInstanceDatabases() result='".( $result->{ok} ? 'true' : 'false' )."'" );
-	return $result;
-}
-
 # ------------------------------------------------------------------------------------------------
 # returns the list of tables in the database
 # (I):
@@ -238,69 +214,6 @@ sub apiRestoreDatabase {
 	}
 	msgVerbose( __PACKAGE__."::apiRestoreDatabase() result='".( $result->{ok} ? 'true' : 'false' )."'" );
 	return $result;
-}
-
-# ------------------------------------------------------------------------------------------------
-# get a connection to a local SqlServer instance
-# (I):
-# - the DBMS instance
-# (O):
-# - an opaque handle on the connection, or undef
-
-sub _connect {
-	my ( $dbms ) = @_;
-	$dbms->{_sqlserver} //= {};
-	my $sqlsrv = $dbms->{_sqlserver}{sqlsrv};
-	if( $sqlsrv ){
-		msgVerbose( __PACKAGE__."::_connect() instance already connected" );
-	} else {
-		my $instance = $dbms->instance();
-		Win32::SqlServer::SetDefaultForEncryption( 'Optional', true );
-		my( $account, $passwd ) = _getCredentials( $dbms );
-		if( length $account && length $passwd ){
-			my $server = $dbms->ep()->node()->name()."\\".$instance;
-			# SQLServer 2008R2 doesn't like have a server connection string with MSSQLSERVER default instance
-			$server = undef if $instance eq "MSSQLSERVER";
-			msgVerbose( __PACKAGE__."::_connect() calling sql_init with server='".( $server || '(undef)' )."', account='$account'..." );
-			$sqlsrv = Win32::SqlServer::sql_init( $server, $account, $passwd );
-			msgVerbose( __PACKAGE__."::_connect() sqlsrv->isconnected()=".$sqlsrv->isconnected());
-			#print Dumper( $sqlsrv );
-			if( $sqlsrv && $sqlsrv->isconnected()){
-				$sqlsrv->{ErrInfo}{MaxSeverity} = 17;
-				$sqlsrv->{ErrInfo}{SaveMessages} = 1;
-				msgVerbose( __PACKAGE__."::_connect() successfully connected" );
-				$dbms->{_sqlserver}{sqlsrv} = $sqlsrv;
-			} else {
-				msgErr( __PACKAGE__."::_connect() unable to connect to '$instance' instance" );
-				$sqlsrv = undef;
-			}
-		} else {
-			msgErr( __PACKAGE__."::_connect() unable to get account/password couple" );
-		}
-	}
-	return $sqlsrv;
-}
-
-# ------------------------------------------------------------------------------------------------
-# returns the first account defined for the named instance
-# (I):
-# - the DBMS instance
-# (O):
-# - an array ( username, password )
-
-sub _getCredentials {
-	my ( $dbms ) = @_;
-	my $credentials = TTP::Credentials::get([ 'DBMS', $dbms->instance(), ]);
-	my $account = undef;
-	my $passwd = undef;
-	if( $credentials ){
-		$account = ( keys %{$credentials} )[0];
-		$passwd = $credentials->{$account};
-		msgVerbose( __PACKAGE__."::_getCredentials() got account='".( $account || '(undef)' )."'" );
-	} else {
-		msgErr( __PACKAGE__."::_getCredentials() unable to get credentials with provided arguments" );
-	}
-	return ( $account, $passwd );
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -414,10 +327,53 @@ sub _restoreDatabaseVerify {
 	return $res->{ok};
 }
 
+### Private methods
+
+# ------------------------------------------------------------------------------------------------
+# get a connection to a local SqlServer instance
+# (I):
+# - the DBMS instance
+# (O):
+# - an opaque handle on the connection, or undef
+
+sub _connect {
+	my ( $self ) = @_;
+
+	my $handle = $self->{_dbms}{connect};
+	if( $handle ){
+		msgVerbose( __PACKAGE__."::_connect() already connected" );
+
+	} else {
+		my( $account, $passwd ) = $self->_getCredentials();
+		if( length $account && length $passwd ){
+			Win32::SqlServer::SetDefaultForEncryption( 'Optional', true );
+			#my $server = $dbms->ep()->node()->name()."\\".$instance;
+			# SQLServer 2008R2 doesn't like have a server connection string with MSSQLSERVER default instance
+			#$server = undef if $instance eq "MSSQLSERVER";
+			my $server = undef;
+			msgVerbose( __PACKAGE__."::_connect() calling sql_init with server='".( $server || '(undef)' )."', account='$account'..." );
+			$handle = Win32::SqlServer::sql_init( $server, $account, $passwd );
+			if( $handle && $handle->isconnected()){
+				$handle->{ErrInfo}{MaxSeverity} = 17;
+				$handle->{ErrInfo}{SaveMessages} = 1;
+				$self->{_dbms}{connect} = $handle;
+				#print STDERR Dumper( $handle );
+				msgVerbose( __PACKAGE__."::_connect() successfully connected" );
+			} else {
+				msgErr( __PACKAGE__."::_connect() unable to connect to the server" );
+				$handle = undef;
+			}
+		} else {
+			msgErr( __PACKAGE__."::_connect() unable to get account/password couple" );
+		}
+	}
+
+	return $handle;
+}
+
 # -------------------------------------------------------------------------------------------------
 # execute a SQL request
 # (I):
-# - dbms: the connection object as provided by Dbms.pm
 # - sql: the command
 # - opts: an optional options hash with following keys:
 #   > printStdout, defaulting to true
@@ -431,7 +387,7 @@ sub _restoreDatabaseVerify {
 # - columns: as an array ref (if asked for)
 
 sub _sqlExec {
-	my ( $dbms, $sql, $opts ) = @_;
+	my ( $self, $sql, $opts ) = @_;
 	$opts //= {};
 	msgErr( __PACKAGE__."::_sqlExec() sql is mandatory, but is not specified" ) if !$sql;
 	my $res = {
@@ -441,7 +397,7 @@ sub _sqlExec {
 	};
 	my $sqlsrv = undef;
 	if( !TTP::errs()){
-		$sqlsrv = _connect( $dbms );
+		$sqlsrv = $self->_connect();
 	}
 	if( !TTP::errs()){
 		#msgVerbose( __PACKAGE__."::_sqlExec() executing '$sql'" );
@@ -508,6 +464,95 @@ sub _sqlExec {
 	msgVerbose( __PACKAGE__."::_sqlExec() returns '".( $res->{ok} ? 'true':'false' )."'" );
 	return $res;
 }
+
+### Public methods
+
+# -------------------------------------------------------------------------------------------------
+# get and returns the list of databases in the server, minus the predefined system databases
+# (I):
+# - none
+# (O):
+# - returns the list of databases in the instance as an array ref, may be empty
+
+sub getDatabases {
+	my ( $self ) = @_;
+
+	my $databases = $self->TTP::DBMS::getDatabases();
+	if( defined( $databases )){
+		msgVerbose( __PACKAGE__."::getDatabases() got cached databases [ ". join( ', ', @{$databases} )." ]" );
+	} else {
+		my $res = $self->_sqlExec( "select name from master.sys.databases order by name" );
+		if( $res->{ok} ){
+			foreach my $it ( @{$res->{result}} ){
+				my $dbname = $it->{name};
+				if( !grep( /^$dbname$/, @{$Const->{systemDatabases}} )){
+					push( @{$databases}, $dbname );
+				}
+			}
+			msgVerbose( __PACKAGE__."::getDatabases() got databases [ ". join( ', ', @{$databases} )." ]" );
+			$self->{_dbms}{databases} = $databases;
+		}
+	}
+
+	return $databases || [];
+}
+
+# -------------------------------------------------------------------------------------------------
+# Getter
+# (I):
+# - none
+# (O):
+# - returns the instance name
+
+sub instance {
+	my ( $self ) = @_;
+
+	my $instance = $self->{_dbms}{instance};
+
+	return $instance;
+}
+
+### Class methods
+
+# -------------------------------------------------------------------------------------------------
+# Constructor
+# (I):
+# - the TTP EP entry point
+# - an argument object with following keys:
+#   > service: the TTP::Service object this DBMS belongs to
+# (O):
+# - this object, or undef in case of an error
+
+sub new {
+	my ( $class, $ep, $args ) = @_;
+	$class = ref( $class ) || $class;
+	$args //= {};
+	my $self = $class->SUPER::new( $ep, $args );
+
+	if( $self ){
+		bless $self, $class;
+		msgVerbose( __PACKAGE__."::new()" );
+	}
+
+	return $self;
+}
+
+# -------------------------------------------------------------------------------------------------
+# Destructor
+# (I):
+# - instance
+# (O):
+
+sub DESTROY {
+	my $self = shift;
+	$self->SUPER::DESTROY();
+	return;
+}
+
+### Global functions
+### Note for the developer: while a global function doesn't take any argument, it can be called both
+### as a class method 'TTP::Package->method()' or as a global function 'TTP::Package::method()',
+### the former being preferred (hence the writing inside of the 'Class methods' block).
 
 1;
 
