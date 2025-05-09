@@ -13,6 +13,7 @@
     - TTP::Credentials->get() only looks at standard site/node configurations at last
     - DBMS services now let the user configure the 'excludeSystemDatabases' property
     - TTP::Node->findByService() displays the names of the found candidates
+	- Get SqlServer-specific properties
 
 ### 4.10.1
 
