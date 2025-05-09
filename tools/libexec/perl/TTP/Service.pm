@@ -38,6 +38,7 @@ use warnings;
 use Carp;
 use Config;
 use Data::Dumper;
+use Module::Load;
 use Role::Tiny::With;
 
 use TTP;
@@ -75,6 +76,12 @@ sub commands {
 	my ( $self, $keys ) = @_;
 
 	my $commands = [];
+
+	# search in this same service definition if exists
+	if( $self->jsonLoaded()){
+		my $part = TTP::commandByOS( $keys, { withCommands => true, jsonable => $self });
+		push( @{$commands}, @{$part} ) if $part;
+	}
 
 	# search in 'services'
 	my $serviceKeys = [ 'services', $self->name(), @{$keys} ];
@@ -152,6 +159,40 @@ sub name {
 	my ( $self ) = @_;
 
 	return $self->{_name};
+}
+
+# ------------------------------------------------------------------------------------------------
+# Instanciates the DBMS object
+# (I):
+# - an optional arguments object with following keys:
+#   > node: the hosting node, defaulting to the current execution node
+# (O):
+# - returns the DBMS-derived instance or undef
+
+sub newDbms {
+	my ( $self, $args ) = @_;
+	$args //= {};
+
+	my $dbms = undef;
+
+	my $package = $self->var([ 'DBMS', 'package' ]);
+	if( $package ){
+		msgVerbose( __PACKAGE__."::newDbms() found package='$package'" );
+		load $package, ':all';
+		if( $package->can( 'new' )){
+			$dbms = $package->new( $ep, { service => $self });
+			if( $dbms ){
+				$dbms->node( $args->{node} || $ep->node());
+			}
+		} else {
+			msgWarn( __PACKAGE__."::newDbms() package '$package' says it cannot 'new()'" );
+		}
+	} else {
+		msgErr( __PACKAGE__."::newDbms() unable to find a suitable DBMS package for '".$self->name()."' service" );
+		$dbms = undef;
+	}
+
+	return $dbms;
 }
 
 # ------------------------------------------------------------------------------------------------

@@ -43,6 +43,33 @@ use TTP::Path;
 
 ### Private methods
 
+# ------------------------------------------------------------------------------------------------
+# returns the first account defined for this DBMS service
+# (I):
+# - none
+# (O):
+# - an array ( username, password )
+
+sub _getCredentials {
+	my ( $self ) = @_;
+
+	my $credentials = TTP::Credentials::get([ 'services', $self->service()->name() ], { jsonable => $self->node() });
+	#print STDERR "credentials=".TTP::chompDumper( $credentials ).EOL;
+	my $account = undef;
+	my $passwd = undef;
+
+	if( $credentials ){
+		$account = ( keys %{$credentials} )[0];
+		$passwd = $credentials->{$account};
+		msgVerbose( __PACKAGE__."::_getCredentials() got account='".( $account || '(undef)' )."'" );
+
+	} else {
+		msgErr( __PACKAGE__."::_getCredentials() unable to get credentials with provided arguments" );
+	}
+
+	return ( $account, $passwd );
+}
+
 ### Public methods
 
 # -------------------------------------------------------------------------------------------------
@@ -192,24 +219,19 @@ sub execSqlCommand {
 }
 
 # -------------------------------------------------------------------------------------------------
-# returns the list of instance databases
-# cache the result (the list of found databases) to request the DBMS only once
+# returns the list of databases in this DBMS
+# this base method tries to returns the cached list of previously got databases, else returns undef
 # (I):
 # - none
 # (O):
-# - the list of databases in the instance as an array ref, ay be empty
+# - the list of databases in the instance as an array ref, may be empty, or undef if not yet cached
 
 sub getDatabases {
 	my ( $self ) = @_;
 
-	if( $self->{_dbms}{databases} ){
-		return $self->{_dbms}{databases};
-	}
+	my $databases = $self->{_dbms}{databases};
 
-	my $result = $self->toPackage( 'apiGetInstanceDatabases' );
-	$self->{_dbms}{databases} = $result->{output} || [];
-
-	return $self->{_dbms}{databases};
+	return $databases;
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -227,17 +249,26 @@ sub getDatabaseTables {
 	return $result->{output} || [];
 }
 
-# -------------------------------------------------------------------------------------------------
-# Getter
+# ------------------------------------------------------------------------------------------------
+# Getter/Setter
 # (I):
-# - none
+# - an optional hosting node
 # (O):
-# returns the instance name
+# - returns the hosting node, defaulting to the current execution node
 
-sub instance {
-	my ( $self ) = @_;
+sub node {
+	my ( $self, $node ) = @_;
 
-	return $self->{_dbms}{instance};
+	if( defined( $node )){
+		my $ref = ref( $node );
+		if( $ref eq 'TTP::Node' ){
+			$self->{_dbms}{node} = $node;
+		} else {
+			msgErr( __PACKAGE__."::node() expects a TTP::Node, got '$ref'" );
+		}
+	}
+
+	return $self->{_dbms}{node};
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -245,13 +276,13 @@ sub instance {
 # (I):
 # - none
 # (O):
-# returns the name of the package which manages this instance type
+# returns the name of the package which manages this DBMS
 
-sub package {
-	my ( $self ) = @_;
-
-	return $self->{_dbms}{package};
-}
+#sub package {
+#	my ( $self ) = @_;
+#
+#	return $self->{_dbms}{package};
+#}
 
 # ------------------------------------------------------------------------------------------------
 # Restore a file into a database
@@ -279,6 +310,19 @@ sub restoreDatabase {
 		msgErr( __PACKAGE__."::restoreDatabase() ".$self->instance()."\\$parms->{database} NOT OK" );
 	}
 	return $result && $result->{ok};
+}
+
+# ------------------------------------------------------------------------------------------------
+# Getter
+# (I):
+# - none
+# (O):
+# - returns the TTP::Service this DBMS belongs to
+
+sub service {
+	my ( $self ) = @_;
+
+	return $self->{_dbms}{service};
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -309,6 +353,22 @@ sub toPackage {
 	return $result;
 }
 
+# ------------------------------------------------------------------------------------------------
+# Getter
+# (I):
+# - none
+# (O):
+# - whether this DBMS instance is only bound to local connections, defaulting to true
+
+sub wantsLocal {
+	my ( $self ) = @_;
+
+	my $wantsLocal = $self->service()->var([ 'DBMS', 'wantsLocal' ]);
+	$wantsLocal = true if !defined $wantsLocal;
+
+	return $wantsLocal;
+}
+
 ### Class methods
 
 # -------------------------------------------------------------------------------------------------
@@ -316,7 +376,7 @@ sub toPackage {
 # (I):
 # - the TTP EP entry point
 # - an argument object with following keys:
-#   > instance: the instance name
+#   > service: the TTP::Service object this DBMS belongs to
 # (O):
 # - this object, or undef in case of an error
 
@@ -327,20 +387,19 @@ sub new {
 	my $self = $class->SUPER::new( $ep, $args );
 	bless $self, $class;
 
-	if( $args->{instance} ){
-		$self->{_dbms}{instance} = $args->{instance};
-		my $package = $ep->var([ 'DBMS', 'byInstance', $args->{instance}, 'package' ]);
-		#print __PACKAGE__."::var() package='".( $package || '(undef)' )."'".EOL;
-		if( $package ){
-			$self->{_dbms}{package} = $package;
-			msgVerbose( __PACKAGE__."::new() package='$package'" );
+	$self->{_dbms} = {};
+
+	if( $args->{service} ){
+		my $ref = ref( $args->{service} );
+		if( $ref eq 'TTP::Service' ){
+			$self->{_dbms}{service} = $args->{service};
+			msgVerbose( __PACKAGE__."::new() service='".$args->{service}->name()."'" );
 		} else {
-			msgErr( __PACKAGE__."::new() unable to find a suitable package for '$args->{instance}' instance" );
+			msgErr( __PACKAGE__."::new() expects 'service' be a TTP::Service, got '$ref'" );
 			$self = undef;
 		}
-
 	} else {
-		msgErr( __PACKAGE__."::new() instance is mandatory, but is not specified" );
+		msgErr( __PACKAGE__."::new() service argument is mandatory, but is not specified" );
 		$self = undef;
 	}
 
