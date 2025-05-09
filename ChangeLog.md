@@ -2,12 +2,13 @@
 
 ## ChangeLog
 
-### 4.10.2-rc.0
+### 4.11.0-rc.0
 
     Release date: 
 
     - site.example/backup-monitor-daemon takes advantage of TTP::Node->hasService() method
     - Improve TTP::Node->hasService() method to take advantage of TTP::Service->list()
+    - Define new TTP::Node->list() class method to get all available nodes, thus bumping minor candidate version number
 
 ### 4.10.1
 

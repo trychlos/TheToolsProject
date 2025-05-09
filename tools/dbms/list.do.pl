@@ -5,8 +5,6 @@
 # @(-) --[no]dummy             dummy run [${dummy}]
 # @(-) --[no]verbose           run verbosely [${verbose}]
 # @(-) --service=<name>        acts on the named service [${service}]
-# @(-) --[no]listinstance      display the Sql Server instance which manages the named service [${listinstance}]
-# @(-) --instance=<name>       acts on the named Sql Server instance [${instance}]
 # @(-) --[no]listdb            list the databases of the named instance [${listdb}]
 # @(-) --database=<name>       acts on the named database [${database}]
 # @(-) --[no]listtables        list the tables of the named database [${listtables}]
@@ -15,6 +13,10 @@
 # @(@)   dbms.pl list -service <service> -listinstance displays the instance name for the named service on this node
 # @(@)   dbms.pl list -instance <instance> -listdb displays the list of databases in the named instance on this node
 # @(@)   dbms.pl list -instance <instance> -database <database> -listtables displays the list of tables in the named database in the named instance on this node
+#
+# @(@) with:
+# @(@)   dbms.pl list -service <service> -listdb displays the available databases for this service
+# @(@)   dbms.pl list -service <service> -database <database> -listtables displays the list of tables in the named database for this service
 #
 # TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
@@ -47,22 +49,18 @@ my $defaults = {
 	dummy => 'no',
 	verbose => 'no',
 	service => '',
-	listinstance => 'no',
-	instance => 'MSSQLSERVER',
 	listdb => 'no',
 	database => '',
 	listtables => 'no'
 };
 
 my $opt_service = $defaults->{service};
-my $opt_listinstance = false;
-my $opt_instance = $defaults->{instance};
-my $opt_instance_set = false;
 my $opt_listdb = false;
 my $opt_database = $defaults->{database};
 my $opt_listtables = false;
 
 # may be overriden by the service if specified
+my $serviceNode = undef;
 my $jsonable = $ep->node();
 my $dbms = undef;
 
@@ -115,12 +113,6 @@ if( !GetOptions(
 	"dummy!"			=> sub { $ep->runner()->dummy( @_ ); },
 	"verbose!"			=> sub { $ep->runner()->verbose( @_ ); },
 	"service=s"			=> \$opt_service,
-	"listinstance!"		=> \$opt_listinstance,
-	"instance=s"		=> sub {
-		my( $opt_name, $opt_value ) = @_;
-		$opt_instance = $opt_value;
-		$opt_instance_set = true;
-	},
 	"listdb!"			=> \$opt_listdb,
 	"database=s"		=> \$opt_database,
 	"listtables!"		=> \$opt_listtables )){
@@ -138,29 +130,21 @@ msgVerbose( "got colored='".( $ep->runner()->colored() ? 'true':'false' )."'" );
 msgVerbose( "got dummy='".( $ep->runner()->dummy() ? 'true':'false' )."'" );
 msgVerbose( "got verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got service='$opt_service'" );
-msgVerbose( "got listinstance='".( $opt_listinstance ? 'true':'false' )."'" );
-msgVerbose( "got instance='$opt_instance'" );
-msgVerbose( "got instance_set='".( $opt_instance_set ? 'true':'false' )."'" );
 msgVerbose( "got listdb='".( $opt_listdb ? 'true':'false' )."'" );
 msgVerbose( "got database='$opt_database'" );
 msgVerbose( "got listtables='".( $opt_listtables ? 'true':'false' )."'" );
 
-# must have either -service or -instance options
-# compute instance from service
-my $count = 0;
-$count += 1 if $opt_service;
-$count += 1 if $opt_instance_set;
-if( $count == 0 ){
-	msgErr( "must have one of '--service' or '--instance' option, none found" );
-} elsif( $count > 1 ){
-	msgErr( "must have one of '--service' or '--instance' option, both found" );
-} elsif( $opt_service ){
+# must have --service option
+# find the node which hosts this service in this same environment (should be at most one)
+if( $opt_service ){
+	$serviceNode = TTP::Node->findByService( $ep->node()->environment(), $opt_service );
 	if( $jsonable->hasService( $opt_service )){
 		$jsonable = TTP::Service->new( $ep, { service => $opt_service });
-		$opt_instance = $jsonable->var([ 'DBMS', 'instance' ]);
 	} else {
 		msgErr( "service '$opt_service' if not defined on current execution node" ) ;
 	}
+} else {
+	msgErr( "'--service' option is mandatory, not found" );
 }
 
 # instanciates the DBMS class

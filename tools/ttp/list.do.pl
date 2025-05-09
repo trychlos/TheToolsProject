@@ -79,25 +79,11 @@ sub listCommands {
 
 sub listNodes {
 	msgOut( "displaying available nodes..." );
-	my $count = 0;
-	# list all nodes in all TTP_ROOTS trees
-	my $finder = TTP::Node->finder();
-	my $findable = {
-		dirs => [ $finder->{dirs} ],
-		glob => '*'.$finder->{suffix}
-	};
-	my $nodes = $ep->runner()->find( $findable );
-	# get only unique available nodes
-	my $uniqs = {};
-	foreach my $it ( @{$nodes} ){
-		my ( $vol, $dirs, $file ) = File::Spec->splitpath( $it );
-		my $name = $file;
-		$name =~ s/\.[^\.]+$//;
-		my $node = TTP::Node->new( $ep, { node => $name, abortOnError => false });
-		$uniqs->{$name} = $it if $node && !defined( $uniqs->{$name} );
-	}
+	# get available nodes
+	my $list = TTP::Node->list();
 	# and display them in ascii order
-	foreach my $it ( sort keys %{$uniqs} ){
+	my $count = 0;
+	foreach my $it ( @{$list} ){
 		print " $it".EOL;
 		$count += 1;
 	}
