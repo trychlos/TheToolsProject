@@ -78,11 +78,13 @@ sub commands {
 
 	# search in 'services'
 	my $serviceKeys = [ 'services', $self->name(), @{$keys} ];
-	push( @{$commands}, TTP::commandByOS( $serviceKeys, { withCommands => true, jsonable => $ep->node() }));
+	my $part = TTP::commandByOS( $serviceKeys, { withCommands => true, jsonable => $ep->node() });
+	push( @{$commands}, @{$part} ) if $part;
 
 	# search in (deprecated in v4.10) 'Services'
 	$serviceKeys = [ 'Services', $self->name(), @{$keys} ];
-	push( @{$commands}, TTP::commandByOS( $serviceKeys, { withCommands => true, jsonable => $ep->node() }));
+	$part = TTP::commandByOS( $serviceKeys, { withCommands => true, jsonable => $ep->node() });
+	push( @{$commands}, @{$part} ) if $part;
 
 	return $commands;
 }

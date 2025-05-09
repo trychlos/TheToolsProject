@@ -8,6 +8,7 @@
 
     - Remove surrounding double quotes of commands and verbs counts
     - Fix node-monitor-daemon.pl array ref argument
+    - Fix TTP::Service array ref computing
 
 ### 4.10.0
 
