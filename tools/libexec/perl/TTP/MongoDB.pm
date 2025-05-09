@@ -140,11 +140,10 @@ sub getDatabases {
 		my $handle = $self->_connect();
 		if( $handle ){
 			my @dbs = $handle->list_databases;
-			my $excludeSystemDatabases = $self->excludeSystemDatabases();
 			$databases = [];
 			foreach my $it ( @dbs ){
 				my $dbname = $it->{name};
-				if( !$excludeSystemDatabases || !grep( /^$dbname$/, @{$Const->{systemDatabases}} )){
+				if( !$self->dbFilteredBySystem( $dbname, $Const->{systemDatabases} ) && !$self->dbFilteredbyLimit( $dbname )){
 					push( @{$databases}, $dbname );
 				}
 			}

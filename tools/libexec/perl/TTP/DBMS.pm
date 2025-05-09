@@ -87,6 +87,66 @@ sub connectionString {
 	return $str;
 }
 
+# -------------------------------------------------------------------------------------------------
+# check that the specified database exists in the DBMS
+# (I):
+# - the database name
+# (O):
+# - returns true|false
+
+sub databaseExists {
+	my ( $self, $database ) = @_;
+	my $exists = false;
+
+	if( $database ){
+		my $list = $self->getDatabases();
+		$exists = true if grep( /$database/i, @{$list} );
+		if( $self->ep()->runner()->dummy()){
+			msgDummy( "considering exists='true'" );
+			$exists = true;
+		}
+	} else {
+		msgErr( __PACKAGE__."::databaseExists() database is mandatory, but is not specified" );
+		TTP::stackTrace();
+	}
+
+	msgVerbose( __PACKAGE__."::databaseExists() database='".( $database || '(undef)' )."' returning ".( $exists ? 'true' : 'false' ));
+	return $exists;
+}
+
+# -------------------------------------------------------------------------------------------------
+# check that the specified database is not filtered by the configured limited view
+# (I):
+# - the database name
+# (O):
+# - returns whether the database is filtered by the configured limited view: true|false
+
+sub dbFilteredbyLimit {
+	my ( $self, $database ) = @_;
+
+	my $limited = $self->viewedDatabases();
+
+	my $filtered = ( $limited && grep( /^$database$/, @{$limited} ));
+
+	return $filtered;
+}
+
+# -------------------------------------------------------------------------------------------------
+# check that the specified database is not filtered as a system database
+# (I):
+# - the database name
+# - the list of system databases
+# (O):
+# - returns whether the database is filtered as a system database: true|false
+
+sub dbFilteredBySystem {
+	my ( $self, $database, $systems ) = @_;
+
+	my $filtered = ( $self->excludeSystemDatabases() && grep( /^$database$/, @{$systems} ));
+
+	return $filtered;
+}
+
 # ------------------------------------------------------------------------------------------------
 # Getter
 # (I):
@@ -201,6 +261,21 @@ sub service {
 	my ( $self ) = @_;
 
 	return $self->{_dbms}{service};
+}
+
+# ------------------------------------------------------------------------------------------------
+# Getter
+# (I):
+# - none
+# (O):
+# - the list of the databases this services is limited to view, or undef if no limit is set
+
+sub viewedDatabases {
+	my ( $self ) = @_;
+
+	my $limit = $self->service()->var([ 'DBMS', 'databases' ]);
+
+	return $limit;
 }
 
 # ------------------------------------------------------------------------------------------------
@@ -337,32 +412,6 @@ sub computeDefaultBackupFilename {
 	$output = File::Spec->catdir( $backupDir, $fname );
 	msgVerbose( __PACKAGE__."::computeDefaultBackupFilename() computing output default as '$output'" );
 	return $output;
-}
-
-# -------------------------------------------------------------------------------------------------
-# check that the specified database exists in the instance
-# (I):
-# - the database name
-# (O):
-# returns true|false
-
-sub databaseExists {
-	my ( $self, $database ) = @_;
-	my $exists = false;
-
-	if( $database ){
-		my $list = $self->getDatabases();
-		$exists = true if grep( /$database/i, @{$list} );
-		if( $self->ep()->runner()->dummy()){
-			msgDummy( "considering exists='true'" );
-			$exists = true;
-		}
-	} else {
-		msgErr( __PACKAGE__."::databaseExists() database is mandatory, but is not specified" );
-	}
-
-	msgVerbose( "checkDatabaseExists() database='".( $database || '(undef)' )."' returning ".( $exists ? 'true' : 'false' ));
-	return $exists;
 }
 
 # -------------------------------------------------------------------------------------------------
