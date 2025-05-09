@@ -65,17 +65,9 @@
                     "default": true
                 },
                 "host": {
-                    "description": "The address name or IP, possibly with a colon and a port number, of the DBMS server.",
+                    "description": "The address name or IP, possibly with a colon and a port number, of the DBMS server, or a full connection string.",
                     "type": "string",
                     "default": "localhost"
-                },
-                "instance": {
-                    "description_array": [
-                        "A specific property which let the administrator name a DBMS server.",
-                        "This is notably used by Microsoft Sql Server, Sybase, ..."
-                    ],
-                    "type": "string",
-                    "default": ""
                 },
                 "package": {
                     "description": "The Perl TTP package to be use'd when working with this DBMS service.",

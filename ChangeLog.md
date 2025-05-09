@@ -14,6 +14,8 @@
     - DBMS services now let the user configure the 'excludeSystemDatabases' property
     - TTP::Node->findByService() displays the names of the found candidates
 	- Get SqlServer-specific properties
+    - 'instance' property is removed from service.DBMS schema
+    - Add dbms.pl list --properties option
 
 ### 4.10.1
 

@@ -77,6 +77,21 @@ sub _getCredentials {
 # (I):
 # - none
 # (O):
+# - the configured connection string, may be undef
+
+sub connectionString {
+	my ( $self ) = @_;
+
+	my $str = $self->service()->var([ 'DBMS', 'host' ]);
+
+	return $str;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Getter
+# (I):
+# - none
+# (O):
 # - whether listing the databases should exclude the system databases
 
 sub excludeSystemDatabases {
@@ -129,8 +144,14 @@ sub getDatabaseTables {
 sub getProperties {
 	my ( $self, $database ) = @_;
 
+	my $props = [];
 
-	return [];
+	push( @{$props}, { name => 'excludeSystemDatabases', value => $self->excludeSystemDatabases() ? 'true' : 'false' });
+	push( @{$props}, { name => 'wantsLocal', value => $self->wantsLocal() ? 'true' : 'false' });
+	push( @{$props}, { name => 'package', value => $self->package() });
+	push( @{$props}, { name => 'connectionString', value => $self->connectionString() || '(undef)' });
+
+	return $props;
 }
 
 # ------------------------------------------------------------------------------------------------
@@ -154,6 +175,19 @@ sub node {
 	}
 
 	return $self->{_dbms}{node};
+}
+
+# -------------------------------------------------------------------------------------------------
+# Getter
+# (I):
+# - none
+# (O):
+# returns the name of the package which manages this DBMS
+
+sub package {
+	my ( $self ) = @_;
+
+	return ref( $self );
 }
 
 # ------------------------------------------------------------------------------------------------
@@ -384,19 +418,6 @@ sub execSqlCommand {
 	}
 	return $result;
 }
-
-# -------------------------------------------------------------------------------------------------
-# Getter
-# (I):
-# - none
-# (O):
-# returns the name of the package which manages this DBMS
-
-#sub package {
-#	my ( $self ) = @_;
-#
-#	return $self->{_dbms}{package};
-#}
 
 # ------------------------------------------------------------------------------------------------
 # Restore a file into a database
