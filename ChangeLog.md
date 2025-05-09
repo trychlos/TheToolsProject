@@ -12,6 +12,7 @@
     - Transform TTP::MongoDB and TTP::SqlServer into TTP::DBMS-derived classes
     - TTP::Credentials->get() only looks at standard site/node configurations at last
     - DBMS services now let the user configure the 'excludeSystemDatabases' property
+    - TTP::Node->findByService() displays the names of the found candidates
 
 ### 4.10.1
 

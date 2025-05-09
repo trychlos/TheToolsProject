@@ -374,7 +374,11 @@ sub findByService {
 	} else {
 		$found = $founds->[0];
 		if( $count > 1 ){
-			msgWarn( "found $count hosting nodes for '$service' service in '$environment' environment: [ ".join( ', ', @{$founds} )." ]" ) ;
+			my $names = [];
+			foreach my $it ( @{$founds} ){
+				push( @{$names}, $it->name());
+			}
+			msgWarn( "found $count hosting nodes [".join( ',', @{$names} )."] for '$service' service in '$environment' environment, choosing the first one (".$found->name().")" ) ;
 		}
 	}
 
