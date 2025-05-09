@@ -108,6 +108,14 @@ sub _noSql {
 		stderr => []
 	};
 	if( !TTP::errs()){
+		my $handle = $self->_connect();
+		#if( $handle ){
+		#	my $hdb = $handle->db( 'admin' );
+		#	if( $hdb ){
+		#		my $result = $hdb->run_command( $command );
+		#		print Dumper( $result );
+		#	}
+		#}
 	}
 	return $res;
 }
@@ -167,6 +175,22 @@ sub getDatabaseTables {
 	}
 
 	return \@collections;
+}
+
+# ------------------------------------------------------------------------------------------------
+# returns the list of properties of this DBMS server
+# (I):
+# - none
+# (O):
+# - the list of properties as a { name, value } array ref
+
+sub getProperties {
+	my ( $self ) = @_;
+
+	# get common properties
+	my $props = $self->TTP::DBMS::getProperties();
+
+	return $props;
 }
 
 ### Class methods
