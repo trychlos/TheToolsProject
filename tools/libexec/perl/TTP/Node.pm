@@ -36,6 +36,7 @@ use Role::Tiny::With;
 use Sys::Hostname qw( hostname );
 
 use TTP;
+use TTP::Service;
 use vars::global qw( $ep );
 
 with 'TTP::IAcceptable', 'TTP::IEnableable', 'TTP::IFindable', 'TTP::IJSONable';
@@ -217,11 +218,8 @@ sub hasService {
 	if( !$service || ref( $service )){
 		msgErr( __PACKAGE__."::hasService() expects a service name be specified, found '".( $service || '(undef)' )."'" );
 	} else {
-		my $services = $self->jsonData()->{services} || $self->jsonData()->{Services} || {};
-		my $hash = $services->{$service};
-		my $enabled = $hash ? true : false;
-		$enabled = $hash->{enabled} if $hash && defined( $hash->{enabled} );
-		$hasService = $hash && $enabled;
+		my $services = TTP::Service->list({ node => $self });
+		$hasService = grep( /$service/, @{$services} );
 	}
 
 	return $hasService;
