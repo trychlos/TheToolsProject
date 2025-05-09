@@ -7,6 +7,7 @@
     Release date: 
 
     - site.example/backup-monitor-daemon takes advantage of TTP::Node->hasService() method
+    - Improve TTP::Node->hasService() method to take advantage of TTP::Service->list()
 
 ### 4.10.1
 
