@@ -10,6 +10,7 @@
     - Improve TTP::Node->hasService() method to take advantage of TTP::Service->list()
     - Define new TTP::Node->list() class method to get all available nodes, thus bumping minor candidate version number
     - Transform TTP::MongoDB and TTP::SqlServer into TTP::DBMS-derived classes
+    - TTP::Credentials->get() only looks at standard site/node configurations at last
 
 ### 4.10.1
 
