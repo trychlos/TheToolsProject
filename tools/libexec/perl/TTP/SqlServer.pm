@@ -206,7 +206,8 @@ sub _sqlExec {
 #   > compress: true|false
 # (O):
 # - returns a hash with following keys:
-#   > status: true|false
+#   > ok: true|false
+#   > output: the (maybe computed here) output file
 #   > stdout: a copy of lines outputed on stdout as an array ref
 
 sub backupDatabase {
@@ -214,9 +215,9 @@ sub backupDatabase {
 	my $result = { ok => false };
 	msgErr( __PACKAGE__."::backupDatabase() database is mandatory, but is not specified" ) if !$parms->{database};
 	msgErr( __PACKAGE__."::backupDatabase() mode must be 'full' or 'diff', found '$parms->{mode}'" ) if $parms->{mode} ne 'full' && $parms->{mode} ne 'diff';
-	msgErr( __PACKAGE__."::backupDatabase() output is mandatory, but is not specified" ) if !$parms->{output};
 	if( !TTP::errs()){
 		msgVerbose( __PACKAGE__."::backupDatabase() entering with service='".$self->service()->name()."' database='$parms->{database}' mode='$parms->{mode}'..." );
+		my $output = $parms->{output} || $self->computeDefaultBackupFilename( $parms );
 		my $tstring = Time::Moment->now->strftime( '%Y-%m-%d %H:%M:%S.%6N %:z' );
 		# if full
 		my $options = "NOFORMAT, NOINIT, MEDIANAME='SQLServerBackups'";
@@ -227,9 +228,11 @@ sub backupDatabase {
 			$label = "Differential";
 		}
 		$options .= ", COMPRESSION" if $parms->{compress};
-		$parms->{sql} = "USE master; BACKUP DATABASE $parms->{database} TO DISK='$parms->{output}' WITH $options, NAME='$parms->{database} $label Backup $tstring';";
-		msgVerbose( __PACKAGE__."::backupDatabase() sql='$parms->{sql}'" );
-		$result = $self->_sqlExec( $parms->{sql} );
+		my $sql = "USE master; BACKUP DATABASE $parms->{database} TO DISK='$output' WITH $options, NAME='$parms->{database} $label Backup $tstring';";
+		msgVerbose( __PACKAGE__."::backupDatabase() sql='$sql'" );
+		$result = $self->_sqlExec( $sql );
+		msgLog( __PACKAGE__."::backupDatabase() stdout='".TTP::chompDumper( $result->{stdout} )."'" );
+		$result->{output} = $output;
 	}
 	msgVerbose( __PACKAGE__."::backupDatabase() returns '".( $result->{ok} ? 'true':'false' )."'" );
 	return $result;
