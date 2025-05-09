@@ -612,12 +612,10 @@ if( !TTP::errs()){
 
 # check configuration for mandatory keys
 if( !TTP::errs()){
-	my $remoteConfig = $daemon->{monitoredNode}->jsonData();
 	# monitoredService is mandatory
 	my $monitoredService = configMonitoredService();
 	if( $monitoredService ){
-		my $remoteService = $remoteConfig->{Services}{$monitoredService};
-		if( $remoteService ){
+		if( $daemon->{monitoredNode}->hasService( $monitoredService )){
 			msgVerbose( "monitored service '$monitoredService' successfully found in remote host '$opt_remote' configuration file" );
 			$daemon->{monitoredService} = TTP::Service->new( $ep, { service => $monitoredService });
 			$daemon->metricLabelAppend( 'service', $monitoredService );
@@ -635,7 +633,8 @@ if( !TTP::errs()){
 		msgErr( "'localDir' key must be specified in daemon configuration, not found" );
 	}
 	# the remoteHost must exhibit a 'remoteShare' which is the share to which we can connect to
-	if( exists( $remoteConfig->{remoteShare} )){
+	my $remoteConfig = $daemon->{monitoredNode}->jsonData();
+	if( defined( $remoteConfig->{remoteShare} )){
 		msgVerbose( "found remoteShare='$remoteConfig->{remoteShare}'" );
 	} else {
 		msgErr( "'remoteShare' key must be specified in remote host '$opt_remote' configuration, not found" );
