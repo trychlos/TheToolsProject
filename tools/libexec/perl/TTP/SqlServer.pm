@@ -56,6 +56,235 @@ my $Const = {
 	]
 };
 
+### Private methods
+
+# ------------------------------------------------------------------------------------------------
+# get a connection to a local SqlServer instance
+# (I):
+# - the DBMS instance
+# (O):
+# - an opaque handle on the connection, or undef
+
+sub _connect {
+	my ( $self ) = @_;
+
+	my $handle = $self->{_dbms}{connect};
+	if( $handle ){
+		msgVerbose( __PACKAGE__."::_connect() already connected" );
+
+	} else {
+		my( $account, $passwd ) = $self->_getCredentials();
+		#print STDERR __PACKAGE__."::_connect() got account='$account' password='$passwd'".EOL;
+		if( length $account && length $passwd ){
+			Win32::SqlServer::SetDefaultForEncryption( 'Optional', true );
+			#my $server = $dbms->ep()->node()->name()."\\".$instance;
+			# SQLServer 2008R2 doesn't like have a server connection string with MSSQLSERVER default instance
+			#$server = undef if $instance eq "MSSQLSERVER";
+			my $server = $self->node()->name();
+			msgVerbose( __PACKAGE__."::_connect() calling sql_init with server='".( $server || '(undef)' )."', account='$account'..." );
+			$handle = Win32::SqlServer::sql_init( $server, $account, $passwd );
+			if( $handle && $handle->isconnected()){
+				$handle->{ErrInfo}{MaxSeverity} = 17;
+				$handle->{ErrInfo}{SaveMessages} = 1;
+				$self->{_dbms}{connect} = $handle;
+				#print STDERR Dumper( $handle );
+				msgVerbose( __PACKAGE__."::_connect() successfully connected" );
+			} else {
+				msgErr( __PACKAGE__."::_connect() unable to connect to the server" );
+				$handle = undef;
+			}
+		} else {
+			msgErr( __PACKAGE__."::_connect() unable to get account/password couple" );
+		}
+	}
+
+	return $handle;
+}
+
+# -------------------------------------------------------------------------------------------------
+# execute a SQL request
+# (I):
+# - sql: the command
+# - opts: an optional options hash with following keys:
+#   > printStdout, defaulting to true
+#   > resultStyle, defaulting to SINGLESET
+#   > colinfoStyle, defaulting to COLINFO_NONE
+# (O):
+# returns hash with following keys:
+# - ok: true|false
+# - result: as an array ref
+# - stdout: as an array ref
+# - columns: as an array ref (if asked for)
+
+sub _sqlExec {
+	my ( $self, $sql, $opts ) = @_;
+	$opts //= {};
+	msgErr( __PACKAGE__."::_sqlExec() sql is mandatory, but is not specified" ) if !$sql;
+	my $res = {
+		ok => false,
+		result => [],
+		stdout => []
+	};
+	my $sqlsrv = undef;
+	if( !TTP::errs()){
+		$sqlsrv = $self->_connect();
+	}
+	if( !TTP::errs()){
+		#msgVerbose( __PACKAGE__."::_sqlExec() executing '$sql'" );
+		msgVerbose( __PACKAGE__."::_sqlExec() executing" );
+		if( $self->ep()->runner()->dummy()){
+			msgDummy( $sql );
+			$res->{ok} = true;
+		} else {
+			my $printStdout = true;
+			$printStdout = $opts->{printStdout} if defined $opts->{printStdout};
+			my $colinfoStyle;
+			if( $opts->{colinfoStyle} ){
+				$colinfoStyle = $opts->{colinfoStyle};
+				msgVerbose( "colinfoStyle=$opts->{colinfoStyle}" );
+			} else {
+				$colinfoStyle = Win32::SqlServer::COLINFO_NONE;
+				msgVerbose( "colinfoStyle= Win32::SqlServer::COLINFO_NONE (default)" );
+			}
+			my $rowStyle;
+			if( $opts->{rowStyle} ){
+				$rowStyle = $opts->{rowStyle};
+				msgVerbose( "rowStyle=$opts->{rowStyle}" );
+			} else {
+				$rowStyle = Win32::SqlServer::HASH;
+				msgVerbose( "rowStyle= Win32::SqlServer::HASH (default)" );
+			}
+			my $resultStyle;
+			if( $opts->{resultStyle} ){
+				$resultStyle = $opts->{resultStyle};
+				msgVerbose( "resultStyle=$opts->{resultStyle}" );
+			} else {
+				$resultStyle = Win32::SqlServer::SINGLESET;
+				msgVerbose( "resultStyle=Win32::SqlServer::SINGLESET (default)" );
+			}
+			my $merged = capture_merged { $res->{result} = $sqlsrv->sql( $sql, $colinfoStyle, $rowStyle, $resultStyle )};
+			my @merged = split( /[\r\n]/, $merged );
+			foreach my $line ( @merged ){
+				chomp( $line );
+				$line =~ s/^\s*//;
+				$line =~ s/\s*$//;
+				if( length $line ){
+					print " $line".EOL if $printStdout;
+					push( @{$res->{stdout}}, $line );
+				}
+			}
+			$res->{ok} = $sqlsrv->sql_has_errors() ? false : true;
+			delete $sqlsrv->{ErrInfo}{Messages};
+			# if we are ok, and the colinfo style has prepended a row, then remove from the result set
+			# pwi 2024-12-23 happens that we are unable to get the prepended row with columns infos :(
+			#if( $res->{ok} && $colinfoStyle != Win32::SqlServer::COLINFO_NONE ){
+			#if( $res->{ok} ){
+				#print Dumper( $result );
+				#$res->{columns} = @{shift( @$result )};
+				#my $row = shift( @$result );
+				#if( $resultStyle == Win32::SqlServer::SINGLESET ){
+				#} else {
+				#}
+			#}
+		}
+	}
+	#print Dumper( $sql );
+	#print Dumper( $opts );
+	#print Dumper( $res );
+	msgVerbose( __PACKAGE__."::_sqlExec() returns '".( $res->{ok} ? 'true':'false' )."'" );
+	return $res;
+}
+
+### Public methods
+
+# -------------------------------------------------------------------------------------------------
+# get and returns the list of databases in the server, minus the predefined system databases
+# (I):
+# - none
+# (O):
+# - returns the list of databases in the instance as an array ref, may be empty
+
+sub getDatabases {
+	my ( $self ) = @_;
+
+	my $databases = $self->TTP::DBMS::getDatabases();
+	if( defined( $databases )){
+		msgVerbose( __PACKAGE__."::getDatabases() got cached databases [ ". join( ', ', @{$databases} )." ]" );
+	} else {
+		$databases = [];
+		my $res = $self->_sqlExec( "select name from master.sys.databases order by name" );
+		if( $res->{ok} ){
+			foreach my $it ( @{$res->{result}} ){
+				my $dbname = $it->{name};
+				if( !grep( /^$dbname$/, @{$Const->{systemDatabases}} )){
+					push( @{$databases}, $dbname );
+				}
+			}
+			msgVerbose( __PACKAGE__."::getDatabases() got databases [ ". join( ', ', @{$databases} )." ]" );
+			$self->{_dbms}{databases} = $databases;
+		}
+	}
+
+	return $databases;
+}
+
+# -------------------------------------------------------------------------------------------------
+# Getter
+# (I):
+# - none
+# (O):
+# - returns the instance name
+
+sub instance {
+	my ( $self ) = @_;
+
+	my $instance = $self->{_dbms}{instance};
+
+	return $instance;
+}
+
+### Class methods
+
+# -------------------------------------------------------------------------------------------------
+# Constructor
+# (I):
+# - the TTP EP entry point
+# - an argument object with following keys:
+#   > service: the TTP::Service object this DBMS belongs to
+# (O):
+# - this object, or undef in case of an error
+
+sub new {
+	my ( $class, $ep, $args ) = @_;
+	$class = ref( $class ) || $class;
+	$args //= {};
+	my $self = $class->SUPER::new( $ep, $args );
+
+	if( $self ){
+		bless $self, $class;
+		msgVerbose( __PACKAGE__."::new()" );
+	}
+
+	return $self;
+}
+
+# -------------------------------------------------------------------------------------------------
+# Destructor
+# (I):
+# - instance
+# (O):
+
+sub DESTROY {
+	my $self = shift;
+	$self->SUPER::DESTROY();
+	return;
+}
+
+### Global functions
+### Note for the developer: while a global function doesn't take any argument, it can be called both
+### as a class method 'TTP::Package->method()' or as a global function 'TTP::Package::method()',
+### the former being preferred (hence the writing inside of the 'Class methods' block).
+
 # -------------------------------------------------------------------------------------------------
 # Backup a database
 # (I):
@@ -326,233 +555,6 @@ sub _restoreDatabaseVerify {
 	my $res = _sqlExec( $dbms, "RESTORE VERIFYONLY FROM DISK='$fname' WITH $move;" );
 	return $res->{ok};
 }
-
-### Private methods
-
-# ------------------------------------------------------------------------------------------------
-# get a connection to a local SqlServer instance
-# (I):
-# - the DBMS instance
-# (O):
-# - an opaque handle on the connection, or undef
-
-sub _connect {
-	my ( $self ) = @_;
-
-	my $handle = $self->{_dbms}{connect};
-	if( $handle ){
-		msgVerbose( __PACKAGE__."::_connect() already connected" );
-
-	} else {
-		my( $account, $passwd ) = $self->_getCredentials();
-		if( length $account && length $passwd ){
-			Win32::SqlServer::SetDefaultForEncryption( 'Optional', true );
-			#my $server = $dbms->ep()->node()->name()."\\".$instance;
-			# SQLServer 2008R2 doesn't like have a server connection string with MSSQLSERVER default instance
-			#$server = undef if $instance eq "MSSQLSERVER";
-			my $server = undef;
-			msgVerbose( __PACKAGE__."::_connect() calling sql_init with server='".( $server || '(undef)' )."', account='$account'..." );
-			$handle = Win32::SqlServer::sql_init( $server, $account, $passwd );
-			if( $handle && $handle->isconnected()){
-				$handle->{ErrInfo}{MaxSeverity} = 17;
-				$handle->{ErrInfo}{SaveMessages} = 1;
-				$self->{_dbms}{connect} = $handle;
-				#print STDERR Dumper( $handle );
-				msgVerbose( __PACKAGE__."::_connect() successfully connected" );
-			} else {
-				msgErr( __PACKAGE__."::_connect() unable to connect to the server" );
-				$handle = undef;
-			}
-		} else {
-			msgErr( __PACKAGE__."::_connect() unable to get account/password couple" );
-		}
-	}
-
-	return $handle;
-}
-
-# -------------------------------------------------------------------------------------------------
-# execute a SQL request
-# (I):
-# - sql: the command
-# - opts: an optional options hash with following keys:
-#   > printStdout, defaulting to true
-#   > resultStyle, defaulting to SINGLESET
-#   > colinfoStyle, defaulting to COLINFO_NONE
-# (O):
-# returns hash with following keys:
-# - ok: true|false
-# - result: as an array ref
-# - stdout: as an array ref
-# - columns: as an array ref (if asked for)
-
-sub _sqlExec {
-	my ( $self, $sql, $opts ) = @_;
-	$opts //= {};
-	msgErr( __PACKAGE__."::_sqlExec() sql is mandatory, but is not specified" ) if !$sql;
-	my $res = {
-		ok => false,
-		result => [],
-		stdout => []
-	};
-	my $sqlsrv = undef;
-	if( !TTP::errs()){
-		$sqlsrv = $self->_connect();
-	}
-	if( !TTP::errs()){
-		#msgVerbose( __PACKAGE__."::_sqlExec() executing '$sql'" );
-		msgVerbose( __PACKAGE__."::_sqlExec() executing" );
-		if( $dbms->ep()->runner()->dummy()){
-			msgDummy( $sql );
-			$res->{ok} = true;
-		} else {
-			my $printStdout = true;
-			$printStdout = $opts->{printStdout} if defined $opts->{printStdout};
-			my $colinfoStyle;
-			if( $opts->{colinfoStyle} ){
-				$colinfoStyle = $opts->{colinfoStyle};
-				msgVerbose( "colinfoStyle=$opts->{colinfoStyle}" );
-			} else {
-				$colinfoStyle = Win32::SqlServer::COLINFO_NONE;
-				msgVerbose( "colinfoStyle= Win32::SqlServer::COLINFO_NONE (default)" );
-			}
-			my $rowStyle;
-			if( $opts->{rowStyle} ){
-				$rowStyle = $opts->{rowStyle};
-				msgVerbose( "rowStyle=$opts->{rowStyle}" );
-			} else {
-				$rowStyle = Win32::SqlServer::HASH;
-				msgVerbose( "rowStyle= Win32::SqlServer::HASH (default)" );
-			}
-			my $resultStyle;
-			if( $opts->{resultStyle} ){
-				$resultStyle = $opts->{resultStyle};
-				msgVerbose( "resultStyle=$opts->{resultStyle}" );
-			} else {
-				$resultStyle = Win32::SqlServer::SINGLESET;
-				msgVerbose( "resultStyle=Win32::SqlServer::SINGLESET (default)" );
-			}
-			my $merged = capture_merged { $res->{result} = $sqlsrv->sql( $sql, $colinfoStyle, $rowStyle, $resultStyle )};
-			my @merged = split( /[\r\n]/, $merged );
-			foreach my $line ( @merged ){
-				chomp( $line );
-				$line =~ s/^\s*//;
-				$line =~ s/\s*$//;
-				if( length $line ){
-					print " $line".EOL if $printStdout;
-					push( @{$res->{stdout}}, $line );
-				}
-			}
-			$res->{ok} = $sqlsrv->sql_has_errors() ? false : true;
-			delete $sqlsrv->{ErrInfo}{Messages};
-			# if we are ok, and the colinfo style has prepended a row, then remove from the result set
-			# pwi 2024-12-23 happens that we are unable to get the prepended row with columns infos :(
-			#if( $res->{ok} && $colinfoStyle != Win32::SqlServer::COLINFO_NONE ){
-			#if( $res->{ok} ){
-				#print Dumper( $result );
-				#$res->{columns} = @{shift( @$result )};
-				#my $row = shift( @$result );
-				#if( $resultStyle == Win32::SqlServer::SINGLESET ){
-				#} else {
-				#}
-			#}
-		}
-	}
-	#print Dumper( $sql );
-	#print Dumper( $opts );
-	#print Dumper( $res );
-	msgVerbose( __PACKAGE__."::_sqlExec() returns '".( $res->{ok} ? 'true':'false' )."'" );
-	return $res;
-}
-
-### Public methods
-
-# -------------------------------------------------------------------------------------------------
-# get and returns the list of databases in the server, minus the predefined system databases
-# (I):
-# - none
-# (O):
-# - returns the list of databases in the instance as an array ref, may be empty
-
-sub getDatabases {
-	my ( $self ) = @_;
-
-	my $databases = $self->TTP::DBMS::getDatabases();
-	if( defined( $databases )){
-		msgVerbose( __PACKAGE__."::getDatabases() got cached databases [ ". join( ', ', @{$databases} )." ]" );
-	} else {
-		my $res = $self->_sqlExec( "select name from master.sys.databases order by name" );
-		if( $res->{ok} ){
-			foreach my $it ( @{$res->{result}} ){
-				my $dbname = $it->{name};
-				if( !grep( /^$dbname$/, @{$Const->{systemDatabases}} )){
-					push( @{$databases}, $dbname );
-				}
-			}
-			msgVerbose( __PACKAGE__."::getDatabases() got databases [ ". join( ', ', @{$databases} )." ]" );
-			$self->{_dbms}{databases} = $databases;
-		}
-	}
-
-	return $databases || [];
-}
-
-# -------------------------------------------------------------------------------------------------
-# Getter
-# (I):
-# - none
-# (O):
-# - returns the instance name
-
-sub instance {
-	my ( $self ) = @_;
-
-	my $instance = $self->{_dbms}{instance};
-
-	return $instance;
-}
-
-### Class methods
-
-# -------------------------------------------------------------------------------------------------
-# Constructor
-# (I):
-# - the TTP EP entry point
-# - an argument object with following keys:
-#   > service: the TTP::Service object this DBMS belongs to
-# (O):
-# - this object, or undef in case of an error
-
-sub new {
-	my ( $class, $ep, $args ) = @_;
-	$class = ref( $class ) || $class;
-	$args //= {};
-	my $self = $class->SUPER::new( $ep, $args );
-
-	if( $self ){
-		bless $self, $class;
-		msgVerbose( __PACKAGE__."::new()" );
-	}
-
-	return $self;
-}
-
-# -------------------------------------------------------------------------------------------------
-# Destructor
-# (I):
-# - instance
-# (O):
-
-sub DESTROY {
-	my $self = shift;
-	$self->SUPER::DESTROY();
-	return;
-}
-
-### Global functions
-### Note for the developer: while a global function doesn't take any argument, it can be called both
-### as a class method 'TTP::Package->method()' or as a global function 'TTP::Package::method()',
-### the former being preferred (hence the writing inside of the 'Class methods' block).
 
 1;
 
