@@ -391,6 +391,39 @@ sub finder {
 }
 
 # -------------------------------------------------------------------------------------------------
+# list the available (defined) nodes
+# (I):
+# - none
+# (O):
+# - a ref to the array of defined nodes in ASCII order
+
+sub list {
+	my ( $class ) = @_;
+	$class = ref( $class ) || $class;
+
+	# list all nodes in all TTP_ROOTS trees
+	my $finder = $class->finder();
+	my $findable = {
+		dirs => [ $finder->{dirs} ],
+		glob => '*'.$finder->{suffix}
+	};
+	my $nodes = $ep->runner()->find( $findable );
+	# get only unique available nodes
+	my $uniqs = {};
+	foreach my $it ( @{$nodes} ){
+		my ( $vol, $dirs, $file ) = File::Spec->splitpath( $it );
+		my $name = $file;
+		$name =~ s/\.[^\.]+$//;
+		my $node = TTP::Node->new( $ep, { node => $name, abortOnError => false });
+		$uniqs->{$name} = $it if $node && !defined( $uniqs->{$name} );
+	}
+	# evaluates in array context
+	my @nodes = sort keys %{$uniqs};
+
+	return \@nodes;
+}
+
+# -------------------------------------------------------------------------------------------------
 # Constructor
 # (I):
 # - the TTP EP entry point
@@ -441,7 +474,7 @@ sub new {
 			exit( 1 );
 		} else {
 			$self = undef;
-			msgErr( "an invalid JSON configuration is detected" );
+			msgErr( "an invalid JSON configuration has been detected for '$node'" );
 		}
 	}
 
