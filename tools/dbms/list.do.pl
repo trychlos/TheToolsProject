@@ -137,7 +137,7 @@ msgVerbose( "got listtables='".( $opt_listtables ? 'true':'false' )."'" );
 
 # must have --service option
 # find the node which hosts this service in this same environment (should be at most one)
-# anxd check that the service is DBMS-aware
+# and check that the service is DBMS-aware
 if( $opt_service ){
 	$objNode = TTP::Node->findByService( $ep->node()->environment(), $opt_service );
 	if( $objNode ){
