@@ -97,7 +97,7 @@ sub doBackup {
 			service => $opt_service,
 			database => $db,
 			mode => $mode,
-			output => ( $res->{status} ? $res->{output} : "" ),
+			output => ( $res->{ok} ? $res->{output} : "" ),
 			compress => $opt_compress
 		};
 		# honors --report option
@@ -122,7 +122,7 @@ sub doBackup {
 			});
 		}
 		$asked += 1;
-		$count += 1 if $res->{status};
+		$count += 1 if $res->{ok};
 	}
 	my $str = "$count/$asked backuped database(s)";
 	if( $count == $asked ){
@@ -204,7 +204,7 @@ if( scalar @{$databases} ){
 }
 
 # check for full or diff backup mode
-$count = 0;
+my $count = 0;
 $count += 1 if $opt_full;
 $count += 1 if $opt_diff;
 if( $count == 0 ){

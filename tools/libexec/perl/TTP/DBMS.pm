@@ -73,6 +73,38 @@ sub _getCredentials {
 ### Public methods
 
 # ------------------------------------------------------------------------------------------------
+# compute the default backup output filename for the current machine/service/database
+# making sure the output directory exists
+# As of 2024 -1-31, default output filename is <host>-<instance>-<database>-<date>-<time>-<mode>.backup
+# As of 2024 -2- 2, the backupDir is expected to be daily-ised, ie to contain a date/time part
+# As of 2025- 6-10, the instance is replaced with the service
+# (I):
+# - parms is a hash ref with keys:
+#   > database name: mandatory
+#   > mode: defaulting to 'full'
+# (O):
+# - the default output full filename
+
+sub computeDefaultBackupFilename {
+	my ( $self, $parms ) = @_;
+	#msgVerbose( __PACKAGE__."::computeDefaultBackupFilename() entering" );
+	my $output = undef;
+	msgErr( __PACKAGE__."::computeDefaultBackupFilename() database is mandatory, but is not specified" ) if !$parms->{database};
+	my $mode = 'full';
+	$mode = $parms->{mode} if defined $parms->{mode};
+	msgErr( __PACKAGE__."::computeDefaultBackupFilename() mode must be 'full' or 'diff', found '$mode'" ) if $mode ne 'full' and $mode ne 'diff';
+	# compute the dir and make sure it exists
+	my $node = $self->node();
+	my $backupDir = TTP::dbmsBackupsPeriodic();
+	TTP::Path::makeDirExist( $backupDir );
+	# compute the filename
+	my $fname = $node->name().'-'.$self->service()->name()."-$parms->{database}-".( Time::Moment->now->strftime( '%y%m%d-%H%M%S' ))."-$mode.backup";
+	$output = File::Spec->catdir( $backupDir, $fname );
+	msgVerbose( __PACKAGE__."::computeDefaultBackupFilename() computing output default as '$output'" );
+	return $output;
+}
+
+# ------------------------------------------------------------------------------------------------
 # Getter
 # (I):
 # - none
@@ -380,38 +412,6 @@ sub backupDatabase {
 		msgVerbose( __PACKAGE__."::backupDatabase() returning status='true' output='$result->{output}'" );
 	}
 	return $result;
-}
-
-# ------------------------------------------------------------------------------------------------
-# compute the default backup output filename for the current machine/intance/database
-# making sure the output directory exists
-# As of 2024 -1-31, default output filename is <host>-<instance>-<database>-<date>-<time>-<mode>.backup
-# As of 2024 -2- 2, the backupDir is expected to be daily-ised, ie to contain a date part
-# (I):
-# - dbms, the DBMS object from _buildDbms()
-# - parms is a hash ref with keys:
-#   > database name: mandatory
-#   > mode: defaulting to 'full'
-# (O):
-# - the default output full filename
-
-sub computeDefaultBackupFilename {
-	my ( $self, $parms ) = @_;
-	#msgVerbose( __PACKAGE__."::computeDefaultBackupFilename() entering" );
-	my $output = undef;
-	msgErr( __PACKAGE__."::computeDefaultBackupFilename() database is mandatory, but is not specified" ) if !$parms->{database};
-	my $mode = 'full';
-	$mode = $parms->{mode} if defined $parms->{mode};
-	msgErr( __PACKAGE__."::computeDefaultBackupFilename() mode must be 'full' or 'diff', found '$mode'" ) if $mode ne 'full' and $mode ne 'diff';
-	# compute the dir and make sure it exists
-	my $node = $self->ep()->node();
-	my $backupDir = TTP::dbmsBackupsPeriodic();
-	TTP::Path::makeDirExist( $backupDir );
-	# compute the filename
-	my $fname = $node->name().'-'.$self->instance()."-$parms->{database}-".( Time::Moment->now->strftime( '%y%m%d-%H%M%S' ))."-$mode.backup";
-	$output = File::Spec->catdir( $backupDir, $fname );
-	msgVerbose( __PACKAGE__."::computeDefaultBackupFilename() computing output default as '$output'" );
-	return $output;
 }
 
 # -------------------------------------------------------------------------------------------------
