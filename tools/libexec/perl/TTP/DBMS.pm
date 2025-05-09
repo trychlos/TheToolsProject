@@ -263,6 +263,7 @@ sub node {
 		my $ref = ref( $node );
 		if( $ref eq 'TTP::Node' ){
 			$self->{_dbms}{node} = $node;
+			msgVerbose( __PACKAGE__."::node() set hosting node='".$node->name()."'" );
 		} else {
 			msgErr( __PACKAGE__."::node() expects a TTP::Node, got '$ref'" );
 		}
