@@ -197,6 +197,45 @@ sub _sqlExec {
 ### Public methods
 
 # -------------------------------------------------------------------------------------------------
+# Backup a database
+# (I):
+# - parms is a hash ref with following keys:
+#   > database: mandatory
+#   > output: optional
+#   > mode: full-diff, defaulting to 'full'
+#   > compress: true|false
+# (O):
+# - returns a hash with following keys:
+#   > status: true|false
+#   > stdout: a copy of lines outputed on stdout as an array ref
+
+sub backupDatabase {
+	my ( $self, $parms ) = @_;
+	my $result = { ok => false };
+	msgErr( __PACKAGE__."::backupDatabase() database is mandatory, but is not specified" ) if !$parms->{database};
+	msgErr( __PACKAGE__."::backupDatabase() mode must be 'full' or 'diff', found '$parms->{mode}'" ) if $parms->{mode} ne 'full' && $parms->{mode} ne 'diff';
+	msgErr( __PACKAGE__."::backupDatabase() output is mandatory, but is not specified" ) if !$parms->{output};
+	if( !TTP::errs()){
+		msgVerbose( __PACKAGE__."::backupDatabase() entering with service='".$self->service()->name()."' database='$parms->{database}' mode='$parms->{mode}'..." );
+		my $tstring = Time::Moment->now->strftime( '%Y-%m-%d %H:%M:%S.%6N %:z' );
+		# if full
+		my $options = "NOFORMAT, NOINIT, MEDIANAME='SQLServerBackups'";
+		my $label = "Full";
+		# if diff
+		if( $parms->{mode} eq 'diff' ){
+			$options .= ", DIFFERENTIAL";
+			$label = "Differential";
+		}
+		$options .= ", COMPRESSION" if $parms->{compress};
+		$parms->{sql} = "USE master; BACKUP DATABASE $parms->{database} TO DISK='$parms->{output}' WITH $options, NAME='$parms->{database} $label Backup $tstring';";
+		msgVerbose( __PACKAGE__."::backupDatabase() sql='$parms->{sql}'" );
+		$result = $self->_sqlExec( $parms->{sql} );
+	}
+	msgVerbose( __PACKAGE__."::backupDatabase() returns '".( $result->{ok} ? 'true':'false' )."'" );
+	return $result;
+}
+
+# -------------------------------------------------------------------------------------------------
 # get and returns the list of databases in the server, minus the predefined system databases
 # (I):
 # - none
@@ -335,46 +374,6 @@ sub DESTROY {
 ### Note for the developer: while a global function doesn't take any argument, it can be called both
 ### as a class method 'TTP::Package->method()' or as a global function 'TTP::Package::method()',
 ### the former being preferred (hence the writing inside of the 'Class methods' block).
-
-# -------------------------------------------------------------------------------------------------
-# Backup a database
-# (I):
-# - the DBMS instance
-# - parms is a hash ref with following keys:
-#   > database: mandatory
-#   > output: optional
-#   > mode: full-diff, defaulting to 'full'
-#   > compress: true|false
-# (O):
-# - returns a hash with following keys:
-#   > ok: true|false
-#   > stdout: a copy of lines outputed on stdout as an array ref
-
-sub apiBackupDatabase {
-	my ( $me, $dbms, $parms ) = @_;
-	my $result = { ok => false };
-	msgErr( __PACKAGE__."::apiBackupDatabase() database is mandatory, but is not specified" ) if !$parms->{database};
-	msgErr( __PACKAGE__."::apiBackupDatabase() mode must be 'full' or 'diff', found '$parms->{mode}'" ) if $parms->{mode} ne 'full' && $parms->{mode} ne 'diff';
-	msgErr( __PACKAGE__."::apiBackupDatabase() output is mandatory, but is not specified" ) if !$parms->{output};
-	if( !TTP::errs()){
-		msgVerbose( __PACKAGE__."::apiBackupDatabase() entering with instance='".$dbms->instance()."' database='$parms->{database}' mode='$parms->{mode}'..." );
-		my $tstring = Time::Moment->now->strftime( '%Y-%m-%d %H:%M:%S.%6N %:z' );
-		# if full
-		my $options = "NOFORMAT, NOINIT, MEDIANAME='SQLServerBackups'";
-		my $label = "Full";
-		# if diff
-		if( $parms->{mode} eq 'diff' ){
-			$options .= ", DIFFERENTIAL";
-			$label = "Differential";
-		}
-		$options .= ", COMPRESSION" if defined $parms->{compress} && $parms->{compress};
-		$parms->{sql} = "USE master; BACKUP DATABASE $parms->{database} TO DISK='$parms->{output}' WITH $options, NAME='$parms->{database} $label Backup $tstring';";
-		msgVerbose( __PACKAGE__."::apiBackupDatabase() sql='$parms->{sql}'" );
-		$result = _sqlExec( $dbms, $parms->{sql} );
-	}
-	msgVerbose( __PACKAGE__."::apiBackupDatabase() returns '".( $result->{ok} ? 'true':'false' )."'" );
-	return $result;
-}
 
 # ------------------------------------------------------------------------------------------------
 # execute a SQL command and returns its result
