@@ -16,6 +16,7 @@
 	- Get SqlServer-specific properties
     - 'instance' property is removed from service.DBMS schema
     - Add dbms.pl list --properties option
+    - Remove dbms.pl vars --service (unused) option
 
 ### 4.10.1
 
@@ -38,7 +39,7 @@
     - Define new TTP::Service->list(), updating node-monitor-daemon.pl and services.pl list accordingly
     - Obsolete 'services.pl list --type' in favor of 'services.pl --identifier' option to get consistent with 'environment.id' property
     - Credentials are now searched only in etc/ subdirectories
-    - Obsolete 'archivesRoot' and 'archivesDir' properties in favor of 'archives.periodicDic' and 'archives.rootDir'
+    - Obsolete 'archivesRoot' and 'archivesDir' properties in favor of 'archives.periodicDir' and 'archives.rootDir'
 
 ### 4.9.3
 
