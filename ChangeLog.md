@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.10.1-rc.0
+### 4.10.1
 
-    Release date: 
+    Release date: 2025- 5- 9
 
     - Remove surrounding double quotes of commands and verbs counts
     - Fix node-monitor-daemon.pl array ref argument
@@ -334,4 +334,4 @@
 
 ---
 P. Wieser
-- Last updated on 2025, May 7th
+- Last updated on 2025, May 9th
