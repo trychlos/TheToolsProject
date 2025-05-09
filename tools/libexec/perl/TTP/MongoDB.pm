@@ -72,8 +72,8 @@ sub _connect {
 	} else {
 		my( $account, $passwd ) = $self->_getCredentials();
 		if( length $account && length $passwd ){
-			my $host = $self->service()->var([ 'DBMS', 'host' ]) || 'localhost:27017';
-			$handle = MongoDB::MongoClient->new( host => $host, username => $account, password => $passwd );
+			my $server = $self->service()->var([ 'DBMS', 'host' ], $self->node()) || 'localhost:27017';
+			$handle = MongoDB::MongoClient->new( host => $server, username => $account, password => $passwd );
 			$self->{_dbms}{connect} = $handle;
 			if( $handle ){
 				#print STDERR Dumper( $handle );
@@ -132,10 +132,11 @@ sub getDatabases {
 		my $handle = $self->_connect();
 		if( $handle ){
 			my @dbs = $handle->list_databases;
+			my $excludeSystemDatabases = $self->excludeSystemDatabases();
 			$databases = [];
 			foreach my $it ( @dbs ){
 				my $dbname = $it->{name};
-				if( !grep( /^$dbname$/, @{$Const->{systemDatabases}} )){
+				if( !$excludeSystemDatabases || !grep( /^$dbname$/, @{$Const->{systemDatabases}} )){
 					push( @{$databases}, $dbname );
 				}
 			}
@@ -145,6 +146,27 @@ sub getDatabases {
 	}
 
 	return $databases || [];
+}
+
+# -------------------------------------------------------------------------------------------------
+# returns the list of collections in the database
+# (I):
+# - the database to list the collections from
+# (O):
+# - the list of collections, which may be empty
+
+sub getDatabaseTables {
+	my ( $self, $database ) = @_;
+
+	my @collections = ();
+	my $handle = $self->_connect();
+	if( $handle ){
+		my $db = $handle->get_database( $database );
+		@collections = $db->collection_names;
+		msgVerbose( __PACKAGE__."::getDatabasesTables() got ".scalar( @collections )." collection(s)" );
+	}
+
+	return \@collections;
 }
 
 ### Class methods

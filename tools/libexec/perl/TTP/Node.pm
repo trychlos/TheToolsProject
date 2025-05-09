@@ -351,20 +351,30 @@ sub _enumTestSingle {
 # - environment identifier
 # - service name
 # (O):
-# - the first found node as a TTP::Node instance
+# - the first found node as a TTP::Node instance, or undef
 
 sub findByService {
 	my ( $class, $environment, $service ) = @_;
 	$class = ref( $class ) || $class;
 	msgDebug( __PACKAGE__."::findByService() environment='$environment' service='$service'" );
 
-	my $found = undef;
+	my $founds = [];
 	my $nodes = $class->list();
 	foreach my $name ( @{$nodes} ){
 		my $candidate = $class->new( $ep, { node => $name });
 		if( $candidate && $candidate->hasService( $service ) && $candidate->environment() eq $environment ){
-			$found = $candidate;
-			last;
+			push( @{$founds}, $candidate );
+		}
+	}
+
+	my $found = undef;
+	my $count = scalar( @{$founds} );
+	if( $count == 0 ){
+		msgErr( "unable to find an hosting node for '$service' service in '$environment' environment" ) ;
+	} else {
+		$found = $founds->[0];
+		if( $count > 1 ){
+			msgWarn( "found $count hosting nodes for '$service' service in '$environment' environment: [ ".join( ', ', @{$founds} )." ]" ) ;
 		}
 	}
 
