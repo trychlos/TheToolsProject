@@ -81,6 +81,19 @@ sub listDatabases {
 }
 
 # -------------------------------------------------------------------------------------------------
+# list the properties of the service
+
+sub listProperties {
+	my $props = [];
+	msgOut( "displaying properties of '$opt_service' DBMS service..." );
+	$props = $objDbms->getProperties() || [];
+	foreach my $it ( @{$props} ){
+		print " ".$it->{name}.": ".$it->{value}.EOL;
+	}
+	msgOut( scalar @{$props}." found properties(s)" );
+}
+
+# -------------------------------------------------------------------------------------------------
 # list the tables in the database
 
 sub listTables {
@@ -166,6 +179,7 @@ if( !$opt_properties && !$opt_listdb && ( !$opt_database || !$opt_listtables )){
 
 if( !TTP::errs()){
 	listDatabases() if $opt_listdb;
+	listProperties() if $opt_properties;
 	listTables() if $opt_database && $opt_listtables;
 }
 

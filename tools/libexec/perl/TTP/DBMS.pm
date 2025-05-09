@@ -119,6 +119,20 @@ sub getDatabaseTables {
 	return undef;
 }
 
+# -------------------------------------------------------------------------------------------------
+# returns the list of properties of the DBMS service
+# (I):
+# - none
+# (O):
+# - the list of properties as a { name, value } array ref
+
+sub getProperties {
+	my ( $self, $database ) = @_;
+
+
+	return [];
+}
+
 # ------------------------------------------------------------------------------------------------
 # Getter/Setter
 # (I):

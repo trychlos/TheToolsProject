@@ -252,6 +252,34 @@ sub getDatabaseTables {
 	return $tables;
 }
 
+# ------------------------------------------------------------------------------------------------
+# returns the list of properties of this DBMS server
+# (I):
+# - none
+# (O):
+# - the list of properties as a { name, value } array ref
+
+sub getProperties {
+	my ( $self ) = @_;
+
+	# get common properties
+	my $props = $self->TTP::DBMS::getProperties();
+
+	# get SqlServer-specific properties
+	my $res = $self->_sqlExec( "SELECT \@\@SERVICENAME as name" );
+	if( $res->{ok} ){
+		push( @{$props}, { name => 'serviceName', value => $res->{result}[0]{name} });
+	}
+	$res = $self->_sqlExec( "SELECT \@\@VERSION as version" );
+	if( $res->{ok} ){
+		# limit to the first line of the version
+		my @lines = split( /[\r\n]/,  $res->{result}[0]{version} );
+		push( @{$props}, { name => 'version', value => $lines[0] });
+	}
+
+	return $props;
+}
+
 # -------------------------------------------------------------------------------------------------
 # Getter
 # (I):
