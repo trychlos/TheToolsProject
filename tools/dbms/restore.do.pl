@@ -4,7 +4,7 @@
 # @(-) --[no]colored           color the output depending of the message level [${colored}]
 # @(-) --[no]dummy             dummy run [${dummy}]
 # @(-) --[no]verbose           run verbosely [${verbose}]
-# @(-) --instance=<name>       Sql Server instance name [${instance}]
+# @(-) --service=<name>        acts of this service [${service}]
 # @(-) --database=<name>       target database name [${database}]
 # @(-) --full=<filename>       restore from this full backup [${full}]
 # @(-) --diff=<filename>       restore with this differential backup [${diff}]
@@ -44,7 +44,7 @@ my $defaults = {
 	colored => 'no',
 	dummy => 'no',
 	verbose => 'no',
-	instance => 'MSSQLSERVER',
+	service => '',
 	database => '',
 	full => '',
 	diff => '',
@@ -52,15 +52,19 @@ my $defaults = {
 	report => 'yes'
 };
 
-my $opt_instance = $defaults->{instance};
-my $opt_instance_set = false;
+my $opt_service = $defaults->{service};
 my $opt_database = $defaults->{database};
 my $opt_full = $defaults->{full};
 my $opt_diff = $defaults->{diff};
 my $opt_verifyonly = false;
 my $opt_report = true;
 
-my $dbms = undef;
+# the node which hosts the requested service
+my $objNode = undef;
+# the service object
+my $objService = undef;
+# the DBMS object
+my $objDbms = undef;
 
 # -------------------------------------------------------------------------------------------------
 # restore the provided backup file
@@ -69,9 +73,9 @@ sub doRestore {
 	if( $opt_verifyonly ){
 		msgOut( "verifying the restorability of '$opt_full'".( $opt_diff ? ", with additional diff" : "" )."..." );
 	} else {
-		msgOut( "restoring database '$opt_instance\\$opt_database' from '$opt_full'".( $opt_diff ? ", with additional diff" : "" )."..." );
+		msgOut( "restoring database '$opt_service\\$opt_database' from '$opt_full'".( $opt_diff ? ", with additional diff" : "" )."..." );
 	}
-	my $res = $dbms->restoreDatabase({
+	my $res = $objDbms->restoreDatabase({
 		database => $opt_database,
 		full => $opt_full,
 		diff => $opt_diff,
@@ -82,7 +86,7 @@ sub doRestore {
 		#  with the same properties and options than dbms.pl backup
 		my $mode = $opt_diff ? 'diff' : 'full';
 		my $data = {
-			instance => $opt_instance,
+			service => $opt_service,
 			database => $opt_database,
 			full => $opt_full,
 			mode => $mode
@@ -103,10 +107,10 @@ sub doRestore {
 				},
 				mqtt => {
 					data => $data,
-					topic => $ep->node()->name().'/executionReport/'.$ep->runner()->command().'/'.$ep->runner()->verb()."/$opt_instance/$opt_database",
+					topic => $objNode->name().'/executionReport/'.$ep->runner()->command().'/'.$ep->runner()->verb()."/$opt_service/$opt_database",
 					options => "-retain",
 					excludes => [
-						'instance',
+						'service',
 						'database',
 						'cmdline',
 						'command',
@@ -133,11 +137,7 @@ if( !GetOptions(
 	"colored!"			=> sub { $ep->runner()->colored( @_ ); },
 	"dummy!"			=> sub { $ep->runner()->dummy( @_ ); },
 	"verbose!"			=> sub { $ep->runner()->verbose( @_ ); },
-	"instance=s"		=> sub {
-		my( $opt_name, $opt_value ) = @_;
-		$opt_instance = $opt_value;
-		$opt_instance_set = true;
-	},
+	"service=s"			=> \$opt_service,
 	"database=s"		=> \$opt_database,
 	"full=s"			=> \$opt_full,
 	"diff=s"			=> \$opt_diff,
@@ -156,21 +156,30 @@ if( $ep->runner()->help()){
 msgVerbose( "got colored='".( $ep->runner()->colored() ? 'true':'false' )."'" );
 msgVerbose( "got dummy='".( $ep->runner()->dummy() ? 'true':'false' )."'" );
 msgVerbose( "got verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
-msgVerbose( "got instance='$opt_instance'" );
-msgVerbose( "got instance_set='".( $opt_instance_set ? 'true':'false' )."'" );
+msgVerbose( "got service='$opt_service'" );
 msgVerbose( "got database='$opt_database'" );
 msgVerbose( "got full='$opt_full'" );
 msgVerbose( "got diff='$opt_diff'" );
 msgVerbose( "got verifyonly='".( $opt_verifyonly ? 'true':'false' )."'" );
 msgVerbose( "got report='".( $opt_report ? 'true':'false' )."'" );
 
-msgErr( "'--instance' option is mandatory, but is not specified" ) if !$opt_instance;
+# must have --service option
+# find the node which hosts this service in this same environment (should be at most one)
+# and check that the service is DBMS-aware
+if( $opt_service ){
+	$objNode = TTP::Node->findByService( $ep->node()->environment(), $opt_service );
+	if( $objNode ){
+		msgVerbose( "got hosting node='".$objNode->name()."'" );
+		$objService = TTP::Service->new( $ep, { service => $opt_service });
+		$objDbms = $objService->newDbms({ node => $objNode });
+	}
+} else {
+	msgErr( "'--service' option is mandatory, but is not specified" );
+}
+
 msgErr( "'--database' option is mandatory, but is not specified" ) if !$opt_database && !$opt_verifyonly;
 msgErr( "'--full' option is mandatory, but is not specified" ) if !$opt_full;
 msgErr( "$opt_diff: file not found or not readable" ) if $opt_diff && ! -f $opt_diff;
-
-# instanciates the DBMS class
-$dbms = TTP::DBMS->new( $ep, { instance => $opt_instance }) if !TTP::errs();
 
 if( !TTP::errs()){
 	doRestore();
