@@ -56,7 +56,9 @@
 |      |            | and same for all other jsonRead(), TTP::IEnableable:enabled(), TTP::IJSONable::jsonLoad() |
 |      |            | and same for evaluate() functions |
 |  141 | 2025- 5-10 | MongoDB::backupDatabase() and restoreDatabase() command-lines should be configurable somewhere |
-|  142 |  |  |
+|  142 | 2025- 5-10 | review commands executions to homogeneize the call, the execution, the logs |
+|  143 | 2025- 5-10 | both dbms.pl status and dbms.pl telemetry are tighly linked to SqlServer - Has to move this specific code to the module, making some place for other DBMS |
+|  144 |  |  |
 
 ---
 ## Done

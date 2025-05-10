@@ -186,6 +186,27 @@ sub backupDatabase {
 }
 
 # -------------------------------------------------------------------------------------------------
+# execute a sql command
+# not managed by MongoDB driver as of v4.11
+# (I):
+# - the command string to be executed
+# - an optional options hash which may contain following keys:
+#   > tabular: whether to format data as tabular data, defaulting to true
+#   > json: an output file where data is to be saved
+#   > multiple: whether we expect several result sets, defaulting to false
+# (O):
+# returns a hash ref with following keys:
+# - ok: true|false
+# - result: an array ref to hash results
+
+sub execSqlCommand {
+	my ( $self, $command, $opts ) = @_;
+	my $result = { ok => false };
+	msgErr( __PACKAGE__."::execSqlCommand() doesn't manage SQL commands as MongoDB is a NoSQL database" );
+	return $result;
+}
+
+# -------------------------------------------------------------------------------------------------
 # returns the list of databases in this DBMS
 # cache the result (the list of found databases) to request the DBMS only once
 # (I):
