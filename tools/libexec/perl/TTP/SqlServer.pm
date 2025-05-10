@@ -53,7 +53,19 @@ my $Const = {
 	systemTables => [
 		'dtproperties',
 		'sysdiagrams'
-	]
+	],
+	# Source: https://learn.microsoft.com/fr-fr/sql/relational-databases/system-catalog-views/sys-databases-transact-sql?view=sql-server-ver16
+	sqlStates => {
+		'0' => 'online',
+		'1' => 'restoring',
+		'2' => 'recovering',
+		'3' => 'recovery_pending',
+		'4' => 'suspect',
+		'5' => 'emergency',
+		'6' => 'offline',
+		'7' => 'copying',
+		'10' => 'offline_secondary'
+	}
 };
 
 ### Private methods
@@ -356,6 +368,49 @@ sub backupDatabase {
 	}
 	msgVerbose( __PACKAGE__."::backupDatabase() returns '".( $result->{ok} ? 'true':'false' )."'" );
 	return $result;
+}
+
+# -------------------------------------------------------------------------------------------------
+# Get the status of a database
+# (I):
+# - database name
+# (O):
+# - returns a hash with following keys:
+#   > state: whether the database is up and running, with values 0 (down) or 1 (up)
+#   > state_desc: a label which describes the state, e.g. 'online' or 'down'
+
+sub databaseState {
+	my ( $self, $database ) = @_;
+	my $result = {};
+
+	my $sql = "select state, state_desc from sys.databases where name='$database'";
+	if( $ep->runner()->dummy()){
+		msgDummy( $sql );
+		$result = {
+			state => 0,
+			state_desc => 'DUMMY_ONLINE'
+		}
+	} else {
+		my $sqlres = $self->execSqlCommand( $sql, { tabular => false });
+		$result = $sqlres->{ok} ? $sqlres->{result}->[0] : {};
+	}
+
+	return $result;
+}
+
+# -------------------------------------------------------------------------------------------------
+# Get the possible statuses of a database
+# (I):
+# - none
+# (O):
+# - returns a hash with following items where:
+#   > the key is the numerical 'state' as returned by databaseState() abode
+#   > the value is the corresponding string 'state_desc'
+
+sub dbStatuses {
+	my ( $self ) = @_;
+
+	return $Const->{sqlStates};
 }
 
 # -------------------------------------------------------------------------------------------------

@@ -51,7 +51,12 @@ my $Const = {
 	],
 	# the list of system tables to be excluded
 	systemTables => [
-	]
+	],
+	# just inferred from returned database statistics (dbStats command)
+	dbStates => {
+		'0' => 'down',
+		'1' => 'online'
+	}
 };
 
 ### Private methods
@@ -183,6 +188,65 @@ sub backupDatabase {
 
 	msgVerbose( __PACKAGE__."::backupDatabase() returns '".( $result->{ok} ? 'true':'false' )."'" );
 	return $result;
+}
+
+# -------------------------------------------------------------------------------------------------
+# Get the status of a database
+# (I):
+# - database name
+# (O):
+# - returns a hash with following keys:
+#   > state: whether the database is up and running, with values 0 (down) or 1 (up)
+#   > state_desc: a label which describes the state, e.g. 'online' or 'down'
+#
+# dbStats $VAR1 = {
+#          'fsTotalSize' => '19165872128',
+#          'db' => 'ronin',
+#          'storageSize' => '180224',
+#          'scaleFactor' => '1',
+#          'ok' => '1',
+#          'fsUsedSize' => '10445062144',
+#          'objects' => 67,
+#          'indexes' => 27,
+#          'avgObjSize' => '174.805970149254',
+#          'dataSize' => '11712',
+#          'collections' => 11,
+#          'totalSize' => '479232',
+#          'views' => 0,
+#          'indexSize' => '299008'
+#        };
+
+sub databaseState {
+	my ( $self, $database ) = @_;
+	my $result = {
+		state => 0,
+		state_desc => $Const->{dbStates}{'0'}
+	};
+	my $handle = $self->_connect();
+	if( $handle ){
+		my $dbh = $handle->get_database( $database );
+		if( $dbh ){
+			my $stats = $dbh->run_command([ dbStats => 1 ]);
+			$result->{state} = $stats->{ok};
+			$result->{state_desc} = $Const->{dbStates}{$stats->{ok}};
+		}
+	}
+	return $result;
+}
+
+# -------------------------------------------------------------------------------------------------
+# Get the possible statuses of a database
+# (I):
+# - none
+# (O):
+# - returns a hash with following items where:
+#   > the key is the numerical 'state' as returned by databaseState() abode
+#   > the value is the corresponding string 'state_desc'
+
+sub dbStatuses {
+	my ( $self ) = @_;
+
+	return $Const->{dbStates};
 }
 
 # -------------------------------------------------------------------------------------------------
