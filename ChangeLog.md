@@ -18,7 +18,7 @@
     - Add dbms.pl list --properties option
     - Remove dbms.pl vars --service (unused) option
     - TTP::Node->new() auto-evaluate the node at least once at instanciation time
-    - 'dataPath' SqlServer-specific property is removed from service.DBMS schema
+    - 'dataPath' SqlServer-specific property is now dynamically acquired and removed from service.DBMS schema
 
 ### 4.10.1
 

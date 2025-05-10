@@ -142,10 +142,12 @@ sub _noSql {
 
 sub backupDatabase {
 	my ( $self, $parms ) = @_;
+
 	my $result = { ok => false };
 	msgErr( __PACKAGE__."::backupDatabase() database is mandatory, but is not specified" ) if !$parms->{database};
 	msgErr( __PACKAGE__."::backupDatabase() mode must be 'full' or 'diff', found '$parms->{mode}'" ) if $parms->{mode} ne 'full' && $parms->{mode} ne 'diff';
 	msgErr( __PACKAGE__."::backupDatabase() differential mode is not managed here" ) if $parms->{mode} eq 'diff';
+
 	my $account = undef;
 	my $passwd = undef;
 	if( !TTP::errs()){
@@ -154,6 +156,7 @@ sub backupDatabase {
 			msgErr( __PACKAGE__."::backupDatabase() unable to get account/password couple" );
 		}
 	}
+
 	if( !TTP::errs()){
 		msgVerbose( __PACKAGE__."::backupDatabase() entering with service='".$self->service()->name()."' database='$parms->{database}' mode='$parms->{mode}'..." );
 		my $output = $parms->{output} || $self->computeDefaultBackupFilename( $parms );
@@ -166,18 +169,18 @@ sub backupDatabase {
 		$cmd .= " --password $passwd";
 		$cmd .= " --authenticationDatabase admin";
 		$cmd .= " --db $parms->{database}";
-		$cmd .= " --gzip" if $parms->{compress};
 		$cmd .= " --out $tmpdir";
 		my $opt = "";
 		$opt = "-z" if $parms->{compress};
-		$cmd .= " && tar -c $opt -f - $tmpdir > $output";
+		$cmd .= " && (cd $tmpdir; tar -c $opt -f - $parms->{database} > $output)";
 		my $res = TTP::commandExec( $cmd );
 		# mongodump provides its output on stderr, while stdout is empty
 		$result->{ok} = $res->{success};
 		$result->{stdout} = $res->{stderr};
-		msgLog( __PACKAGE__."::backupDatabase() stdout='".TTP::chompDumper( $result->{stdout} )."'" );
+		#msgLog( __PACKAGE__."::backupDatabase() stdout='".TTP::chompDumper( $result->{stdout} )."'" );
 		$result->{output} = $output;
 	}
+
 	msgVerbose( __PACKAGE__."::backupDatabase() returns '".( $result->{ok} ? 'true':'false' )."'" );
 	return $result;
 }
@@ -250,6 +253,65 @@ sub getProperties {
 	my $props = $self->TTP::DBMS::getProperties();
 
 	return $props;
+}
+
+# -------------------------------------------------------------------------------------------------
+# Restore a file into a database
+# As backups are managed with mongodump, restores are to be managed with mongorestore
+# a database is provided because made required by SqlServer, but not needed here as mongorestore
+# has special options (not implemented as of v4.11) to restore to another database name.
+# (I):
+# - parms is a hash ref with keys:
+#   > full: mandatory, the full backup file
+# (O):
+# - returns a hash with following keys:
+#   > ok: true|false
+
+sub restoreDatabase {
+	my ( $self, $parms ) = @_;
+
+	my $result = { ok => false };
+	msgErr( __PACKAGE__."::restoreDatabase() full is mandatory, not specified" ) if !$parms->{full};
+	msgErr( __PACKAGE__."::restoreDatabase() --verifyonly option is not supported here" ) if $parms->{verifyonly};
+	msgErr( __PACKAGE__."::restoreDatabase() --diff option is not supported here" ) if $parms->{diff};
+
+	my $account = undef;
+	my $passwd = undef;
+	if( !TTP::errs()){
+		( $account, $passwd ) = $self->_getCredentials();
+		if( !length $account || !length $passwd ){
+			msgErr( __PACKAGE__."::restoreDatabase() unable to get account/password couple" );
+		}
+	}
+	if( !TTP::errs()){
+		msgVerbose( __PACKAGE__."::restoreDatabase() entering with service='".$self->service()->name()."' database='$parms->{database}'..." );
+		my $tmpdir = tempdir( CLEANUP => 1 );
+		# do we have a compressed archive file ?
+		my $cmd = "file $parms->{full}";
+		my $res = TTP::commandExec( $cmd, { stdinFromNull => false });
+		my $gziped = false;
+		if( grep( /gzip/, @{$res->{stdout}} )){
+			$gziped = true;
+		}
+		my $opt = "";
+		$opt = "-z" if $gziped;
+		$cmd = "tar -x $opt -f $parms->{full} --directory $tmpdir";
+		$cmd .= " && mongorestore";
+		$cmd .= " --host ".$self->server();
+		$cmd .= " --username $account";
+		$cmd .= " --password $passwd";
+		$cmd .= " --authenticationDatabase admin";
+		$cmd .= " --drop";
+		$cmd .= " $tmpdir";
+		$res = TTP::commandExec( $cmd );
+		# mongodump provides its output on stderr, while stdout is empty
+		$result->{ok} = $res->{success};
+		#$result->{stdout} = $res->{stderr};
+		#msgLog( __PACKAGE__."::backupDatabase() stdout='".TTP::chompDumper( $result->{stdout} )."'" );
+	}
+
+	msgVerbose( __PACKAGE__."::restoreDatabase() result='".( $result->{ok} ? 'true' : 'false' )."'" );
+	return $result;
 }
 
 ### Class methods
