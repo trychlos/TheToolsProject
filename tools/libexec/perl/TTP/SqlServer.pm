@@ -78,8 +78,8 @@ sub _connect {
 		if( length $account && length $passwd ){
 			Win32::SqlServer::SetDefaultForEncryption( 'Optional', true );
 			# SQLServer 2008R2 doesn't like have a server connection string with MSSQLSERVER default instance -> obsoleted
-			# SQLServer 2012R2 doesn't like connect to localhost:1433, but rather wants the COMPUTERNAME
-			my $server = $self->service()->var([ 'DBMS', 'host' ], $self->node()) || $self->node()->name();
+			# SQLServer 2012 doesn't like connect to localhost:1433, but rather wants the COMPUTERNAME
+			my $server = $self->server();
 			msgVerbose( __PACKAGE__."::_connect() calling sql_init with server='".( $server || '(undef)' )."', account='$account'..." );
 			$handle = Win32::SqlServer::sql_init( $server, $account, $passwd );
 			if( $handle && $handle->isconnected()){
@@ -202,7 +202,7 @@ sub _sqlExec {
 # - parms is a hash ref with following keys:
 #   > database: mandatory
 #   > output: optional
-#   > mode: full-diff, defaulting to 'full'
+#   > mode: full|diff, defaulting to 'full'
 #   > compress: true|false
 # (O):
 # - returns a hash with following keys:

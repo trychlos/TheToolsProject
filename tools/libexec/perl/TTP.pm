@@ -23,12 +23,12 @@ use strict;
 use utf8;
 use warnings;
 
+use Capture::Tiny qw( :all );
 use Config;
 use Data::Dumper;
 use Data::UUID;
 use Devel::StackTrace;
 use File::Spec;
-use IPC::Run qw( run timeout );
 use JSON;
 use open qw( :std :encoding(UTF-8));
 use Path::Tiny qw( path );
@@ -246,7 +246,10 @@ sub commandExec {
 			msgDummy( $result->{evaluated} );
 			$result->{success} = true;
 		} else {
-			my @res_out = `$result->{evaluated}`;
+			my ( $res_out, $res_err ) = capture { `$result->{evaluated}` };
+			my @res_out = split( /[\r\n]/, $res_out );
+			my @res_err = split( /[\r\n]/, $res_err );
+			#print "code ".Dumper( $res_code );
 			# https://www.perlmonks.org/?node_id=81640
 			# Thus, the exit value of the subprocess is actually ($? >> 8), and $? & 127 gives which signal, if any, the
 			# process died from, and $? & 128 reports whether there was a core dump.
@@ -262,6 +265,7 @@ sub commandExec {
 				msgVerbose( "TTP::commandExec() robocopy specific interpretation res=$res_code success=".( $result->{success} ? 'true' : 'false' ));
 			}
 			$result->{stdout} = \@res_out;
+			$result->{stderr} = \@res_err;
 		}
 		msgVerbose( "TTP::commandExec() success=".( $result->{success} ? 'true' : 'false' ));
 	}

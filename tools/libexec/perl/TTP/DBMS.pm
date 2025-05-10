@@ -287,6 +287,21 @@ sub package {
 # (I):
 # - none
 # (O):
+# - returns the server or the connection string as configured in the DBMS service
+
+sub server {
+	my ( $self ) = @_;
+
+	my $server = $self->service()->var([ 'DBMS', 'host' ], $self->node()) || $self->node()->name();
+
+	return $server;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Getter
+# (I):
+# - none
+# (O):
 # - returns the TTP::Service this DBMS belongs to
 
 sub service {
@@ -381,40 +396,6 @@ sub DESTROY {
 ### the former being preferred (hence the writing inside of the 'Class methods' block).
 
 # -------------------------------------------------------------------------------------------------
-# Backup a database
-# (I):
-# - parms is a hash ref with following keys:
-#   > database: mandatory
-#   > output: optional
-#   > mode: full-diff, defaulting to 'full'
-#   > compress: true|false
-# returns a hash reference with:
-# - status: true|false
-# - output: the output filename (even if provided on input)
-
-sub backupDatabase {
-	my ( $self, $parms ) = @_;
-	my $result = { status => false };
-	msgErr( __PACKAGE__."::backupDatabase() database is mandatory, but is not specified" ) if !$parms->{database};
-	msgErr( __PACKAGE__."::backupDatabase() mode must be 'full' or 'diff', found '$parms->{mode}'" ) if $parms->{mode} ne 'full' && $parms->{mode} ne 'diff';
-	if( !TTP::errs()){
-		if( !$parms->{output} ){
-			$parms->{output} = $self->computeDefaultBackupFilename( $parms );
-		}
-		msgOut( "backuping to '$parms->{output}'" );
-		my $res = $self->toPackage( 'apiBackupDatabase', $parms );
-		$result->{status} = $res->{ok};
-	}
-	$result->{output} = $parms->{output};
-	if( !$result->{status} ){
-		msgErr( __PACKAGE__."::backupDatabase() ".$self->instance()."\\$parms->{database} NOT OK" );
-	} else {
-		msgVerbose( __PACKAGE__."::backupDatabase() returning status='true' output='$result->{output}'" );
-	}
-	return $result;
-}
-
-# -------------------------------------------------------------------------------------------------
 # execute a sql command
 # (I):
 # - the command string to be executed
@@ -495,34 +476,6 @@ sub restoreDatabase {
 	}
 	return $result && $result->{ok};
 }
-
-# -------------------------------------------------------------------------------------------------
-# address a function in the package which deserves the instance
-#  and returns the result which is expected to be a hash with (at least) a 'ok' key, or undef
-# (I):
-# - the name of the function to be called
-# - an optional options hash to be passed to the function
-# (O):
-# - the result
-
-#sub toPackage {
-#	my ( $self, $fname, $parms ) = @_;
-#	msgVerbose( __PACKAGE__."::toPackage() entering with fname='".( $fname || '(undef)' )."'" );
-#	my $result = undef;
-#	if( $fname ){
-#		my $package = $self->package();
-#		Module::Load::load( $package );
-#		if( $package->can( $fname )){
-#			$result = $package->$fname( $self, $parms );
-#		} else {
-#			msgWarn( __PACKAGE__."::toPackage() package '$package' says it cannot '$fname'" );
-#		}
-#	} else {
-#		msgErr( __PACKAGE__."::toPackage() function name must be specified" );
-#	}
-#	msgVerbose( __PACKAGE__."::toPackage() returning with result='".( defined $result ? ( $result->{ok} ? 'true':'false' ) : '(undef)' )."'" );
-#	return $result;
-#}
 
 1;
 

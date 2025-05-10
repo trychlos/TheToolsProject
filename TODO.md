@@ -52,7 +52,11 @@
 |      | 2025- 5- 7 | emphasize is done - but not generalization |
 |      | 2025- 5- 9 | dbms.pl list no more have --instance option has useless for SqlServer |
 |  139 | 2025- 5- 9 | when accessing a service, should be able to specify a target node in the case where the service is available on several nodes in this environment |
-|  140 |  |  |
+|  140 | 2025- 5-10 | TTP::IFindable::_find_run() whether to log should be a run option activated only on some situations (because this is too much verbose) |
+|      |            | and same for all other jsonRead(), TTP::IEnableable:enabled(), TTP::IJSONable::jsonLoad() |
+|      |            | and same for evaluate() functions |
+|  141 | 2025- 5-10 | MongoDB::backupDatabase() and restoreDatabase() command-lines should be configurable somewhere |
+|  142 |  |  |
 
 ---
 ## Done
