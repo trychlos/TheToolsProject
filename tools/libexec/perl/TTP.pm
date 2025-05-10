@@ -247,8 +247,6 @@ sub commandExec {
 			$result->{success} = true;
 		} else {
 			my ( $res_out, $res_err ) = capture { `$result->{evaluated}` };
-			my @res_out = split( /[\r\n]/, $res_out );
-			my @res_err = split( /[\r\n]/, $res_err );
 			#print "code ".Dumper( $res_code );
 			# https://www.perlmonks.org/?node_id=81640
 			# Thus, the exit value of the subprocess is actually ($? >> 8), and $? & 127 gives which signal, if any, the
@@ -257,14 +255,19 @@ sub commandExec {
 			my $res_code = $?;
 			$result->{exit} = $res_code;
 			$result->{success} = ( $res_code == 0 ) ? true : false;
-			msgVerbose( scalar( @res_out ) ? join( EOL, @res_out ) : '<empty stdout>' );
 			msgVerbose( "TTP::commandExec() return_code=$res_code firstly interpreted as success=".( $result->{success} ? 'true' : 'false' ));
 			if( $result->{evaluated} =~ /^\s*robocopy/i ){
 				$res_code = ( $res_code >> 8 );
 				$result->{success} = ( $res_code <= 7 ) ? true : false;
 				msgVerbose( "TTP::commandExec() robocopy specific interpretation res=$res_code success=".( $result->{success} ? 'true' : 'false' ));
 			}
+			# stdout
+			msgVerbose( "TTP::commandExec() stdout='$res_out'" );
+			my @res_out = split( /[\r\n]/, $res_out );
 			$result->{stdout} = \@res_out;
+			# stderr
+			msgVerbose( "TTP::commandExec() stderr='$res_err'" );
+			my @res_err = split( /[\r\n]/, $res_err );
 			$result->{stderr} = \@res_err;
 		}
 		msgVerbose( "TTP::commandExec() success=".( $result->{success} ? 'true' : 'false' ));

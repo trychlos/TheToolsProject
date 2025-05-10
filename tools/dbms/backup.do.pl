@@ -41,7 +41,6 @@ use warnings;
 
 use File::Spec;
 
-use TTP::DBMS;
 use TTP::Service;
 
 my $defaults = {
