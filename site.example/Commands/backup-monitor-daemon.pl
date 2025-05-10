@@ -50,13 +50,15 @@ use File::stat;
 use Getopt::Long;
 
 use TTP;
+use vars::global qw( $ep );
+
 use TTP::Constants qw( :all );
-use TTP::Daemon;
 use TTP::Message qw( :all );
+use TTP::Node;
 use TTP::Path;
 use TTP::Reporter;
+use TTP::RunnerDaemon;
 use TTP::Service;
-use vars::global qw( $ep );
 
 my $daemon = TTP::Daemon->init();
 

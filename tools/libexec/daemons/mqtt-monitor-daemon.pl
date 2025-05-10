@@ -50,12 +50,13 @@ use Path::Tiny qw( path );
 use Time::Moment;
 
 use TTP;
+use vars::global qw( $ep );
+
 use TTP::Constants qw( :all );
 use TTP::JSONable;
 use TTP::Message qw( :all );
 use TTP::MQTT;
 use TTP::RunnerDaemon;
-use vars::global qw( $ep );
 
 my $daemon = TTP::RunnerDaemon->bootstrap();
 

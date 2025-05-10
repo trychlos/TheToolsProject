@@ -35,12 +35,12 @@ use File::Spec;
 use Role::Tiny::With;
 use Sys::Hostname qw( hostname );
 
-use TTP;
-use TTP::Service;
-use vars::global qw( $ep );
-
 with 'TTP::IAcceptable', 'TTP::IEnableable', 'TTP::IFindable', 'TTP::IJSONable';
 
+use TTP;
+use vars::global qw( $ep );
+
+use TTP::Service;
 use TTP::Constants qw( :all );
 use TTP::Message qw( :all );
 

@@ -29,10 +29,11 @@ use Getopt::Long;
 use Path::Tiny;
 
 use TTP;
+use vars::global qw( $ep );
+
 use TTP::Constants qw( :all );
 use TTP::Extern;
 use TTP::Message qw( :all );
-use vars::global qw( $ep );
 
 # TTP initialization
 my $extern = TTP::Extern->new();

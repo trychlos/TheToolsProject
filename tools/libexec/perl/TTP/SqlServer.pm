@@ -37,6 +37,8 @@ use Time::Moment;
 use if $Config{osname} eq 'MSWin32', "Win32::SqlServer", qw( :DEFAULT :consts );
 
 use TTP;
+use vars::global qw( $ep );
+
 use TTP::Constants qw( :all );
 use TTP::Credentials;
 use TTP::Message qw( :all );

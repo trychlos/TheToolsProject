@@ -40,10 +40,10 @@ use Getopt::Long;
 use Role::Tiny::With;
 use Try::Tiny;
 
+with 'TTP::IFindable';
+
 use TTP;
 use vars::global qw( $ep );
-
-with 'TTP::IFindable';
 
 use TTP::Constants qw( :all );
 use TTP::Message qw( :all );

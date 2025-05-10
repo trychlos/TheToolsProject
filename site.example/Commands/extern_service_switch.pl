@@ -32,9 +32,10 @@ use File::Spec;
 use Getopt::Long;
 
 use TTP;
+use vars::global qw( $ep );
+
 use TTP::Constants qw( :all );
 use TTP::Message qw( :all );
-use vars::global qw( $ep );
 
 # TTP initialization
 my $extern = TTP::Extern->new();
