@@ -101,6 +101,112 @@ sub _connect {
 }
 
 # -------------------------------------------------------------------------------------------------
+# restore the target database from the specified backup file
+# (I):
+# - parms is a hash ref with keys:
+#   > database: mandatory
+#   > file: mandatory
+#   > last: mandatory
+# (O):
+# - returns the needed 'MOVE' sentence
+
+sub _restoreDatabaseFile {
+	my ( $self, $parms ) = @_;
+	my $database = $parms->{database};
+	my $fname = $parms->{file};
+	my $last = $parms->{last};
+	#
+	msgVerbose(  __PACKAGE__."::_restoreDatabaseFile() restoring $fname" );
+	my $recovery = 'NORECOVERY';
+	if( $last ){
+		$recovery = 'RECOVERY';
+	}
+	my $move = $self->_restoreDatabaseMove( $parms );
+	my $result = true;
+	if( $move ){
+		my $res = $self->_sqlExec( "RESTORE DATABASE $database FROM DISK='$fname' WITH $recovery, $move;" );
+		$result = $res->{ok};
+	}
+	return $result;
+}
+
+# -------------------------------------------------------------------------------------------------
+# returns the move option in case of the datapath is different from the source or when the target
+# database has changed
+# (I):
+# - parms is a hash ref with keys:
+#   > database: mandatory
+#   > file: mandatory
+# (O):
+# - returns the needed 'MOVE' sentence
+
+sub _restoreDatabaseMove {
+	my ( $self, $parms ) = @_;
+	my $database = $parms->{database};
+	my $fname = $parms->{file};
+	msgVerbose( __PACKAGE__."::_restoreDatabaseMove() database='$database'" );
+	my $result = $self->_sqlExec( "RESTORE FILELISTONLY FROM DISK='$fname'" );
+	my $move = undef;
+	if( $dbms->ep()->runner()->dummy()){
+		msgDummy( "considering nomove" );
+	} elsif( !scalar @{$result->{result}} ){
+		msgErr( __PACKAGE__."::_restoreDatabaseMove() unable to get the files list of the backup set" );
+	} else {
+		#my $sqlDataPath = $self->service()->var([ 'DBMS', 'dataPath' ]);
+		my $res = $self->_sqlExec( "select InstanceDefaultDataPath = serverproperty( 'InstanceDefaultDataPath ')" );
+		my $sqlDataPath = $res->{result}[0]{InstanceDefaultDataPath};
+		foreach( @{$result->{result}} ){
+			my $row = $_;
+			$move .= ', ' if length $move;
+			my ( $vol, $dirs, $fname ) = File::Spec->splitpath( $sqlDataPath, true );
+			my $target_file = File::Spec->catpath( $vol, $dirs, $database.( $row->{Type} eq 'D' ? '.mdf' : '.ldf' ));
+			$move .= "MOVE '".$row->{'LogicalName'}."' TO '$target_file'";
+		}
+	}
+	return $move;
+}
+
+# -------------------------------------------------------------------------------------------------
+# restore the target database from the specified backup file
+# in this first phase, set it first offline (if it exists)
+# (I):
+# - parms is a hash ref with keys:
+#   > database: mandatory
+# (O):
+# - returns true|false
+
+sub _restoreDatabaseSetOffline {
+	my ( $self, $parms ) = @_;
+	my $database = $parms->{database};
+	msgVerbose( __PACKAGE__."::_restoreDatabaseSetOffline() database='$database'" );
+	my $result = true;
+	if( $self->databaseExists( $database )){
+		my $res = $self->_sqlExec( "ALTER DATABASE $database SET OFFLINE WITH ROLLBACK IMMEDIATE;" );
+		$result = $res->{ok};
+	}
+	return $result;
+}
+
+# -------------------------------------------------------------------------------------------------
+# verify the restorability of the file
+# (I):
+# - parms is a hash ref with keys:
+#   > database: mandatory
+#   > file: mandatory
+# (O):
+# - returns true|false
+
+sub _restoreDatabaseVerify {
+	my ( $self, $parms ) = @_;
+	my $database = $parms->{database};
+	my $fname = $parms->{file};
+	msgVerbose( __PACKAGE__."::_restoreDatabaseVerify() verifying $fname" );
+	my $move = $self->_restoreDatabaseMove( $parms );
+	my $res = $self->_sqlExec( "RESTORE VERIFYONLY FROM DISK='$fname' WITH $move;" );
+	return $res->{ok};
+}
+
+# -------------------------------------------------------------------------------------------------
 # execute a SQL request
 # (I):
 # - sql: the command
@@ -336,6 +442,51 @@ sub instance {
 	return $instance;
 }
 
+# -------------------------------------------------------------------------------------------------
+# Restore a file into a database
+# (I):
+# - parms is a hash ref with keys:
+#   > database: mandatory
+#   > full: mandatory, the full backup file
+#   > diff: optional, the diff backup file
+#   > verifyonly: whether we want only check the restorability of the provided file
+# (O):
+# - returns a hash with following keys:
+#   > ok: true|false
+
+sub restoreDatabase {
+	my ( $self, $parms ) = @_;
+	my $result = { ok => false };
+	my $verifyonly = false;
+	$verifyonly = $parms->{verifyonly} if defined $parms->{verifyonly};
+	msgErr( __PACKAGE__."::restoreDatabase() database is mandatory, not specified" ) if !$parms->{database} && !$verifyonly;
+	msgErr( __PACKAGE__."::restoreDatabase() full is mandatory, not specified" ) if !$parms->{full};
+	if( !TTP::errs()){
+		msgVerbose( __PACKAGE__."::restoreDatabase() entering with service='".$self->service()->name()."' database='$parms->{database}' verifyonly='$verifyonly'..." );
+		my $diff = $parms->{diff} || '';
+		if( $verifyonly || $self->_restoreDatabaseSetOffline( $parms )){
+			$parms->{'file'} = $parms->{full};
+			$parms->{'last'} = length $diff == 0 ? true : false;
+			if( $verifyonly ){
+				$result->{ok} = $self->_restoreDatabaseVerify( $parms );
+			} else {
+				$result->{ok} = $self->_restoreDatabaseFile( $parms );
+			}
+			if( $result->{ok} && length $diff ){
+				$parms->{'file'} = $diff;
+				$parms->{'last'} = true;
+				if( $verifyonly ){
+					$result->{ok} &= $self->_restoreDatabaseVerify( $parms );
+				} else {
+					$result->{ok} &= $self->_restoreDatabaseFile( $parms );
+				}
+			}
+		}
+	}
+	msgVerbose( __PACKAGE__."::restoreDatabase() result='".( $result->{ok} ? 'true' : 'false' )."'" );
+	return $result;
+}
+
 ### Class methods
 
 # -------------------------------------------------------------------------------------------------
@@ -418,163 +569,6 @@ sub apiExecSqlCommand {
 	}
 	msgVerbose( __PACKAGE__."::apiExecSqlCommand() result='".( $result->{ok} ? 'true' : 'false' )."'" );
 	return $result;
-}
-
-# -------------------------------------------------------------------------------------------------
-# Restore a file into a database
-# (I):
-# - the DBMS instance
-# - parms is a hash ref with keys:
-#   > database: mandatory
-#   > full: mandatory, the full backup file
-#   > diff: optional, the diff backup file
-#   > verifyonly: whether we want only check the restorability of the provided file
-# (O):
-# - returns a hash with following keys:
-#   > ok: true|false
-
-sub apiRestoreDatabase {
-	my ( $me, $dbms, $parms ) = @_;
-	my $result = { ok => false };
-	my $verifyonly = false;
-	$verifyonly = $parms->{verifyonly} if defined $parms->{verifyonly};
-	msgErr( __PACKAGE__."::apiRestoreDatabase() database is mandatory, not specified" ) if !$parms->{database} && !$verifyonly;
-	msgErr( __PACKAGE__."::apiRestoreDatabase() full is mandatory, not specified" ) if !$parms->{full};
-	if( !TTP::errs()){
-		msgVerbose( __PACKAGE__."::apiRestoreDatabase() entering with instance='".$dbms->instance()."' database='$parms->{database}' verifyonly='$verifyonly'..." );
-		my $diff = $parms->{diff} || '';
-		if( $verifyonly || _restoreDatabaseSetOffline( $dbms, $parms )){
-			$parms->{'file'} = $parms->{full};
-			$parms->{'last'} = length $diff == 0 ? true : false;
-			if( $verifyonly ){
-				$result->{ok} = _restoreDatabaseVerify( $dbms, $parms );
-			} else {
-				$result->{ok} = _restoreDatabaseFile( $dbms, $parms );
-			}
-			if( $result->{ok} && length $diff ){
-				$parms->{'file'} = $diff;
-				$parms->{'last'} = true;
-				if( $verifyonly ){
-					$result->{ok} &= _restoreDatabaseVerify( $dbms, $parms );
-				} else {
-					$result->{ok} &= _restoreDatabaseFile( $dbms, $parms );
-				}
-			}
-		}
-	}
-	msgVerbose( __PACKAGE__."::apiRestoreDatabase() result='".( $result->{ok} ? 'true' : 'false' )."'" );
-	return $result;
-}
-
-# -------------------------------------------------------------------------------------------------
-# restore the target database from the specified backup file
-# (I):
-# - the DBMS instance
-# - parms is a hash ref with keys:
-#   > database: mandatory
-#   > file: mandatory
-#   > last: mandatory
-# (O):
-# - returns the needed 'MOVE' sentence
-
-sub _restoreDatabaseFile {
-	my ( $dbms, $parms ) = @_;
-	my $instance = $dbms->instance();
-	my $database = $parms->{database};
-	my $fname = $parms->{file};
-	my $last = $parms->{last};
-	#
-	msgVerbose(  __PACKAGE__."::_restoreDatabaseFile() restoring $fname" );
-	my $recovery = 'NORECOVERY';
-	if( $last ){
-		$recovery = 'RECOVERY';
-	}
-	my $move = _restoreDatabaseMove( $dbms, $parms );
-	my $result = true;
-	if( $move ){
-		my $res = _sqlExec( $dbms, "RESTORE DATABASE $database FROM DISK='$fname' WITH $recovery, $move;" );
-		$result = $res->{ok};
-	}
-	return $result;
-}
-
-# -------------------------------------------------------------------------------------------------
-# returns the move option in case of the datapath is different from the source or when the target
-# database has changed
-# (I):
-# - the DBMS instance
-# - parms is a hash ref with keys:
-#   > database: mandatory
-#   > file: mandatory
-# (O):
-# - returns the needed 'MOVE' sentence
-
-sub _restoreDatabaseMove {
-	my ( $dbms, $parms ) = @_;
-	my $instance = $dbms->instance();
-	my $database = $parms->{database};
-	my $fname = $parms->{file};
-	msgVerbose( __PACKAGE__."::_restoreDatabaseMove() database='$database'" );
-	my $result = _sqlExec( $dbms, "RESTORE FILELISTONLY FROM DISK='$fname'" );
-	my $move = undef;
-	if( $dbms->ep()->runner()->dummy()){
-		msgDummy( "considering nomove" );
-	} elsif( !scalar @{$result->{result}} ){
-		msgErr( __PACKAGE__."::_restoreDatabaseMove() unable to get the files list of the backup set" );
-	} else {
-		my $sqlDataPath = $dbms->ep()->node()->var([ 'DBMS', 'byInstance', $instance, 'dataPath' ]);
-		foreach( @{$result->{result}} ){
-			my $row = $_;
-			$move .= ', ' if length $move;
-			my ( $vol, $dirs, $fname ) = File::Spec->splitpath( $sqlDataPath, true );
-			my $target_file = File::Spec->catpath( $vol, $dirs, $database.( $row->{Type} eq 'D' ? '.mdf' : '.ldf' ));
-			$move .= "MOVE '".$row->{'LogicalName'}."' TO '$target_file'";
-		}
-	}
-	return $move;
-}
-
-# -------------------------------------------------------------------------------------------------
-# restore the target database from the specified backup file
-# in this first phase, set it first offline (if it exists)
-# (I):
-# - the DBMS instance
-# - parms is a hash ref with keys:
-#   > database: mandatory
-# (O):
-# - returns true|false
-
-sub _restoreDatabaseSetOffline {
-	my ( $dbms, $parms ) = @_;
-	my $database = $parms->{database};
-	msgVerbose( __PACKAGE__."::_restoreDatabaseSetOffline() database='$database'" );
-	my $result = true;
-	if( $dbms->databaseExists( $database )){
-		my $res = _sqlExec( $dbms, "ALTER DATABASE $database SET OFFLINE WITH ROLLBACK IMMEDIATE;" );
-		$result = $res->{ok};
-	}
-	return $result;
-}
-
-# -------------------------------------------------------------------------------------------------
-# verify the restorability of the file
-# (I):
-# - the DBMS instance
-# - parms is a hash ref with keys:
-#   > database: mandatory
-#   > file: mandatory
-# (O):
-# - returns true|false
-
-sub _restoreDatabaseVerify {
-	my ( $dbms, $parms ) = @_;
-	my $instance = $dbms->instance();
-	my $database = $parms->{database};
-	my $fname = $parms->{file};
-	msgVerbose( __PACKAGE__."::_restoreDatabaseVerify() verifying $fname" );
-	my $move = _restoreDatabaseMove( $dbms, $parms );
-	my $res = _sqlExec( $dbms, "RESTORE VERIFYONLY FROM DISK='$fname' WITH $move;" );
-	return $res->{ok};
 }
 
 1;

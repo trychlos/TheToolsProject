@@ -180,7 +180,7 @@ if( $opt_service ){
 		$objDbms = $objService->newDbms({ node => $objNode });
 	}
 } else {
-	msgErr( "'--service' option is mandatory, not found" );
+	msgErr( "'--service' option is mandatory, but is not specified" );
 }
 
 # database(s) can be specified in the command-line, or can come from the service
