@@ -32,6 +32,7 @@ use Config;
 use Capture::Tiny qw( :all );
 use Data::Dumper;
 use File::Spec;
+use File::Temp qw( tempdir );
 use MongoDB;
 use Path::Tiny;
 use Time::Moment;
@@ -121,6 +122,65 @@ sub _noSql {
 }
 
 ### Public methods
+
+# -------------------------------------------------------------------------------------------------
+# Backup a database
+# There is no backup/restore primitive in MongoDB Perl driver, we so must stuck to
+#  mongodump/mongorestore command-line utilities.
+# As of 4.11.0-rc.0, we are only able to do full backups :(
+# (I):
+# - parms is a hash ref with following keys:
+#   > database: mandatory
+#   > output: optional
+#   > mode: full|diff, defaulting to 'full'
+#   > compress: true|false
+# (O):
+# - returns a hash with following keys:
+#   > ok: true|false
+#   > output: the (maybe computed here) output file
+#   > stdout: a copy of lines outputed on stdout as an array ref
+
+sub backupDatabase {
+	my ( $self, $parms ) = @_;
+	my $result = { ok => false };
+	msgErr( __PACKAGE__."::backupDatabase() database is mandatory, but is not specified" ) if !$parms->{database};
+	msgErr( __PACKAGE__."::backupDatabase() mode must be 'full' or 'diff', found '$parms->{mode}'" ) if $parms->{mode} ne 'full' && $parms->{mode} ne 'diff';
+	msgErr( __PACKAGE__."::backupDatabase() differential mode is not managed here" ) if $parms->{mode} eq 'diff';
+	my $account = undef;
+	my $passwd = undef;
+	if( !TTP::errs()){
+		( $account, $passwd ) = $self->_getCredentials();
+		if( !length $account || !length $passwd ){
+			msgErr( __PACKAGE__."::backupDatabase() unable to get account/password couple" );
+		}
+	}
+	if( !TTP::errs()){
+		msgVerbose( __PACKAGE__."::backupDatabase() entering with service='".$self->service()->name()."' database='$parms->{database}' mode='$parms->{mode}'..." );
+		my $output = $parms->{output} || $self->computeDefaultBackupFilename( $parms );
+		# mongodump dumps to a directory (piping to stdout in only possible for a single collection)
+		# so have to create a temp dir, and then tar.gzip it and remove the temp dir at end
+		my $tmpdir = tempdir( CLEANUP => 1 );
+		my $cmd = "mongodump";
+		$cmd .= " --host ".$self->server();
+		$cmd .= " --username $account";
+		$cmd .= " --password $passwd";
+		$cmd .= " --authenticationDatabase admin";
+		$cmd .= " --db $parms->{database}";
+		$cmd .= " --gzip" if $parms->{compress};
+		$cmd .= " --out $tmpdir";
+		my $opt = "";
+		$opt = "-z" if $parms->{compress};
+		$cmd .= " && tar -c $opt -f - $tmpdir > $output";
+		my $res = TTP::commandExec( $cmd );
+		# mongodump provides its output on stderr, while stdout is empty
+		$result->{ok} = $res->{success};
+		$result->{stdout} = $res->{stderr};
+		msgLog( __PACKAGE__."::backupDatabase() stdout='".TTP::chompDumper( $result->{stdout} )."'" );
+		$result->{output} = $output;
+	}
+	msgVerbose( __PACKAGE__."::backupDatabase() returns '".( $result->{ok} ? 'true':'false' )."'" );
+	return $result;
+}
 
 # -------------------------------------------------------------------------------------------------
 # returns the list of databases in this DBMS

@@ -75,7 +75,7 @@ sub bootstrap {
 	my $node = TTP::Node->new( $self );
 	msgDebug( __PACKAGE__."::bootstrap() ".ref( $node )." instanciated" );
 	$self->{_node} = $node;
-	$node->evaluate();
+	#$node->evaluate();
 	msgDebug( __PACKAGE__."::bootstrap() ".ref( $node )." set and first evaluated" );
 
 	# reevaluate the site when the node is set
