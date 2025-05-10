@@ -503,7 +503,7 @@ sub new {
 		# keep node name if ok
 		$self->{_node} = $node;
 		# auto-evaluate at least once at instanciation time
-		$self->evaluate();
+		$self->evaluate({ warnOnUninitialized => false });
 
 	# unable to find and load the node configuration file ?
 	# this is an unrecoverable error unless otherwise specified

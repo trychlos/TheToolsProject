@@ -76,26 +76,13 @@ my $objDbms = undef;
 # list of databases to be checked
 my $databases = [];
 
-# Source: https://learn.microsoft.com/fr-fr/sql/relational-databases/system-catalog-views/sys-databases-transact-sql?view=sql-server-ver16
-my $sqlStates = {
-	'0' => 'online',
-	'1' => 'restoring',
-	'2' => 'recovering',
-	'3' => 'recovery_pending',
-	'4' => 'suspect',
-	'5' => 'emergency',
-	'6' => 'offline',
-	'7' => 'copying',
-	'10' => 'offline_secondary'
-};
-
 # -------------------------------------------------------------------------------------------------
 # get the state of all databases of the specified service, or specified in the command-line
 # Also publish as a labelled telemetry the list of possible values
 # (same behavior than for example Prometheus windows_exporter which display the status of services)
 # We so publish:
 # - on MQTT, two payloads as .../state and .../state_desc
-# - to HTTP, 10 numerical payloads, only one having a one value
+# - to HTTP, ten numerical payloads, only one having a '1' value
 
 sub doState {
 	msgOut( "get database(s) state for '$opt_service'..." );
@@ -106,17 +93,7 @@ sub doState {
 	my $result = undef;
 	foreach my $db ( @{$databases} ){
 		msgOut( "database '$db'" );
-		my $sql = "select state, state_desc from sys.databases where name='$db'";
-		if( $ep->runner()->dummy()){
-			msgDummy( $sql );
-			$result = {
-				state => 0,
-				state_desc => 'DUMMY_ONLINE'
-			}
-		} else {
-			my $sqlres = $objDbms->execSqlCommand( $sql, { tabular => false });
-			$result = $sqlres->{ok} ? $sqlres->{result}->[0] : {};
-		}
+		my $result = $objDbms->databaseState( $db );
 		# due to the differences between the two publications contents, publish separately
 		# -> stdout
 		foreach my $key ( sort keys %{$result} ){
@@ -136,10 +113,11 @@ sub doState {
 		});
 		# -> http/text: publish a metric per known sqlState
 		#    e.g. state=emergency 0
-		foreach my $key ( keys( %{$sqlStates} )){
+		my $states = $objDbms->dbStatuses();
+		foreach my $key ( keys( %{$states} )){
 			my @labels = ( @opt_prepends, "environment=".$ep->node()->environment());
 			push( @labels, "service=".$opt_service );
-			@labels = ( @labels, "command=".$ep->runner()->command(), "verb=".$ep->runner()->verb(), "database=$db", "state=$sqlStates->{$key}", @opt_appends );
+			@labels = ( @labels, "command=".$ep->runner()->command(), "verb=".$ep->runner()->verb(), "database=$db", "state=$states->{$key}", @opt_appends );
 			TTP::Metric->new( $ep, {
 				name => 'dbms_state',
 				value => "$key" eq "$result->{state}" ? 1 : 0,
