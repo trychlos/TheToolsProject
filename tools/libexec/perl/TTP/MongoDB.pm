@@ -404,8 +404,6 @@ sub getTableRowsCount {
 # -------------------------------------------------------------------------------------------------
 # Restore a file into a database
 # As backups are managed with mongodump, restores are to be managed with mongorestore
-# a database is provided because made required by SqlServer, but not needed here as mongorestore
-# has special options (not implemented as of v4.11) to restore to another database name.
 # (I):
 # - parms is a hash ref with keys:
 #   > full: mandatory, the full backup file
@@ -434,13 +432,25 @@ sub restoreDatabase {
 		my $tmpdir = tempdir( CLEANUP => 1 );
 		# do we have a compressed archive file ?
 		my $cmd = "file $parms->{full}";
-		my $res = TTP::commandExec( $cmd, { stdinFromNull => false });
+		my $res = `$cmd`;
+		my @res = split( /[\r\n]/, $res );
 		my $gziped = false;
-		if( grep( /gzip/, @{$res->{stdout}} )){
+		if( grep( /gzip/, @res )){
 			$gziped = true;
 		}
 		my $opt = "";
 		$opt = "-z" if $gziped;
+		msgVerbose( __PACKAGE__."::restoreDatabase() find provided dump file is ".( $gziped ? '' : 'NOT ' )."gziped" );
+		# find the source database name in the dump file
+		# this should be the first element of the paths
+		$cmd = "tar -t $opt -f $parms->{full}";
+		$res = `$cmd`;
+		@res = split( /[\r\n]/, $res );
+		my $sourcedb = $res[0];
+		$sourcedb =~ s/\/$//;
+		msgVerbose( __PACKAGE__."::restoreDatabase() find source database='$sourcedb'" );
+		# and restore
+		# if source and target database don't have the same name, then rename
 		$cmd = "tar -x $opt -f $parms->{full} --directory $tmpdir";
 		$cmd .= " && mongorestore";
 		$cmd .= " --host ".$self->server();
@@ -448,6 +458,10 @@ sub restoreDatabase {
 		$cmd .= " --password $passwd";
 		$cmd .= " --authenticationDatabase admin";
 		$cmd .= " --drop";
+		if( $sourcedb ne $parms->{database} ){
+			$cmd .= " --nsFrom '$sourcedb.*'";
+			$cmd .= " --nsTo '$parms->{database}.*'";
+		}
 		$cmd .= " $tmpdir";
 		$res = TTP::commandExec( $cmd );
 		# mongodump provides its output on stderr, while stdout is empty

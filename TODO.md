@@ -57,7 +57,6 @@
 |      |            | and same for evaluate() functions |
 |  141 | 2025- 5-10 | MongoDB::backupDatabase() and restoreDatabase() command-lines should be configurable somewhere |
 |  142 | 2025- 5-10 | review commands executions to homogeneize the call, the execution, the logs |
-|  143 | 2025- 5-10 | both dbms.pl status and dbms.pl telemetry are tighly linked to SqlServer - Has to move this specific code to the module, making some place for other DBMS |
 |  144 | 2025- 5-10 | have a default value to publish a telemetry on mqtt |
 |  145 |  |  |
 
@@ -358,6 +357,8 @@
 |      | 2025- 5- 7 | done |
 |  135 | 2025- 4-29 | ttp.sh switch doesn't display help - but shouldn't it ? |
 |      | 2025- 5- 7 | fixed, . ttp.sh switch (sourced) still display error messages which is the wanted behavior |
+|  143 | 2025- 5-10 | both dbms.pl status and dbms.pl telemetry are tighly linked to SqlServer - Has to move this specific code to the module, making some place for other DBMS |
+|      | 2025- 5-10 | done |
 
 ---
 P. Wieser
