@@ -66,12 +66,13 @@ use Proc::Background;
 use Proc::ProcessTable;
 use Role::Tiny::With;
 use Time::Moment;
-use vars::global qw( $ep );
 use if $Config{osname} eq 'MSWin32', "Win32::OLE";
 
 with 'TTP::ISleepable';
 
 use TTP;
+use vars::global qw( $ep );
+
 use TTP::Constants qw( :all );
 use TTP::DaemonConfig;
 use TTP::Message qw( :all );

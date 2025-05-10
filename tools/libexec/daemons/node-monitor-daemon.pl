@@ -46,11 +46,12 @@ use Data::Dumper;
 use Getopt::Long;
 
 use TTP;
+use vars::global qw( $ep );
+
 use TTP::Constants qw( :all );
 use TTP::Message qw( :all );
 use TTP::RunnerDaemon;
 use TTP::Service;
-use vars::global qw( $ep );
 
 my $daemon = TTP::RunnerDaemon->bootstrap();
 
