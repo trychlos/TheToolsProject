@@ -110,22 +110,23 @@ sub _connect {
 # (O):
 # - returns the needed 'MOVE' sentence
 
-sub _restoreDatabaseFile {
+sub _restoreFile {
 	my ( $self, $parms ) = @_;
 
 	my $database = $parms->{database};
 	my $fname = $parms->{file};
 	my $last = $parms->{last};
 
-	msgVerbose(  __PACKAGE__."::_restoreDatabaseFile() restoring $fname" );
+	msgVerbose(  __PACKAGE__."::_restoreFile() restoring $fname" );
 	my $recovery = 'NORECOVERY';
 	if( $last ){
 		$recovery = 'RECOVERY';
 	}
-	my $move = $self->_restoreDatabaseMove( $parms );
+	my $move = $self->_restoreMove( $parms );
 	my $result = true;
 	if( $move ){
 		my $res = $self->_sqlExec( "RESTORE DATABASE $database FROM DISK='$fname' WITH $recovery, $move;" );
+		msgLog( __PACKAGE__."::_restoreFile() stdout='".TTP::chompDumper( $res->{stdout} )."'" );
 		$result = $res->{ok};
 	}
 
@@ -142,19 +143,19 @@ sub _restoreDatabaseFile {
 # (O):
 # - returns the needed 'MOVE' sentence
 
-sub _restoreDatabaseMove {
+sub _restoreMove {
 	my ( $self, $parms ) = @_;
 
 	my $database = $parms->{database};
 	my $fname = $parms->{file};
-	msgVerbose( __PACKAGE__."::_restoreDatabaseMove() database='$database'" );
+	msgVerbose( __PACKAGE__."::_restoreMove() database='$database'" );
 
 	my $result = $self->_sqlExec( "RESTORE FILELISTONLY FROM DISK='$fname'" );
 	my $move = undef;
 	if( $self->ep()->runner()->dummy()){
 		msgDummy( "considering nomove" );
 	} elsif( !scalar @{$result->{result}} ){
-		msgErr( __PACKAGE__."::_restoreDatabaseMove() unable to get the files list of the backup set" );
+		msgErr( __PACKAGE__."::_restoreMove() unable to get the files list of the backup set" );
 	} else {
 		# starting with v4.11, dataPath no more comes from the configuration, but is dynamically read from SqlServer
 		#my $sqlDataPath = $self->service()->var([ 'DBMS', 'dataPath' ]);
@@ -181,11 +182,11 @@ sub _restoreDatabaseMove {
 # (O):
 # - returns true|false
 
-sub _restoreDatabaseSetOffline {
+sub _restoreSetOffline {
 	my ( $self, $parms ) = @_;
 
 	my $database = $parms->{database};
-	msgVerbose( __PACKAGE__."::_restoreDatabaseSetOffline() database='$database'" );
+	msgVerbose( __PACKAGE__."::_restoreSetOffline() database='$database'" );
 
 	my $result = true;
 	if( $self->databaseExists( $database )){
@@ -205,13 +206,17 @@ sub _restoreDatabaseSetOffline {
 # (O):
 # - returns true|false
 
-sub _restoreDatabaseVerify {
+sub _restoreVerify {
 	my ( $self, $parms ) = @_;
+
 	my $database = $parms->{database};
 	my $fname = $parms->{file};
-	msgVerbose( __PACKAGE__."::_restoreDatabaseVerify() verifying $fname" );
-	my $move = $self->_restoreDatabaseMove( $parms );
+	msgVerbose( __PACKAGE__."::_restoreVerify() verifying $fname" );
+
+	my $move = $self->_restoreMove( $parms );
 	my $res = $self->_sqlExec( "RESTORE VERIFYONLY FROM DISK='$fname' WITH $move;" );
+	msgLog( __PACKAGE__."::_restoreVerify() stdout='".TTP::chompDumper( $res->{stdout} )."'" );
+
 	return $res->{ok};
 }
 
@@ -473,21 +478,21 @@ sub restoreDatabase {
 	if( !TTP::errs()){
 		msgVerbose( __PACKAGE__."::restoreDatabase() entering with service='".$self->service()->name()."' database='$parms->{database}' verifyonly='$verifyonly'..." );
 		my $diff = $parms->{diff} || '';
-		if( $verifyonly || $self->_restoreDatabaseSetOffline( $parms )){
+		if( $verifyonly || $self->_restoreSetOffline( $parms )){
 			$parms->{'file'} = $parms->{full};
 			$parms->{'last'} = length $diff == 0 ? true : false;
 			if( $verifyonly ){
-				$result->{ok} = $self->_restoreDatabaseVerify( $parms );
+				$result->{ok} = $self->_restoreVerify( $parms );
 			} else {
-				$result->{ok} = $self->_restoreDatabaseFile( $parms );
+				$result->{ok} = $self->_restoreFile( $parms );
 			}
 			if( $result->{ok} && length $diff ){
 				$parms->{'file'} = $diff;
 				$parms->{'last'} = true;
 				if( $verifyonly ){
-					$result->{ok} &= $self->_restoreDatabaseVerify( $parms );
+					$result->{ok} &= $self->_restoreVerify( $parms );
 				} else {
-					$result->{ok} &= $self->_restoreDatabaseFile( $parms );
+					$result->{ok} &= $self->_restoreFile( $parms );
 				}
 			}
 		}
