@@ -87,12 +87,16 @@ my $databases = [];
 sub doState {
 	msgOut( "get database(s) state for '$opt_service'..." );
 	my $list = [];
-	my $code = 0;
+	my $dbcount = 0;
+	my $mqttcount = 0;
+	my $httpcount = 0;
+	my $textcount = 0;
 	my $dummy = $ep->runner()->dummy() ? "-dummy" : "-nodummy";
 	my $verbose = $ep->runner()->verbose() ? "-verbose" : "-noverbose";
 	my $result = undef;
 	foreach my $db ( @{$databases} ){
 		msgOut( "database '$db'" );
+		$dbcount += 1;
 		my $result = $objDbms->databaseState( $db );
 		# due to the differences between the two publications contents, publish separately
 		# -> stdout
@@ -111,6 +115,7 @@ sub doState {
 		})->publish({
 			mqtt => $opt_mqtt
 		});
+		$mqttcount += 1 if $opt_mqtt;
 		# -> http/text: publish a metric per known sqlState
 		#    e.g. state=emergency 0
 		my $states = $objDbms->dbStatuses();
@@ -128,11 +133,15 @@ sub doState {
 				http => $opt_http,
 				text => $opt_text
 			});
+			$httpcount += 1 if $opt_http;
+			$textcount += 1 if $opt_text;
 		}
 	}
-	if( $code ){
+	if( TTP::errs()){
 		msgErr( "NOT OK" );
 	} else {
+		msgOut( "got $dbcount database status(es)" );
+		msgOut( "published $mqttcount metric(s) to MQTT bus, $httpcount metric(s) to HTTP gateway, $textcount metric(s) to text files" );
 		msgOut( "done" );
 	}
 }

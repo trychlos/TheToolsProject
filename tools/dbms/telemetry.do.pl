@@ -82,45 +82,6 @@ my $objDbms = undef;
 # list of databases to be checked
 my $databases = [];
 
-# note that the sp_spaceused stored procedure returns:
-# - two resuts sets, that we concatenate
-# - and that units are in the data, so we move them to the column names
-# below a sample of the got result from "dbms.pl sql -tabular -multiple" command
-=pod
-+---------------+---------------+-------------------+
-| database_size | database_name | unallocated space |
-+---------------+---------------+-------------------+
-| 54.75 MB      | Dom1          | 9.91 MB           |
-+---------------+---------------+-------------------+
-+--------+----------+------------+----------+
-| unused | reserved | index_size | data     |
-+--------+----------+------------+----------+
-| 752 KB | 42464 KB | 2216 KB    | 39496 KB |
-+--------+----------+------------+----------+
-=cut
-
-# -------------------------------------------------------------------------------------------------
-# get the two result sets from sp_spaceused stored procedure
-# returns a ready-to-be-published consolidated result set
-
-sub _interpretDbResultSet {
-	my ( $sets ) = @_;
-	my $result = {};
-	foreach my $set ( @{$sets} ){
-		my $row = @{$set}[0];
-		foreach my $key ( keys %{$row} ){
-			# only publish numeric datas
-			next if $key eq "database_name";
-			# moving the unit to the column name
-			my $data = $row->{$key};
-			$key =~ s/\s/_/g;
-			my @words = split( /\s+/, $data );
-			$result->{$key.'_'.$words[1]} = $words[0];
-		}
-	}
-	return $result;
-}
-
 # -------------------------------------------------------------------------------------------------
 # publish the databases sizes
 # if a service has been specified, only consider the databases of this service
@@ -128,16 +89,22 @@ sub _interpretDbResultSet {
 
 sub doDbSize {
 	msgOut( "publishing databases size on '$opt_service'..." );
-	my $count = 0;
+	my $dbcount = 0;
+	my $mqttcount = 0;
+	my $httpcount = 0;
+	my $textcount = 0;
 	my $dummy = $ep->runner()->dummy() ? "-dummy" : "-nodummy";
 	my $verbose = $ep->runner()->verbose() ? "-verbose" : "-noverbose";
 	foreach my $db ( @{$databases} ){
-		last if $count >= $opt_limit && $opt_limit >= 0;
+		last if $dbcount >= $opt_limit && $opt_limit >= 0;
 		msgOut( "database '$db'" );
-		# sp_spaceused provides two results sets, where each one only contains one data row
-		my $sqlres = $objDbms->execSqlCommand( "use $db; exec sp_spaceused;", { tabular => false, multiple => true });
-		my $set = _interpretDbResultSet( $sqlres->{result} );
-		# we got so six metrics for each database
+		$dbcount += 1;
+		my $set = $objDbms->databaseSize( $db );
+		# -> stdout
+		foreach my $key ( sort keys %{$set} ){
+			print " $key: $set->{$key}".EOL;
+		}
+		# we got several metrics per database
 		# that we publish separately as mqtt-based names are slightly different from Prometheus ones
 		my @labels = ( @opt_prepends,
 			"environment=".$ep->node()->environment(), "service=".$opt_service, "command=".$ep->runner()->command(), "verb=".$ep->runner()->verb(), "database=$db", @opt_appends );
@@ -156,71 +123,87 @@ sub doDbSize {
 				text => $opt_text,
 				textPrefix => 'dbms_dbsize_'
 			});
-			$count += 1 if $opt_mqtt || $opt_http || $opt_text;
-			last if $count >= $opt_limit && $opt_limit >= 0;
+			$mqttcount += 1 if $opt_mqtt;
+			$httpcount += 1 if $opt_http;
+			$textcount += 1 if $opt_text;
+			last if $dbcount >= $opt_limit && $opt_limit >= 0;
 		}
 	}
-	msgOut( "$count published database size metric(s)" );
+	if( TTP::errs()){
+		msgErr( "NOT OK" );
+	} else {
+		msgOut( "got $dbcount database size(s)" );
+		msgOut( "published $mqttcount metric(s) to MQTT bus, $httpcount metric(s) to HTTP gateway, $textcount metric(s) to text files" );
+		msgOut( "done" );
+	}
 }
 
 # -------------------------------------------------------------------------------------------------
-# publish all tables rows count for the specified database
-#  this is an error if no database has been specified on the command-line
-#  if we have asked for a service, we may have several databases
+# publish all tables rows count for the specified database(s)
 
 sub doTablesCount {
-	my $count = 0;
+	my $dbcount = 0;
+	my $tabcount = 0;
+	my $mqttcount = 0;
+	my $httpcount = 0;
+	my $textcount = 0;
 	my $dummy = $ep->runner()->dummy() ? "-dummy" : "-nodummy";
 	my $verbose = $ep->runner()->verbose() ? "-verbose" : "-noverbose";
 	foreach my $db ( @{$databases} ){
 		msgOut( "publishing tables rows count on '$opt_service\\$db'..." );
-		last if $count >= $opt_limit && $opt_limit >= 0;
+		$dbcount += 1;
 		my $command = "dbms.pl list -service $opt_service -database $db -listtables -nocolored $dummy $verbose";
 		my $tables = TTP::filter( `$command` );
 		foreach my $tab ( @{$tables} ){
-			last if $count >= $opt_limit && $opt_limit >= 0;
+			$tabcount += 1;
 			msgOut( " table '$tab'" );
-			my $sqlres = $objDbms->execSqlCommand( "use $db; select count(*) as rows_count from $tab;", { tabular => false });
-			if( $sqlres->{ok} ){
-				# mqtt and http/text have different names
-				# mqtt topic: <node>/telemetry/<environment>/<service>/<command>/<verb>/<instance>/<database>/rowscount/<table>
-				# mqtt value: <table_rows_count>
-				if( $opt_mqtt ){
-					my @labels = ( @opt_prepends,
-						"environment=".$ep->node()->environment(), "service=".$opt_service, "command=".$ep->runner()->command(), "verb=".$ep->runner()->verb(), "database=$db", @opt_appends );
-					TTP::Metric->new( $ep, {
-						name => $tab,
-						value => $sqlres->{result}->[0]->{rows_count} || 0,
-						labels => \@labels
-					})->publish({
-						mqtt => $opt_mqtt,
-						mqttPrefix => 'rowscount/'
-					});
-				}
-				# http labels += table=<table>
-				# http value: <table_rows_count>
-				if( $opt_http || $opt_text ){
-					my @labels = ( @opt_prepends,
-						"environment=".$ep->node()->environment(), "service=".$opt_service, "command=".$ep->runner()->command(), "verb=".$ep->runner()->verb(), "database=$db", "table=$tab", @opt_appends );
-					TTP::Metric->new( $ep, {
-						name => 'rowscount',
-						value => $sqlres->{result}->[0]->{rows_count} || 0,
-						type => 'gauge',
-						help => 'Table rows count',
-						labels => \@labels
-					})->publish({
-						http => $opt_http,
-						httpPrefix => 'dbms_table_',
-						text => $opt_text,
-						textPrefix => 'dbms_table_'
-					});
-				}
-				$count += 1 if $opt_mqtt || $opt_http || $opt_text;
-				last if $count >= $opt_limit && $opt_limit >= 0;
+			my $rowscount = $objDbms->getTableRowsCount( $db, $tab );
+			# mqtt and http/text have different names
+			# mqtt topic: <node>/telemetry/<environment>/<service>/<command>/<verb>/<instance>/<database>/rowscount/<table>
+			# mqtt value: <table_rows_count>
+			if( $opt_mqtt ){
+				my @labels = ( @opt_prepends,
+					"environment=".$ep->node()->environment(), "service=".$opt_service, "command=".$ep->runner()->command(), "verb=".$ep->runner()->verb(), "database=$db", @opt_appends );
+				TTP::Metric->new( $ep, {
+					name => $tab,
+					value => $rowscount,
+					labels => \@labels
+				})->publish({
+					mqtt => $opt_mqtt,
+					mqttPrefix => 'rowscount/'
+				});
+				$mqttcount += 1 if $opt_mqtt;
 			}
+			# http labels += table=<table>
+			# http value: <table_rows_count>
+			if( $opt_http || $opt_text ){
+				my @labels = ( @opt_prepends,
+					"environment=".$ep->node()->environment(), "service=".$opt_service, "command=".$ep->runner()->command(), "verb=".$ep->runner()->verb(), "database=$db", "table=$tab", @opt_appends );
+				TTP::Metric->new( $ep, {
+					name => 'rowscount',
+					value => $rowscount,
+					type => 'gauge',
+					help => 'Table rows count',
+					labels => \@labels
+				})->publish({
+					http => $opt_http,
+					httpPrefix => 'dbms_table_',
+					text => $opt_text,
+					textPrefix => 'dbms_table_'
+				});
+				$httpcount += 1 if $opt_http;
+				$textcount += 1 if $opt_text;
+			}
+			last if $tabcount >= $opt_limit && $opt_limit >= 0;
 		}
 	}
-	msgOut( "$count published tables rows count metric(s)" );
+	if( TTP::errs()){
+		msgErr( "NOT OK" );
+	} else {
+		msgOut( "got $tabcount tables rows counts for $dbcount database(s)" );
+		msgOut( "published $mqttcount metric(s) to MQTT bus, $httpcount metric(s) to HTTP gateway, $textcount metric(s) to text files" );
+		msgOut( "done" );
+	}
 }
 
 # =================================================================================================

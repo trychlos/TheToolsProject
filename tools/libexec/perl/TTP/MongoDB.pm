@@ -84,6 +84,8 @@ sub _connect {
 			if( $handle ){
 				#print STDERR Dumper( $handle );
 				msgVerbose( __PACKAGE__."::_connect() successfully connected" );
+			} else {
+				msgErr( __PACKAGE__."::_connect() unable to connect to '$server' host" );
 			}
 		} else {
 			msgErr( __PACKAGE__."::_connect() unable to get account/password couple" );
@@ -191,6 +193,32 @@ sub backupDatabase {
 }
 
 # -------------------------------------------------------------------------------------------------
+# Get the different sizes of a database
+# (I):
+# - database name
+# (O):
+# - returns a hash with four items { key, value } describing the six different sizes to be considered
+
+sub databaseSize {
+	my ( $self, $database ) = @_;
+	my $result = {};
+	my $handle = $self->_connect();
+	if( $handle ){
+		my $dbh = $handle->get_database( $database );
+		if( $dbh ){
+			my $stats = $dbh->run_command([ dbStats => 1 ]);
+			$result->{dataSize} = $stats->{dataSize};
+			$result->{indexSize} = $stats->{indexSize};
+			$result->{storageSize} = $stats->{storageSize};
+			$result->{totalSize} = $stats->{totalSize};
+		} else {
+			msgErr( __PACKAGE__."::databaseSize() unable to get a handle on '$database' database" );
+		}
+	}
+	return $result;
+}
+
+# -------------------------------------------------------------------------------------------------
 # Get the status of a database
 # (I):
 # - database name
@@ -229,6 +257,8 @@ sub databaseState {
 			my $stats = $dbh->run_command([ dbStats => 1 ]);
 			$result->{state} = $stats->{ok};
 			$result->{state_desc} = $Const->{dbStates}{$stats->{ok}};
+		} else {
+			msgErr( __PACKAGE__."::databaseState() unable to get a handle on '$database' database" );
 		}
 	}
 	return $result;
@@ -338,6 +368,37 @@ sub getProperties {
 	my $props = $self->TTP::DBMS::getProperties();
 
 	return $props;
+}
+
+# ------------------------------------------------------------------------------------------------
+# returns the count of documents in the collection of the database
+# (I):
+# - database
+# - table
+# (O):
+# - the count of rows
+
+sub getTableRowsCount {
+	my ( $self, $database, $table ) = @_;
+
+	my $count = 0;
+	my $handle = $self->_connect();
+	if( $handle ){
+		my $dbh = $handle->get_database( $database );
+		if( $dbh ){
+			my $coll = $dbh->get_collection( $table );
+			if( $coll ){
+				$count = $coll->count_documents({});
+			} else {
+				msgErr( __PACKAGE__."::getTableRowscount() unable to get a handle on '$table' collection" );
+			}
+		} else {
+			msgErr( __PACKAGE__."::getTableRowscount() unable to get a handle on '$database' database" );
+		}
+	}
+
+	msgVerbose( __PACKAGE__."::getTableRowscount() database='$database' collection='$table' count=$count" );
+	return $count;
 }
 
 # -------------------------------------------------------------------------------------------------

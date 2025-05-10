@@ -371,6 +371,54 @@ sub backupDatabase {
 }
 
 # -------------------------------------------------------------------------------------------------
+# Get the different sizes of a database
+# (I):
+# - database name
+# (O):
+# - returns a hash with six items { key, value } describing the six different sizes to be considered
+#
+# get the two result sets from sp_spaceused stored procedure
+# returns a ready-to-be-published consolidated result set
+# note that the sp_spaceused stored procedure returns:
+# - two resuts sets, that we concatenate
+# - and that units are in the data, so we move them to the column names
+# below a sample of the got result with "dbms.pl sql -tabular -multiple" command
+#
+#	+---------------+---------------+-------------------+
+#	| database_size | database_name | unallocated space |
+#	+---------------+---------------+-------------------+
+#	| 54.75 MB      | Dom1          | 9.91 MB           |
+#	+---------------+---------------+-------------------+
+#	+--------+----------+------------+----------+
+#	| unused | reserved | index_size | data     |
+#	+--------+----------+------------+----------+
+#	| 752 KB | 42464 KB | 2216 KB    | 39496 KB |
+#	+--------+----------+------------+----------+
+
+sub databaseSize {
+	my ( $self, $database ) = @_;
+
+	# sp_spaceused provides two results sets, where each one only contains one data row
+	# we got so six metrics for each database
+	my $sqlres = $self->execSqlCommand( "use $database; exec sp_spaceused;", { tabular => false, multiple => true });
+	my $result = {};
+	foreach my $set ( @{$sqlres->{result}} ){
+		my $row = @{$set}[0];
+		foreach my $key ( keys %{$row} ){
+			# only publish numeric datas
+			next if $key eq "database_name";
+			# moving the unit to the column name
+			my $data = $row->{$key};
+			$key =~ s/\s/_/g;
+			my @words = split( /\s+/, $data );
+			$result->{$key.'_'.$words[1]} = $words[0];
+		}
+	}
+
+	return $result;
+}
+
+# -------------------------------------------------------------------------------------------------
 # Get the status of a database
 # (I):
 # - database name
@@ -567,6 +615,26 @@ sub getProperties {
 	}
 
 	return $props;
+}
+
+# ------------------------------------------------------------------------------------------------
+# returns the count of rows in the table of the database
+# (I):
+# - database
+# - table
+# (O):
+# - the count of rows
+
+sub getTableRowsCount {
+	my ( $self, $database, $table ) = @_;
+
+	my $count = 0;
+	my $sqlres = $self->execSqlCommand( "use $database; select count(*) as rows_count from $table;", { tabular => false });
+	if( $sqlres->{ok} ){
+		$count = $sqlres->{result}->[0]->{rows_count} || 0;
+	}
+
+	return $count;
 }
 
 # -------------------------------------------------------------------------------------------------
