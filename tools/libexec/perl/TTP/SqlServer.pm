@@ -359,6 +359,79 @@ sub backupDatabase {
 }
 
 # -------------------------------------------------------------------------------------------------
+# execute a sql command
+# (I):
+# - the command string to be executed
+# - an optional options hash which may contain following keys:
+#   > tabular: whether to format data as tabular data, defaulting to true
+#   > json: an output file where data is to be saved
+#   > multiple: whether we expect several result sets, defaulting to false
+# (O):
+# returns a hash ref with following keys:
+# - ok: true|false
+# - result: an array ref to hash results
+
+sub execSqlCommand {
+	my ( $self, $command, $opts ) = @_;
+	$opts //= {};
+	my $result = { ok => false };
+	msgErr( __PACKAGE__."::execSqlCommand() command is mandatory, but not specified" ) if !$command;
+
+	if( !TTP::errs()){
+		msgVerbose( __PACKAGE__."::execSqlCommand() entering with service='".$self->service()->name()."' sql='$command'" );
+		my $resultStyle = undef;
+		my $colinfoStyle = undef;
+		my $rowStyle = undef;
+		if( $Config{osname} eq "MSWin32" ){
+			$resultStyle = Win32::SqlServer::SINGLESET;
+			$resultStyle = Win32::SqlServer::MULTISET if $opts->{multiple};
+			$colinfoStyle = Win32::SqlServer::COLINFO_NONE;
+			$colinfoStyle = Win32::SqlServer::COLINFO_FULL if $opts->{columns};
+			$rowStyle = Win32::SqlServer::HASH;
+		}
+		my $args = {
+			resultStyle => $resultStyle,
+			colinfoStyle => $colinfoStyle,
+			rowStyle => $rowStyle
+		};
+		$result = $self->_sqlExec( $command, $args );
+	}
+	msgVerbose( __PACKAGE__."::execSqlCommand() result='".( $result->{ok} ? 'true' : 'false' )."'" );
+
+	#print Dumper( $parms );
+	#print Dumper( $result );
+	#print Dumper( $opts );
+	if( $result->{ok} ){
+		# tabular output if asked for
+		my $tabular = true;
+		$tabular = $opts->{tabular} if defined $opts->{tabular};
+		if( $tabular ){
+			TTP::displayTabular( $result->{result} );
+		} else {
+			msgVerbose( "do not display tabular result as opts->{tabular}='false'" );
+		}
+		# json output if asked for
+		my $json = '';
+		$json = $opts->{json} if defined $opts->{json};
+		if( $json ){
+			TTP::jsonOutput( $result->{result}, $json );
+		} else {
+			msgVerbose( "do not save JSON result as opts->{json} is not set" );
+		}
+		# columns names output if asked for
+		# pwi 2024-12-23 doesn't work in Win23::SQLServer when query is too complex - so ignored at the moment
+		#my $columns = '';
+		#$columns = $opts->{columns} if defined $opts->{columns};
+		#if( $columns ){
+		#	$self->columnsOutput( $command, $columns );
+		#} else {
+		#	msgVerbose( "do not save columns names as opts->{columns} is not set" );
+		#}
+	}
+	return $result;
+}
+
+# -------------------------------------------------------------------------------------------------
 # get and returns the list of databases in the server, minus the predefined system databases
 # (I):
 # - none
@@ -542,48 +615,6 @@ sub DESTROY {
 ### Note for the developer: while a global function doesn't take any argument, it can be called both
 ### as a class method 'TTP::Package->method()' or as a global function 'TTP::Package::method()',
 ### the former being preferred (hence the writing inside of the 'Class methods' block).
-
-# ------------------------------------------------------------------------------------------------
-# execute a SQL command and returns its result
-# (I):
-# - the DBMS instance
-# - an object with following keys:
-#   > command: the sql command
-#   > opts: an optional options hash which following keys:
-#     - multiple: whether several result sets are expected, defaulting to false
-#     - columns: the output filename for the columns array(s)
-# (O):
-# returns a hash with following keys:
-# - ok: true|false
-# - result: the result set as an array ref
-# - stdout: a copy of lines outputed on stdout as an array ref
-
-sub apiExecSqlCommand {
-	my ( $me, $dbms, $parms ) = @_;
-	my $result = { ok => false };
-	msgErr( __PACKAGE__."::apiExecSqlCommand() command is mandatory, but not specified" ) if !$parms || !$parms->{command};
-	if( !TTP::errs()){
-		msgVerbose( __PACKAGE__."::apiExecSqlCommand() entering with instance='".$dbms->instance()."' sql='$parms->{command}'" );
-		my $resultStyle = undef;
-		my $colinfoStyle = undef;
-		my $rowStyle = undef;
-		if( $Config{osname} eq "MSWin32" ){
-			$resultStyle = Win32::SqlServer::SINGLESET;
-			$resultStyle = Win32::SqlServer::MULTISET if $parms->{opts} && $parms->{opts}{multiple};
-			$colinfoStyle = Win32::SqlServer::COLINFO_NONE;
-			$colinfoStyle = Win32::SqlServer::COLINFO_FULL if $parms->{opts} && $parms->{opts}{columns};
-			$rowStyle = Win32::SqlServer::HASH;
-		}
-		my $opts = {
-			resultStyle => $resultStyle,
-			colinfoStyle => $colinfoStyle,
-			rowStyle => $rowStyle
-		};
-		$result = _sqlExec( $dbms, $parms->{command}, $opts );
-	}
-	msgVerbose( __PACKAGE__."::apiExecSqlCommand() result='".( $result->{ok} ? 'true' : 'false' )."'" );
-	return $result;
-}
 
 1;
 

@@ -37,6 +37,7 @@ use strict;
 use utf8;
 use warnings;
 
+use TTP::Node;
 use TTP::Service;
 
 my $defaults = {
