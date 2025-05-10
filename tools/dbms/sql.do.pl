@@ -5,7 +5,6 @@
 # @(-) --[no]dummy             dummy run [${dummy}]
 # @(-) --[no]verbose           run verbosely [${verbose}]
 # @(-) --service=<name>        acts on the named service [${service}]
-# @(-) --instance=<name>       acts on the named Sql Server instance [${instance}]
 # @(-) --[no]stdin             whether the sql command has to be read from stdin [${stdin}]
 # @(-) --script=<filename>     the sql script filename [${script}]
 # @(-) --command=<command>     the sql command as a string [${command}]
@@ -43,7 +42,7 @@ use warnings;
 
 use Path::Tiny;
 
-use TTP::DBMS;
+use TTP::Node;
 use TTP::Service;
 
 my $defaults = {
@@ -52,7 +51,6 @@ my $defaults = {
 	dummy => 'no',
 	verbose => 'no',
 	service => '',
-	instance => 'MSSQLSERVER',
 	stdin => 'no',
 	script => '',
 	command => '',
@@ -63,8 +61,6 @@ my $defaults = {
 };
 
 my $opt_service = $defaults->{service};
-my $opt_instance = $defaults->{instance};
-my $opt_instance_set = false;
 my $opt_stdin = false;
 my $opt_script = $defaults->{script};
 my $opt_command = $defaults->{command};
@@ -73,9 +69,12 @@ my $opt_multiple = false;
 my $opt_json = $defaults->{json};
 my $opt_columns = $defaults->{columns};
 
-# may be overriden by the service if specified
-my $jsonable = $ep->node();
-my $dbms = undef;
+# the node which hosts the requested service
+my $objNode = undef;
+# the service object
+my $objService = undef;
+# the DBMS object
+my $objDbms = undef;
 
 # -------------------------------------------------------------------------------------------------
 # DBMS::execSqlCommand returns a hash with:
@@ -113,7 +112,7 @@ sub execSqlStdin {
 	}
 	chomp $command;
 	msgVerbose( "executing '$command' from stdin" );
-	_result( $dbms->execSqlCommand( $command, { tabular => $opt_tabular, json => $opt_json, columns => $opt_columns, multiple => $opt_multiple }));
+	_result( $objDbms->execSqlCommand( $command, { tabular => $opt_tabular, json => $opt_json, columns => $opt_columns, multiple => $opt_multiple }));
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -123,7 +122,7 @@ sub execSqlScript {
 	msgVerbose( "executing from '$opt_script'" );
 	my $sql = path( $opt_script )->slurp_utf8;
 	#msgVerbose( "sql='$sql'" );
-	_result( $dbms->execSqlCommand( $sql, { tabular => $opt_tabular, json => $opt_json, columns => $opt_columns, multiple => $opt_multiple }));
+	_result( $objDbms->execSqlCommand( $sql, { tabular => $opt_tabular, json => $opt_json, columns => $opt_columns, multiple => $opt_multiple }));
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -131,7 +130,7 @@ sub execSqlScript {
 
 sub execSqlCommand {
 	msgVerbose( "executing command='$opt_command'" );
-	_result( $dbms->execSqlCommand( $opt_command, { tabular => $opt_tabular, json => $opt_json, columns => $opt_columns, multiple => $opt_multiple }));
+	_result( $objDbms->execSqlCommand( $opt_command, { tabular => $opt_tabular, json => $opt_json, columns => $opt_columns, multiple => $opt_multiple }));
 }
 
 # =================================================================================================
@@ -144,11 +143,6 @@ if( !GetOptions(
 	"dummy!"			=> sub { $ep->runner()->dummy( @_ ); },
 	"verbose!"			=> sub { $ep->runner()->verbose( @_ ); },
 	"service=s"			=> \$opt_service,
-	"instance=s"		=> sub {
-		my( $opt_name, $opt_value ) = @_;
-		$opt_instance = $opt_value;
-		$opt_instance_set = true;
-	},
 	"stdin!"			=> \$opt_stdin,
 	"script=s"			=> \$opt_script,
 	"command=s"			=> \$opt_command,
@@ -170,8 +164,6 @@ msgVerbose( "got colored='".( $ep->runner()->colored() ? 'true':'false' )."'" );
 msgVerbose( "got dummy='".( $ep->runner()->dummy() ? 'true':'false' )."'" );
 msgVerbose( "got verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got service='$opt_service'" );
-msgVerbose( "got instance='$opt_instance'" );
-msgVerbose( "got instance_set='".( $opt_instance_set ? 'true':'false' )."'" );
 msgVerbose( "got stdin='".( $opt_stdin ? 'true':'false' )."'" );
 msgVerbose( "got script='$opt_script'" );
 msgVerbose( "got command='$opt_command'" );
@@ -180,29 +172,22 @@ msgVerbose( "got multiple='".( $opt_multiple ? 'true':'false' )."'" );
 msgVerbose( "got json='$opt_json'" );
 msgVerbose( "got columns='$opt_columns'" );
 
-# must have either -service or -instance options
-# compute instance from service
-my $count = 0;
-$count += 1 if $opt_service;
-$count += 1 if $opt_instance_set;
-if( $count == 0 ){
-	msgErr( "must have one of '--service' or '--instance' option, none found" );
-} elsif( $count > 1 ){
-	msgErr( "must have one of '--service' or '--instance' option, both found" );
-} elsif( $opt_service ){
-	if( $jsonable->hasService( $opt_service )){
-		$jsonable = TTP::Service->new( $ep, { service => $opt_service });
-		$opt_instance = $jsonable->var([ 'DBMS', 'instance' ]);
-	} else {
-		msgErr( "service '$opt_service' if not defined on current execution node" ) ;
+# must have --service option
+# find the node which hosts this service in this same environment (should be at most one)
+# and check that the service is DBMS-aware
+if( $opt_service ){
+	$objNode = TTP::Node->findByService( $ep->node()->environment(), $opt_service );
+	if( $objNode ){
+		msgVerbose( "got hosting node='".$objNode->name()."'" );
+		$objService = TTP::Service->new( $ep, { service => $opt_service });
+		$objDbms = $objService->newDbms({ node => $objNode });
 	}
+} else {
+	msgErr( "'--service' option is mandatory, but is not specified" );
 }
 
-# instanciates the DBMS class
-$dbms = TTP::DBMS->new( $ep, { instance => $opt_instance }) if !TTP::errs();
-
 # either -stdin or -script or -command options must be specified and only one
-$count = 0;
+my $count = 0;
 $count += 1 if $opt_stdin;
 $count += 1 if $opt_script;
 $count += 1 if $opt_command;
