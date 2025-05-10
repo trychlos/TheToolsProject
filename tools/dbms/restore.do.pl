@@ -95,7 +95,7 @@ sub doRestore {
 			$data->{diff} = $opt_diff;
 		} else {
 			msgVerbose( "emptying '/diff' MQTT message as restored from a full backup" );
-			my $cmd = 'mqtt.pl publish -topic '.$ep->node()->name().'/executionReport/'.$ep->runner()->command().'/'.$ep->runner()->verb()."/$opt_instance/$opt_database/diff -payload \"\" -retain -nocolored";
+			my $cmd = 'mqtt.pl publish -topic '.$objNode->name().'/executionReport/'.$ep->runner()->command().'/'.$ep->runner()->verb()."/$opt_service/$opt_database/diff -payload \"\" -retain -nocolored";
 			msgOut( "executing '$cmd'" );
 			`$cmd`;
 		}

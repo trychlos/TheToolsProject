@@ -112,10 +112,11 @@ sub _connect {
 
 sub _restoreDatabaseFile {
 	my ( $self, $parms ) = @_;
+
 	my $database = $parms->{database};
 	my $fname = $parms->{file};
 	my $last = $parms->{last};
-	#
+
 	msgVerbose(  __PACKAGE__."::_restoreDatabaseFile() restoring $fname" );
 	my $recovery = 'NORECOVERY';
 	if( $last ){
@@ -127,6 +128,7 @@ sub _restoreDatabaseFile {
 		my $res = $self->_sqlExec( "RESTORE DATABASE $database FROM DISK='$fname' WITH $recovery, $move;" );
 		$result = $res->{ok};
 	}
+
 	return $result;
 }
 
@@ -142,18 +144,21 @@ sub _restoreDatabaseFile {
 
 sub _restoreDatabaseMove {
 	my ( $self, $parms ) = @_;
+
 	my $database = $parms->{database};
 	my $fname = $parms->{file};
 	msgVerbose( __PACKAGE__."::_restoreDatabaseMove() database='$database'" );
+
 	my $result = $self->_sqlExec( "RESTORE FILELISTONLY FROM DISK='$fname'" );
 	my $move = undef;
-	if( $dbms->ep()->runner()->dummy()){
+	if( $self->ep()->runner()->dummy()){
 		msgDummy( "considering nomove" );
 	} elsif( !scalar @{$result->{result}} ){
 		msgErr( __PACKAGE__."::_restoreDatabaseMove() unable to get the files list of the backup set" );
 	} else {
+		# starting with v4.11, dataPath no more comes from the configuration, but is dynamically read from SqlServer
 		#my $sqlDataPath = $self->service()->var([ 'DBMS', 'dataPath' ]);
-		my $res = $self->_sqlExec( "select InstanceDefaultDataPath = serverproperty( 'InstanceDefaultDataPath ')" );
+		my $res = $self->_sqlExec( "select InstanceDefaultDataPath = serverproperty( 'InstanceDefaultDataPath' )" );
 		my $sqlDataPath = $res->{result}[0]{InstanceDefaultDataPath};
 		foreach( @{$result->{result}} ){
 			my $row = $_;
@@ -163,6 +168,7 @@ sub _restoreDatabaseMove {
 			$move .= "MOVE '".$row->{'LogicalName'}."' TO '$target_file'";
 		}
 	}
+
 	return $move;
 }
 
@@ -177,13 +183,16 @@ sub _restoreDatabaseMove {
 
 sub _restoreDatabaseSetOffline {
 	my ( $self, $parms ) = @_;
+
 	my $database = $parms->{database};
 	msgVerbose( __PACKAGE__."::_restoreDatabaseSetOffline() database='$database'" );
+
 	my $result = true;
 	if( $self->databaseExists( $database )){
 		my $res = $self->_sqlExec( "ALTER DATABASE $database SET OFFLINE WITH ROLLBACK IMMEDIATE;" );
 		$result = $res->{ok};
 	}
+
 	return $result;
 }
 
