@@ -5,7 +5,6 @@
 # @(-) --[no]dummy             dummy run (ignored here) [${dummy}]
 # @(-) --[no]verbose           run verbosely [${verbose}]
 # @(-) --service=<name>        acts on the named service [${service}]
-# @(-) --instance=<name>       acts on the named Sql Server instance [${instance}]
 # @(-) --database=<name>       database name [${database}]
 # @(-) --[no]dbsize            get databases size for the specified instance [${dbsize}]
 # @(-) --[no]tabcount          get tables rows count for the specified database [${tabcount}]
@@ -41,8 +40,8 @@ use strict;
 use utf8;
 use warnings;
 
-use TTP::DBMS;
 use TTP::Metric;
+use TTP::Node;
 use TTP::Service;
 
 my $defaults = {
@@ -51,7 +50,6 @@ my $defaults = {
 	dummy => 'no',
 	verbose => 'no',
 	service => '',
-	instance => 'MSSQLSERVER',
 	database => '',
 	dbsize => 'no',
 	tabcount => 'no',
@@ -64,8 +62,6 @@ my $defaults = {
 };
 
 my $opt_service = $defaults->{service};
-my $opt_instance = '';
-my $opt_instance_set = false;
 my $opt_database = $defaults->{database};
 my $opt_dbsize = false;
 my $opt_tabcount = false;
@@ -76,9 +72,12 @@ my $opt_text = false;
 my @opt_prepends = ();
 my @opt_appends = ();
 
-# may be overriden by the service if specified
-my $jsonable = $ep->node();
-my $dbms = undef;
+# the node which hosts the requested service
+my $objNode = undef;
+# the service object
+my $objService = undef;
+# the DBMS object
+my $objDbms = undef;
 
 # list of databases to be checked
 my $databases = [];
@@ -128,7 +127,7 @@ sub _interpretDbResultSet {
 # if only an instance has been specified, then all databases of this instance are considered
 
 sub doDbSize {
-	msgOut( "publishing databases size on '$opt_instance'..." );
+	msgOut( "publishing databases size on '$opt_service'..." );
 	my $count = 0;
 	my $dummy = $ep->runner()->dummy() ? "-dummy" : "-nodummy";
 	my $verbose = $ep->runner()->verbose() ? "-verbose" : "-noverbose";
@@ -136,14 +135,12 @@ sub doDbSize {
 		last if $count >= $opt_limit && $opt_limit >= 0;
 		msgOut( "database '$db'" );
 		# sp_spaceused provides two results sets, where each one only contains one data row
-		my $sqlres = $dbms->execSqlCommand( "use $db; exec sp_spaceused;", { tabular => false, multiple => true });
+		my $sqlres = $objDbms->execSqlCommand( "use $db; exec sp_spaceused;", { tabular => false, multiple => true });
 		my $set = _interpretDbResultSet( $sqlres->{result} );
 		# we got so six metrics for each database
 		# that we publish separately as mqtt-based names are slightly different from Prometheus ones
 		my @labels = ( @opt_prepends,
-			"environment=".$ep->node()->environment(), "service=".$opt_service, "command=".$ep->runner()->command(), "verb=".$ep->runner()->verb(),
-			"instance=$opt_instance", "database=$db",
-			@opt_appends );
+			"environment=".$ep->node()->environment(), "service=".$opt_service, "command=".$ep->runner()->command(), "verb=".$ep->runner()->verb(), "database=$db", @opt_appends );
 		foreach my $key ( keys %{$set} ){
 			TTP::Metric->new( $ep, {
 				name => $key,
@@ -176,23 +173,21 @@ sub doTablesCount {
 	my $dummy = $ep->runner()->dummy() ? "-dummy" : "-nodummy";
 	my $verbose = $ep->runner()->verbose() ? "-verbose" : "-noverbose";
 	foreach my $db ( @{$databases} ){
-		msgOut( "publishing tables rows count on '$opt_instance\\$db'..." );
+		msgOut( "publishing tables rows count on '$opt_service\\$db'..." );
 		last if $count >= $opt_limit && $opt_limit >= 0;
-		my $command = "dbms.pl list -instance $opt_instance -database $db -listtables -nocolored $dummy $verbose";
+		my $command = "dbms.pl list -service $opt_service -database $db -listtables -nocolored $dummy $verbose";
 		my $tables = TTP::filter( `$command` );
 		foreach my $tab ( @{$tables} ){
 			last if $count >= $opt_limit && $opt_limit >= 0;
 			msgOut( " table '$tab'" );
-			my $sqlres = $dbms->execSqlCommand( "use $db; select count(*) as rows_count from $tab;", { tabular => false });
+			my $sqlres = $objDbms->execSqlCommand( "use $db; select count(*) as rows_count from $tab;", { tabular => false });
 			if( $sqlres->{ok} ){
 				# mqtt and http/text have different names
 				# mqtt topic: <node>/telemetry/<environment>/<service>/<command>/<verb>/<instance>/<database>/rowscount/<table>
 				# mqtt value: <table_rows_count>
 				if( $opt_mqtt ){
 					my @labels = ( @opt_prepends,
-						"environment=".$ep->node()->environment(), "service=".$opt_service, "command=".$ep->runner()->command(), "verb=".$ep->runner()->verb(),
-						"instance=$opt_instance", "database=$db",
-						@opt_appends );
+						"environment=".$ep->node()->environment(), "service=".$opt_service, "command=".$ep->runner()->command(), "verb=".$ep->runner()->verb(), "database=$db", @opt_appends );
 					TTP::Metric->new( $ep, {
 						name => $tab,
 						value => $sqlres->{result}->[0]->{rows_count} || 0,
@@ -206,9 +201,7 @@ sub doTablesCount {
 				# http value: <table_rows_count>
 				if( $opt_http || $opt_text ){
 					my @labels = ( @opt_prepends,
-						"environment=".$ep->node()->environment(), "service=".$opt_service, "command=".$ep->runner()->command(), "verb=".$ep->runner()->verb(),
-						"instance=$opt_instance", "database=$db", "table=$tab",
-						@opt_appends );
+						"environment=".$ep->node()->environment(), "service=".$opt_service, "command=".$ep->runner()->command(), "verb=".$ep->runner()->verb(), "database=$db", "table=$tab", @opt_appends );
 					TTP::Metric->new( $ep, {
 						name => 'rowscount',
 						value => $sqlres->{result}->[0]->{rows_count} || 0,
@@ -240,11 +233,6 @@ if( !GetOptions(
 	"dummy!"			=> sub { $ep->runner()->dummy( @_ ); },
 	"verbose!"			=> sub { $ep->runner()->verbose( @_ ); },
 	"service=s"			=> \$opt_service,
-	"instance=s"		=> sub {
-		my( $opt_name, $opt_value ) = @_;
-		$opt_instance = $opt_value;
-		$opt_instance_set = true;
-	},
 	"database=s"		=> \$opt_database,
 	"dbsize!"			=> \$opt_dbsize,
 	"tabcount!"			=> \$opt_tabcount,
@@ -268,7 +256,6 @@ msgVerbose( "got colored='".( $ep->runner()->colored() ? 'true':'false' )."'" );
 msgVerbose( "got dummy='".( $ep->runner()->dummy() ? 'true':'false' )."'" );
 msgVerbose( "got verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got service='$opt_service'" );
-msgVerbose( "got instance='$opt_instance'" );
 msgVerbose( "got database='$opt_database'" );
 msgVerbose( "got dbsize='".( $opt_dbsize ? 'true':'false' )."'" );
 msgVerbose( "got tabcount='".( $opt_tabcount ? 'true':'false' )."'" );
@@ -281,41 +268,34 @@ msgVerbose( "got prepends='".join( ',', @opt_prepends )."'" );
 @opt_appends = split( /,/, join( ',', @opt_appends ));
 msgVerbose( "got appends='".join( ',', @opt_appends )."'" );
 
-# must have either -service or -instance options
-# compute instance from service
-my $count = 0;
-$count += 1 if $opt_service;
-$count += 1 if $opt_instance_set;
-if( $count == 0 ){
-	msgErr( "must have one of '--service' or '--instance' option, none found" );
-} elsif( $count > 1 ){
-	msgErr( "must have one of '--service' or '--instance' option, both found" );
-} elsif( $opt_service ){
-	if( $jsonable->hasService( $opt_service )){
-		$jsonable = TTP::Service->new( $ep, { service => $opt_service });
-		$opt_instance = $jsonable->var([ 'DBMS', 'instance' ]);
-	} else {
-		msgErr( "service '$opt_service' if not defined on current execution node" ) ;
+# must have --service option
+# find the node which hosts this service in this same environment (should be at most one)
+# and check that the service is DBMS-aware
+if( $opt_service ){
+	$objNode = TTP::Node->findByService( $ep->node()->environment(), $opt_service );
+	if( $objNode ){
+		msgVerbose( "got hosting node='".$objNode->name()."'" );
+		$objService = TTP::Service->new( $ep, { service => $opt_service });
+		$objDbms = $objService->newDbms({ node => $objNode });
 	}
+} else {
+	msgErr( "'--service' option is mandatory, but is not specified" );
 }
-
-# instanciates the DBMS class
-$dbms = TTP::DBMS->new( $ep, { instance => $opt_instance }) if !TTP::errs();
 
 # database(s) can be specified in the command-line, or can come from the service
 if( $opt_database ){
 	push( @{$databases}, $opt_database );
 } elsif( $opt_service ){
-	$databases = $jsonable->var([ 'DBMS', 'databases' ]);
+	$databases = $objDbms->getDatabases();
 	msgVerbose( "setting databases='".join( ', ', @{$databases} )."'" );
 }
 
 # all databases must exist in the instance
 if( scalar @{$databases} ){
 	foreach my $db ( @{$databases} ){
-		my $exists = $dbms->databaseExists( $db );
+		my $exists = $objDbms->databaseExists( $db );
 		if( !$exists ){
-			msgErr( "database '$db' doesn't exist in the '$opt_instance' instance" );
+			msgErr( "database '$db' doesn't exist in the '$opt_service' DBMS instance" );
 		}
 	}
 } else {
