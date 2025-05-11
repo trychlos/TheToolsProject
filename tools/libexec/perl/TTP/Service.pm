@@ -262,6 +262,23 @@ sub var {
 	return $value;
 }
 
+# -------------------------------------------------------------------------------------------------
+# Whether we should warn when several hosting nodes are found is rather a site-level property.
+# it is nonetheless overridable on a per-service or per-node basis. Hence this method.
+# (I):
+# - none
+# (O):
+# - whether we should warn when several hosting nodes are found: true|false
+
+sub warnOnMultipleHostingNodes {
+	my ( $self ) = @_;
+	
+	my $warn = $self->var([ 'warnOnMultipleHostingNodes' ]);
+	$warn = true if !defined $warn;
+
+	return $warn;
+}
+
 ### Class methods
 
 # -------------------------------------------------------------------------------------------------

@@ -366,7 +366,7 @@ sub findByService {
 	$candidate->findByService_addCandidate( $environment, $service, $founds ) if $candidate;
 
 	# if it is candidate, this node will be chosen
-	# scan the full list just to be able to emit a warning when several nodes are found
+	# scan the full list a) to find others and b) to be able to emit a warning when several nodes are found
 	my $nodeNames = $class->list();
 	foreach my $name ( @{$nodeNames} ){
 		$candidate = $class->new( $ep, { node => $name });
@@ -385,10 +385,15 @@ sub findByService {
 		$found = $founds->[0];
 		if( $count > 1 ){
 			my $names = [];
-			foreach my $it ( @{$founds} ){
-				push( @{$names}, $it->name());
+			my $objService = TTP::Service->new( $ep, { service => $service });
+			if( $objService->warnOnMultipleHostingNodes()){
+				foreach my $it ( @{$founds} ){
+					push( @{$names}, $it->name());
+				}
+				msgWarn( "found $count hosting nodes [".join( ',', @{$names} )."] for '$service' service in '$environment' environment, choosing the first one (".$found->name().")" ) ;
+			} else {
+				msgVerbose( "found $count hosting nodes [".join( ',', @{$names} )."] for '$service' service in '$environment' environment, choosing the first one (".$found->name().")" ) ;
 			}
-			msgWarn( "found $count hosting nodes [".join( ',', @{$names} )."] for '$service' service in '$environment' environment, choosing the first one (".$found->name().")" ) ;
 		}
 	}
 

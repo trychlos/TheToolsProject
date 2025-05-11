@@ -2,11 +2,11 @@
 
 ## ChangeLog
 
-### 4.11.2-rc.0
+### 4.12.0-rc.0
 
     Release date: 
 
-    - 
+    - Define new 'warnOnMultipleHostingNodes' property, overridable or a per-node or per-service basis (todo #145), thus bumping minor candidate version number
 
 ### 4.11.1
 

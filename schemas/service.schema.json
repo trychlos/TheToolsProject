@@ -91,6 +91,15 @@
             "type": "boolean",
             "default": false
         },
+        "warnOnMultipleHostingNodes": {
+            "description_array": [
+                "Whether we should emit a warning when several nodes are hosting candidates for the service.",
+                "Though this is rather a site-level property, this is nonetheless overridable on a per-node or per-service basis.",
+                "Hence this property in this schema."
+            ],
+            "type": "boolean",
+            "default": "true"
+        },
         "workloads": {
             "description_array": [
                 "The configuration of each workload this service subscribes to.",
