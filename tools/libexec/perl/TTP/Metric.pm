@@ -69,7 +69,7 @@ use constant {
 	VALUE_UNAVAILABLE => 4,
 	VALUE_UNSUITED => 5,
 	NAME_UNAVAILABLE => 6,
-	MQTT_NOCOMMAND => 7,
+	notused => 7,
 	MQTT_COMMAND_ERROR => 8,
 	HTTP_NOURL => 9,
 	HTTP_REQUEST_ERROR => 10,
@@ -266,12 +266,12 @@ sub publish {
 	my $result = {};
 
 	my $macros = {
-		'<NAME>' => $self->name(),
-		'<VALUE>' => $self->value(),
-		'<HELP>' => $self->help(),
-		'<LABELS>' => join( ',', @{$self->labels()} ),
-		'<LABEL_NAMES>' => join( ',', @{$self->label_names()} ),
-		'<LABEL_VALUES>' => join( ',', @{$self->label_values()} )
+		NAME => $self->name(),
+		VALUE => $self->value(),
+		HELP => $self->help(),
+		LABELS => join( ',', @{$self->labels()} ),
+		LABEL_NAMES => join( ',', @{$self->label_names()} ),
+		LABEL_VALUES => join( ',', @{$self->label_values()} )
 	};
 
 	my $mqtt = false;
@@ -385,27 +385,24 @@ sub _mqtt_publish {
 				$command = "mqtt.pl publish -topic <TOPIC> -payload \"<VALUE>\"";
 			}
 		}
-		if( $command ){
-			my $name = $self->name();
-			if( $name ){
-				$name = "$prefix$name";
-				my $topic = TTP::Telemetry::getConfigurationValue([ 'withMqtt', 'topic' ]);
-				if( !$topic ){
-					$topic = "<NODE>/telemetry/<LABEL_VALUES>/<NAME>";
-				}
-				# when substituting the macros to build the topic, replace commas (',') with slashes ('/')
-				$topic = TTP::substituteMacros( $topic, $macros );
-				$topic =~ s/,/\//g;
-				$macros->{'<TOPIC>'} = $topic;
-				# when running the command, takes care that the provided command may not honor nor even accept standard options - do not modify it
-				$command = TTP::substituteMacros( $command, $macros );
-				my $result = TTP::commandExec( $command );
-				$res = $result->{success} ? 0 : MQTT_COMMAND_ERROR;
-			} else {
-				$res = NAME_UNAVAILABLE;
+		my $name = $self->name();
+		if( $name ){
+			$name = "$prefix$name";
+			my $topic = TTP::Telemetry::getConfigurationValue([ 'withMqtt', 'topic' ]);
+			if( !$topic ){
+				$topic = "<NODE>/telemetry/<LABEL_VALUES>/<NAME>";
 			}
+			# when substituting the macros to build the topic, replace commas (',') with slashes ('/')
+			$topic = TTP::substituteMacros( $topic, $macros );
+			$topic =~ s/,/\//g;
+			$macros->{TOPIC} = $topic;
+			# when running the command, takes care that the provided command may not honor nor even accept standard options - do not modify it
+			my $result = TTP::commandExec( $command, {
+				macros => $macros
+			});
+			$res = $result->{success} ? 0 : MQTT_COMMAND_ERROR;
 		} else {
-			$res = MQTT_NOCOMMAND;
+			$res = NAME_UNAVAILABLE;
 		}
 	} else {
 		$res = MQTT_DISABLED_BY_CONFIGURATION;

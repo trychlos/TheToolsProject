@@ -10,6 +10,8 @@
     - Define new 'TTP::version()' function
     - Decrease the logs verbosity when searching for JSON candidates (todo #140)
     - Have a default command and a default topic to publish a telemetry on MQTT (todo #144)
+    - Homogenize the way TTP::commandExec() and TTP::substituteMacros() deal with macros (i.e. definitively without angle brackets)
+    - TTP::commandExec() now uses system() instead of backtits to better handle both STDERR and return code
 
 ### 4.11.1
 

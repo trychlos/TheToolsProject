@@ -125,8 +125,8 @@ sub evaluate {
 	$self->TTP::IJSONable::evaluate();
 
 	TTP::substituteMacros( $self->jsonData(), {
-		'<NODE>' => $self->ep()->node()->name(),
-		'<SERVICE>' => $self->name()
+		NODE => $self->ep()->node()->name(),
+		SERVICE => $self->name()
 	});
 
 	return $self;

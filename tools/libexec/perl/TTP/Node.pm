@@ -175,14 +175,14 @@ sub evaluate {
 	$self->TTP::IJSONable::evaluate();
 
 	TTP::substituteMacros( $self->jsonData(), {
-		'<NODE>' => $self->name()
+		NODE => $self->name()
 	});
 
 	# 'services' is introduced in v4.10 to replace 'Services'
 	my $services = $self->var([ 'services' ]);
 	foreach my $it ( keys %{$services} ){
 		TTP::substituteMacros( $self->var([ 'services', $it ]), {
-			'<SERVICE>' => $it
+			SERVICE => $it
 		});
 	}
 
@@ -196,7 +196,7 @@ sub evaluate {
 		}
 		foreach my $it ( keys %{$services} ){
 			TTP::substituteMacros( $self->var([ 'Services', $it ]), {
-				'<SERVICE>' => $it
+				SERVICE => $it
 			});
 		}
 	}
