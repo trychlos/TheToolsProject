@@ -74,7 +74,7 @@ sub doPurgeDirs {
 				msgVerbose( "ignoring '$path'" );
 			}
 			closedir( FD );
-			# sort in inverse order: most recent first
+			# sort in reverse order: most recent first as we expect a periodic naming
 			@list = sort { $b cmp $a } @list;
 			msgVerbose( "got ".scalar @list." item(s) in $opt_dirpath" );
 			# build the lists to be kept and moved

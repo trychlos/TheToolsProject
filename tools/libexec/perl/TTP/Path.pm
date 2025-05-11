@@ -644,7 +644,7 @@ sub removeTrailingSeparator {
 }
 
 # -------------------------------------------------------------------------------------------------
-# delete a directory and all its content
+# delete a directory and all its content, honoring the dummy runner option
 # (I):
 # - the dir to be deleted
 # (O):
@@ -653,30 +653,34 @@ sub removeTrailingSeparator {
 sub removeTree {
 	my ( $dir ) = @_;
 	my $result = true;
-	TTP::Message::msgVerbose( __PACKAGE__."::removeTree() removing '$dir'" );
-	my $error;
-	my $removed;
-	my $rtres = remove_tree( $dir, {
-		verbose => $ep->runner()->verbose(),
-		error => \$error,
-		result => \$removed
-	});
-	# https://perldoc.perl.org/File::Path#make_path%28-%24dir1%2C-%24dir2%2C-....-%29
-	if( $error && @$error ){
-		for my $diag ( @$error ){
-			my ( $file, $message ) = %$diag;
-			if( $file eq '' ){
-				TTP::Message::msgErr( __PACKAGE__."::removeTree.remove_tree() $message" );
-			} else {
-				TTP::Message::msgErr( __PACKAGE__."::removeTree.remove_tree() $file: $message" );
+	if( $ep->runner()->dummy()){
+		TTP::Message::msgDummy( __PACKAGE__."::removeTree() removing '$dir'" );
+	} else {
+		TTP::Message::msgVerbose( __PACKAGE__."::removeTree() removing '$dir'" );
+		my $error;
+		my $removed;
+		my $rtres = remove_tree( $dir, {
+			verbose => $ep->runner()->verbose(),
+			error => \$error,
+			result => \$removed
+		});
+		# https://perldoc.perl.org/File::Path#make_path%28-%24dir1%2C-%24dir2%2C-....-%29
+		if( $error && @$error ){
+			for my $diag ( @$error ){
+				my ( $file, $message ) = %$diag;
+				if( $file eq '' ){
+					TTP::Message::msgErr( __PACKAGE__."::removeTree.remove_tree() $message" );
+				} else {
+					TTP::Message::msgErr( __PACKAGE__."::removeTree.remove_tree() $file: $message" );
+				}
 			}
+			$result = false;
 		}
-		$result = false;
+		if( $removed && ref( $removed ) eq 'ARRAY' ){
+			TTP::Message::msgVerbose( __PACKAGE__."::removeTree() removed=[ ".join( ', ', @{$removed} )." ]" );
+		}
+		TTP::Message::msgVerbose( __PACKAGE__."::removeTree() dir='$dir' remove_tree result='$rtres' function result=".( $result ? 'true' : 'false' ));
 	}
-	if( $removed && ref( $removed ) eq 'ARRAY' ){
-		TTP::Message::msgVerbose( __PACKAGE__."::removeTree() removed=[ ".join( ', ', @{$removed} )." ]" );
-	}
-	TTP::Message::msgVerbose( __PACKAGE__."::removeTree() dir='$dir' remove_tree result='$rtres' function result=".( $result ? 'true' : 'false' ));
 	return $result;
 }
 
