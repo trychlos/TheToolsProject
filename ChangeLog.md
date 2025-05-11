@@ -13,6 +13,7 @@
     - Homogenize the way TTP::commandExec() and TTP::substituteMacros() deal with macros (i.e. definitively without angle brackets)
     - TTP::commandExec() now uses system() instead of backtits to better handle both STDERR and return code
     - TTP::filter() now takes a command string (instead of its output) and directly executes it through TTP::commandExec()
+    - All commands executions use either TTP::commandExec() or TTP::filter() (todo #142)
 
 ### 4.11.1
 

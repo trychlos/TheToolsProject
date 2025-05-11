@@ -70,15 +70,11 @@ sub getLive {
 		$command = $service->var([ 'status', 'live' ]);
 	}
 	if( $command ){
-		msgVerbose( $command );
-		my $stdout = `$command`;
-		my $rc = $?;
-		msgVerbose( $stdout );
-		msgVerbose( "rc=$rc" );
-		if( $rc ){
+		my $stdout = TTP::filter( $command );
+		if( !scalar( @{$stdout} )){
 			msgWarn( "the service seems unable to identify its own live machine, saying there is none (maybe is it dead ?)" );
 		} else {
-			my @live = grep( /X-Sent-By/, split( /[\r\n]/, $stdout ));
+			my @live = grep( /X-Sent-By/, @{$stdout} );
 			my $live = $live[0];
 			$live =~ s/^\s*X-Sent-By:\s*//;
 			print "  live: $live".EOL;
@@ -86,13 +82,8 @@ sub getLive {
 			my @hosts = ();
 			my @nexts;
 			$command = "services.pl list -service $opt_service -identifier $opt_environment -machines -nocolored $dummy $verbose";
-			msgVerbose( $command );
-			$stdout = `$command`;
-			$rc = $?;
-			msgVerbose( $stdout );
-			msgVerbose( "rc=$rc" );
-			my @output = grep( !/^\[|\(ERR|\(DUM|\(VER|\(WAR|^$/, split( /[\r\n]/, $stdout ));
-			foreach my $it ( @output ){
+			$stdout = TTP::filter( $command );
+			foreach my $it ( @{$stdout} ){
 				my @words = split( /\s+/, $it );
 				push( @hosts, $words[scalar( @words )-1] );
 			}
@@ -111,14 +102,10 @@ sub getLive {
 				# topic is HOST/telemetry/environment/<ENVIRONMENT>/service/<SERVICE>/command/<COMMAND>/verb/<VERB>/machine/backup=next
 				my $mqtt_live = $live || 'none';
 				$command = "telemetry.pl publish -metric live $labels -value=$mqtt_live -mqtt -mqttPrefix machine/ -nohttp $dummy $verbose";
-				msgVerbose( $command );
-				$stdout = `$command`;
-				msgVerbose( $stdout );
+				TTP::commandExec( $command );
 				if( $opt_next && scalar @nexts ){
 					$command = "telemetry.pl publish -metric backup $labels -value=$next -mqtt -mqttPrefix machine/ -nohttp $dummy $verbose";
-					msgVerbose( $command );
-					$stdout = `$command`;
-					msgVerbose( $stdout );
+					TTP::commandExec( $command );
 				}
 			}
 			if( $opt_http ){
@@ -135,9 +122,7 @@ sub getLive {
 					$httpLabels .= " -append live=$host" if $value eq "1";
 					$httpLabels .= " -append backup=$host" if grep( /$host/, @nexts );
 					$command = "telemetry.pl publish -metric ttp_service_machine $httpLabels -value=$value -nomqtt -http -type gauge $dummy $verbose";
-					msgVerbose( $command );
-					$stdout = `$command`;
-					msgVerbose( $stdout );
+					TTP::commandExec( $command );
 				}
 			}
 			msgOut( "done" );

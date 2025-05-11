@@ -85,10 +85,7 @@ sub _execute {
 			msgDummy( $value );
 		} else {
 			msgOut( " $value" );
-			my $stdout = `$value`;
-			my $rc = $?;
-			msgLog( "stdout='$stdout'" );
-			msgLog( "got rc=$rc" );
+			TTP::commandExec( $value );
 		}
 		$count += 1;
 	} else {

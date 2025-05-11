@@ -68,29 +68,24 @@ sub doSwitch {
 	my $dummy = $extern->dummy() ? "-dummy" : "-nodummy";
 	my $verbose = $extern->verbose() ? "-verbose" : "-noverbose";
 	my $command = "ssh inlingua-user\@$opt_to services.pl vars -service $opt_service -key switch,$tokey,commands -nocolored $dummy $verbose";
-	msgVerbose( $command );
-	my $stdout = `$command`;
-	my $rc = $?;
-	msgVerbose( $stdout );
-	msgVerbose( "rc=$rc" );
-	my @output = grep( !/^\[|\(ERR|\(DUM|\(VER|\(WAR|^$/, split( /[\r\n]/, $stdout ));
+	my $stdout = TTP::filter( $command );
 	my $count = 0;
 	my $cOk = 0;
-	foreach my $line ( @output ){
+	foreach my $line ( @{$stdout} ){
 		$line =~ s/^\s*//;
 		my @words = split( /\s+/, $line, 2 );
 		$command = $words[1];
-		$command =~ s/<NODE>/$opt_to/g;
-		$command =~ s/<SERVICE>/$opt_service/g;
-		# also have to re-double the backlashes to survive to ssh shell
+		# have to re-double the backlashes to survive to ssh shell
 		$command =~ s/\\/\\\\/g;
 		msgOut( "executing $command" );
-		$stdout = `$command`;
-		my $rc = $?;
-		msgVerbose( $stdout );
-		msgVerbose( "rc=$rc" );
+		my $res = TTP::commandExec( $command, {
+			macros => {
+				NODE => $opt_to,
+				SERVICE => $opt_service
+			}
+		});
 		$count += 1;
-		$cOk += 1 if !$rc;
+		$cOk += 1 if $res->{success};
 	}
 	
 	msgOut( "$count executed command(s), $cOk/$count OK" );

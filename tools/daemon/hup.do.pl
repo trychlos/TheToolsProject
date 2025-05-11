@@ -62,12 +62,12 @@ sub doHup {
 	my $dummy = $ep->runner()->dummy() ? "-dummy" : "-nodummy";
 	my $verbose = $ep->runner()->verbose() ? "-verbose" : "-noverbose";
 	my $cmd = "daemon.pl command -nocolored $dummy $verbose -command hup -port $opt_port";
-	msgVerbose( $cmd );
-	my $res = `$cmd`;
-	msgVerbose( "res='$res'" );
-	my $result = ( $res && length $res && $? == 0 );
-	if( $result ){
-		print "$res";
+	# TTP::commandExec() verbose-logs stdout, stderr and return code
+	# TTP::filter() returns filtered stdout
+	my $res = TTP::filter( $cmd );
+	my $success = $res && scalar( @{$res} );
+	if( $success ){
+		print join( EOL, @{$res} ).EOL;
 		msgOut( "done" );
 	} else {
 		msgWarn( "no answer from the daemon" );

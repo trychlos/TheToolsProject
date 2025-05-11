@@ -505,9 +505,8 @@ sub _executionReportToFile {
 			my $verbose = $ep->runner()->verbose() ? "-verbose" : "-noverbose";
 			my $cmd = "$command -nocolored $dummy $verbose";
 			msgOut( "executing '$cmd'" );
-			`$cmd`;
-			msgVerbose( "TTP::_executionReportToFile() got $?" );
-			$res = ( $? == 0 );
+			my $result = TTP::commandExec( $cmd );
+			$res = $result->{success};
 		} else {
 			msgErr( "executionReportToFile() expected a 'command' argument, not found" );
 		}
@@ -556,10 +555,8 @@ sub _executionReportToMqtt {
 						$cmd =~ s/<OPTIONS>/$options/;
 						$cmd = "$cmd -nocolored $dummy $verbose";
 						msgOut( "executing '$cmd'" );
-						`$cmd`;
-						my $rc = $?;
-						msgVerbose( "TTP::_executionReportToMqtt() got rc=$rc" );
-						$res = ( $rc == 0 );
+						my $result = TTP::commandExec( $cmd );
+						$res = $result->{success};
 					} else {
 						msgVerbose( "do not publish excluded '$key' key" );
 					}

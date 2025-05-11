@@ -127,13 +127,15 @@ sub printSummary {
 		$fh->spew( $stdout );
 		my $subject = sprintf( "[%s\@%s] workload summary", $opt_workload, $host );
 		msgOut( "subject='$subject'" );
-		$command =~ s/<SUBJECT>/$subject/;
-		$command =~ s/<OPTIONS>/-textfname $textfname/;
 		my $dummy = $extern->dummy() ? "-dummy" : "";
 		my $verbose = $extern->verbose() ? "-verbose" : "";
 		# this script is not interactive but written to be executed as part of a batch - there is so no reason to log stdout of the command because all msgXxxx() of the command are already logged
-		`$command -nocolored $dummy $verbose`;
-		msgVerbose( "printSummary() got rc=$?" );
+		TTP::commandExec( "$command -nocolored $dummy $verbose", {
+			macros => {
+				SUBJECT => $subject,
+				OPTIONS => "-textfname $textfname"
+			}
+		});
 	}
 	# and to stdout (at last)
 	print $stdout;

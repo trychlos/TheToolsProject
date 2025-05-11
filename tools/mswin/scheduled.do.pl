@@ -57,10 +57,8 @@ sub doListTasks {
 		msgOut( "listing all tasks..." );
 	}
 	my $count = 0;
-	my $stdout = `schtasks /Query /fo list`;
-	my $res = $? == 0;
-	my @lines = split( /[\r\n]/, $stdout );
-	my @tasks = grep( /TaskName:/, @lines );
+	my $res = TTP::commandExec( "schtasks /Query /fo list" );
+	my @tasks = grep( /TaskName:/, @{$res->{stdout}} );
 	if( $opt_task ){
 		@tasks = grep( /$opt_task/i, @tasks );
 	}
@@ -73,7 +71,7 @@ sub doListTasks {
 			print "  $words[1]".EOL;
 		}
 	}
-	if( $res ){
+	if( $res->{success} ){
 		msgOut( "found $count tasks" );
 	} else {
 		msgErr( "NOT OK" );
@@ -85,18 +83,15 @@ sub doListTasks {
 
 sub doTaskStatus {
 	msgOut( "displaying the '$opt_task' task status..." );
-	my $stdout = `schtasks /Query /fo table /TN $opt_task`;
-	my $res = $? == 0;
-	msgVerbose( "res=".( $res ? 'true' : 'false' ));
+	my $res = TTP::commandExec( "schtasks /Query /fo table /TN $opt_task" );
 	my @words = split( /\\/, $opt_task );
 	my $name = $words[scalar( @words )-1];
-	my @lines = split( /[\r\n]/, $stdout );
-	my @props = grep( /$name/, @lines );
+	my @props = grep( /$name/, @{$res->{stdout}} );
 	if( $props[0] ){
 		@words = split( /\s+/, $props[0] );
 		print "  $name: $words[scalar(@words)-1]".EOL;
 	}
-	if( $res ){
+	if( $res->{success} ){
 		msgOut( "success" );
 	} else {
 		msgErr( "NOT OK" );
@@ -108,21 +103,18 @@ sub doTaskStatus {
 
 sub doTaskEnabled {
 	msgOut( "check the 'enabled' property of the '$opt_task' task..." );
-	my $stdout = `schtasks /Query /fo table /TN $opt_task`;
-	my $res = $? == 0;
-	msgVerbose( "res=".( $res ? 'true' : 'false' ));
-	if( $res ){
-		my @lines = split( /[\r\n]/, $stdout );
+	my $res = TTP::commandExec( "schtasks /Query /fo table /TN $opt_task" );
+	if( $res->{success} ){
 		my @words = split( /\\/, $opt_task );
 		my $name = $words[scalar( @words )-1];
-		my @props = grep( /$name/, @lines );
+		my @props = grep( /$name/, @{$res->{stdout}} );
 		if( $props[0] ){
 			@words = split( /\s+/, $props[0] );
 			my @ready = grep( /Ready/, @words );
-			$res = scalar( @ready ) > 0;
+			$res->{success} = scalar( @ready ) > 0;
 		}
 	}
-	if( !$res ){
+	if( !$res->{success} ){
 		$ep->runner()->runnableErrInc();
 	}
 }

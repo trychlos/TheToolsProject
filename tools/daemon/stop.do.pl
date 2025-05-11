@@ -70,7 +70,8 @@ sub doStop {
 	# TTP::commandExec() verbose-logs stdout, stderr and return code
 	# TTP::filter() returns filtered stdout
 	my $res = TTP::filter( $command );
-	if( $res && scalar @{$res} ){
+	my $success = $res && scalar( @{$res} );
+	if( $success ){
 		print join( EOL, @{$res} ).EOL;
 		my $result = true;
 		if( $opt_wait ){
