@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.11.1-rc.0
+### 4.11.1
 
-    Release date: 
+    Release date: 2025- 5-11
 
     - When choosing a node for a service, make sure the current node is the first candidate
     - Databases list must be filtered through the configured list
@@ -359,4 +359,4 @@
 
 ---
 P. Wieser
-- Last updated on 2025, May 10th
+- Last updated on 2025, May 11th
