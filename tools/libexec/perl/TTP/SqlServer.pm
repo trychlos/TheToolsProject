@@ -553,9 +553,10 @@ sub getDatabases {
 		$databases = [];
 		my $res = $self->_sqlExec( "select name from master.sys.databases order by name" );
 		if( $res->{ok} ){
+			my $limited = $self->viewedDatabases();
 			foreach my $it ( @{$res->{result}} ){
 				my $dbname = $it->{name};
-				if( !$self->dbFilteredBySystem( $dbname, $Const->{systemDatabases} ) && !$self->dbFilteredbyLimit( $dbname )){
+				if( !$self->dbFilteredBySystem( $dbname, $Const->{systemDatabases} ) && ( !$limited || !$self->dbFilteredbyLimit( $dbname, $limited ))){
 					push( @{$databases}, $dbname );
 				}
 			}

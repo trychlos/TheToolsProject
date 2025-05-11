@@ -319,9 +319,10 @@ sub getDatabases {
 		if( $handle ){
 			my @dbs = $handle->list_databases;
 			$databases = [];
+			my $limited = $self->viewedDatabases();
 			foreach my $it ( @dbs ){
 				my $dbname = $it->{name};
-				if( !$self->dbFilteredBySystem( $dbname, $Const->{systemDatabases} ) && !$self->dbFilteredbyLimit( $dbname )){
+				if( !$self->dbFilteredBySystem( $dbname, $Const->{systemDatabases} ) && ( !$limited || !$self->dbFilteredbyLimit( $dbname, $limited ))){
 					push( @{$databases}, $dbname );
 				}
 			}
