@@ -430,7 +430,7 @@ sub new {
 		$self->_loadConfig( $args );
 	} else {
 		msgErr( __PACKAGE__."::new() expects a 'jsonPath' argument, not found" );
-		TTP::stackTrace;
+		TTP::stackTrace();
 	}
 
 	return $self;

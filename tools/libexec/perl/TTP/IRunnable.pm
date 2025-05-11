@@ -222,6 +222,7 @@ after _newBase => sub {
 			$self->{_irunnable}{runMode} = "sh";
 		} else {
 			msgErr( __PACKAGE__."::after_newBase() $ENV{ttp_me}='".$ENV{ttp_me}." which is not managed" );
+			TTP::stackTrace();
 		}
 	} else {
 			$self->{_irunnable}{runMode} = "perl";

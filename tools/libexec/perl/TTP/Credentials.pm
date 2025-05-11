@@ -90,6 +90,7 @@ sub get {
 
 	if( ref( $keys ) ne 'ARRAY' ){
 		msgErr( __PACKAGE__."::get() expects an array, found '".ref( $keys )."'" );
+		TTP::stackTrace();
 
 	} else {
 		# prepare a finder for the credentials

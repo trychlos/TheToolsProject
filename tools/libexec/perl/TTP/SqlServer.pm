@@ -349,6 +349,9 @@ sub backupDatabase {
 	my $result = { ok => false };
 	msgErr( __PACKAGE__."::backupDatabase() database is mandatory, but is not specified" ) if !$parms->{database};
 	msgErr( __PACKAGE__."::backupDatabase() mode must be 'full' or 'diff', found '$parms->{mode}'" ) if $parms->{mode} ne 'full' && $parms->{mode} ne 'diff';
+	if( TTP::errs()){
+		TTP::stackTrace();
+	}
 	if( !TTP::errs()){
 		msgVerbose( __PACKAGE__."::backupDatabase() entering with service='".$self->service()->name()."' database='$parms->{database}' mode='$parms->{mode}'..." );
 		my $output = $parms->{output} || $self->computeDefaultBackupFilename( $parms );

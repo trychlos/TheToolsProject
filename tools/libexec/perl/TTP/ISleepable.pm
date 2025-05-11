@@ -95,7 +95,9 @@ sub sleepableDeclareFn {
 	msgErr( __PACKAGE__."::sleepableDeclareFn() expects an interval integer, found '$ref'" ) if $ref;
 	msgErr( __PACKAGE__."::sleepableDeclareFn() expects a positive interval, found '$args{interval}'" ) if !$args{interval} || $args{interval} <= 0;
 
-	if( !TTP::errs()){
+	if( TTP::errs()){
+		TTP::stackTrace();
+	} else {
 		push( @{$self->{_isleepable}{fn}}, { sub => $args{sub}, parms => $args{parms}, interval => $args{interval} } );
 		$success = true;
 	}
@@ -116,6 +118,7 @@ sub sleepableDeclareStop {
 	my $success = false;
 	my $ref = ref( $args{sub} );
 	msgErr( __PACKAGE__."::sleepableDeclareStop() expects a code reference, found '$ref'" ) if $ref ne 'CODE';
+	TTP::stackTrace();
 
 	if( !TTP::errs()){
 		$self->{_isleepable}{stop} = { sub => $args{sub} };
@@ -138,6 +141,7 @@ sub sleepableStart {
 
 	my $success = false;
 	msgErr( __PACKAGE__."::sleepableStart() no stop() function has been declared" ) if !defined $self->{_isleepable}{stop};
+	TTP::stackTrace();
 
 	if( !TTP::errs()){
 		# compute the minimal interval and loop on 1/10e of it

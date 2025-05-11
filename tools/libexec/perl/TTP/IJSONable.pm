@@ -257,6 +257,7 @@ sub jsonLoad {
 				$self->{_ijsonable}{json} = $res;
 			} else {
 				msgErr( __PACKAGE__."::jsonLoad() expects scalar of array from Findable::find(), received '$ref'" );
+				TTP::stackTrace();
 			}
 			if( $self->{_ijsonable}{json} ){
 				$self->{_ijsonable}{raw} = TTP::jsonRead( $self->{_ijsonable}{json} );
@@ -266,6 +267,7 @@ sub jsonLoad {
 	# else we have no way to find the file: this is an unrecoverable error
 	} else {
 		msgErr( __PACKAGE__."::jsonLoad() must have 'path' argument, or be a 'Findable' and have a 'findable' argument" );
+		TTP::stackTrace();
 	}
 
 	# if the raw data has been successfully loaded (no JSON syntax error) and content has been accepted

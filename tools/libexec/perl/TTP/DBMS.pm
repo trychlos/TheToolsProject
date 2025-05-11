@@ -93,15 +93,19 @@ sub computeDefaultBackupFilename {
 	my $mode = 'full';
 	$mode = $parms->{mode} if defined $parms->{mode};
 	msgErr( __PACKAGE__."::computeDefaultBackupFilename() mode must be 'full' or 'diff', found '$mode'" ) if $mode ne 'full' and $mode ne 'diff';
-	# compute the dir and make sure it exists
-	my $node = $self->node();
-	my $backupDir = TTP::dbmsBackupsPeriodic();
-	TTP::Path::makeDirExist( $backupDir );
-	# compute the filename
-	my $fname = $node->name().'-'.$self->service()->name()."-$parms->{database}-".( Time::Moment->now->strftime( '%y%m%d-%H%M%S' ))."-$mode.backup";
-	$output = File::Spec->catdir( $backupDir, $fname );
-	msgVerbose( __PACKAGE__."::computeDefaultBackupFilename() computing output default as '$output'" );
-	return $output;
+	if( TTP::errs()){
+		TTP::stackTrace();
+	} else {
+		# compute the dir and make sure it exists
+		my $node = $self->node();
+		my $backupDir = TTP::dbmsBackupsPeriodic();
+		TTP::Path::makeDirExist( $backupDir );
+		# compute the filename
+		my $fname = $node->name().'-'.$self->service()->name()."-$parms->{database}-".( Time::Moment->now->strftime( '%y%m%d-%H%M%S' ))."-$mode.backup";
+		$output = File::Spec->catdir( $backupDir, $fname );
+		msgVerbose( __PACKAGE__."::computeDefaultBackupFilename() computing output default as '$output'" );
+		return $output;
+	}
 }
 
 # ------------------------------------------------------------------------------------------------
@@ -264,6 +268,7 @@ sub node {
 			msgVerbose( __PACKAGE__."::node() set hosting node='".$node->name()."'" );
 		} else {
 			msgErr( __PACKAGE__."::node() expects a TTP::Node, got '$ref'" );
+			TTP::stackTrace();
 		}
 	}
 
