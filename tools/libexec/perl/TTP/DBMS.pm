@@ -77,7 +77,7 @@ sub _getCredentials {
 # making sure the output directory exists
 # As of 2024 -1-31, default output filename is <host>-<instance>-<database>-<date>-<time>-<mode>.backup
 # As of 2024 -2- 2, the backupDir is expected to be daily-ised, ie to contain a date/time part
-# As of 2025- 6-10, the instance is replaced with the service
+# As of 2025- 5-10, the instance is replaced with the service
 # (I):
 # - parms is a hash ref with keys:
 #   > database name: mandatory
