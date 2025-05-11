@@ -1,4 +1,4 @@
-# @(#) move directories from a source to a target
+# @(#) archive directories, keeping a count of directories inside the source, archiving the others into the target
 #
 # @(-) --[no]help              print this message, and exit [${help}]
 # @(-) --[no]colored           color the output depending of the message level [${colored}]
@@ -8,7 +8,6 @@
 # @(-) --sourcecmd=s           the command which will give the source path [${sourcecmd}]
 # @(-) --targetpath=s          the target path [${targetpath}]
 # @(-) --targetcmd=s           the command which will give the target path [${targetcmd}]
-# @(-) --[no]dirs              move directories and their content [${dirs}]
 # @(-) --keep=s                count of to-be-kept directories in the source [${keep}]
 # @(-) --[no]makeDirExist      whether to first create the destination top directory [${makeDirExist}]
 #
@@ -53,7 +52,6 @@ my $defaults = {
 	sourcecmd => '',
 	targetpath => '',
 	targetcmd => '',
-	dirs => 'no',
 	keep => '0',
 	makeDirExist => 'yes'
 };
@@ -62,7 +60,6 @@ my $opt_sourcepath = $defaults->{sourcepath};
 my $opt_sourcecmd = $defaults->{sourcecmd};
 my $opt_targetpath = $defaults->{targetpath};
 my $opt_targetcmd = $defaults->{targetcmd};
-my $opt_dirs = false;
 my $opt_keep = $defaults->{keep};
 my $opt_makeDirExist = true;
 
@@ -84,7 +81,7 @@ sub doMoveDirs {
 					msgVerbose( "ignoring '$path'" );
 					next;
 				}
-				if( $opt_dirs && -d "$path" ){
+				if( -d "$path" ){
 					push( @list, "$it" );
 					next;
 				}
@@ -187,7 +184,6 @@ if( !GetOptions(
 	"sourcecmd=s"		=> \$opt_sourcecmd,
 	"targetpath=s"		=> \$opt_targetpath,
 	"targetcmd=s"		=> \$opt_targetcmd,
-	"dirs!"				=> \$opt_dirs,
 	"keep=s"			=> \$opt_keep,
 	"makeDirExist!"		=> \$opt_makeDirExist )){
 
@@ -207,7 +203,6 @@ msgVerbose( "got sourcepath='$opt_sourcepath'" );
 msgVerbose( "got sourcecmd='$opt_sourcecmd'" );
 msgVerbose( "got targetpath='$opt_targetpath'" );
 msgVerbose( "got targetcmd='$opt_targetcmd'" );
-msgVerbose( "got dirs='".( $opt_dirs ? 'true':'false' )."'" );
 msgVerbose( "got keep='$opt_keep'" );
 msgVerbose( "got makeDirExist='".( $opt_makeDirExist ? 'true':'false' )."'" );
 
@@ -229,9 +224,6 @@ $opt_sourcepath = TTP::Path::fromCommand( $opt_sourcecmd ) if $opt_sourcecmd;
 
 # if we have a target cmd, get the path
 $opt_targetpath = TTP::Path::fromCommand( $opt_targetcmd ) if $opt_targetcmd;
-
-# --dirs option must be specified at the moment
-msgErr( "--dirs' option must be specified (at the moment)" ) if !$opt_dirs;
 
 if( !TTP::errs()){
 	doMoveDirs();
