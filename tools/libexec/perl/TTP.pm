@@ -246,13 +246,14 @@ sub commandExec {
 			msgDummy( $result->{evaluated} );
 			$result->{success} = true;
 		} else {
-			my ( $res_out, $res_err ) = capture { `$result->{evaluated}` };
+			# https://stackoverflow.com/questions/799968/whats-the-difference-between-perls-backticks-system-and-exec
+			# as of v4.12 choose to use system() instead of backtits, this later not returning stderr
+			my ( $res_out, $res_err, $res_code ) = capture { system( $result->{evaluated} ); };
 			#print "code ".Dumper( $res_code );
 			# https://www.perlmonks.org/?node_id=81640
 			# Thus, the exit value of the subprocess is actually ($? >> 8), and $? & 127 gives which signal, if any, the
 			# process died from, and $? & 128 reports whether there was a core dump.
 			# https://ss64.com/nt/robocopy-exit.html
-			my $res_code = $?;
 			$result->{exit} = $res_code;
 			$result->{success} = ( $res_code == 0 ) ? true : false;
 			msgVerbose( "TTP::commandExec() return_code=$res_code firstly interpreted as success=".( $result->{success} ? 'true' : 'false' ));
@@ -262,10 +263,12 @@ sub commandExec {
 				msgVerbose( "TTP::commandExec() robocopy specific interpretation res=$res_code success=".( $result->{success} ? 'true' : 'false' ));
 			}
 			# stdout
+			chomp $res_out;
 			msgVerbose( "TTP::commandExec() stdout='$res_out'" );
 			my @res_out = split( /[\r\n]/, $res_out );
 			$result->{stdout} = \@res_out;
 			# stderr
+			chomp $res_err;
 			msgVerbose( "TTP::commandExec() stderr='$res_err'" );
 			my @res_err = split( /[\r\n]/, $res_err );
 			$result->{stderr} = \@res_err;
@@ -1043,9 +1046,9 @@ sub substituteMacros {
 		}
 	} else {
 		foreach my $it ( keys %{$macros} ){
-			$data =~ s/$it/$macros->{$it}/g;
+			$data =~ s/<$it>/$macros->{$it}/g;
 		}
-		if( !defined $macros->{'<NODE>'} ){
+		if( !defined $macros->{NODE} ){
 			my $executionNode = $ep->node()->name();
 			$data =~ s/<NODE>/$executionNode/g;
 		}
