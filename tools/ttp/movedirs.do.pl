@@ -148,16 +148,16 @@ sub _moveDir {
 		msgWarn( "$source: directory doesn't exist" );
 		return true;
 	}
-	my $cmdres = TTP::commandExec( $ep->var([ 'moveDir', 'byOS', $Config{osname}, 'command' ]), {
-		macros => {
-			SOURCE => $source,
-			TARGET => $target
-		}
-	});
-	if( defined $cmdres->{evaluated} ){
-		$result = $cmdres->{success};
+	my $command = TTP::commandByOS([ 'moveDir' ]);
+	if( $command ){
+		my $res = TTP::commandExec( $command, {
+			macros => {
+				SOURCE => $source,
+				TARGET => $target
+			}
+		});
+		$result = $res->{success};
 	} else {
-		# result is true or false
 		$result = TTP::Path::copyDir( $source, $target ) && TTP::Path::removeTree( $source );
 	}
 	msgVerbose( "_moveDir() result=$result" );

@@ -17,6 +17,7 @@
     - Call TTP::stackTrace() when we detect a code (and only a code) argument error (todo #49)
     - msgDummy() now displays the standard '[command.pl verb]' prefix
     - TTP::Path::removeTree() now honors '--dummy' option, and so does ttp.pl purgedirs
+    - ttp.pl movedirs now uses TTP::commandByOS()
 
 ### 4.11.1
 
