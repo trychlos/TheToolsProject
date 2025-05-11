@@ -48,9 +48,6 @@
 |  132 | 2025- 4-29 | review ttp.pl movedirs vs. ttp.pl purgedirs vs. ttp.pl copydirs |
 |  137 | 2025- 5- 7 | have mariadb backup/restore |
 |  139 | 2025- 5- 9 | when accessing a service, should be able to specify a target node in the case where the service is available on several nodes in this environment |
-|  140 | 2025- 5-10 | TTP::IFindable::_find_run() whether to log should be a run option activated only on some situations (because this is too much verbose) |
-|      |            | and same for all other jsonRead(), TTP::IEnableable:enabled(), TTP::IJSONable::jsonLoad() |
-|      |            | and same for evaluate() functions |
 |  141 | 2025- 5-10 | MongoDB::backupDatabase() and restoreDatabase() command-lines should be configurable somewhere |
 |  142 | 2025- 5-10 | review commands executions to homogeneize the call, the execution, the logs |
 |  144 | 2025- 5-10 | have a default command to publish (a telemetry) on mqtt |
@@ -360,6 +357,10 @@
 |      | 2025- 5- 7 | emphasize is done - but not generalization |
 |      | 2025- 5- 9 | dbms.pl list no more have --instance option has useless for SqlServer |
 |      | 2025- 5-10 | --instance option is full removed from all dbms.pl verbs |
+|  140 | 2025- 5-10 | TTP::IFindable::_find_run() whether to log should be a run option activated only on some situations (because this is too much verbose) |
+|      |            | and same for all other jsonRead(), TTP::IEnableable:enabled(), TTP::IJSONable::jsonLoad() |
+|      |            | and same for evaluate() functions |
+|      | 2025- 5-11 | done |
 |  143 | 2025- 5-10 | both dbms.pl status and dbms.pl telemetry are tighly linked to SqlServer - Has to move this specific code to the module, making some place for other DBMS |
 |      | 2025- 5-10 | done |
 |  145 | 2025- 5-11 | have warnOnMultipleHostingNodes site property |

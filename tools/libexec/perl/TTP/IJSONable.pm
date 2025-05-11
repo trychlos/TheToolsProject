@@ -277,7 +277,7 @@ sub jsonLoad {
 	}
 
 	my $loaded = $self->jsonLoaded();
-	msgVerbose( __PACKAGE__."::jsonLoad() returning loaded='$loaded'" );
+	msgDebug( __PACKAGE__."::jsonLoad() returning loaded='$loaded'" );
 	return $loaded;
 }
 

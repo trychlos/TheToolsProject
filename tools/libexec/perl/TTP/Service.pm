@@ -177,7 +177,7 @@ sub newDbms {
 
 	my $package = $self->var([ 'DBMS', 'package' ]);
 	if( $package ){
-		msgVerbose( __PACKAGE__."::newDbms() found package='$package'" );
+		msgVerbose( __PACKAGE__."::newDbms() got package='$package'" );
 		load $package, ':all';
 		if( $package->can( 'new' )){
 			$dbms = $package->new( $ep, { service => $self });
