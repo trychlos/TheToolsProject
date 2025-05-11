@@ -215,8 +215,7 @@ sub msgDummy {
 	if( $ep && $ep->runner() && $ep->runner()->dummy()){
 		_printMsg({
 			msg => shift,
-			level => DUMMY,
-			withPrefix => false
+			level => DUMMY
 		});
 	}
 	return true;
