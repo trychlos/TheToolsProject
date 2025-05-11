@@ -45,10 +45,6 @@
 |  128 | 2025- 4-29 | have a test for each of dbms.pl vars variables |
 |  129 | 2025- 4-29 | have a test for each of services.pl vars variables |
 |  130 | 2025- 4-29 | RunnerDaemon->run() takes a 'listener' argument which is never used - is there a use case ? or remove the code |
-|  132 | 2025- 4-29 | review ttp.pl movedirs vs. ttp.pl purgedirs vs. ttp.pl copydirs |
-|      | 2025- 5-11 | copydirs: copy a tree A to a target B, manage excluded files and dirs, manage additional options |
-|      | 2025- 5-11 | movedirs: move a tree A to a target B, keeping C subdirectories in the source |
-|      | 2025- 5-11 | purgedirs: keep C subdirectories in a given tree |
 |  137 | 2025- 5- 7 | have mariadb backup/restore |
 |  139 | 2025- 5- 9 | when accessing a service, should be able to specify a target node in the case where the service is available on several nodes in this environment |
 |  141 | 2025- 5-10 | MongoDB::backupDatabase() and restoreDatabase() command-lines should be configurable somewhere |
@@ -348,6 +344,12 @@
 |      | 2025- 4-29 | auto-fixed |
 |  131 | 2025- 4-29 | remove unused ttp.pl test |
 |      | 2025- 5- 7 | done |
+|  132 | 2025- 4-29 | review ttp.pl movedirs vs. ttp.pl purgedirs vs. ttp.pl copydirs |
+|      | 2025- 5-11 | copydirs: copy a tree A to a target B, manage excluded files and dirs, manage additional options |
+|      | 2025- 5-11 | movedirs: move a tree A to a target B, keeping C subdirectories in the source |
+|      | 2025- 5-11 | purgedirs: keep C subdirectories in a given tree |
+|      | 2025- 5-11 | ttp.pl movedirs is renamed ttp.pl archivedirs with same options |
+|      | 2025- 5-11 | done |
 |  133 | 2025- 4-29 | change "TheToolsProject" mentions with "TheToolsProject" |
 |      | 2025- 5- 7 | done |
 |  134 | 2025- 4-29 | check all copyright mentions and make sure they are consistent |
