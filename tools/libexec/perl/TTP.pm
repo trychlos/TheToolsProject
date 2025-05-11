@@ -1013,15 +1013,16 @@ sub stackTrace {
 }
 
 # ------------------------------------------------------------------------------------------------
-# substitute the macros in a hash
-# At the moment:
-# - <NODE> the current execution node
-# - <SERVICE> this service name
+# Substitute the macros in a hash
+# Always honors <NODE> macro which defaults to current execution node
+# Macros must be specified as {
+#	<MACRO> => value
+# }
 # (I):
-# - the hash to be substituted
+# - the value to be substituted, which can be a scalar, or an array, or a hash
 # - a hash ref where keys are the macro the be substituted and values are the substituted value
 # (O):
-# - substituted hash
+# - substituted value
 
 sub substituteMacros {
 	my ( $data, $macros ) = @_;
@@ -1042,7 +1043,11 @@ sub substituteMacros {
 		}
 	} else {
 		foreach my $it ( keys %{$macros} ){
-			$data =~ s/$it/$macros->{$it}/;
+			$data =~ s/$it/$macros->{$it}/g;
+		}
+		if( !defined $macros->{'<NODE>'} ){
+			my $executionNode = $ep->node()->name();
+			$data =~ s/<NODE>/$executionNode/g;
 		}
 	}
 

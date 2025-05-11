@@ -1055,13 +1055,15 @@
                         "- an optional help line,",
                         "- an optional list of labels defined as \"name\"=\"value\".",
                         "Please note that, while the list of labels is unordered from Prometheus point of view, and so unordered in HTTP PushGateway and text TextFile collector,",
-                        "it is ordered from MQTT point of view because they are parts of the built topic.",
+                        "it is ordered from MQTT point of view because they can be parts of the built topic.",
                         "The following macros are available to the 'telemetry.pl' verbs:",
                         "- <NAME>: the metric name, always 'ttp_'-prefixed,",
-                        "- <VALUE>: the metric value,",
+                        "- <VALUE>: the metric value, always a scalar, must be a numerical value when publishing on HTTP or TextFile,",
                         "- <HELP>: the metric help line,",
-                        "- <LABELS>: the provided (ordered) labels as a comma-separated string."
-    ],
+                        "- <LABELS>: the provided (ordered) labels as a comma-separated string,",
+                        "- <LABEL_NAMES>: the provided (ordered) label names as a comma-separated string,",
+                        "- <LABEL_VALUES>: the provided (ordered) label values as a comma-separated string."
+                    ],
                     "type": "object",
                     "properties": {
                         "server": {
@@ -1105,7 +1107,13 @@
                                                 }
                                             }
                                         }
-                                    }
+                                    },
+                                    "default": "mqtt.pl publish -topic <TOPIC> -payload \"<VALUE>\""
+                                },
+                                "topic": {
+                                    "description": "Build the topic to be used when publishing the telemetry to MQTT.",
+                                    "type": "string",
+                                    "default": "<NODE>/telemetry/<LABEL_VALUES>/<NAME>"
                                 }
                             }
                         },

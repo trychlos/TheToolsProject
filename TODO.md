@@ -50,7 +50,6 @@
 |  139 | 2025- 5- 9 | when accessing a service, should be able to specify a target node in the case where the service is available on several nodes in this environment |
 |  141 | 2025- 5-10 | MongoDB::backupDatabase() and restoreDatabase() command-lines should be configurable somewhere |
 |  142 | 2025- 5-10 | review commands executions to homogeneize the call, the execution, the logs |
-|  144 | 2025- 5-10 | have a default command to publish (a telemetry) on mqtt |
 |  146 | 2025- 5-11 | maybe a site may/want/should define its own test suite, to be run after the TTP own test suite |
 |  147 |  |  |
 
@@ -363,6 +362,8 @@
 |      | 2025- 5-11 | done |
 |  143 | 2025- 5-10 | both dbms.pl status and dbms.pl telemetry are tighly linked to SqlServer - Has to move this specific code to the module, making some place for other DBMS |
 |      | 2025- 5-10 | done |
+|  144 | 2025- 5-10 | have a default command to publish (a telemetry) on mqtt |
+|      | 2025- 5-11 | have a default command and a default topic |
 |  145 | 2025- 5-11 | have warnOnMultipleHostingNodes site property |
 |      | 2025- 5-11 | done |
 

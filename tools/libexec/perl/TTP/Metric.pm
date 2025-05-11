@@ -142,11 +142,15 @@ sub labels {
 
 	if( defined( $arg ) && ref( $arg ) eq 'ARRAY' ){
 		my $labels = [];
+		my $names = [];
+		my $values = [];
 		my $errs = 0;
 		foreach my $it ( @{$arg} ){
 			my @words = split( /=/, $it );
 			if( scalar( @words ) == 2 && $words[0] =~ m/$Const->{labelNameRE}/ && $words[1] =~ m/$Const->{labelValueRE}/ ){
 				push( @{$labels}, "$words[0]=$words[1]" );
+				push( @{$names}, "$words[0]" );
+				push( @{$values}, "$words[1]" );
 			} else {
 				$errs += 1;
 				msgErr( __PACKAGE__."::labels() '$it' doesn't conform to accepted label name or value regexes" );
@@ -154,12 +158,40 @@ sub labels {
 		}
 		if( !$errs ){
 			$self->{_metric}{labels} = $labels;
+			$self->{_metric}{label_names} = $names;
+			$self->{_metric}{label_values} = $values;
 		}
 	} elsif( defined( $arg )){
 		msgErr( __PACKAGE__."::labels() expects an array ref, found '".ref( $arg )."'" );
 	}
 
 	return $self->{_metric}{labels};
+}
+
+# -------------------------------------------------------------------------------------------------
+# Getter
+# (I):
+# - none
+# (O):
+# - the list of label names as an array ref
+
+sub label_names {
+	my ( $self ) = @_;
+
+	return $self->{_metric}{label_names};
+}
+
+# -------------------------------------------------------------------------------------------------
+# Getter
+# (I):
+# - none
+# (O):
+# - the list of label values as an array ref
+
+sub label_values {
+	my ( $self ) = @_;
+
+	return $self->{_metric}{label_values};
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -233,23 +265,32 @@ sub publish {
 	$args //= {};
 	my $result = {};
 
+	my $macros = {
+		'<NAME>' => $self->name(),
+		'<VALUE>' => $self->value(),
+		'<HELP>' => $self->help(),
+		'<LABELS>' => join( ',', @{$self->labels()} ),
+		'<LABEL_NAMES>' => join( ',', @{$self->label_names()} ),
+		'<LABEL_VALUES>' => join( ',', @{$self->label_values()} )
+	};
+
 	my $mqtt = false;
 	$mqtt = $args->{mqtt} if defined $args->{mqtt};
 	my $mqttPrefix = '';
 	$mqttPrefix = $args->{mqttPrefix} if defined $args->{mqttPrefix};
-	$result->{mqtt} = $self->_mqtt_publish( $mqttPrefix ) if $mqtt;
+	$result->{mqtt} = $self->_mqtt_publish( $mqttPrefix, $macros ) if $mqtt;
 
 	my $http = false;
 	$http = $args->{http} if defined $args->{http};
 	my $httpPrefix = '';
 	$httpPrefix = $args->{httpPrefix} if defined $args->{httpPrefix};
-	$result->{http} = $self->_http_publish( $httpPrefix ) if $http && $self->type_check();
+	$result->{http} = $self->_http_publish( $httpPrefix, $macros ) if $http && $self->type_check();
 
 	my $text = false;
 	$text = $args->{text} if defined $args->{text};
 	my $textPrefix = '';
 	$textPrefix = $args->{textPrefix} if defined $args->{textPrefix};
-	$result->{text} = $self->_text_publish( $textPrefix ) if $text && $self->type_check();
+	$result->{text} = $self->_text_publish( $textPrefix, $macros ) if $text && $self->type_check();
 
 	return $result;
 }
@@ -258,7 +299,7 @@ sub publish {
 # only publish numeric values
 
 sub _http_publish {
-	my ( $self, $prefix ) = @_;
+	my ( $self, $prefix, $macros ) = @_;
 	my $res = 0;
 
 	my $ep = $self->ep();
@@ -329,45 +370,37 @@ sub _http_publish {
 # only used values from ordered labels (do not use the label's names)
 
 sub _mqtt_publish {
-	my ( $self, $prefix ) = @_;
+	my ( $self, $prefix, $macros ) = @_;
 	my $res = 0;
 
 	my $ep = $self->ep();
 	my $enabled = TTP::Telemetry::isMqttEnabled();
 	if( $enabled ){
-		my $command = TTP::Telemetry::getConfigurationValue([ 'withMqtt', 'command' ]);
+		my $command = TTP::commandByOS([ 'telemetry', 'withMqtt' ], { withCommand => true });
+		if( !$command ){
+			$command = TTP::commandByOS([ 'Telemetry', 'withMqtt' ], { withCommand => true });
+			if( $command ){
+				msgWarn( "'Telemetry' property is obsoleted is favor of 'telemetry'. You should update your configurations" );
+			} else {
+				$command = "mqtt.pl publish -topic <TOPIC> -payload \"<VALUE>\"";
+			}
+		}
 		if( $command ){
 			my $name = $self->name();
 			if( $name ){
 				$name = "$prefix$name";
-				# built the topic, starting with the host name
-				my $topic = $ep->node()->name();
-				$topic .= '/telemetry';
-				my $labels = $self->labels();
-				foreach my $it ( @{$labels} ){
-					my @words = split( /=/, $it );
-					$topic .= "/$words[1]";
+				my $topic = TTP::Telemetry::getConfigurationValue([ 'withMqtt', 'topic' ]);
+				if( !$topic ){
+					$topic = "<NODE>/telemetry/<LABEL_VALUES>/<NAME>";
 				}
-				$topic .= "/$name";
-				# have a payload
-				my $value = $self->value();
-				# manage macros
-				#print "name='$name' value='$value'".EOL;
-				$command =~ s/<TOPIC>/$topic/;
-				$command =~ s/<PAYLOAD>/$value/;
-				# and run the command
-				my $dummy = $ep->runner()->dummy() ? "-dummy" : "-nodummy";
-				my $verbose = $ep->runner()->verbose() ? "-verbose" : "-noverbose";
-				my $cmd = "$command -nocolored $dummy $verbose";
-				if( $ep->runner()->dummy()){
-					msgDummy( $cmd );
-				} else {
-					my $stdout = `$cmd`;
-					msgVerbose( $stdout );
-					my $rc = $?;
-					msgVerbose( __PACKAGE__."::_mqtt_publish() got rc=$rc" );
-					$res = MQTT_COMMAND_ERROR if $rc;
-				}
+				# when substituting the macros to build the topic, replace commas (',') with slashes ('/')
+				$topic = TTP::substituteMacros( $topic, $macros );
+				$topic =~ s/,/\//g;
+				$macros->{'<TOPIC>'} = $topic;
+				# when running the command, takes care that the provided command may not honor nor even accept standard options - do not modify it
+				$command = TTP::substituteMacros( $command, $macros );
+				my $result = TTP::commandExec( $command );
+				$res = $result->{success} ? 0 : MQTT_COMMAND_ERROR;
 			} else {
 				$res = NAME_UNAVAILABLE;
 			}
@@ -387,7 +420,7 @@ sub _mqtt_publish {
 # the collector filename is ?
 
 sub _text_publish {
-	my ( $self, $prefix ) = @_;
+	my ( $self, $prefix, $macros ) = @_;
 	my $res = 0;
 
 	my $ep = $self->ep();
