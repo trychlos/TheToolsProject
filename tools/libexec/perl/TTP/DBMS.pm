@@ -150,15 +150,16 @@ sub databaseExists {
 # check that the specified database is not filtered by the configured limited view
 # (I):
 # - the database name
+# - an optional array ref which list the databases we are limited to, defaulting to viewedDatabases()
 # (O):
 # - returns whether the database is filtered by the configured limited view: true|false
 
 sub dbFilteredbyLimit {
-	my ( $self, $database ) = @_;
+	my ( $self, $database, $limited ) = @_;
 
-	my $limited = $self->viewedDatabases();
+	$limited = $self->viewedDatabases() if !$limited;
 
-	my $filtered = ( $limited && grep( /^$database$/, @{$limited} ));
+	my $filtered = ( $limited && !grep( /^$database$/, @{$limited} ));
 
 	return $filtered;
 }
