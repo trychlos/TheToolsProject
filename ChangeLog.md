@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - When choosing a node for a service, make sure the current node is the first candidate
 
 ### 4.11.0
 

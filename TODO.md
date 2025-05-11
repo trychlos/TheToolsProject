@@ -46,18 +46,14 @@
 |  129 | 2025- 4-29 | have a test for each of services.pl vars variables |
 |  130 | 2025- 4-29 | RunnerDaemon->run() takes a 'listener' argument which is never used - is there a use case ? or remove the code |
 |  132 | 2025- 4-29 | review ttp.pl movedirs vs. ttp.pl purgedirs vs. ttp.pl copydirs |
-|  136 | 2025- 5- 7 | have mongodb backup/restore |
 |  137 | 2025- 5- 7 | have mariadb backup/restore |
-|  138 | 2025- 5- 7 | dbms.pl verbs should emphasize that --instance is a SqlServer-specific option and see how to either avoid or generalize that |
-|      | 2025- 5- 7 | emphasize is done - but not generalization |
-|      | 2025- 5- 9 | dbms.pl list no more have --instance option has useless for SqlServer |
 |  139 | 2025- 5- 9 | when accessing a service, should be able to specify a target node in the case where the service is available on several nodes in this environment |
 |  140 | 2025- 5-10 | TTP::IFindable::_find_run() whether to log should be a run option activated only on some situations (because this is too much verbose) |
 |      |            | and same for all other jsonRead(), TTP::IEnableable:enabled(), TTP::IJSONable::jsonLoad() |
 |      |            | and same for evaluate() functions |
 |  141 | 2025- 5-10 | MongoDB::backupDatabase() and restoreDatabase() command-lines should be configurable somewhere |
 |  142 | 2025- 5-10 | review commands executions to homogeneize the call, the execution, the logs |
-|  144 | 2025- 5-10 | have a default value to publish a telemetry on mqtt |
+|  144 | 2025- 5-10 | have a default command to publish (a telemetry) on mqtt |
 |  145 |  |  |
 
 ---
@@ -357,6 +353,12 @@
 |      | 2025- 5- 7 | done |
 |  135 | 2025- 4-29 | ttp.sh switch doesn't display help - but shouldn't it ? |
 |      | 2025- 5- 7 | fixed, . ttp.sh switch (sourced) still display error messages which is the wanted behavior |
+|  136 | 2025- 5- 7 | have mongodb backup/restore |
+|      | 2025- 5-10 | done |
+|  138 | 2025- 5- 7 | dbms.pl verbs should emphasize that --instance is a SqlServer-specific option and see how to either avoid or generalize that |
+|      | 2025- 5- 7 | emphasize is done - but not generalization |
+|      | 2025- 5- 9 | dbms.pl list no more have --instance option has useless for SqlServer |
+|      | 2025- 5-10 | --instance option is full removed from all dbms.pl verbs |
 |  143 | 2025- 5-10 | both dbms.pl status and dbms.pl telemetry are tighly linked to SqlServer - Has to move this specific code to the module, making some place for other DBMS |
 |      | 2025- 5-10 | done |
 

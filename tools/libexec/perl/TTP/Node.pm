@@ -359,18 +359,28 @@ sub findByService {
 	msgDebug( __PACKAGE__."::findByService() environment='$environment' service='$service'" );
 
 	my $founds = [];
-	my $nodes = $class->list();
-	foreach my $name ( @{$nodes} ){
-		my $candidate = $class->new( $ep, { node => $name });
-		if( $candidate && $candidate->hasService( $service ) && $candidate->environment() eq $environment ){
-			push( @{$founds}, $candidate );
-		}
+	my $candidate = undef;
+
+	# test the current execution node before scanning the full list
+	$candidate = $ep->node();
+	$candidate->findByService_addCandidate( $environment, $service, $founds ) if $candidate;
+
+	# if it is candidate, this node will be chosen
+	# scan the full list just to be able to emit a warning when several nodes are found
+	my $nodeNames = $class->list();
+	foreach my $name ( @{$nodeNames} ){
+		$candidate = $class->new( $ep, { node => $name });
+		$candidate->findByService_addCandidate( $environment, $service, $founds ) if $candidate;
 	}
 
+	# this is an error to not have any candidate
 	my $found = undef;
 	my $count = scalar( @{$founds} );
 	if( $count == 0 ){
 		msgErr( "unable to find an hosting node for '$service' service in '$environment' environment" ) ;
+
+	# it is possible to have several candidates and we choose the first one
+	# we emit a warning in this case
 	} else {
 		$found = $founds->[0];
 		if( $count > 1 ){
@@ -383,6 +393,31 @@ sub findByService {
 	}
 
 	return $found;
+}
+
+sub findByService_addCandidate {
+	my ( $self, $environment, $service, $founds ) = @_;
+
+	my $addedCandidate = false;
+
+	if( $self->hasService( $service ) && $self->environment() eq $environment ){
+		my $alreadyAdded = false;
+		foreach my $node ( @{$founds} ){
+			if( $node->name() eq $self->name()){
+				$alreadyAdded = true;
+				last;
+			}
+		}
+		if( $alreadyAdded ){
+			msgVerbose( __PACKAGE__."::findByService_addCandidate() '".$self->name()."' has already been added" );
+		} else {
+			$addedCandidate = true;
+			push( @{$founds}, $self );
+			msgVerbose( __PACKAGE__."::findByService_addCandidate() adding '".$self->name()."'" );
+		}
+	}
+
+	return $addedCandidate;
 }
 
 # ------------------------------------------------------------------------------------------------
