@@ -54,7 +54,7 @@
 |  141 | 2025- 5-10 | MongoDB::backupDatabase() and restoreDatabase() command-lines should be configurable somewhere |
 |  142 | 2025- 5-10 | review commands executions to homogeneize the call, the execution, the logs |
 |  144 | 2025- 5-10 | have a default command to publish (a telemetry) on mqtt |
-|  145 |  |  |
+|  146 |  |  |
 
 ---
 ## Done
@@ -361,6 +361,8 @@
 |      | 2025- 5-10 | --instance option is full removed from all dbms.pl verbs |
 |  143 | 2025- 5-10 | both dbms.pl status and dbms.pl telemetry are tighly linked to SqlServer - Has to move this specific code to the module, making some place for other DBMS |
 |      | 2025- 5-10 | done |
+|  145 | 2025- 5-11 | have warnOnMultipleHostingNodes site property |
+|      | 2025- 5-11 | done |
 
 ---
 P. Wieser
