@@ -88,20 +88,14 @@ my $serviceStates = {
 sub doServicesList {
 	msgOut( "querying the services list..." );
 	my $command = "sc query | find \"SERVICE_NAME:\"";
-	msgVerbose( $command );
-	my $stdout = `$command`;
-	my $rc = $?;
-	my $res = ( $rc == 0 );
-	msgVerbose( $stdout );
-	msgVerbose( "rc=$rc" );
-	my @list = split( /[\r\n]/, $stdout );
+	my $res = TTP::commandExec( $command );
 	my $count = 0;
-	foreach my $it ( sort { "\L$a" cmp "\L$b" } @list ){
+	foreach my $it ( sort { "\L$a" cmp "\L$b" } @{$res->{stdout}} ){
 		my @words = split( /\s+/, $it );
 		print " $words[1]".EOL;
 		$count += 1;
 	}
-	if( $res ){
+	if( $res->{success} ){
 		msgOut( "$count found managed service(s)" );
 	} else {
 		msgErr( "NOT OK" );
@@ -114,23 +108,17 @@ sub doServicesList {
 sub doServiceState {
 	msgOut( "querying the '$opt_name' service state..." );
 	my $command = "sc query $opt_name";
-	msgVerbose( $command );
-	my $stdout = `$command`;
-	my $rc = $?;
-	my $res = ( $rc == 0 );
-	msgVerbose( $stdout );
-	msgVerbose( "rc=$rc" );
+	my $res = TTP::commandExec( $command );
 	# note that we do not should execute directly a pipe'd command as we want the return code of the 'sc' one
-	# find STATE the line if the command has been successful
+	# find STATE in the line if the command has been successful
 	# in case of an error we get the error message in the last non-blank line
-	my @lines = split( /[\r\n]/, $stdout );
-	my $count = scalar( @lines );
+	my $count = scalar( @{$res->{stdout}} );
 	my $label = undef;
 	my $value = undef;
 	my $error = undef;
-	if( $res ){
+	if( $res->{success} ){
 		my $state = undef;
-		foreach my $line ( @lines ){
+		foreach my $line ( @{$res->{stdout}} ){
 			if( $line =~ m/STATE/ ){
 				my @words = split( /\s+/, $line );
 				$label = $words[scalar( @words )-1];
@@ -139,6 +127,7 @@ sub doServiceState {
 			}
 		}
 	} else {
+		my @lines = @{$res->{stdout}};
 		for( my $i=$count ; $i ; --$i ){
 			if( $lines[$i-1] && length $lines[$i-1] ){
 				$error = $lines[$i-1];
@@ -182,7 +171,7 @@ sub doServiceState {
 			});
 		}
 	}
-	if( $res ){
+	if( $res->{success} ){
 		msgOut( "success" );
 	} else {
 		msgErr( "NOT OK", { incErr => false });

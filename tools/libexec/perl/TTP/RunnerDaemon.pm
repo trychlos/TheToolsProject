@@ -412,7 +412,7 @@ sub get_first_item_of_ole_collection {
 # ------------------------------------------------------------------------------------------------
 # the daemon advertise of its status every 'messagingInterval' seconds (defaults to 60)
 # topics are:
-#	'<node>/daemon/<daemon_name>/status'				'running since yyyy-mm-dd hh:mm:ss.nnnnn`|offline'	retained
+#	'<node>/daemon/<daemon_name>/status'				'running since yyyy-mm-dd hh:mm:ss.nnnnn|offline'	retained
 #	'<node>/daemon/<json_basename_wo_ext>/pid'					<pid>
 #	'<node>/daemon/<json_basename_wo_ext>/json'					<full_json_path>
 #	'<node>/daemon/<json_basename_wo_ext>/enabled'				'true|false'

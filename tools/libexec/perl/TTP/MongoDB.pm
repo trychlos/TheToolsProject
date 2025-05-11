@@ -433,21 +433,19 @@ sub restoreDatabase {
 		my $tmpdir = tempdir( CLEANUP => 1 );
 		# do we have a compressed archive file ?
 		my $cmd = "file $parms->{full}";
-		my $res = `$cmd`;
-		my @res = split( /[\r\n]/, $res );
+		my $res = TTP::commandExec( $cmd );
 		my $gziped = false;
-		if( grep( /gzip/, @res )){
+		if( grep( /gzip/, @{$res->{stdout}} )){
 			$gziped = true;
 		}
 		my $opt = "";
 		$opt = "-z" if $gziped;
-		msgVerbose( __PACKAGE__."::restoreDatabase() find provided dump file is ".( $gziped ? '' : 'NOT ' )."gziped" );
+		msgVerbose( __PACKAGE__."::restoreDatabase() compute that provided dump file is ".( $gziped ? '' : 'NOT ' )."gzip'ed" );
 		# find the source database name in the dump file
 		# this should be the first element of the paths
 		$cmd = "tar -t $opt -f $parms->{full}";
-		$res = `$cmd`;
-		@res = split( /[\r\n]/, $res );
-		my $sourcedb = $res[0];
+		$res = TTP::commandExec( $cmd );
+		my $sourcedb = $res->{stdout}[0];
 		$sourcedb =~ s/\/$//;
 		msgVerbose( __PACKAGE__."::restoreDatabase() find source database='$sourcedb'" );
 		# and restore

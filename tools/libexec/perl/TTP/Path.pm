@@ -410,7 +410,8 @@ sub fromCommand {
 	TTP::Message::msgErr( __PACKAGE__."::fromCommand() command is not specified" ) if !$cmd;
 	my $path = undef;
 	if( !TTP::errs()){
-		$path = `$cmd`;
+		my $res = TTP::commandExec( $cmd );
+		$path = $res->{stdout}[0] if scalar( @{$res->{stdout}} );
 		TTP::Message::msgErr( __PACKAGE__."::fromCommand() command doesn't output anything" ) if !$path;
 	}
 	if( !TTP::errs()){

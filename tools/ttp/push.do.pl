@@ -140,13 +140,12 @@ sub doPush_gitCheck {
 	$allowed = $tree->{'git-check'} if defined $tree->{'git-check'};
 	if( $allowed ){
 		msgOut( "checking source='$tree->{source}'" );
-		my @status = `git -C $tree->{source} status`;
+		my $res = TTP::commandExec( "git -C $tree->{source} status" );
 		my $branch = '';
 		my $changes = false;
 		my $untracked = false;
 		my $clean = false;
-		foreach my $line ( @status ){
-			chomp $line;
+		foreach my $line ( @{$res->{stdout}} ){
 			if( $line =~ /^On branch/ ){
 				$branch = $line;
 				$branch =~ s/^On branch //;
@@ -203,8 +202,8 @@ sub doPush_gitTag {
 		if( $ep->runner()->dummy()){
 			msgDummy( $command );
 		} else {
-			msgVerbose( $command );
-			print `$command`;
+			my $res = TTP::commandExec( $command );
+			print join( EOL, @{$res->{stdout}} ).EOL;
 		}
 	} else {
 		msgVerbose( "do not git-tag '$tree->{source}' source tree as not allowed by the configuration" );

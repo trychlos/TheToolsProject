@@ -98,7 +98,7 @@ sub doRestore {
 			msgVerbose( "emptying '/diff' MQTT message as restored from a full backup" );
 			my $cmd = 'mqtt.pl publish -topic '.$objNode->name().'/executionReport/'.$ep->runner()->command().'/'.$ep->runner()->verb()."/$opt_service/$opt_database/diff -payload \"\" -retain -nocolored";
 			msgOut( "executing '$cmd'" );
-			`$cmd`;
+			TTP::commandExec( $cmd );
 		}
 		# honors --report option
 		if( $opt_report ){
