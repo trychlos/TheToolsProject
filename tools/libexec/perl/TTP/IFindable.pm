@@ -103,10 +103,10 @@ sub _find_run {
 	}
 	if( $self->{_ifindable}{wantsAll} ){
 		$result = $self->{_ifindable}{accepted};
-		msgVerbose( __PACKAGE__."::_find_run() returning [".join( ',', @{$result} )."]" );
+		msgDebug( __PACKAGE__."::_find_run() returning [".join( ',', @{$result} )."]" );
 	} else {
 		$result = $self->{_ifindable}{accepted}->[0] if scalar @{$self->{_ifindable}{accepted}};
-		msgVerbose( __PACKAGE__."::_find_run() returning '".( $result ? $result : '(undef)' )."'" );
+		msgDebug( __PACKAGE__."::_find_run() returning '".( $result ? $result : '(undef)' )."'" );
 	}
 	return $result;
 }

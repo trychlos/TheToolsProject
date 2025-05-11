@@ -8,6 +8,7 @@
 
     - Define new 'warnOnMultipleHostingNodes' property, overridable or a per-node or per-service basis (todo #145), thus bumping minor candidate version number
     - Define new 'TTP::version()' function
+    - Decrease the logs verbosity when searching for JSON candidates (todo #140)
 
 ### 4.11.1
 

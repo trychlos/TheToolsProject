@@ -758,7 +758,7 @@ sub jsonRead {
 	my ( $path, $opts ) = @_;
 	TTP::stackTrace() if !$path;
 	$opts //= {};
-	msgVerbose( "jsonRead() path='$path'" );
+	#msgVerbose( "jsonRead() path='$path'" );
 	my $result = undef;
 	if( $path && -r $path ){
 		my $content = do {

@@ -82,7 +82,7 @@ sub enabled {
 		msgErr( __PACKAGE__."::enabled() expects object be a hash reference or a scalar, found '$ref'" );
 	}
 
-	msgVerbose( __PACKAGE__.":enabled() returning '$enabled'" );
+	msgDebug( __PACKAGE__.":enabled() returning '$enabled'" );
 	return $enabled;
 }
 
