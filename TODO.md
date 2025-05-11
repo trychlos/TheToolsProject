@@ -11,7 +11,6 @@
 |   Id | Date       | Description and comment(s) |
 | ---: | :---       | :---                       |
 |    8 | 2024- 5- 2 | implements and honors text-based telemetry |
-|   49 | 2024- 5-11 | all functions should check the type of their arguments and call TTP::stackTrace() on coding error |
 |   53 | 2025- 1-17 | have a timeout on movedirs and purgedirs at least, maybe on all verbs which needs a network access + alert when this timeout is reached |
 |      | 2025- 1-20 | daemon.pl command done |
 |      | 2025- 4-10 | should build an inventory of what should be done, and what can be done |
@@ -35,6 +34,7 @@
 |  110 | 2025- 4-20 | site.schema for moveDir |
 |  111 | 2025- 4-20 | site.schema for telemetry |
 |      | 2025- 4-22 | done - has to be honored |
+|      | 2025- 5-11 | Mqtt honors it |
 |  122 | 2025- 4-26 | daemon.pl start should default to refuse to start a daemon several times |
 |      | 2025- 5- 7 | the daemon itself should accept nonetheless to run in foreground |
 |  123 | 2025- 4-29 | have a test for alerts-monitor-daemon |
@@ -192,6 +192,8 @@
 |      | 2024- 5-11 | fixed
 |   48 | 2024- 5-11 | remove ns230134_c network shortcut
 |      | 2024- 5-12 | done
+|   49 | 2024- 5-11 | all functions should check the type of their arguments and call TTP::stackTrace() on coding error |
+|      | 2025- 5-11 | most often done... |
 |   50 | 2024- 5-13 | dbms.pl vars doesn't replace the <HOST> macro
 |      | 2024- 5-13 | fixed
 |   51 | 2024- 5-13 | replace <HOST> macros by <NODE>

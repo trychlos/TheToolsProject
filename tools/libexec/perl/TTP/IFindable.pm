@@ -69,14 +69,17 @@ sub find {
 			$ref = ref( $args->{dirs} );
 			if( $ref && $ref ne 'ARRAY' ){
 				msgErr( __PACKAGE__."::find() expects args->dirs be a scalar or an array, found '$ref'" );
+				TTP::stackTrace();
 			} else {
 				$result = $self->_find_run( $args, $opts );
 			}
 		} else {
 			msgErr( __PACKAGE__."::find() expects args->dirs object, which has not been found" );
+			TTP::stackTrace();
 		}
 	} else {
 		msgErr( __PACKAGE__."::find() expects args be a hash, found '$ref'" );
+		TTP::stackTrace();
 	}
 	return $result;
 }
@@ -125,6 +128,7 @@ sub _find_inpath_rec {
 				$ref = ref( $dirs->[$i] );
 				if( $ref && $ref ne 'ARRAY' ){
 					msgErr( __PACKAGE__."::_find_inpath_rec() unexpected intermediate ref='$ref'" );
+					TTP::stackTrace();
 				# if an element of the dirs is itself an array, then each item of this later array must be tested
 				} elsif( $ref ){
 					$haveArray = true;
@@ -142,6 +146,7 @@ sub _find_inpath_rec {
 			}
 		} else {
 			msgErr( __PACKAGE__."::_find_inpath_rec() unexpected final ref='$ref'" );
+			TTP::stackTrace();
 		}
 	} else {
 		$self->_find_single( $args, $opts, File::Spec->catfile( $rootDir, $dirs ));

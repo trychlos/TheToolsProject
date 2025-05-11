@@ -14,6 +14,7 @@
     - TTP::commandExec() now uses system() instead of backtits to better handle both STDERR and return code
     - TTP::filter() now takes a command string (instead of its output) and directly executes it through TTP::commandExec()
     - All commands executions use either TTP::commandExec() or TTP::filter() (todo #142)
+    - Call TTP::stackTrace() when we detect a code (and only a code) argument error (todo #49)
 
 ### 4.11.1
 

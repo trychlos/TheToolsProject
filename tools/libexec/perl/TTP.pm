@@ -160,7 +160,7 @@ sub commandByOS {
 					msgErr( __PACKAGE__."::commandByOS() unexpected object found in [".join( ', ', @locals )."] configuration: $obj ($ref)." );
 				}
 			} else {
-				msgErr( __PACKAGE__."commandByOS() unexpected 'withCommand(s)' mode" );
+				msgErr( __PACKAGE__."::commandByOS() unexpected 'withCommand(s)' mode" );
 				TTP::stackTrace();
 			}
 		} else {
@@ -224,15 +224,15 @@ sub commandExec {
 		success => false
 	};
 	if( !$command ){
-		msgErr( "TTP::commandExec() undefined command" );
+		msgErr( __PACKAGE__."::commandExec() undefined command" );
 		stackTrace();
 	} else {
-		msgVerbose( "TTP::commandExec() got command='".( $command )."'" );
+		msgVerbose( __PACKAGE__."::commandExec() got command='".( $command )."'" );
 		my $stdinFromNull = true;
 		$stdinFromNull = $opts->{stdinFromNull} if defined $opts->{stdinFromNull};
 		if( $stdinFromNull ){
 			$command .= " < ".TTP::nullByOS();
-			msgVerbose( "TTP::commandExec() rewritten to='".( $command )."'" );
+			msgVerbose( __PACKAGE__."::commandExec() rewritten to='".( $command )."'" );
 		}
 		$result->{evaluated} = $command;
 		if( $opts->{macros} ){
@@ -241,7 +241,7 @@ sub commandExec {
 				$result->{evaluated} =~ s/<$key>/$value/g;
 			}
 		}
-		msgVerbose( "TTP::commandExec() evaluated to '$result->{evaluated}'" );
+		msgVerbose( __PACKAGE__."::commandExec() evaluated to '$result->{evaluated}'" );
 		if( $ep->runner()->dummy()){
 			msgDummy( $result->{evaluated} );
 			$result->{success} = true;
@@ -508,10 +508,11 @@ sub _executionReportToFile {
 			my $result = TTP::commandExec( $cmd );
 			$res = $result->{success};
 		} else {
-			msgErr( "executionReportToFile() expected a 'command' argument, not found" );
+			msgErr( __PACKAGE__."::_executionReportToFile() expected a 'command' argument, not found" );
 		}
 	} else {
-		msgErr( "executionReportToFile() expected a 'data' argument, not found" );
+		msgErr( __PACKAGE__."::_executionReportToFile() expected a 'data' argument, not found" );
+		TTP::stackTrace();
 	}
 	return $res;
 }
@@ -562,13 +563,14 @@ sub _executionReportToMqtt {
 					}
 				}
 			} else {
-				msgErr( "executionReportToMqtt() expected a 'command' argument, not found" );
+				msgErr( __PACKAGE__."::_executionReportToMqtt() expected a 'command' argument, not found" );
 			}
 		} else {
-			msgErr( "executionReportToMqtt() expected a 'topic' argument, not found" );
+			msgErr( __PACKAGE__."::_executionReportToMqtt() expected a 'topic' argument, not found" );
 		}
 	} else {
-		msgErr( "executionReportToMqtt() expected a 'data' argument, not found" );
+		msgErr( __PACKAGE__."::_executionReportToMqtt() expected a 'data' argument, not found" );
+		TTP::stackTrace();
 	}
 	return $res;
 }
@@ -763,7 +765,7 @@ sub jsonRead {
 	my $result = undef;
 	if( $path && -r $path ){
 		my $content = do {
-		   open( my $fh, "<:encoding(UTF-8)", $path ) or msgErr( "jsonRead() $path: $!" );
+		   open( my $fh, "<:encoding(UTF-8)", $path ) or msgErr( __PACKAGE__."::jsonRead() $path: $!" );
 		   local $/;
 		   <$fh>
 		};
@@ -778,9 +780,9 @@ sub jsonRead {
 	} elsif( $path ){
 		my $ignoreIfNotExist = false;
 		$ignoreIfNotExist = $opts->{ignoreIfNotExist} if defined $opts->{ignoreIfNotExist};
-		msgErr( "jsonRead() $path: not found or not readable" ) if !$ignoreIfNotExist;
+		msgErr( __PACKAGE__."::jsonRead() $path: not found or not readable" ) if !$ignoreIfNotExist;
 	} else {
-		msgErr( "jsonRead() expects a JSON path to be read" );
+		msgErr( __PACKAGE__."::jsonRead() expects a JSON path to be read" );
 	}
 	return $result;
 }
@@ -881,7 +883,7 @@ sub nodeName {
 # - returns the 'nodeRoot' directory - removed in v4.7
 
 sub nodeRoot {
-	msgErr( "TTP::nodeRoot() is deprecated and not replaced. You should update your code." );
+	msgErr( __PACKAGE__."::nodeRoot() is deprecated and not replaced. You should update your code." );
 	return undef;
 }
 
@@ -924,8 +926,8 @@ sub print {
 	if( defined( $prefix ) && defined( $value )){
 		print_rec( $prefix, $value );
 	} else {
-		msgErr( "TTP::print() undefined prefix" ) if !defined $prefix;
-		msgErr( "TTP::print() undefined value" ) if !defined $value;
+		msgErr( __PACKAGE__."::print() undefined prefix" ) if !defined $prefix;
+		msgErr( __PACKAGE__."::print() undefined value" ) if !defined $value;
 	}
 }
 
@@ -942,7 +944,8 @@ sub print_rec {
 				print_rec( "$prefix.$it", $value->{$it} );
 			}
 		} else {
-			msgErr( "TTP::print() unmanaged reference '$ref'" );
+			msgErr( __PACKAGE__."::print_rec() unmanaged reference '$ref'" );
+			TTP::stackTrace();
 		}
 	} else {
 		print "$prefix: $value".EOL;
@@ -1040,7 +1043,7 @@ sub substituteMacros {
 			}
 		} elsif( $ref ne 'JSON::PP::Boolean' ){
 			msgErr( __PACKAGE__."::substituteMacros() unmanaged ref '$ref'" );
-			stackTrace();
+			TTP::stackTrace();
 		}
 	} else {
 		foreach my $it ( keys %{$macros} ){

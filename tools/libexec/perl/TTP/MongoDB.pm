@@ -154,6 +154,9 @@ sub backupDatabase {
 	msgErr( __PACKAGE__."::backupDatabase() database is mandatory, but is not specified" ) if !$parms->{database};
 	msgErr( __PACKAGE__."::backupDatabase() mode must be 'full' or 'diff', found '$parms->{mode}'" ) if $parms->{mode} ne 'full' && $parms->{mode} ne 'diff';
 	msgErr( __PACKAGE__."::backupDatabase() differential mode is not managed here" ) if $parms->{mode} eq 'diff';
+	if( TTP::errs()){
+		TTP::stackTrace();
+	}
 
 	my $account = undef;
 	my $passwd = undef;
@@ -419,6 +422,9 @@ sub restoreDatabase {
 	msgErr( __PACKAGE__."::restoreDatabase() full is mandatory, not specified" ) if !$parms->{full};
 	msgErr( __PACKAGE__."::restoreDatabase() --verifyonly option is not supported here" ) if $parms->{verifyonly};
 	msgErr( __PACKAGE__."::restoreDatabase() --diff option is not supported here" ) if $parms->{diff};
+	if( TTP::errs()){
+		TTP::stackTrace();
+	}
 
 	my $account = undef;
 	my $passwd = undef;

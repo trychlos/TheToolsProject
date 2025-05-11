@@ -408,6 +408,7 @@ sub fromCommand {
 	my( $cmd, $opts ) = @_;
 	$opts //= {};
 	TTP::Message::msgErr( __PACKAGE__."::fromCommand() command is not specified" ) if !$cmd;
+	TTP::stackTrace();
 	my $path = undef;
 	if( !TTP::errs()){
 		my $res = TTP::commandExec( $cmd );

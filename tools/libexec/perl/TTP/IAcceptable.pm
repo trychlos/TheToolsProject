@@ -70,15 +70,19 @@ sub accept {
 					$self->_accept_run( $args );
 				} else {
 					msgErr( __PACKAGE__."::accept() expects args->object object, which has not been found" );
+					TTP::stackTrace();
 				}
 			} else {
 				msgErr( __PACKAGE__."::accept() expects args->accept be a code ref an an array of code refs, found '$ref'" );
+				TTP::stackTrace();
 			}				
 		} else {
 			msgErr( __PACKAGE__."::accept() expects args->accept object, which has not been found" );
+			TTP::stackTrace();
 		}
 	} else {
 		msgErr( __PACKAGE__."::accept() expects args be a hash, found '$ref'" );
+		TTP::stackTrace();
 	}
 
 	return $self->accepted();
@@ -100,6 +104,7 @@ sub _accept_run {
 				$accepted &= $it->( $args->{object}, $args->{opts} );
 			} else {
 				msgErr( __PACKAGE__."::_accept_run() expects a code ref, found '$ref'" );
+				TTP::stackTrace();
 			}
 			last if !$accepted;
 		}

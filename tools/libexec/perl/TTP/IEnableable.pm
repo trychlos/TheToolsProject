@@ -80,6 +80,7 @@ sub enabled {
 	# else this is an unrecoverable error
 	} else {
 		msgErr( __PACKAGE__."::enabled() expects object be a hash reference or a scalar, found '$ref'" );
+		TTP::stackTrace();
 	}
 
 	msgDebug( __PACKAGE__.":enabled() returning '$enabled'" );
