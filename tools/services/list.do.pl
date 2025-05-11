@@ -96,7 +96,9 @@ sub getDefinedWorktasks {
 	$displayHiddens = $opts->{hidden} if defined $opts->{hidden};
 	my $command = "services.pl list -services -nocolored";
 	$command .= " -hidden" if $displayHiddens;
-	my $services = TTP::filter( `$command` );
+	# TTP::commandExec() verbose-logs stdout, stderr and return code
+	# TTP::filter() returns filtered stdout
+	my $services = TTP::filter( $command );
 	# build here the to-be-sorted array and a hash which will be used to build the result
 	my @list = ();
 	foreach my $it ( @{$services} ){
@@ -147,7 +149,9 @@ sub listServiceMachines {
 	}
 	my $count = 0;
 	my $command = "ttp.pl list -nodes -nocolored";
-	my $hosts = TTP::filter( `$command` );
+	# TTP::commandExec() verbose-logs stdout, stderr and return code
+	# TTP::filter() returns filtered stdout
+	my $hosts = TTP::filter( $command );
 	msgVerbose( "found ".scalar @{$hosts}." node(s)" );
 	foreach my $host ( @{$hosts} ){
 		msgVerbose( "examining '$host'" );

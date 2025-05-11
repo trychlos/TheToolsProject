@@ -592,25 +592,26 @@ sub exit {
 }
 
 # -------------------------------------------------------------------------------------------------
-# given a command output, extracts the [command.pl verb] lines, returning the rest as an array
-# Note:
-# - we receive an array of EOL-terminated strings when called as $result = TTP::filter( `$command` );
-# - but we receive a single concatenated string when called as $result = `$command`; $result = TTP:filter( $result );
+# given a command, executes it and extracts the [command.pl verb] lines from stdout, returning the
+# rest as an array
 # (I):
-# - the output of a command, as a string or an array of strings
+# - the command string
+# - an optional options argument to be passed to TTP::commandExec()
 # (O):
-# - a ref to an array of output lines, having removed the "[command.pl verb]" lines
+# - a ref to an array of stdout outputed lines, having removed the "[command.pl verb]" lines
 
 sub filter {
-	my $single = join( '', @_ );
-	my @lines = split( /[\r\n]/, $single );
+	my ( $command, $opts ) = @_;
+	$opts //= {};
+
 	my @result = ();
-	foreach my $it ( @lines ){
-		chomp $it;
+	my $res = TTP::commandExec( $command, $opts );
+	foreach my $it ( @{$res->{stdout}} ){
 		$it =~ s/^\s*//;
 		$it =~ s/\s*$//;
-		push( @result, $it ) if !grep( /^\[|\(ERR|\(DUM|\(VER|\(WAR|^$/, $it ) && $it !~ /\(WAR\)/ && $it !~ /\(ERR\)/;
+		push( @result, $it ) if $it !~ /\(DBG|DUM|ERR|VER|WAR\)/; #!grep( /^\[|\(ERR|\(DUM|\(VER|\(WAR|^$/, $it ) && $it !~ /\(WAR\)/ && $it !~ /\(ERR\)/;
 	}
+
 	return \@result;
 }
 
