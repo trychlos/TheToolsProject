@@ -15,6 +15,7 @@
     - TTP::filter() now takes a command string (instead of its output) and directly executes it through TTP::commandExec()
     - All commands executions use either TTP::commandExec() or TTP::filter() (todo #142)
     - Call TTP::stackTrace() when we detect a code (and only a code) argument error (todo #49)
+    - msgDummy() now displays the standard '[command.pl verb]' prefix
 
 ### 4.11.1
 
