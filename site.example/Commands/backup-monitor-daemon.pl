@@ -271,12 +271,8 @@ sub doWithNew {
 					my $command = "dbms.pl restore -nocolored -instance $restoreInstance -database $database ";
 					$command .= " -full $result->{full}";
 					$command .= " -diff $result->{diff}" if $result->{diff};
-					# happens that dbms.pl restore may block in WS2012R2 when run from a daemon
-					my $null = TTP::nullByOS();
-					msgVerbose( "$command < $null" );
-					my $res = TTP::filter( `$command < $null` );
-					my $rc = $?;
-					msgVerbose( join( '\n', @{$res} ).EOL );
+					# TTP::commandExec() verbose-logs stdout, stderr and return code
+					TTP::commandExec( $command );
 				} else {
 					msgWarn( "result is undefined, unable to restore" );
 				}

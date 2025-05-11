@@ -153,7 +153,9 @@ sub doTablesCount {
 		msgOut( "publishing tables rows count on '$opt_service\\$db'..." );
 		$dbcount += 1;
 		my $command = "dbms.pl list -service $opt_service -database $db -listtables -nocolored $dummy $verbose";
-		my $tables = TTP::filter( `$command` );
+		# TTP::commandExec() verbose-logs stdout, stderr and return code
+		# TTP::filter() returns filtered stdout
+		my $tables = TTP::filter( $command );
 		foreach my $tab ( @{$tables} ){
 			$tabcount += 1;
 			msgOut( " table '$tab'" );

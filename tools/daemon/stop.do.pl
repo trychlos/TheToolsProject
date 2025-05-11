@@ -67,11 +67,11 @@ sub doStop {
 	my $dummy = $ep->runner()->dummy() ? "-dummy" : "-nodummy";
 	my $verbose = $ep->runner()->verbose() ? "-verbose" : "-noverbose";
 	my $command = "daemon.pl command -nocolored $dummy $verbose -command terminate -port $opt_port -timeout $opt_timeout";
-	msgVerbose( $command );
-	my $res = TTP::filter( `$command` );
-	my $rc = $?;
-	if( $res && scalar @{$res} && !$rc ){
-		print join( '\n', @{$res} ).EOL;
+	# TTP::commandExec() verbose-logs stdout, stderr and return code
+	# TTP::filter() returns filtered stdout
+	my $res = TTP::filter( $command );
+	if( $res && scalar @{$res} ){
+		print join( EOL, @{$res} ).EOL;
 		my $result = true;
 		if( $opt_wait ){
 			$result = doWait( $res );
