@@ -28,6 +28,7 @@ use Config;
 use Data::Dumper;
 use Data::UUID;
 use Devel::StackTrace;
+use File::Basename;
 use File::Spec;
 use JSON;
 use open qw( :std :encoding(UTF-8));
@@ -39,7 +40,6 @@ use vars::global create => qw( $ep );
 
 use TTP::Constants qw( :all );
 use TTP::EP;
-use TTP::Finder;
 use TTP::Message qw( :all );
 use TTP::Node;
 use TTP::Path;
@@ -1072,6 +1072,31 @@ sub tempDir {
 
 sub var {
 	return $ep->var( @_ );
+}
+
+# -------------------------------------------------------------------------------------------------
+# Returns the version string of *this* TTP tree
+# (I):
+# - none
+# (O):
+# - the found version string or undef
+
+sub version {
+	my $version = undef;
+
+	# simpler than provide a code ref to IFindable
+	my @roots = split( /$Config{path_sep}/, $ENV{TTP_ROOTS} );
+	foreach my $it ( @roots ){
+		my $parent = dirname( $it );
+		my $candidate = File::Spec->catfile( $parent, ".VERSION" );
+		if( -r $candidate ){
+			$version = path( $candidate )->slurp_utf8;
+			chomp $version;
+			last;
+		}
+	}
+
+	return $version;
 }
 
 1;

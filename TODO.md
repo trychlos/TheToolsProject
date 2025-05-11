@@ -54,7 +54,8 @@
 |  141 | 2025- 5-10 | MongoDB::backupDatabase() and restoreDatabase() command-lines should be configurable somewhere |
 |  142 | 2025- 5-10 | review commands executions to homogeneize the call, the execution, the logs |
 |  144 | 2025- 5-10 | have a default command to publish (a telemetry) on mqtt |
-|  146 |  |  |
+|  146 | 2025- 5-11 | maybe a site may/want/should define its own test suite, to be run after the TTP own test suite |
+|  147 |  |  |
 
 ---
 ## Done
