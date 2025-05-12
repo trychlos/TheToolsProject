@@ -8,11 +8,12 @@
 		"Whether this node configuration file should be examined when scanning all nodes.",
 		"This let us have this 'node.sample.json' in the node/ directory without being actually used.",
 		"Note that disabling this node will fully prevent it to be visible in the list or loadable, or anything. The node will no more be visible in TTP context.",
+		"Note too that the previous sentence is not exactly true: if the JSON is malformed, TTP will emit a warning before being able to detect it is disabled.",
 		"Hardcoded default is 'true'"
 	],
 	"enabled": false,
 
-	"ServicesComments": [
+	"services_comments": [
 		"These are the services defined on this host as objects where the top key if the name of the service. At least this top key should be specified, even if with an empty properties object.",
 		"Values may be:",
 		"- dbms: a hash of the involved DBMS objects, where the top key is the instance name and values may be:",
@@ -36,7 +37,7 @@
 	"services": {
 		"Canal33": {
 			"DBMS": {
-				"databases": [
+				"limitDatabases": [
 					"Canal33"
 				]
 			},

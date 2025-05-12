@@ -54,10 +54,25 @@
             "type": "object",
             "properties": {
                 "databases": {
-                    "description": "The list of databases we are limited to view for this service in the DBMS server.",
+                    "description": "The list of databases we are limited to view for this service in the DBMS server. Deprecated in favor of 'limitDatabases' in v4.12.",
+                    "deprecated": true
+                },
+                "limitDatabases": {
+                    "description_array": [
+                        "The list of databases we are limited to view for this service in the DBMS server.",
+                        "If both 'limitDatabases' and 'excludeDatabases' are specified, then the properties must both be satisfied."
+                    ],
                     "type": "array",
                     "items": "string",
                     "default": "the_full_list_of_databases"
+                },
+                "excludeDatabases": {
+                    "description_array": [
+                        "The list of databases we do not want view for this service in the DBMS server.",
+                        "If both 'limitDatabases' and 'excludeDatabases' are specified, then the properties must both be satisfied."
+                    ],
+                    "type": "array",
+                    "items": "string"
                 },
                 "excludeSystemDatabases": {
                     "description": "Whether listing databases should exclude system databases.",

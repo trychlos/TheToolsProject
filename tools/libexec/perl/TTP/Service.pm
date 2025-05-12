@@ -41,7 +41,7 @@ use Data::Dumper;
 use Module::Load;
 use Role::Tiny::With;
 
-with 'TTP::IEnableable', 'TTP::IFindable', 'TTP::IJSONable';
+with 'TTP::IAcceptable', 'TTP::IEnableable', 'TTP::IFindable', 'TTP::IJSONable';
 
 use TTP;
 use vars::global qw( $ep );

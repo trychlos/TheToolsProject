@@ -19,7 +19,7 @@
 # Whether a candidate object can be accepted by the implementation.
 #
 # This is notably used by the JSON configuration file-based classes as Site, Node, Service or Daemon
-# to check if the file is enabled or not. From this point of view, the enabled property is an primary
+# to check if the file is enabled or not. From this point of view, the enabled property is a primary
 # element of the acceptability decision.
 #
 # The accepted status is set to true at instanciation time.

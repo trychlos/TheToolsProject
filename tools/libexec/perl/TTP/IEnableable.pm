@@ -49,7 +49,7 @@ requires qw( _newBase );
 # Test for enable-ity
 # Site, Node, Service and Daemon classes, which use JSON configuration  files, may choose to disable
 # the instance in the JSON.
-# This is checked here as a sub-component of file Acceptability.
+# This is checked here as a sub-component of file IAcceptable-ity.
 # (I):
 # - expects a scalar which is either the file path or the data content as a hash ref
 # - expects an object which contains a 'type' key with 'JSON' value
