@@ -135,7 +135,7 @@ sub help {
 # (I):
 # - an optional array ref of 'name=value' labels
 # (O):
-# - the current content of the labels array ref
+# - the current content of the labels array ref, which may be empty
 
 sub labels {
 	my ( $self, $arg ) = @_;
@@ -165,7 +165,7 @@ sub labels {
 		msgErr( __PACKAGE__."::labels() expects an array ref, found '".ref( $arg )."'" );
 	}
 
-	return $self->{_metric}{labels};
+	return $self->{_metric}{labels} || [];
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -221,33 +221,7 @@ sub name {
 }
 
 # -------------------------------------------------------------------------------------------------
-# Properties setter
-# (I):
-# - an arguments hash with following keys:
-#   > help
-#   > type
-#   > name
-#   > value
-#   > labels as an array ref
-# (O):
-# - this same object
-
-sub props {
-	my ( $self, $args ) = @_;
-	$args //= {};
-
-	# set the provided values
-	$self->help( $args->{help} ) if defined $args->{help};
-	$self->name( $args->{name} ) if defined $args->{name};
-	$self->type( $args->{type} ) if defined $args->{type};
-	$self->value( $args->{value} ) if defined $args->{value};
-	$self->labels( $args->{labels} ) if defined $args->{labels};
-
-	return $self;
-}
-
-# -------------------------------------------------------------------------------------------------
-# Publish the metric to the specified media
+# Publish the metric to the specified medua
 # (I):
 # - an arguments hash ref with following keys:
 #   > mqtt, whether to publish to (MQTT-based) messaging system, defaulting to false
@@ -460,7 +434,7 @@ sub _text_publish {
 # -------------------------------------------------------------------------------------------------
 # Getter/Setter
 # Only http-based and text-based Prometheus metrics take care of the value type
-# Documentation says this is an optional information, but Prometheus set the vaue as 'untyped' if
+# Documentation says this is an optional information, but Prometheus set the value as 'untyped' if
 # not specified at the very first time the value is sent, and the value type can never be modified.
 # So better to always provide it.
 # Doesn't check here if the value is known as messaging (MQTT) doesn't care
@@ -486,7 +460,7 @@ sub type {
 
 # -------------------------------------------------------------------------------------------------
 # (O):
-# - true|false if the type exists, whatever the publishing meda
+# - true|false if the type exists, whatever be the publishing media
 
 sub type_check {
 	my ( $self ) = @_;
@@ -532,7 +506,7 @@ sub value {
 # Constructor
 # (I):
 # - the TTP EP entry point
-# - an optional arguments hash with following keys:
+# - a mandatory arguments hash with following keys:
 #   > help
 #   > type
 #   > name
@@ -551,12 +525,29 @@ sub new {
 	$self->{_metric}{labels} = [];
 
 	if( $args && ref( $args ) eq 'HASH' ){
-		$self->props( $args );
 
-	# if an arguments is provided but not a hash ref, this is an unrecoverable error
-	} elsif( defined( $args )){
-		msgErr( __PACKAGE__."::new() expects an optional hash ref arguments, found '".ref( $args )."'" );
-		$self = undef;
+		# set the provided values
+		$self->help( $args->{help} ) if defined $args->{help};
+		$self->name( $args->{name} ) if defined $args->{name};
+		$self->type( $args->{type} ) if defined $args->{type};
+		$self->value( $args->{value} ) if defined $args->{value};
+		$self->labels( $args->{labels} ) if defined $args->{labels};
+
+		# check that the mandatory values are here
+		if( !$self->name()){
+			msgErr( __PACKAGE__."::new() expects a metric name, not found" );
+		}
+		if( !defined( $args->{value} )){
+			msgErr( __PACKAGE__."::new() expects a metric value, not found" );
+		}
+		if( TTP::errs()){
+			TTP::stackTrace();
+		}
+
+	# else (no argument or not a hash ref), this is an unrecoverable error
+	} else {
+		msgErr( __PACKAGE__."::new() expects a mandatory hash ref arguments, found '".( $args ? ref( $args ) : '(undef)' )."'" );
+		TTP::stackTrace();
 	}
 
 	return $self;
