@@ -44,7 +44,6 @@
 |  127 | 2025- 4-29 | have a test for each of daemons.pl vars variables |
 |  128 | 2025- 4-29 | have a test for each of dbms.pl vars variables |
 |  129 | 2025- 4-29 | have a test for each of services.pl vars variables |
-|  130 | 2025- 4-29 | RunnerDaemon->run() takes a 'listener' argument which is never used - is there a use case ? or remove the code |
 |  137 | 2025- 5- 7 | have mariadb backup/restore |
 |  139 | 2025- 5- 9 | when accessing a service, should be able to specify a target node in the case where the service is available on several nodes in this environment |
 |  141 | 2025- 5-10 | MongoDB::backupDatabase() and restoreDatabase() command-lines should be configurable somewhere |
@@ -342,6 +341,8 @@
 |      | 2025- 4-23 | done |
 |  121 | 2025- 4-24 | seems that daemons MQTT status is incomplete ? |
 |      | 2025- 4-29 | auto-fixed |
+|  130 | 2025- 4-29 | RunnerDaemon->run() takes a 'listener' argument which is never used - is there a use case ? or remove the code |
+|      | 2025- 5-12 | argument is removed |
 |  131 | 2025- 4-29 | remove unused ttp.pl test |
 |      | 2025- 5- 7 | done |
 |  132 | 2025- 4-29 | review ttp.pl movedirs vs. ttp.pl purgedirs vs. ttp.pl copydirs |

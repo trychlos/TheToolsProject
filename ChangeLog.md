@@ -23,6 +23,7 @@
 	- Improve mqtt.pl clear reporting
     - Introduce 'excludeDatabases' new service DBMS property
     - Obsolete 'databases' service DBMS property in favor of 'limitDatabases'
+    - Remove (unused) 'listener' argument from TTP::RunnerDaemon->run() method (todo #130)
 
 ### 4.11.1
 
