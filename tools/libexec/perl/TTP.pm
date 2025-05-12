@@ -608,7 +608,7 @@ sub filter {
 	foreach my $it ( @{$res->{stdout}} ){
 		$it =~ s/^\s*//;
 		$it =~ s/\s*$//;
-		push( @result, $it ) if $it !~ /\(DBG|DUM|ERR|VER|WAR\)/; #!grep( /^\[|\(ERR|\(DUM|\(VER|\(WAR|^$/, $it ) && $it !~ /\(WAR\)/ && $it !~ /\(ERR\)/;
+		push( @result, $it ) if $it !~ /\(DBG|DUM|ERR|VER|WAR\)/ && $it !~ /^\[\w[\w\.\s]*\]/;
 	}
 
 	return \@result;
@@ -1049,7 +1049,7 @@ sub substituteMacros {
 		foreach my $it ( keys %{$macros} ){
 			$data =~ s/<$it>/$macros->{$it}/g;
 		}
-		if( !defined $macros->{NODE} ){
+		if( !defined $macros->{NODE} && $ep->node()){
 			my $executionNode = $ep->node()->name();
 			$data =~ s/<NODE>/$executionNode/g;
 		}

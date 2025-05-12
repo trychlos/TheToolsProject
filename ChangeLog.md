@@ -19,6 +19,7 @@
     - TTP::Path::removeTree() now honors '--dummy' option, and so does ttp.pl purgedirs
     - ttp.pl movedirs now uses TTP::commandByOS() and is renamed ttp.pl archivedirs (todo #132)
     - Define new mqtt.pl clear verb
+	- Fix TTP::filter()
 
 ### 4.11.1
 
