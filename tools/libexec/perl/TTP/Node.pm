@@ -165,19 +165,24 @@ sub environment {
 # ------------------------------------------------------------------------------------------------
 # Override the 'IJSONable::evaluate()' method to manage the macros substitutions
 # (I):
-# -none
+# - an optional options hash with following keys:
+#   > warnOnUninitialized, defaulting to true
 # (O):
 # - this same object
 
 sub evaluate {
-	my ( $self ) = @_;
+	my ( $self, $opts ) = @_;
+	$opts //= {};
 
-	$self->TTP::IJSONable::evaluate();
+	print STDERR __PACKAGE__."::evaluate() entering".EOL if $ENV{TTP_EVAL};
+	$self->TTP::IJSONable::evaluate( $opts );
 
+	print STDERR __PACKAGE__."::evaluate() substitute <NODE> macro".EOL if $ENV{TTP_EVAL};
 	TTP::substituteMacros( $self->jsonData(), {
 		NODE => $self->name()
 	});
 
+	print STDERR __PACKAGE__."::evaluate() substitute <SERVICE> macro for 'services' keys".EOL if $ENV{TTP_EVAL};
 	# 'services' is introduced in v4.10 to replace 'Services'
 	my $services = $self->var([ 'services' ]);
 	foreach my $it ( keys %{$services} ){
@@ -188,6 +193,7 @@ sub evaluate {
 
 	# 'Services' is deprecated in v4.10 in favor of 'services'
 	# warn only once
+	print STDERR __PACKAGE__."::evaluate() substitute <SERVICE> macro for 'Services' keys".EOL if $ENV{TTP_EVAL};
 	$services = $self->var([ 'Services' ]);
 	if( $services && scalar( keys %{$services} ) > 0 ){
 		if( !$ep->{_warnings}{services} ){
@@ -556,8 +562,9 @@ sub new {
 			msgErr( "Exiting with code 1" );
 			exit( 1 );
 		} else {
+			# the JSON can be malformed (already warned by jsonRead() function)
+			# the JSON can be disabled
 			$self = undef;
-			msgWarn( "an invalid JSON configuration has been detected for '$node'" );
 		}
 	}
 

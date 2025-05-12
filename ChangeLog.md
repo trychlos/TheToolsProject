@@ -21,6 +21,8 @@
     - Define new mqtt.pl clear verb
 	- Fix TTP::filter()
 	- Improve mqtt.pl clear reporting
+    - Introduce 'excludeDatabases' new service DBMS property
+    - Obsolete 'databases' service DBMS property in favor of 'limitDatabases'
 
 ### 4.11.1
 

@@ -38,7 +38,7 @@ use warnings;
 use Data::Dumper;
 use Role::Tiny::With;
 
-with 'TTP::IEnableable', 'TTP::IAcceptable', 'TTP::IFindable', 'TTP::IJSONable';
+with 'TTP::IAcceptable', 'TTP::IEnableable', 'TTP::IFindable', 'TTP::IJSONable';
 
 use TTP;
 use vars::global qw( $ep );

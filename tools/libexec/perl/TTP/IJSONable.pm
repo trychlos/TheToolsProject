@@ -143,6 +143,8 @@ sub _evaluatePrint {
 	# https://perldoc.perl.org/warnings
 	my $warnOnUninitialized = true;
 	$warnOnUninitialized = $opts->{warnOnUninitialized} if defined $opts->{warnOnUninitialized};
+	print STDERR __PACKAGE__."::_evaluatePrint() value='$value' warnOnUninitialized='$warnOnUninitialized'".EOL if $ENV{TTP_EVAL};
+
 	if( $warnOnUninitialized ){
 		$result = eval $value;
 	} else {
@@ -245,8 +247,8 @@ sub jsonLoad {
 			}
 		}
 
-	# else hope that the class is also a Findable
-	# if a Findable, it will itself manages the Acceptable role
+	# else hope that the class is also a IFindable
+	# this is up to the class to decide to also be a IAcceptable+IEnableable or not
 	} elsif( $self->does( 'TTP::IFindable' ) && $args->{findable} ){
 		my $res = $self->find( $args->{findable}, $args );
 		if( $res ){

@@ -321,16 +321,7 @@ sub getDatabases {
 		my $handle = $self->_connect();
 		if( $handle ){
 			my @dbs = $handle->list_databases;
-			$databases = [];
-			my $limited = $self->viewedDatabases();
-			foreach my $it ( @dbs ){
-				my $dbname = $it->{name};
-				if( !$self->dbFilteredBySystem( $dbname, $Const->{systemDatabases} ) && ( !$limited || !$self->dbFilteredbyLimit( $dbname, $limited ))){
-					push( @{$databases}, $dbname );
-				}
-			}
-			msgVerbose( __PACKAGE__."::getDatabases() got databases [ ". join( ', ', @{$databases} )." ]" );
-			$self->{_dbms}{databases} = $databases;
+			$databases = $self->filterGotDatabases( \@dbs, $Const->{systemDatabases} );
 		}
 	}
 

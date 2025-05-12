@@ -16,8 +16,7 @@
 # along with TheToolsProject; see the file COPYING. If not,
 # see <http://www.gnu.org/licenses/>.
 #
-# An indirection level between the verb scripts and the underlying product-specialized packages
-#(Win32::SqlServer, PostgreSQL and MariaDB are involved)
+# A base class for underlying product-specialized packages (Win32::SqlServer, PostgreSQL and MariaDB are involved)
 
 package TTP::DBMS;
 die __PACKAGE__ . " must be loaded as TTP::DBMS\n" unless __PACKAGE__ eq 'TTP::DBMS';
@@ -151,17 +150,35 @@ sub databaseExists {
 }
 
 # -------------------------------------------------------------------------------------------------
+# check that the specified database is not filtered by the configured exclusion list
+# (I):
+# - the database name
+# - an optional array ref which list the databases we are limited to, defaulting to excludedDatabases()
+# (O):
+# - returns whether the database is filtered by the configured limited view: true|false
+
+sub dbFilteredbyExclude {
+	my ( $self, $database, $excluded ) = @_;
+
+	$excluded = $self->excludedDatabases() if !$excluded;
+
+	my $filtered = ( $excluded && grep( /^$database$/i, @{$excluded} ));
+
+	return $filtered;
+}
+
+# -------------------------------------------------------------------------------------------------
 # check that the specified database is not filtered by the configured limited view
 # (I):
 # - the database name
-# - an optional array ref which list the databases we are limited to, defaulting to viewedDatabases()
+# - an optional array ref which list the databases we are limited to, defaulting to limitedDatabases()
 # (O):
 # - returns whether the database is filtered by the configured limited view: true|false
 
 sub dbFilteredbyLimit {
 	my ( $self, $database, $limited ) = @_;
 
-	$limited = $self->viewedDatabases() if !$limited;
+	$limited = $self->limitedDatabases() if !$limited;
 
 	my $filtered = ( $limited && !grep( /^$database$/i, @{$limited} ));
 
@@ -189,6 +206,21 @@ sub dbFilteredBySystem {
 # (I):
 # - none
 # (O):
+# - the list of the databases this services which are excluded
+
+sub excludedDatabases {
+	my ( $self ) = @_;
+
+	my $exclude = $self->service()->var([ 'DBMS', 'excludeDatabases' ]);
+
+	return $exclude;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Getter
+# (I):
+# - none
+# (O):
 # - whether listing the databases should exclude the system databases
 
 sub excludeSystemDatabases {
@@ -198,6 +230,34 @@ sub excludeSystemDatabases {
 	$exclude = true if !defined $exclude;
 
 	return $exclude;
+}
+
+# -------------------------------------------------------------------------------------------------
+# starting from a raw list of databases, filter out those which are not to be viewed in this service
+# (I):
+# - the raw list of databases as an array ref of objects with a 'name' property
+# - the list of system databases to be considered for this driver
+# (O):
+# - an array ref of the list of viewed databases,
+
+sub filterGotDatabases {
+	my ( $self, $dbs, $systemDbs ) = @_;
+
+	my $databases = [];
+	my $limited = $self->limitedDatabases();
+	my $excluded = $self->excludedDatabases();
+	foreach my $it ( @{$dbs} ){
+		my $dbname = $it->{name};
+		if( !$self->dbFilteredBySystem( $dbname, $systemDbs ) &&
+			( !$limited || !$self->dbFilteredbyLimit( $dbname, $limited )) &&
+			( !$excluded || !$self->dbFilteredbyExclude( $dbname, $excluded ))){
+				push( @{$databases}, $dbname );
+		}
+	}
+	msgVerbose( __PACKAGE__."::filterGotDatabases() got databases [ ". join( ', ', @{$databases} )." ]" );
+	$self->{_dbms}{databases} = $databases;
+
+	return $databases;
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -249,6 +309,27 @@ sub getProperties {
 	push( @{$props}, { name => 'connectionString', value => $self->connectionString() || '(undef)' });
 
 	return $props;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Getter
+# (I):
+# - none
+# (O):
+# - the list of the databases this services is limited to view, or undef if no limit is set
+
+sub limitedDatabases {
+	my ( $self ) = @_;
+
+	my $limit = $self->service()->var([ 'DBMS', 'limitDatabases' ]);
+	if( !$limit ){
+		$limit = $self->service()->var([ 'DBMS', 'databases' ]);
+		if( $limit ){
+			msgWarn( "'DBMS.databases' property is deprecated in favor of 'DBMS.limitDatabases'. You should update your configurations." );
+		}
+	}
+
+	return $limit;
 }
 
 # ------------------------------------------------------------------------------------------------
@@ -314,21 +395,6 @@ sub service {
 	my ( $self ) = @_;
 
 	return $self->{_dbms}{service};
-}
-
-# ------------------------------------------------------------------------------------------------
-# Getter
-# (I):
-# - none
-# (O):
-# - the list of the databases this services is limited to view, or undef if no limit is set
-
-sub viewedDatabases {
-	my ( $self ) = @_;
-
-	my $limit = $self->service()->var([ 'DBMS', 'databases' ]);
-
-	return $limit;
 }
 
 # ------------------------------------------------------------------------------------------------
