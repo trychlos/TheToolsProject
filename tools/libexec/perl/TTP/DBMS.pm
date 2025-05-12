@@ -163,7 +163,7 @@ sub dbFilteredbyLimit {
 
 	$limited = $self->viewedDatabases() if !$limited;
 
-	my $filtered = ( $limited && !grep( /^$database$/, @{$limited} ));
+	my $filtered = ( $limited && !grep( /^$database$/i, @{$limited} ));
 
 	return $filtered;
 }
@@ -179,7 +179,7 @@ sub dbFilteredbyLimit {
 sub dbFilteredBySystem {
 	my ( $self, $database, $systems ) = @_;
 
-	my $filtered = ( $self->excludeSystemDatabases() && grep( /^$database$/, @{$systems} ));
+	my $filtered = ( $self->excludeSystemDatabases() && grep( /^$database$/i, @{$systems} ));
 
 	return $filtered;
 }
