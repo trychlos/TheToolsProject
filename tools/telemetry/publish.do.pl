@@ -14,7 +14,7 @@
 # @(-) --httpPrefix=<prefix>   prefix the metric name when publishing to the (HTTP-based) Prometheus PushGateway system [${httpPrefix}]
 # @(-) --[no]text              publish the metrics to the (text-based) Prometheus TextFile Collector system [${text}]
 # @(-) --textPrefix=<prefix>   prefix the metric name when publishing to the (text-based) Prometheus TextFile Collector system [${textPrefix}]
-# @(-) --prepend=<name=value>  label to be appended to the telemetry metrics, may be specified several times or as a comma-separated list [${prepend}]
+# @(-) --prepend=<name=value>  label to be prepended to the telemetry metrics, may be specified several times or as a comma-separated list [${prepend}]
 # @(-) --append=<name=value>   label to be appended to the telemetry metrics, may be specified several times or as a comma-separated list [${append}]
 #
 # @(@) This verb let you publish a metric to any enabled medium, among (MQTT-based) messaging system, or (http-based) Prometheus PushGateway or

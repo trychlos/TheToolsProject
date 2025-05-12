@@ -24,6 +24,7 @@
     - Introduce 'excludeDatabases' new service DBMS property
     - Obsolete 'databases' service DBMS property in favor of 'limitDatabases'
     - Remove (unused) 'listener' argument from TTP::RunnerDaemon->run() method (todo #130)
+    - TTP::Metric->new() better checks its arguments
 
 ### 4.11.1
 
