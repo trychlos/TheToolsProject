@@ -5,7 +5,7 @@
 # @(-) --[no]dummy             dummy run [${dummy}]
 # @(-) --[no]verbose           run verbosely [${verbose}]
 # @(-) --topic=<name>          the topic to publish in [${topic}]
-# @(-) --[no]check             check that the topics have been successfully cleared
+# @(-) --[no]check             check that the topics have been successfully cleared [${check}]
 #
 # TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
@@ -48,59 +48,71 @@ my $opt_check = true;
 
 sub doClear {
 	msgOut( "clearing '$opt_topic' hierarchy..." );
-	my $result = false;
-	my $total_count = 0;
-	my $cleared_count = 0;
-	my $success_count = 0;
-	my $checked_count = -1;
 
 	if( $ep->runner()->dummy()){
 		msgDummy( "considering clear successful" );
-		$result = true;
+
 	} else {
+		my $total_count = 0;
+		my $cleared_count = 0;
+		my $success_count = 0;
 		# get all the retained topics
-		my $retained = TTP::filter( "mqtt.pl retained -get -nocolored" );
-		my $cleared = [];
-		# filter the to-be-cleared topics
-		foreach my $it ( @{${retained}} ){
-			$total_count += 1;
-			if( $it =~ /^$opt_topic/ ){
-				push( @{$cleared}, $it );
-				$cleared_count += 1;
-			}
-		}
+		msgOut( "getting retained messages..." );
+		my ( $retained, $cleared ) = _filter_retained();
+		$total_count = scalar( @{$retained} );
+		$cleared_count = scalar( @{$cleared} );
+		msgOut( "got $total_count total retained message(s)" );
+		msgOut( "filtered $cleared_count to be cleared message(s)" );
 		# clear the to-be-cleared topics
 		foreach my $it ( @{$cleared} ){
+			msgVerbose( "clearing '$it' message" );
 			my $res = TTP::commandExec( "mqtt.pl publish -topic $it -payload \"\" -retain -nocolored" );
 			if( $res->{success} ){
 				$success_count += 1;
 			}
 		}
-		# check if asked for
-		if( $opt_check ){
-			$checked_count = 0;
-			$retained = TTP::filter( "mqtt.pl retained -get -nocolored" );
-			foreach my $it ( @{${retained}} ){
-				if( $it =~ /^$opt_topic/ ){
-					push( @{$cleared}, $it );
-					$checked_count += 1;
+		msgOut( "successfully cleared $success_count message(s)" );
+		if( $cleared_count == $success_count ){
+			# check if asked for
+			if( $opt_check ){
+				msgOut( "checking among still retained messages..." );
+				my ( $retained, $cleared ) = _filter_retained();
+				my $checked_count = scalar( @{$cleared} );
+				if( $checked_count == 0 ){
+					msgOut( "found $checked_count remaining (not cleared) messages: fine" );
+				} else {
+					msgErr( "got $checked_count remaining (not cleared) messages" );
 				}
+			}
+		} else {
+			msgErr( "remaining messages:" );
+			my ( $retained, $cleared ) = _filter_retained();
+			foreach my $it ( @{$cleared} ){
+				msgErr( " $it" );
 			}
 		}
 	}
-	msgOut( "got $cleared_count of $total_count total retained topics, among them $success_count have been successfully cleared" );
-	if( $opt_check ){
-		if( $checked_count == 0 ){
-			msgOut( "check fully successful" );
-		} else {
-			msgErr( "got $checked_count remaining (not cleared) topics" );
+	if( TTP::errs()){
+		msgErr( "NOT OK" );
+	} else {
+		msgOut( "done" );
+	}
+}
+
+# get the retained messages, filtering them out
+# returns the lists of all retained and to-be-cleared messages
+
+sub _filter_retained {
+	my $retained = TTP::filter( "mqtt.pl retained -get -nocolored" );
+	my $cleared = [];
+	# filter the to-be-cleared topics with an insensitive case match
+	foreach my $it ( @{${retained}} ){
+		if( $it =~ /^$opt_topic/i ){
+			my @words = split( /\s+/, $it );
+			push( @{$cleared}, $words[0] );
 		}
 	}
-	if( $result ){
-		msgOut( "done" );
-	} else {
-		msgErr( "NOT OK" );
-	}
+	return ( $retained, $cleared );
 }
 
 # =================================================================================================
