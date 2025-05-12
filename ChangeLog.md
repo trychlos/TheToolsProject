@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.12.0-rc.0
+### 4.12.0
 
-    Release date: 
+    Release date: 2025- 5-12
 
     - Define new 'warnOnMultipleHostingNodes' property, overridable or a per-node or per-service basis (todo #145), thus bumping minor candidate version number
     - Define new 'TTP::version()' function
@@ -383,4 +383,4 @@
 
 ---
 P. Wieser
-- Last updated on 2025, May 11th
+- Last updated on 2025, May 12th
