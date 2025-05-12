@@ -20,6 +20,7 @@
     - ttp.pl movedirs now uses TTP::commandByOS() and is renamed ttp.pl archivedirs (todo #132)
     - Define new mqtt.pl clear verb
 	- Fix TTP::filter()
+	- Improve mqtt.pl clear reporting
 
 ### 4.11.1
 
