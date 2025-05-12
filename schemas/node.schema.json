@@ -78,7 +78,7 @@
             "type": "object",
             "properties": {
                 "monitor": {
-                    "description": "A list of commands to be executed to get the full status of the node.",
+                    "description": "A list of commands to be executed to get the full status of the node, not included the services which have their own checks.",
                     "type": "object",
                     "properties": {
                         "commands": {
