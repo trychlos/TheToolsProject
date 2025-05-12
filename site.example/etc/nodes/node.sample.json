@@ -12,14 +12,6 @@
 	],
 	"enabled": false,
 
-	"daemons_comments": [
-		"The daemons which will dictate the host behavior, and mainly whether is it a backup production host or not.",
-		"- ...",
-		""
-	],
-	"daemons": [
-	],
-
 	"ServicesComments": [
 		"These are the services defined on this host as objects where the top key if the name of the service. At least this top key should be specified, even if with an empty properties object.",
 		"Values may be:",
@@ -41,10 +33,9 @@
 		"- ...",
 		""
 	],
-	"Services": {
+	"services": {
 		"Canal33": {
 			"DBMS": {
-				"instance": "DEV",
 				"databases": [
 					"Canal33"
 				]
@@ -63,21 +54,8 @@
 		},
 		"Dom.2008": {
 			"DBMS": {
-				"instance": "DEV"
 			},
-			"status_comments": [
-				"The commands to be executed to get a full status of the service.",
-				"These commands are typically executed every <n> minutes to provide telemetry to a status dashboard, maybe from some external machine",
-				"While the service can only define a 'commands' array, we can define at this host-level:",
-				"- 'before' and 'after' keys define commands to be executed respectively before and after the commands defined at the service level",
-				"- 'replace' defines commands to be executed as a service-level commands replacement",
-				"- when defined here, 'commands' array is just inserted before the service-level commands (same than 'before' though a bit less explicit)."
-			],
 			"status": {
-				"live_comments": [
-					"A command which let us determine where is the live production. This is a single command as we manage a single live production",
-					"Only useful for monitoring, and when about to switch a machine status to or from live or backup"
-				],
 				"live": "http.pl get -nocolored -url http://ip.test.blingua.net -header X-Sent-By -accept ...",
 				"before": {
 					"commands": [
@@ -132,37 +110,13 @@
 			}
 		}
 	},
-	"DBMS_comments": [
-		"Override here, on a per-machine basis, the corresponding keys defined in site 'toops.json':",
-		"- archivesDir",
-		"- archivesRoot",
-		"- backupsDir",
-		"- backupsRoot",
-		"- instance",
-		"And a per-instance basis:",
-		"- byInstance",
-		"  <INSTANCE>",
-		"  - package",
-		"  - dataPath"
-	],
 	"DBMS": {
 		"archivesDir": "[eval:File::Spec->catdir( TTP::var([ 'DBMS', 'archivesRoot' ]), Time::Moment->now->strftime( '%y%m%d' ))]",
-		"archivesRoot": "\\[eval:File::Spec->catdir( '\\ftpback-rbx7-618.ovh.net', 'ns3153065.ip-51-91-25.eu', '<NODE>', 'SQLBackups' )]",
-		"byInstance": {
-			"DEV": {
-				"dataPath": "C:\\Program Files\\Microsoft SQL Server\\MSSQL11.DEV\\MSSQL\\DATA"
-			}
-		}
+		"archivesRoot": "\\[eval:File::Spec->catdir( '\\ftpback-rbx7-618.ovh.net', 'ns3153065.ip-51-91-25.eu', '<NODE>', 'SQLBackups' )]"
 	},
 	"environment": {
-		"type_comments": [
-			"Define here the environment to which this machine is attached. A machine is attached to at most only one environment.",
-			"If this is not what you are searching for, maybe you could take a glance at the logical machine paradigm, unless you could be more interested by roles"
-		],
 		"id": "DEV"
 	},
 
-	"remoteShare_comments": [
-	],
 	"remoteShare": "\\\\10.122.1.14\\C"
 }

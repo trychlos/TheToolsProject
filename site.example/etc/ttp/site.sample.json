@@ -17,17 +17,13 @@
 		"These variables are free to the site integrator and NOT considered by TheToolsProject, though they can be used in below TTP JSON dynamic evaluations."
 	],
 
+	"enabled": true,
+
 	"site_comments": [
 		"We can define here some variables at the site level."
 	],
 	"site": {
 		"commandsDir": "[eval:File::Spec->catdir( TTP::vars([ 'site', 'rootDir' ]), 'SiteResources', 'Commands' )]",
-		"workloadSummary_comments": [
-			"manage macros: SUBJECT, OPTIONS"
-		],
-		"workloadSummary": {
-			"command": "smtp.pl send -subject \"<SUBJECT>\" -to my-admin@example.com <OPTIONS>"
-		},
 		"rootDir": "C:\\CUSTOMER_1234"
 	},
 
@@ -64,9 +60,9 @@
 			"manage macros: SOURCE, TARGET, EXCLUDEDIRS, EXCLUDEFILES and OPTIONS"
 		],
 		"copyDir": {
-			"byOS": {
-				"MSWin32": {
-					"command": "robocopy <SOURCE> <TARGET> /E /TS /FP /NP /BYTES"
+			"command": {
+				"byOS": {
+					"MSWin32": "robocopy <SOURCE> <TARGET> /E /TS /FP /NP /BYTES"
 				}
 			}
 		},
@@ -96,12 +92,7 @@
 				"periodicDir": "[eval:File::Spec->catdir( TTP::dbmsBackupsRoot(), Time::Moment->now->strftime( '%y%m%d' ), TTP::nodeName())]",
 				"rootDir": "[eval:File::Spec->catdir( TTP::tempDir(), 'TTP', 'backups' )]"
 			},
-			"instance": "MSSQLSERVER",
-			"byInstance": {
-				"MSSQLSERVER": {
-					"package": "TTP::SqlServer"
-				}
-			}
+			"package": "TTP::SqlServer"
 		},
 
 		"deployemnts_comments": [
