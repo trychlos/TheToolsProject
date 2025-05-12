@@ -835,9 +835,7 @@ sub run {
 			# set a runnable qualifier as soon as we can
 			$self->runnablePushQualifier( $self->config()->name());
 			# and initialize listening socket and messaging connection when asked for
-			my $listener = true;
-			$listener = $args->{listener} if defined $args->{listener};
-			$self->_initListener( $args ) if $listener;
+			$self->_initListener( $args );
 			$loaded = true;
 		}
 	} else {
