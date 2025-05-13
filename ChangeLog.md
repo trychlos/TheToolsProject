@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - Fix TTP::Path::fromCommand() call to stackTrace()
 
 ### 4.12.0
 
