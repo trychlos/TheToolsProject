@@ -556,7 +556,7 @@ sub getDatabases {
 		$databases = [];
 		my $res = $self->_sqlExec( "select name from master.sys.databases order by name" );
 		if( $res->{ok} ){
-			$databases = $self->filterGotDatabases( \@dbs, $Const->{systemDatabases} );
+			$databases = $self->filterGotDatabases( $res->{result}, $Const->{systemDatabases} );
 		}
 	}
 
