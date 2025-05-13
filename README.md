@@ -32,13 +32,13 @@ __TheToolsProject__ is an organized set of commands and verbs whose aims are:
 
     Even if the stdout console output can be highly configured, all informations, results, warnings, errors are logged and kept. No information is never lost (though can be archived).
 
-- manage several services, for several environments.
+- manage several services, maybe spanned on several nodes, for several environments.
 
     Configuration files are outside of the code and well separated.
 
     Libraries have all the code needed to compute and use the right precedence depending of the current command / verb / usage.
 
-But, most of all, __TheToolsProject__ materializes a work paradigm where all environments managed by our IT team use the exact same version of scripts and configuration files.
+But, most of all, __TheToolsProject__ materializes a working paradigm where all environments managed by our IT team use the exact same version of scripts and configuration files.
 
 No more install or manage scripts which must slightly be updated when moving from an environment to another! This implies a much better quality of these moves. Instead of this painful work, just one configuration file which contains all parameters required for all managed environments.
 
@@ -71,7 +71,6 @@ or
 `$ ttp.sh`
 
 depending of the exact flavor you are running.
->>>>>>> 8333a1f (Homogeneize source files and rebuild the tree)
 
 You should get an answer like:
 
@@ -91,7 +90,7 @@ ttp.pl: TheToolsProject Management
   writejson: write JSON data into a file
 ```
 
-The `ttp.pl` command, when run without any argument, answers by providing the list of its available verbs.
+The `ttp.pl` (resp. `ttp.sh`) command, when run without any argument, answers by providing the list of its available verbs.
 
 And so do all available commands.
 
@@ -143,7 +142,7 @@ ttp.pl: TheToolsProject Management
 
 One more time, the `ttp.pl list` command, when run without any argument, answers by providing its usage and available options.
 
-And this is a general rule of __TheToolsProject__ (also known as __TTP__ by the fans): a command will never ever break or modify something without the corresponding and validated option argument. This is a security rule so that the users can freely explorate the available commands and verbs, without having to worry about potential damages.
+And this is a general rule of __TheToolsProject__ (also known as __TTP__ by the fans): a command will never ever break or modify something without the corresponding and validated option argument. This is a security rule so that the users can freely explore the available commands and verbs, without having to worry about potential damages.
 
 So go on with the available commands.
 
@@ -194,7 +193,7 @@ Two layers are usually defined:
 
 As many layers as needed can be installed, each one containing only the subset needed by this layer. They are resolved in the usual way: the first found wins.
 
-See all details in [Install](./tools/libexec/doc/2-Install.md).
+See all details in [Install](./doc/2-Install.md).
 
 ## A word of the history
 
