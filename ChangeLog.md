@@ -7,6 +7,7 @@
     Release date: 
 
     - Fix TTP::Path::fromCommand() call to stackTrace()
+    - Fix TTP::SqlServer::getDatabases()
 
 ### 4.12.0
 
