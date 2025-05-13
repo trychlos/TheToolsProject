@@ -180,10 +180,10 @@ sub newDbms {
 		msgVerbose( __PACKAGE__."::newDbms() got package='$package'" );
 		load $package, ':all';
 		if( $package->can( 'new' )){
-			$dbms = $package->new( $ep, { service => $self });
-			if( $dbms ){
-				$dbms->node( $args->{node} || $ep->node());
-			}
+			$dbms = $package->new( $ep, {
+				node => $args->{node} || $ep->node(),
+				service => $self
+			});
 		} else {
 			msgWarn( __PACKAGE__."::newDbms() package '$package' says it cannot 'new()'" );
 		}

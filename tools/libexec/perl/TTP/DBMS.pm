@@ -163,11 +163,12 @@ sub dbFilteredbyExclude {
 	$excluded = $self->excludedDatabases() if !$excluded;
 
 	my $filtered = ( $excluded && grep( /^$database$/i, @{$excluded} ));
+	msgVerbose( __PACKAGE__."::dbFilteredbyExclude() filtering database='$database'" ) if $filtered;
 
 	return $filtered;
 }
 
-# -------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------------------------
 # check that the specified database is not filtered by the configured limited view
 # (I):
 # - the database name
@@ -181,6 +182,7 @@ sub dbFilteredbyLimit {
 	$limited = $self->limitedDatabases() if !$limited;
 
 	my $filtered = ( $limited && !grep( /^$database$/i, @{$limited} ));
+	msgVerbose( __PACKAGE__."::dbFilteredbyLimit() filtering database='$database'" ) if $filtered;
 
 	return $filtered;
 }
@@ -197,6 +199,7 @@ sub dbFilteredBySystem {
 	my ( $self, $database, $systems ) = @_;
 
 	my $filtered = ( $self->excludeSystemDatabases() && grep( /^$database$/i, @{$systems} ));
+	msgVerbose( __PACKAGE__."::dbFilteredBySystem() filtering database='$database'" ) if $filtered;
 
 	return $filtered;
 }
@@ -333,25 +336,14 @@ sub limitedDatabases {
 }
 
 # ------------------------------------------------------------------------------------------------
-# Getter/Setter
+# Getter
 # (I):
-# - an optional hosting node
+# - none
 # (O):
 # - returns the hosting TTP::Node node, defaulting to the current execution node
 
 sub node {
 	my ( $self, $node ) = @_;
-
-	if( defined( $node )){
-		my $ref = ref( $node );
-		if( $ref eq 'TTP::Node' ){
-			$self->{_dbms}{node} = $node;
-			msgVerbose( __PACKAGE__."::node() set hosting node='".$node->name()."'" );
-		} else {
-			msgErr( __PACKAGE__."::node() expects a TTP::Node, got '$ref'" );
-			TTP::stackTrace();
-		}
-	}
 
 	return $self->{_dbms}{node};
 }
@@ -420,6 +412,7 @@ sub wantsLocal {
 # (I):
 # - the TTP EP entry point
 # - an argument object with following keys:
+#   > node: the TTP::Node object this DBMS runs on
 #   > service: the TTP::Service object this DBMS belongs to
 # (O):
 # - this object, or undef in case of an error
@@ -433,18 +426,30 @@ sub new {
 
 	$self->{_dbms} = {};
 
+	if( $args->{node} ){
+		my $ref = ref( $args->{node} );
+		if( $ref eq 'TTP::Node' ){
+			$self->{_dbms}{node} = $args->{node};
+		} else {
+			msgErr( __PACKAGE__."::new() expects 'node' be a TTP::Node, got '$ref'" );
+		}
+	} else {
+		msgErr( __PACKAGE__."::new() 'node' argument is mandatory, but is not specified" );
+	}
+
 	if( $args->{service} ){
 		my $ref = ref( $args->{service} );
 		if( $ref eq 'TTP::Service' ){
 			$self->{_dbms}{service} = $args->{service};
-			msgVerbose( __PACKAGE__."::new() service='".$args->{service}->name()."'" );
 		} else {
 			msgErr( __PACKAGE__."::new() expects 'service' be a TTP::Service, got '$ref'" );
-			$self = undef;
 		}
 	} else {
-		msgErr( __PACKAGE__."::new() service argument is mandatory, but is not specified" );
-		$self = undef;
+		msgErr( __PACKAGE__."::new() 'service' argument is mandatory, but is not specified" );
+	}
+
+	if( TTP::errs()){
+		TTP::stackTrace();
 	}
 
 	return $self;

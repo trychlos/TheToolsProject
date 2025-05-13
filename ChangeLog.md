@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - Improve TTP::DBMS->new() object instanciation and verbosity
 
 ### 4.12.1
 

@@ -477,6 +477,7 @@ sub restoreDatabase {
 # (I):
 # - the TTP EP entry point
 # - an argument object with following keys:
+#   > node: the TTP::Node object this DBMS runs on
 #   > service: the TTP::Service object this DBMS belongs to
 # (O):
 # - this object, or undef in case of an error
@@ -489,7 +490,7 @@ sub new {
 
 	if( $self ){
 		bless $self, $class;
-		msgVerbose( __PACKAGE__."::new()" );
+		msgVerbose( __PACKAGE__."::new() node='".$args->{node}->name()."' service='".$args->{service}->name()."'" );
 	}
 
 	return $self;
