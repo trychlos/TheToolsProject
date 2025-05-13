@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.12.1-rc.0
+### 4.12.1
 
-    Release date: 
+    Release date: 2025- 5-13
 
     - Fix TTP::Path::fromCommand() call to stackTrace()
     - Fix TTP::SqlServer::getDatabases()
@@ -390,4 +390,4 @@
 
 ---
 P. Wieser
-- Last updated on 2025, May 12th
+- Last updated on 2025, May 13th
