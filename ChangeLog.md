@@ -7,6 +7,7 @@
     Release date: 
 
     - Improve TTP::DBMS->new() object instanciation and verbosity
+    - Fix ttp.pl archivedirs call to commandByOS()
 
 ### 4.12.1
 
