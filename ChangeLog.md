@@ -2,7 +2,7 @@
 
 ## ChangeLog
 
-### 4.13.0-rc.1
+### 4.13.0-rc.2
 
     Release date: 
 
@@ -11,6 +11,7 @@
     - Improve TTP::version() computing using SemVer Perl module
     - Make sure all daemon intervals are configured the same way, and that interval <= 0 disable it
     - Make TTP::Service->new() just a bit less verbose on specific calls
+    - ttp.pl push fix warning message
 
 ### 4.12.2
 

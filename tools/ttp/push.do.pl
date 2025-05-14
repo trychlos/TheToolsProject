@@ -263,7 +263,7 @@ if( $ref_host ){
 		msgVerbose( "pushing on pull reference host '$ref_host': fine" );
 	}
 } else {
-	msgWarn( "'deployements.reference' node name expected, not found. Terminating..." );
+	msgWarn( "'deployments.reference' node name expected, not found. Terminating..." );
 	TTP::exit();
 }
 
