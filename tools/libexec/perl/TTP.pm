@@ -1117,7 +1117,8 @@ sub version {
 		}
 	}
 
-	return $version->normal;
+	# on Windows SemVer 0.10.0, '$version' is a single string instead of being a SemVer object
+	return ref( $version ) ? $version->normal : $version;
 }
 
 1;
