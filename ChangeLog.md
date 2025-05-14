@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.12.2-rc.0
+### 4.12.2
 
-    Release date: 
+    Release date: 2025- 5-14
 
     - Improve TTP::DBMS->new() object instanciation and verbosity
     - Fix ttp.pl archivedirs call to commandByOS()
@@ -398,4 +398,4 @@
 
 ---
 P. Wieser
-- Last updated on 2025, May 13th
+- Last updated on 2025, May 14th
