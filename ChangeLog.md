@@ -2,11 +2,11 @@
 
 ## ChangeLog
 
-### 4.12.3-rc.0
+### 4.13.0-rc.0
 
     Release date: 
 
-    - 
+    - Execution report 'host' property is renamed to 'node', thus bumping minor candidate version number
 
 ### 4.12.2
 

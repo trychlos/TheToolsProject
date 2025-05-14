@@ -469,7 +469,7 @@ sub _executionReportCompleteData {
 	$data->{cmdline} = "$0 ".join( ' ', @{$ep->runner()->runnableArgs()} );
 	$data->{command} = $ep->runner()->command();
 	$data->{verb} = $ep->runner()->verb();
-	$data->{host} = $ep->node()->name();
+	$data->{node} = $ep->node()->name();
 	$data->{code} = $ep->runner()->runnableErrs();
 	$data->{started} = $ep->runner()->runnableStarted()->strftime( '%Y-%m-%d %H:%M:%S.%6N %:z' );
 	$data->{ended} = Time::Moment->now->strftime( '%Y-%m-%d %H:%M:%S.%6N %:z' );
