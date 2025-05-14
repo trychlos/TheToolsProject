@@ -23,7 +23,7 @@
 # Hence this class.
 #
 # The properties managed here are only standard ones.
-# Other daemons are free to derive this class, or just do not manage :(
+# Each daemons are free to derive this class, or just to not manage :(
 
 package TTP::DaemonConfig;
 die __PACKAGE__ . " must be loaded as TTP::DaemonConfig\n" unless __PACKAGE__ eq 'TTP::DaemonConfig';
@@ -198,7 +198,7 @@ sub httpingInterval {
 
 	my $interval = $self->jsonData()->{httpingInterval};
 	$interval = DEFAULT_HTTPING_INTERVAL if !defined $interval;
-	if( $interval && $interval > 0 && $interval < MIN_HTTPING_INTERVAL ){
+	if( $interval > 0 && $interval < MIN_HTTPING_INTERVAL ){
 		msgVerbose( "defined httpingInterval=$interval less than minimum accepted ".MIN_HTTPING_INTERVAL.", ignored" );
 		$interval = DEFAULT_HTTPING_INTERVAL;
 	}
@@ -209,6 +209,7 @@ sub httpingInterval {
 # ------------------------------------------------------------------------------------------------
 # Returns the interval in sec. between two listening loops
 # We provide a default value if not specified in the configuration file.
+# The listening is never disabled as we need it to interact with the dameon
 # (I):
 # - none
 # (O):
@@ -219,7 +220,7 @@ sub listeningInterval {
 
 	my $interval = $self->jsonData()->{listeningInterval};
 	$interval = DEFAULT_LISTEN_INTERVAL if !defined $interval;
-	if( $interval > 0 && $interval < MIN_LISTEN_INTERVAL ){
+	if( $interval < MIN_LISTEN_INTERVAL ){
 		msgVerbose( "defined listeningInterval=$interval less than minimum accepted ".MIN_LISTEN_INTERVAL.", ignored" );
 		$interval = DEFAULT_LISTEN_INTERVAL;
 	}
@@ -269,7 +270,7 @@ sub messagingInterval {
 
 	my $interval = $self->jsonData()->{messagingInterval};
 	$interval = DEFAULT_MESSAGING_INTERVAL if !defined $interval;
-	if( $interval && $interval < MIN_MESSAGING_INTERVAL ){
+	if( $interval > 0 && $interval < MIN_MESSAGING_INTERVAL ){
 		msgVerbose( "defined messagingInterval=$interval less than minimum accepted ".MIN_MESSAGING_INTERVAL.", ignored" );
 		$interval = DEFAULT_MESSAGING_INTERVAL;
 	}
@@ -356,7 +357,7 @@ sub textingInterval {
 
 	my $interval = $self->jsonData()->{textingInterval};
 	$interval = DEFAULT_TEXTING_INTERVAL if !defined $interval;
-	if( $interval && $interval > 0 && $interval < MIN_TEXTING_INTERVAL ){
+	if( $interval > 0 && $interval < MIN_TEXTING_INTERVAL ){
 		msgVerbose( "defined textingInterval=$interval less than minimum accepted ".MIN_TEXTING_INTERVAL.", ignored" );
 		$interval = DEFAULT_TEXTING_INTERVAL;
 	}
