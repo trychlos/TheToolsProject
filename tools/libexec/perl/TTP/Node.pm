@@ -356,27 +356,43 @@ sub _enumTestSingle {
 # (I):
 # - environment identifier
 # - service name
+# - an optional options hash with following keys:
+#   > inhibit: a node or a list of node names to prevent from being candidates
 # (O):
 # - the first found node as a TTP::Node instance, or undef
 
 sub findByService {
-	my ( $class, $environment, $service ) = @_;
+	my ( $class, $environment, $service, $opts ) = @_;
 	$class = ref( $class ) || $class;
+	$opts //= {};
 	msgDebug( __PACKAGE__."::findByService() environment='$environment' service='$service'" );
 
 	my $founds = [];
 	my $candidate = undef;
 
+	# compute to-be-inhibited nodes list
+	my $inhibits = [];
+	if( $opts->{inhibit} ){
+		my $ref = ref( $opts->{inhibit} );
+		if( $ref eq 'ARRAY' ){
+			$inhibits = $opts->{inhibit};
+		} elsif( $ref ){
+			msgErr( __PACKAGE__."::findByService() expects 'inhibit' be a string or an array, got '$ref'" );
+		} else {
+			$inhibits = [ $opts->{inhibit} ];
+		}
+	}
+
 	# test the current execution node before scanning the full list
 	$candidate = $ep->node();
-	$candidate->findByService_addCandidate( $environment, $service, $founds ) if $candidate;
+	$candidate->findByService_addCandidate( $environment, $service, $founds, $inhibits ) if $candidate;
 
 	# if it is candidate, this node will be chosen
 	# scan the full list a) to find others and b) to be able to emit a warning when several nodes are found
 	my $nodeNames = $class->list();
 	foreach my $name ( @{$nodeNames} ){
 		$candidate = $class->new( $ep, { node => $name });
-		$candidate->findByService_addCandidate( $environment, $service, $founds ) if $candidate;
+		$candidate->findByService_addCandidate( $environment, $service, $founds, $inhibits ) if $candidate;
 	}
 
 	# this is an error to not have any candidate
@@ -407,24 +423,29 @@ sub findByService {
 }
 
 sub findByService_addCandidate {
-	my ( $self, $environment, $service, $founds ) = @_;
+	my ( $self, $environment, $service, $founds, $inhibits ) = @_;
 
 	my $addedCandidate = false;
 
-	if( $self->hasService( $service ) && $self->environment() eq $environment ){
-		my $alreadyAdded = false;
-		foreach my $node ( @{$founds} ){
-			if( $node->name() eq $self->name()){
-				$alreadyAdded = true;
-				last;
+	if( grep( /$self->name()/, @{$inhibits} )){
+		msgVerbose( __PACKAGE__."::findByService_addCandidate() '".$self->name()."' is inhibited by option" );
+
+	} else {
+		if( $self->hasService( $service ) && $self->environment() eq $environment ){
+			my $alreadyAdded = false;
+			foreach my $node ( @{$founds} ){
+				if( $node->name() eq $self->name()){
+					$alreadyAdded = true;
+					last;
+				}
 			}
-		}
-		if( $alreadyAdded ){
-			msgVerbose( __PACKAGE__."::findByService_addCandidate() '".$self->name()."' has already been added" );
-		} else {
-			$addedCandidate = true;
-			push( @{$founds}, $self );
-			msgVerbose( __PACKAGE__."::findByService_addCandidate() adding '".$self->name()."'" );
+			if( $alreadyAdded ){
+				msgVerbose( __PACKAGE__."::findByService_addCandidate() '".$self->name()."' has already been added" );
+			} else {
+				$addedCandidate = true;
+				push( @{$founds}, $self );
+				msgVerbose( __PACKAGE__."::findByService_addCandidate() adding '".$self->name()."'" );
+			}
 		}
 	}
 

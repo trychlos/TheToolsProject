@@ -10,6 +10,7 @@
 # @(-) --diff=<filename>       restore with this differential backup [${diff}]
 # @(-) --[no]verifyonly        only check the backup restorability [${verifyonly}]
 # @(-) --[no]report            whether an execution report should be provided [${report}]
+# @(-) --inhibit=<node>        make sure to not restore on that node [${inhibit}]
 #
 # @(@) Note 1: you must at least provide a full backup to restore, and may also provide an additional differential backup file.
 # @(@) Note 2: target database is mandatory unless you only want a backup restorability check, in which case '--dummy' option is not honored.
@@ -50,7 +51,8 @@ my $defaults = {
 	full => '',
 	diff => '',
 	verifyonly => 'no',
-	report => 'yes'
+	report => 'yes',
+	inhibit => ''
 };
 
 my $opt_service = $defaults->{service};
@@ -59,6 +61,7 @@ my $opt_full = $defaults->{full};
 my $opt_diff = $defaults->{diff};
 my $opt_verifyonly = false;
 my $opt_report = true;
+my $opt_inhibit = $defaults->{inhibit};
 
 # the node which hosts the requested service
 my $objNode = undef;
@@ -143,7 +146,8 @@ if( !GetOptions(
 	"full=s"			=> \$opt_full,
 	"diff=s"			=> \$opt_diff,
 	"verifyonly!"		=> \$opt_verifyonly,
-	"report!"			=> \$opt_report )){
+	"report!"			=> \$opt_report,
+	"inhibit=s"			=> \$opt_inhibit )){
 
 		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
@@ -163,12 +167,15 @@ msgVerbose( "got full='$opt_full'" );
 msgVerbose( "got diff='$opt_diff'" );
 msgVerbose( "got verifyonly='".( $opt_verifyonly ? 'true':'false' )."'" );
 msgVerbose( "got report='".( $opt_report ? 'true':'false' )."'" );
+msgVerbose( "got inhibit='$opt_inhibit'" );
 
 # must have --service option
 # find the node which hosts this service in this same environment (should be at most one)
 # and check that the service is DBMS-aware
 if( $opt_service ){
-	$objNode = TTP::Node->findByService( $ep->node()->environment(), $opt_service );
+	$objNode = TTP::Node->findByService( $ep->node()->environment(), $opt_service, {
+		inhibit => $opt_inhibit
+	});
 	if( $objNode ){
 		msgVerbose( "got hosting node='".$objNode->name()."'" );
 		$objService = TTP::Service->new( $ep, { service => $opt_service });
