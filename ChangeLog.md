@@ -8,6 +8,7 @@
 
     - Improve TTP::DBMS->new() object instanciation and verbosity
     - Fix ttp.pl archivedirs call to commandByOS()
+    - Fix TTP::ISleepable management of errors
 
 ### 4.12.1
 

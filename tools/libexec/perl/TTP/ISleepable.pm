@@ -118,9 +118,10 @@ sub sleepableDeclareStop {
 	my $success = false;
 	my $ref = ref( $args{sub} );
 	msgErr( __PACKAGE__."::sleepableDeclareStop() expects a code reference, found '$ref'" ) if $ref ne 'CODE';
-	TTP::stackTrace();
 
-	if( !TTP::errs()){
+	if( TTP::errs()){
+		TTP::stackTrace();
+	} else {
 		$self->{_isleepable}{stop} = { sub => $args{sub} };
 		$success = true;
 	}
@@ -141,9 +142,10 @@ sub sleepableStart {
 
 	my $success = false;
 	msgErr( __PACKAGE__."::sleepableStart() no stop() function has been declared" ) if !defined $self->{_isleepable}{stop};
-	TTP::stackTrace();
 
-	if( !TTP::errs()){
+	if( TTP::errs()){
+		TTP::stackTrace();
+	} else {
 		# compute the minimal interval and loop on 1/10e of it
 		my $min = 0;
 		foreach my $it ( @{$self->{_isleepable}{fn}} ){
