@@ -1078,6 +1078,41 @@
                                 }
                             }
                         },
+                        "withHttp": {
+                            "description": "The HTTP-based configuration of the telemetry, which addresses the Prometheus PushGateway nstalled besides of the Prometheus server.",
+                            "type": "object",
+                            "properties": {
+                                "default": {
+                                    "description": "Whether the HTTP-based telemetry is a default of the 'telemetry.pl publish' command.",
+                                    "type": "boolean",
+                                    "default": false
+                                },
+                                "enabled": {
+                                    "description": "Whether publishing a telemtry to the HTTP gateway is an enabled capability of the site.",
+                                    "type": "boolean",
+                                    "default": true
+                                },
+                                "command": {
+                                    "description": "The command to be run to publish a telemetry to the HTTP gateway.",
+                                    "type": [
+                                        "object",
+                                        "string"
+                                    ],
+                                    "properties": {
+                                        "byOS": {
+                                            "description": "Let a command be specific to the running OS.",
+                                            "type": "object",
+                                            "patternProperties": {
+                                                "^.*$": {
+                                                    "description": "The OS name as reported by Perl-Config, the value being the command to be applied for this OS.",
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
                         "withMqtt": {
                             "description": "The messaging-based configuration of the telemetry, i.e. the configuration needed to publish telemetry to the MQTT bus.",
                             "type": "object",
@@ -1116,41 +1151,6 @@
                                     "description": "Build the topic to be used when publishing the telemetry to MQTT.",
                                     "type": "string",
                                     "default": "<NODE>/telemetry/<LABEL_VALUES>/<NAME>"
-                                }
-                            }
-                        },
-                        "withHttp": {
-                            "description": "The HTTP-based configuration of the telemetry, which addresses the Prometheus PushGateway nstalled besides of the Prometheus server.",
-                            "type": "object",
-                            "properties": {
-                                "default": {
-                                    "description": "Whether the HTTP-based telemetry is a default of the 'telemetry.pl publish' command.",
-                                    "type": "boolean",
-                                    "default": false
-                                },
-                                "enabled": {
-                                    "description": "Whether publishing a telemtry to the HTTP gateway is an enabled capability of the site.",
-                                    "type": "boolean",
-                                    "default": true
-                                },
-                                "command": {
-                                    "description": "The command to be run to publish a telemetry to the HTTP gateway.",
-                                    "type": [
-                                        "object",
-                                        "string"
-                                    ],
-                                    "properties": {
-                                        "byOS": {
-                                            "description": "Let a command be specific to the running OS.",
-                                            "type": "object",
-                                            "patternProperties": {
-                                                "^.*$": {
-                                                    "description": "The OS name as reported by Perl-Config, the value being the command to be applied for this OS.",
-                                                    "type": "string"
-                                                }
-                                            }
-                                        }
-                                    }
                                 }
                             }
                         },
