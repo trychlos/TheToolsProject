@@ -467,13 +467,9 @@ sub DESTROY {
 }
 
 ### Global functions
-
-# -------------------------------------------------------------------------------------------------
-# List the services defined a a given host
-# (I):
-# - an optional node name, defaulting to the current execution node
-# (O):
-# - a ref to an array of the defined services
+### Note for the developer: while a global function doesn't take any argument, it can be called both
+### as a class method 'TTP::Package->method()' or as a global function 'TTP::Package::method()',
+### the former being preferred (hence the writing inside of the 'Class methods' block).
 
 1;
 
