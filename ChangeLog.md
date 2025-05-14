@@ -8,6 +8,7 @@
 
     - Execution report 'host' property is renamed to 'node', thus bumping minor candidate version number
     - dbms.pl restore has an '--inhibit' option to secure the restoration (and let the site administrator not restore on the source node)
+    - Improve TTP::version() computing using SemVer Perl module
 
 ### 4.12.2
 

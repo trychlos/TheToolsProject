@@ -34,6 +34,7 @@ use JSON;
 use open qw( :std :encoding(UTF-8));
 use Path::Tiny qw( path );
 use Scalar::Util qw( looks_like_number );
+use SemVer;
 use Test::Deep;
 use Time::Moment;
 use vars::global create => qw( $ep );
@@ -1084,7 +1085,7 @@ sub var {
 }
 
 # -------------------------------------------------------------------------------------------------
-# Returns the version string of *this* TTP tree
+# Returns the max version string of the defined TTP trees
 # (I):
 # - none
 # (O):
@@ -1095,17 +1096,28 @@ sub version {
 
 	# simpler than provide a code ref to IFindable
 	my @roots = split( /$Config{path_sep}/, $ENV{TTP_ROOTS} );
+	my $versions = [];
 	foreach my $it ( @roots ){
 		my $parent = dirname( $it );
 		my $candidate = File::Spec->catfile( $parent, ".VERSION" );
 		if( -r $candidate ){
 			$version = path( $candidate )->slurp_utf8;
 			chomp $version;
-			last;
+			push( @{$versions}, SemVer->new( $version ));
+		}
+	}
+	# compute the max found version
+	foreach my $it ( @{$versions} ){
+		if( $version ){
+			if( $it > $version ){
+				$version = $it;
+			}
+		} else {
+			$version = $it;
 		}
 	}
 
-	return $version;
+	return $version->normal;
 }
 
 1;
