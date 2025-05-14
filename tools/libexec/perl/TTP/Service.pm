@@ -327,7 +327,7 @@ sub enum {
 			my $services = $node->var([ 'services' ]) || {};
 			my @keys = keys %{$services};
 			foreach my $it ( @keys ){
-				my $service = TTP::Service->new( $ep, { service => $it });
+				my $service = TTP::Service->new( $ep, { service => $it, quiet => true });
 				if( $service && ( !$service->hidden() || $withHiddens ) && ( $service->enabled() || $withDisabled )){
 					$cb->( $service, $args );
 					$count += 1;
@@ -338,7 +338,7 @@ sub enum {
 			@keys = keys %{$services};
 			my $deprecated = 0;
 			foreach my $it ( @keys ){
-				my $service = TTP::Service->new( $ep, { service => $it });
+				my $service = TTP::Service->new( $ep, { service => $it, quiet => true });
 				if( $service && ( !$service->hidden() || $withHiddens ) && ( $service->enabled() || $withDisabled )){
 					$cb->( $service, $args );
 					$count += 1;
@@ -412,6 +412,7 @@ sub _list_cb {
 # - the TTP EP entry point ref
 # - an arguments hash with following keys:
 #   > service: the service name to be initialized
+#   > quiet: whether be quiet about no JSON found, defaulting to false
 # (O):
 # - this object, may or may not have been jsonLoaded()
 
@@ -443,7 +444,9 @@ sub new {
 			$self->evaluate();
 
 		} else {
-			msgVerbose( "service '$args->{service}' is not defined as an autonomous JSON" );
+			my $quiet = false;
+			$quiet = $args->{quiet} if defined $args->{quiet};
+			msgVerbose( "service '$args->{service}' is not defined as an autonomous JSON" ) if !$quiet;
 		}
 
 	} else {

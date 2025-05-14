@@ -10,6 +10,7 @@
     - dbms.pl restore has an '--inhibit' option to secure the restoration (and let the site administrator not restore on the source node)
     - Improve TTP::version() computing using SemVer Perl module
     - Make sure all daemon intervals are configured the same way, and that interval <= 0 disable it
+    - Make TTP::Service->new() just a bit less verbose on specific calls
 
 ### 4.12.2
 

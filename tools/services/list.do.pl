@@ -102,7 +102,7 @@ sub getDefinedWorktasks {
 	# build here the to-be-sorted array and a hash which will be used to build the result
 	my @list = ();
 	foreach my $it ( @{$services} ){
-		my $service = TTP::Service->new( $ep, { service => $it });
+		my $service = TTP::Service->new( $ep, { service => $it, quiet => true });
 		if( $service && ( !$service->hidden() || $displayHiddens )){
 			my $tasks = $service->var([ 'workloads', $workload ]);
 			if( $tasks ){
