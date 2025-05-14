@@ -2,6 +2,12 @@
 
 ## ChangeLog
 
+### 4.12.3-rc.0
+
+    Release date: 
+
+    - 
+
 ### 4.12.2
 
     Release date: 2025- 5-14
