@@ -12,6 +12,7 @@
     - Define test/sh for dbms.pl vars (todo #128)
     - Define test/cmd for ttp.pl vars (todo #126)
     - Define test/cmd for daemon.pl vars (todo #127)
+    - Define test/cmd for dbms.pl vars (todo #128)
 
 ### 4.13.0
 

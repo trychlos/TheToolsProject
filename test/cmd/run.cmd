@@ -68,8 +68,7 @@
 	for /f %%A in ('"prompt $H &echo on &for %%B in (1) do rem"') do set BS=%%A
 
 	rem List of test directories
-	rem set test_dirs=t-perl t-perl-std t-ttp-case t-ttp-load t-cmd-bootstrap t-ttp-bootstrap t-pl-commands t-ttp-vars t-daemon-vars
-	set test_dirs=t-daemon-vars
+	set test_dirs=t-perl t-perl-std t-ttp-case t-ttp-load t-cmd-bootstrap t-ttp-bootstrap t-pl-commands t-ttp-vars t-daemon-vars t-dbms-vars
 
 	for %%D in (%test_dirs%) do (
 		if exist %maindir%\%%D\run.cmd (

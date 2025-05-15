@@ -37,8 +37,6 @@
 |  123 | 2025- 4-29 | have a test for alerts-monitor-daemon |
 |  124 | 2025- 4-29 | have a test for mqtt-monitor-daemon |
 |  125 | 2025- 4-29 | have a test for node-monitor-daemon |
-|  128 | 2025- 4-29 | have a test for each of dbms.pl vars variables |
-|      | 2025- 5-15 | sh done |
 |  137 | 2025- 5- 7 | have mariadb backup/restore |
 |  139 | 2025- 5- 9 | when accessing a service, should be able to specify a target node in the case where the service is available on several nodes in this environment |
 |  141 | 2025- 5-10 | MongoDB::backupDatabase() and restoreDatabase() command-lines should be configurable somewhere |
@@ -348,6 +346,9 @@
 |      | 2025- 5-15 | sh done |
 |      | 2025- 5-15 | cmd done |
 |  127 | 2025- 4-29 | have a test for each of daemons.pl vars variables |
+|      | 2025- 5-15 | sh done |
+|      | 2025- 5-15 | cmd done |
+|  128 | 2025- 4-29 | have a test for each of dbms.pl vars variables |
 |      | 2025- 5-15 | sh done |
 |      | 2025- 5-15 | cmd done |
 |  129 | 2025- 4-29 | have a test for each of services.pl vars variables |
