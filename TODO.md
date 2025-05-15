@@ -43,7 +43,6 @@
 |      | 2025- 5-15 | sh done |
 |  128 | 2025- 4-29 | have a test for each of dbms.pl vars variables |
 |      | 2025- 5-15 | sh done |
-|  129 | 2025- 4-29 | have a test for each of services.pl vars variables |
 |  137 | 2025- 5- 7 | have mariadb backup/restore |
 |  139 | 2025- 5- 9 | when accessing a service, should be able to specify a target node in the case where the service is available on several nodes in this environment |
 |  141 | 2025- 5-10 | MongoDB::backupDatabase() and restoreDatabase() command-lines should be configurable somewhere |
@@ -349,6 +348,8 @@
 |  122 | 2025- 4-26 | daemon.pl start should default to refuse to start a daemon several times |
 |      | 2025- 5- 7 | the daemon itself should accept nonetheless to run in foreground |
 |      | 2025- 5-15 | the listening socket is reserved by the first started - others cannot use it and abort |
+|  129 | 2025- 4-29 | have a test for each of services.pl vars variables |
+|      | 2025- 5-15 | require a test service and some keys to request - so cancel at the moment |
 |  130 | 2025- 4-29 | RunnerDaemon->run() takes a 'listener' argument which is never used - is there a use case ? or remove the code |
 |      | 2025- 5-12 | argument is removed |
 |  131 | 2025- 4-29 | remove unused ttp.pl test |
