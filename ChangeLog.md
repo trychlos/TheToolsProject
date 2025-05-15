@@ -10,6 +10,7 @@
     - Define test/sh for ttp.pl vars (todo #126)
     - Define test/sh for ttp.pl vars (todo #126)
     - Define test/sh for daemon.pl vars (todo #127)
+    - Define test/cmd for ttp.pl vars (todo #126)
 
 ### 4.13.0
 
