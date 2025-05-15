@@ -13,6 +13,7 @@
     - Define test/cmd for ttp.pl vars (todo #126)
     - Define test/cmd for daemon.pl vars (todo #127)
     - Define test/cmd for dbms.pl vars (todo #128)
+    - Let test/sh/run.sh accept a list of tests as command-line arguments
 
 ### 4.13.0
 

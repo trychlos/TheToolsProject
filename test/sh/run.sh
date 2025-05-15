@@ -18,39 +18,11 @@
 # see <http://www.gnu.org/licenses/>.
 #
 # Just run:
-#     $ test/run.sh
+#     $ test/sh/run.sh [testA [testB] ...]
 # or:
-#     C:\> test\run.cmd
+#     C:\> test\cmd\run.cmd [testA [testB] ...]
 #
 # Tests are executed with the current git branch.
-#
-# have to test:
-# - for Perl standard modules
-# - for Perl TTP modules
-# - sh bootstrapping
-# - ttp bootstrapping
-# cmd bootstrapping
-# - we do not have a site.json
-# - we do not have a node.json
-# - $ ttp.pl: gives a list exit=0
-# - $ ttp.pl list: gives an help, exit=0
-# - $ ttp.pl list -commands, gives a list, exit=0
-# $ ttp.pl push -noverb
-# $ ttp.pl vars -logsRoot
-# $ ttp.pl vars -key logs,rootDir
-#
-#   my %seen;
-#   print Dumper( %INC );
-#   for my $key ( sort keys %INC ){
-#   	print "$key => $INC{$key}\n";
-#       my $lc = lc $key;
-#       if ($seen{$lc} && $seen{$lc} ne $key) {
-#           warn "⚠️ Possible duplicate module load (case difference): $seen{$lc} vs $key\n";
-#       }
-#       $seen{$lc} = $key;
-#   }
-#
-# tests for daemons
 
 thisdir="$(cd "$(dirname "$0")"; pwd)"
 let -i _count_total=0
@@ -61,30 +33,13 @@ let -i _count_skipped=0
 _fcounts="$(mktemp)"
 _ferrors="$(mktemp)"
 
-    #t-perl \
-    #t-ksh \
-    #t-perl-std \
-    #t-ttp-case \
-    #t-ttp-load \
-    #t-sh-bootstrap \
-    #t-ttp-bootstrap \
-    #t-pl-commands \
-    #t-ttp-vars \
-    #t-daemon-vars \
-    #t-dbms-vars \
-for _d in \
-    t-perl \
-    t-ksh \
-    t-perl-std \
-    t-ttp-case \
-    t-ttp-load \
-    t-sh-bootstrap \
-    t-ttp-bootstrap \
-    t-pl-commands \
-    t-ttp-vars \
-    t-daemon-vars \
-    t-dbms-vars \
-        ; do
+if [ $# == 0 ]; then
+    dirs="t-perl t-ksh t-perl-std t-ttp-case t-ttp-load t-sh-bootstrap t-ttp-bootstrap t-pl-commands t-ttp-vars t-daemon-vars t-dbms-vars"
+else
+    dirs=$*
+fi
+
+for _d in ${dirs}; do
     if [ -x "${thisdir}/${_d}/run.sh" ]; then
         "${thisdir}/${_d}/run.sh" "${_fcounts}" "${_ferrors}"
         _results="$(cat "${_fcounts}")"
