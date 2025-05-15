@@ -31,7 +31,6 @@
 |  109 | 2025- 4-20 | site.schema for executionReports |
 |      | 2025- 4-22 | done - has to be honored |
 |      | 2025- 5- 7 | TTP::executionReport() honors 'enabled' configuration |
-|  110 | 2025- 4-20 | site.schema for moveDir |
 |  111 | 2025- 4-20 | site.schema for telemetry |
 |      | 2025- 4-22 | done - has to be honored |
 |      | 2025- 5-11 | Mqtt honors it |
@@ -315,6 +314,8 @@
 |      | 2025- 4-19 | fixed |
 |  108 | 2025- 4-20 | site.schema for DBMS |
 |      | 2025- 4-21 | done |
+|  110 | 2025- 4-20 | site.schema for moveDir |
+|      | 2025- 5-15 | done |
 |  112 | 2025- 4-20 | service.schema |
 |      | 2025- 5- 7 | created |
 |  113 | 2025- 4-20 | integration of service's schema in site |

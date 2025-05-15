@@ -173,17 +173,17 @@
 		},
 
 		"telemetry": {
-			"withMqtt": {
-				"enabled": true,
-				"default": false,
-				"command": "mqtt.pl publish -topic <TOPIC> -payload \"<PAYLOAD>\""
-			},
 			"withHttp": {
 				"enabled": true,
 				"default": false,
 				"url": "http://10.11.12.13:9091/metrics/job/telemetry/host/[eval:TTP::nodeName()]"
 			},
-			"withTextfile": {
+			"withMqtt": {
+				"enabled": true,
+				"default": false,
+				"command": "mqtt.pl publish -topic <TOPIC> -payload \"<PAYLOAD>\""
+			},
+			"withText": {
 				"enabled": true,
 				"default": false,
 				"dropDir": "[eval:TTP::tempDir()]"

@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - Write 'moveDir' schema (todo #110)
 
 ### 4.13.0
 

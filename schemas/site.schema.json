@@ -885,6 +885,29 @@
                     "description": "Defines the default behavior for msgDummy(), msgErr(), msgOut(), msgVerbose() and msgWarn() functions. Deprecated in favor of 'messages' in v4.7.",
                     "deprecated": true
                 },
+                "moveDir": {
+                    "description_array": [
+                        "The command to be used to move a directory.",
+                        "May use <SOURCE> and <TARGET> macros."
+                    ],
+                    "type": [
+                        "object",
+                        "string"
+                    ],
+                    "properties": {
+                        "byOS": {
+                            "description": "Let a command be specific to the running OS.",
+                            "type": "object",
+                            "patternProperties": {
+                                "^.*$": {
+                                    "description": "The OS name as reported by Perl-Config, the value being the command to be applied for this OS.",
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "default": "Use copyDir + removeTree"
+                },
                 "MQTTGateway": {
                     "description_array": [
                         "Address the MQTT gateway (aka the MQTT broker) to be able to publish our topics.",
