@@ -14,6 +14,7 @@
     - ttp.pl push fix warning message
     - Define a new 'aliveInterval' daemon configuration property, updating DaemonConfig and RunnerDaemon accordingly
     - Improve TTP::Reporter verbosity
+    - dbms.pl restore MQTT executionReport no more has 'node' information (which is part of the topic)
 
 ### 4.12.2
 

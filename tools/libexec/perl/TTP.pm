@@ -23,7 +23,7 @@ use strict;
 use utf8;
 use warnings;
 
-use Capture::Tiny qw( :all );
+use Capture::Tiny qw( capture );
 use Config;
 use Data::Dumper;
 use Data::UUID;
@@ -229,8 +229,11 @@ sub commandExec {
 		stackTrace();
 	} else {
 		msgVerbose( __PACKAGE__."::commandExec() got command='".( $command )."'" );
+		# https://metacpan.org/pod/Capture::Tiny#LIMITATIONS prevents against acting on standard filehandles
+		# v4.13: just force to false
 		my $stdinFromNull = true;
 		$stdinFromNull = $opts->{stdinFromNull} if defined $opts->{stdinFromNull};
+		$stdinFromNull = false;
 		if( $stdinFromNull ){
 			$command .= " < ".TTP::nullByOS();
 			msgVerbose( __PACKAGE__."::commandExec() rewritten to='".( $command )."'" );
@@ -250,7 +253,6 @@ sub commandExec {
 			# https://stackoverflow.com/questions/799968/whats-the-difference-between-perls-backticks-system-and-exec
 			# as of v4.12 choose to use system() instead of backtits, this later not returning stderr
 			my ( $res_out, $res_err, $res_code ) = capture { system( $result->{evaluated} ); };
-			#print "code ".Dumper( $res_code );
 			# https://www.perlmonks.org/?node_id=81640
 			# Thus, the exit value of the subprocess is actually ($? >> 8), and $? & 127 gives which signal, if any, the
 			# process died from, and $? & 128 reports whether there was a core dump.

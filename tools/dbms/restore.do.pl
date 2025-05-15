@@ -119,7 +119,7 @@ sub doRestore {
 						'cmdline',
 						'command',
 						'verb',
-						'host'
+						'node'
 					]
 				}
 			});

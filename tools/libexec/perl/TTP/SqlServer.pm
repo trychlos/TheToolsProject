@@ -67,7 +67,9 @@ my $Const = {
 		'6' => 'offline',
 		'7' => 'copying',
 		'10' => 'offline_secondary'
-	}
+	},
+	# the maximum length of a sql instruction to be verbose
+	maxSqlVerbose => 512
 };
 
 ### Private methods
@@ -246,7 +248,7 @@ sub _restoreVerify {
 # returns hash with following keys:
 # - ok: true|false
 # - result: as an array ref
-# - stdout: as an array ref
+# - stdout: as an array ref or merged output (stdout+stderr)
 # - columns: as an array ref (if asked for)
 
 sub _sqlExec {
@@ -295,6 +297,7 @@ sub _sqlExec {
 				$resultStyle = Win32::SqlServer::SINGLESET;
 				msgVerbose( "resultStyle=Win32::SqlServer::SINGLESET (default)" );
 			}
+			msgVerbose( "sql='$sql'" ) if length( $sql ) < $Const->{maxSqlVerbose};
 			my $merged = capture_merged { $res->{result} = $sqlsrv->sql( $sql, $colinfoStyle, $rowStyle, $resultStyle )};
 			my @merged = split( /[\r\n]/, $merged );
 			foreach my $line ( @merged ){
