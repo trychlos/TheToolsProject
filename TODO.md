@@ -42,6 +42,7 @@
 |  127 | 2025- 4-29 | have a test for each of daemons.pl vars variables |
 |      | 2025- 5-15 | sh done |
 |  128 | 2025- 4-29 | have a test for each of dbms.pl vars variables |
+|      | 2025- 5-15 | sh done |
 |  129 | 2025- 4-29 | have a test for each of services.pl vars variables |
 |  137 | 2025- 5- 7 | have mariadb backup/restore |
 |  139 | 2025- 5- 9 | when accessing a service, should be able to specify a target node in the case where the service is available on several nodes in this environment |

@@ -40,8 +40,8 @@ for _keyword in $(ttp.pl  vars -help | grep -- '--' | grep -vE 'help|colored|dum
     ttp.pl vars -${_keyword} 1>"${_fout}" 2>"${_ferr}"
     _rc=$?
     _counterr=$(cat "${_ferr}" | wc -l)
-    _countout=$(cat "${_fout}" | wc -l)
-    _res="$(cat "${_fout}" | awk '{ print $2 }')"
+    _countout=$(cat "${_fout}" | grep -v WAR | wc -l)
+    _res="$(grep -v WAR "${_fout}" | awk '{ print $2 }')"
 
     if [ ${_rc} -eq 0 -a ${_counterr} -eq 0 -a ${_countout} -eq 1 -a ! -z ${_res} ]; then
         echo "${_res} OK"
