@@ -40,6 +40,7 @@
 |  126 | 2025- 4-29 | have a test for each of ttp.pl vars variables |
 |      | 2025- 5-15 | sh done |
 |  127 | 2025- 4-29 | have a test for each of daemons.pl vars variables |
+|      | 2025- 5-15 | sh done |
 |  128 | 2025- 4-29 | have a test for each of dbms.pl vars variables |
 |  129 | 2025- 4-29 | have a test for each of services.pl vars variables |
 |  137 | 2025- 5- 7 | have mariadb backup/restore |

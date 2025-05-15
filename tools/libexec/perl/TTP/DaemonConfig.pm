@@ -66,8 +66,7 @@ my $Const = {
 	# how to find the json configuration files
 	confFinder => {
 		dirs => [
-			'etc/daemons',
-			'daemons'
+			'etc/daemons'
 		],
 		suffix => '.json'
 	},

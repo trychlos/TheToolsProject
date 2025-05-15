@@ -70,16 +70,9 @@ _ferrors="$(mktemp)"
     #t-ttp-bootstrap \
     #t-pl-commands \
     #t-ttp-vars \
+    #t-daemon-vars \
 for _d in \
-    t-perl \
-    t-ksh \
-    t-perl-std \
-    t-ttp-case \
-    t-ttp-load \
-    t-sh-bootstrap \
-    t-ttp-bootstrap \
-    t-pl-commands \
-    t-ttp-vars \
+    t-daemon-vars \
         ; do
     if [ -x "${thisdir}/${_d}/run.sh" ]; then
         "${thisdir}/${_d}/run.sh" "${_fcounts}" "${_ferrors}"

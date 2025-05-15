@@ -17,7 +17,7 @@
 # along with TheToolsProject; see the file COPYING. If not,
 # see <http://www.gnu.org/licenses/>.
 #
-# Check ttp.pl (standard) vars
+# Check daemon.pl (standard) vars
 #
 # (I):
 # - temp file where results counts are to be written
@@ -28,16 +28,16 @@ thisbase="$(basename "${thisdir}")"
 . "$(dirname "${thisdir}")/functions.sh"
 
 _toolsdir="$(toolsdir)"
-color_blue "[${thisbase}] checking ttp.pl vars"
+color_blue "[${thisbase}] checking daemon.pl vars"
 
 _fout="$(mktemp)"
 _ferr="$(mktemp)"
 
-for _keyword in $(ttp.pl  vars -help | grep -- '--' | grep -vE 'help|colored|dummy|verbose|key' | sed -e 's|^\s\+--\[no]||' | awk '{ print $1 }'); do
+for _keyword in $(daemon.pl  vars -help | grep -- '--' | grep -vE 'help|colored|dummy|verbose|key' | sed -e 's|^\s\+--\[no]||' | awk '{ print $1 }'); do
     (( _count_total += 1 ))
-    echo -n "  [${thisbase}] testing 'ttp.pl vars -${_keyword}'... "
+    echo -n "  [${thisbase}] testing 'daemon.pl vars -${_keyword}'... "
 
-    ttp.pl vars -${_keyword} 1>"${_fout}" 2>"${_ferr}"
+    daemon.pl vars -${_keyword} 1>"${_fout}" 2>"${_ferr}"
     _rc=$?
     _counterr=$(cat "${_ferr}" | wc -l)
     _countout=$(cat "${_fout}" | wc -l)
@@ -48,7 +48,7 @@ for _keyword in $(ttp.pl  vars -help | grep -- '--' | grep -vE 'help|colored|dum
         (( _count_ok += 1 ))
     else
         color_red "NOT OK"
-        echo "ttp.pl vars -${_keyword}" >> "${_fic_errors}"
+        echo "daemon.pl vars -${_keyword}" >> "${_fic_errors}"
         cat "${_ferr}" >> "${_fic_errors}"
         (( _count_notok += 1 ))
     fi
