@@ -402,6 +402,24 @@ sub textingInterval {
 	return $interval;
 }
 
+# -------------------------------------------------------------------------------------------------
+# Contrarily to Site or Node or Service, DaemonConfig is not overridable at all.
+# All its configuration must be self-contained.
+# (I):
+# - either a single string or a reference to an array of keys to be read from (e.g. [ 'moveDir', 'byOS', 'MSWin32' ])
+#   each key can be itself an array ref of potential candidates for this level
+# (O):
+# - the evaluated value of this variable, which may be undef
+
+sub var {
+	my ( $self, $keys ) = @_;
+	msgDebug( __PACKAGE__."::var() keys=".( ref( $keys ) eq 'ARRAY' ? ( "[ ".join( ', ', @{$keys} )." ]" ) : "'$keys'" ));
+
+	my $value = $self->TTP::IJSONable::var( $keys );
+
+	return $value;
+}
+
 ### Class methods
 
 # ------------------------------------------------------------------------------------------------

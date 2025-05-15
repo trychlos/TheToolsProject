@@ -22,7 +22,9 @@
         "- monitoredDir: the directory to be monitored,",
         "- monitoredFiles: a regular expression to match searched for filenames,",
         "- scanInterval: the scanning period,",
-        "- actions: what to do with the found files."
+        "- actions: what to do with the found files.",
+        "",
+        "Please note that, contrarily to Site, Node or Service, this daemon configuration is not overridable at all, and must be self-contained."
     ],
     "type": "object",
     "properties": {

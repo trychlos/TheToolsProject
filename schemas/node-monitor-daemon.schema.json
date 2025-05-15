@@ -20,7 +20,9 @@
         "",
         "This daemon defines additional following properties:",
         "- workerInterval: the monitoring period,",
-        "- keys: the keys in the node and services configurations where we are going to find the commands to be executed to monitor the node."
+        "- keys: the keys in the node and services configurations where we are going to find the commands to be executed to monitor the node.",
+        "",
+        "Please note that, contrarily to Site, Node or Service, this daemon configuration is not overridable at all, and must be self-contained."
     ],
     "type": "object",
     "properties": {

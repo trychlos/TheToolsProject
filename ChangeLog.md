@@ -14,6 +14,7 @@
     - Define test/cmd for daemon.pl vars (todo #127)
     - Define test/cmd for dbms.pl vars (todo #128)
     - Let test/sh/run.sh accept a list of tests as command-line arguments
+    - daemon.pl vars has now a '--key' option to be specified for a given daemon configuration (todo #148)
 
 ### 4.13.0
 

@@ -20,7 +20,9 @@
         "",
         "This daemon defines additional following properties:",
         "- workerInterval: the period between each MQTT scan,",
-        "- topics: the list of to-be-monitored topics."
+        "- topics: the list of to-be-monitored topics.",
+        "",
+        "Please note that, contrarily to Site, Node or Service, this daemon configuration is not overridable at all, and must be self-contained."
     ],
     "type": "object",
     "properties": {
