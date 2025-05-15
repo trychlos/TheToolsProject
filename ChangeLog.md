@@ -16,6 +16,7 @@
     - Improve TTP::Reporter verbosity
     - dbms.pl restore MQTT executionReport no more has 'node' information (which is part of the topic)
     - Introduce TTP::Telemetry::Http, Mqtt and Text modules
+    - Fix TTP::RunnerDaemon->startDaemon() setting stdin to undef
 
 ### 4.12.2
 

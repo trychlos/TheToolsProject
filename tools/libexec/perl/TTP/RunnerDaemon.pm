@@ -1036,9 +1036,8 @@ sub bootstrap {
 
 # -------------------------------------------------------------------------------------------------
 # From inside the parent process, i.e. the daemon process has not yet been instanciated...
-# Please note that the EntryPoint which is used where is those of the parent process
 # (I):
-# - this TTP::RunnerDaemon class name because this has to be called as 'TTP::RunnerDaemon->start()'
+# - this TTP::RunnerDaemon class name because this has to be called as 'TTP::RunnerDaemon->startDaemon()'
 # - the DaemonConfig configuration
 # (O):
 # - the newly instanciated RunnerDaemon
@@ -1056,7 +1055,10 @@ sub startDaemon {
 		msgDummy( "considering startup as 'true'" );
 		$res = true;
 	} else {
-		$res = Proc::Background->new( $command );
+		$res = Proc::Background->new({
+			stdin => undef,
+			command => $command
+		});
 	}
 
 	return $command;
