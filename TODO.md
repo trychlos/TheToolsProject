@@ -34,12 +34,11 @@
 |  111 | 2025- 4-20 | site.schema for telemetry |
 |      | 2025- 4-22 | done - has to be honored |
 |      | 2025- 5-11 | Mqtt honors it |
-|  122 | 2025- 4-26 | daemon.pl start should default to refuse to start a daemon several times |
-|      | 2025- 5- 7 | the daemon itself should accept nonetheless to run in foreground |
 |  123 | 2025- 4-29 | have a test for alerts-monitor-daemon |
 |  124 | 2025- 4-29 | have a test for mqtt-monitor-daemon |
 |  125 | 2025- 4-29 | have a test for node-monitor-daemon |
 |  126 | 2025- 4-29 | have a test for each of ttp.pl vars variables |
+|      | 2025- 5-15 | sh done |
 |  127 | 2025- 4-29 | have a test for each of daemons.pl vars variables |
 |  128 | 2025- 4-29 | have a test for each of dbms.pl vars variables |
 |  129 | 2025- 4-29 | have a test for each of services.pl vars variables |
@@ -345,6 +344,9 @@
 |      | 2025- 4-23 | done |
 |  121 | 2025- 4-24 | seems that daemons MQTT status is incomplete ? |
 |      | 2025- 4-29 | auto-fixed |
+|  122 | 2025- 4-26 | daemon.pl start should default to refuse to start a daemon several times |
+|      | 2025- 5- 7 | the daemon itself should accept nonetheless to run in foreground |
+|      | 2025- 5-15 | the listening socket is reserved by the first started - others cannot use it and abort |
 |  130 | 2025- 4-29 | RunnerDaemon->run() takes a 'listener' argument which is never used - is there a use case ? or remove the code |
 |      | 2025- 5-12 | argument is removed |
 |  131 | 2025- 4-29 | remove unused ttp.pl test |
