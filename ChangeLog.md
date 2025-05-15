@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.13.0-rc.2
+### 4.13.0
 
-    Release date: 
+    Release date: 2025- 5-15
 
     - Execution report 'host' property is renamed to 'node', thus bumping minor candidate version number
     - dbms.pl restore has an '--inhibit' option to secure the restoration (and let the site administrator not restore on the source node)
