@@ -8,9 +8,10 @@
 
     - Write 'moveDir' schema (todo #110)
     - Define test/sh for ttp.pl vars (todo #126)
-    - Define test/sh for ttp.pl vars (todo #126)
     - Define test/sh for daemon.pl vars (todo #127)
+    - Define test/sh for dbms.pl vars (todo #128)
     - Define test/cmd for ttp.pl vars (todo #126)
+    - Define test/cmd for daemon.pl vars (todo #127)
 
 ### 4.13.0
 

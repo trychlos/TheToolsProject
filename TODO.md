@@ -37,8 +37,6 @@
 |  123 | 2025- 4-29 | have a test for alerts-monitor-daemon |
 |  124 | 2025- 4-29 | have a test for mqtt-monitor-daemon |
 |  125 | 2025- 4-29 | have a test for node-monitor-daemon |
-|  127 | 2025- 4-29 | have a test for each of daemons.pl vars variables |
-|      | 2025- 5-15 | sh done |
 |  128 | 2025- 4-29 | have a test for each of dbms.pl vars variables |
 |      | 2025- 5-15 | sh done |
 |  137 | 2025- 5- 7 | have mariadb backup/restore |
@@ -347,6 +345,9 @@
 |      | 2025- 5- 7 | the daemon itself should accept nonetheless to run in foreground |
 |      | 2025- 5-15 | the listening socket is reserved by the first started - others cannot use it and abort |
 |  126 | 2025- 4-29 | have a test for each of ttp.pl vars variables |
+|      | 2025- 5-15 | sh done |
+|      | 2025- 5-15 | cmd done |
+|  127 | 2025- 4-29 | have a test for each of daemons.pl vars variables |
 |      | 2025- 5-15 | sh done |
 |      | 2025- 5-15 | cmd done |
 |  129 | 2025- 4-29 | have a test for each of services.pl vars variables |
