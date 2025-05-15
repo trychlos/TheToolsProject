@@ -12,6 +12,7 @@
     - Make sure all daemon intervals are configured the same way, and that interval <= 0 disable it
     - Make TTP::Service->new() just a bit less verbose on specific calls
     - ttp.pl push fix warning message
+    - Define a new 'aliveInterval' daemon configuration property, updating DaemonConfig and RunnerDaemon accordingly
 
 ### 4.12.2
 

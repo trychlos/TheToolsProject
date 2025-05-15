@@ -50,6 +50,8 @@ use TTP::Message qw( :all );
 use constant {
 	MIN_LISTEN_INTERVAL => 500,
 	DEFAULT_LISTEN_INTERVAL => 1000,
+	MIN_ALIVE_INTERVAL => 1000,
+	DEFAULT_ALIVE_INTERVAL => 5000,
 	MIN_MESSAGING_INTERVAL => 5000,
 	DEFAULT_MESSAGING_INTERVAL => 60000,
 	MIN_HTTPING_INTERVAL => 5000,
@@ -146,6 +148,42 @@ sub _loadConfig {
 }
 
 ### Public methods
+
+# ------------------------------------------------------------------------------------------------
+# Whether logging an 'alive' line
+# this is true when the aliveInterval is greater or equal to the mminimum allowed.
+# (I):
+# - none
+# (O):
+# - returns true if this daemon is willing to log an 'alive' line
+
+sub aliveEnabled {
+	my ( $self ) = @_;
+
+	my $interval = $self->aliveInterval();
+	return $interval >= MIN_ALIVE_INTERVAL;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns the interval in msec. between two 'alive' log lines.
+# May be set to less or equal to zero in the configuration file to disable that.
+# (I):
+# - none
+# (O):
+# - returns the alive-ing interval, which may be less or equal to zero if disabled
+
+sub aliveInterval {
+	my ( $self ) = @_;
+
+	my $interval = $self->jsonData()->{aliveInterval};
+	$interval = DEFAULT_ALIVE_INTERVAL if !defined $interval;
+	if( $interval > 0 && $interval < MIN_ALIVE_INTERVAL ){
+		msgVerbose( "defined aliveInterval=$interval less than minimum accepted ".MIN_ALIVE_INTERVAL.", ignored" );
+		$interval = DEFAULT_ALIVE_INTERVAL;
+	}
+
+	return $interval;
+}
 
 # ------------------------------------------------------------------------------------------------
 # Returns the execPath of the daemon

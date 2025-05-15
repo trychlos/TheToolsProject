@@ -193,6 +193,16 @@ sub _do_terminate {
 ### Private methods
 
 # ------------------------------------------------------------------------------------------------
+# the daemon advertise it is alive with a periodic log line
+# (I):
+# - none
+
+sub _alive_advertise {
+	my ( $self ) = @_;
+	msgLog( $self->config()->name()." is alive" );
+}
+
+# ------------------------------------------------------------------------------------------------
 # the daemon advertise of its status every 'httpingInterval' seconds (defaults to 60)
 # the metric advertises the last time we have seen the daemon alive
 # (I):
@@ -610,15 +620,18 @@ sub declareSleepables {
 
 	# the listening function, each 'listeningInterval'
 	$self->sleepableDeclareFn( sub => sub { $self->listen( $commands ); }, interval => $self->config()->listeningInterval());
-	# the mqtt status publication, each 'mqttInterval'
+	# the mqtt status publication, each 'messagingInterval'
 	my $mqttInterval = $self->config()->messagingInterval();
 	$self->sleepableDeclareFn( sub => sub { $self->_mqtt_advertise(); }, interval => $mqttInterval ) if $self->config()->messagingEnabled();
-	# the http telemetry publication, each 'httpInterval'
+	# the http telemetry publication, each 'httpingInterval'
 	my $httpInterval = $self->config()->httpingInterval();
 	$self->sleepableDeclareFn( sub => sub { $self->_http_advertise(); }, interval => $httpInterval ) if $self->config()->httpingEnabled();
-	# the text telemetry publication, each 'textInterval'
+	# the text telemetry publication, each 'textingInterval'
 	my $textInterval = $self->config()->textingInterval();
 	$self->sleepableDeclareFn( sub => sub { $self->_text_advertise(); }, interval => $textInterval ) if $self->config()->textingEnabled();
+	# the alive log line, each 'aliveInterval'
+	my $aliveInterval = $self->config()->aliveInterval();
+	$self->sleepableDeclareFn( sub => sub { $self->_alive_advertise(); }, interval => $aliveInterval ) if $self->config()->aliveEnabled();
 
 	$self->sleepableDeclareStop( sub => sub { return $self->terminating(); });
 
