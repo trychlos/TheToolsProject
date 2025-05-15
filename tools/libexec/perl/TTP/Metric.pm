@@ -49,14 +49,9 @@ use strict;
 use utf8;
 use warnings;
 
-use Carp;
 use Config;
 use Data::Dumper;
-use HTTP::Request::Common;
-use LWP::UserAgent;
 use Role::Tiny::With;
-use Scalar::Util qw( looks_like_number );
-use URI::Escape;
 
 use TTP::Constants qw( :all );
 use TTP::Message qw( :all );

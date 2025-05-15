@@ -26,6 +26,10 @@ use utf8;
 use warnings;
 
 use Data::Dumper;
+use HTTP::Request::Common;
+use LWP::UserAgent;
+use Scalar::Util qw( looks_like_number );
+use URI::Escape;
 
 use TTP;
 use TTP::Constants qw( :all );
