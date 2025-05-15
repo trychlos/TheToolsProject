@@ -43,7 +43,9 @@ use utf8;
 use warnings;
 
 use TTP::Metric;
-use TTP::Telemetry;
+use TTP::Telemetry::Http;
+use TTP::Telemetry::Mqtt;
+use TTP::Telemetry::Text;
 
 my $defaults = {
 	help => 'no',
@@ -71,18 +73,15 @@ my $opt_textPrefix = $defaults->{textPrefix};
 my @opt_prepends = ();
 my @opt_appends = ();
 
-my $opt_mqtt = TTP::Telemetry::getConfigurationValue([ 'withMqtt', 'default' ]);
-$opt_mqtt = false if !defined $opt_mqtt;
+my $opt_mqtt = TTP::Telemetry::Mqtt::getDefault();
 $defaults->{mqtt} = $opt_mqtt ? 'yes' : 'no';
 my $opt_mqtt_set = false;
 
-my $opt_http = TTP::Telemetry::getConfigurationValue([ 'withHttp', 'default' ]);
-$opt_http = false if !defined $opt_http;
+my $opt_http = TTP::Telemetry::Http::getDefault();
 $defaults->{http} = $opt_http ? 'yes' : 'no';
 my $opt_http_set = false;
 
-my $opt_text = TTP::Telemetry::getConfigurationValue([ 'withText', 'default' ]);
-$opt_text = false if !defined $opt_text;
+my $opt_text = TTP::Telemetry::Text::getDefault();
 $defaults->{text} = $opt_text ? 'yes' : 'no';
 my $opt_text_set = false;
 
@@ -181,8 +180,7 @@ msgErr( "'--value' option is required, but is not specified" ) if !defined $opt_
 
 # disabled media are just ignored (or refused if option was explicit)
 if( $opt_mqtt ){
-	my $enabled = TTP::Telemetry::getConfigurationValue([ 'withMqtt', 'enabled' ]);
-	$enabled = true if !defined $enabled;
+	my $enabled = TTP::Telemetry::Mqtt::isEnabled();
 	if( !$enabled ){
 		if( $opt_mqtt_set ){
 			msgErr( "MQTT telemetry is disabled, --mqtt option is not valid" );
@@ -193,8 +191,7 @@ if( $opt_mqtt ){
 	}
 }
 if( $opt_http ){
-	my $enabled = TTP::Telemetry::getConfigurationValue([ 'withHttp', 'enabled' ]);
-	$enabled = true if !defined $enabled;
+	my $enabled = TTP::Telemetry::Http::isEnabled();
 	if( !$enabled ){
 		if( $opt_http_set ){
 			msgErr( "HTTP PushGateway telemetry is disabled, --http option is not valid" );
@@ -205,8 +202,7 @@ if( $opt_http ){
 	}
 }
 if( $opt_text ){
-	my $enabled = TTP::Telemetry::getConfigurationValue([ 'withText', 'enabled' ]);
-	$enabled = true if !defined $enabled;
+	my $enabled = TTP::Telemetry::Text::isEnabled();
 	if( !$enabled ){
 		if( $opt_text_set ){
 			msgErr( "TextFile Collector telemetry is disabled, --text option is not valid" );
