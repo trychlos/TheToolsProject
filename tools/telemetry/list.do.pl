@@ -7,7 +7,7 @@
 # @(-) --[no]mqtt              limit to metrics published on the MQTT bus [${mqtt}]
 # @(-) --[no]http              limit to metrics published on the PushGateway [${http}]
 # @(-) --[no]text              limit to metrics published on the TextFile collector [${text}]
-# @(-) --[no]server            get metrics from the server [${server}]
+# @(-) --[no]server            get available metrics from the server [${server}]
 # @(-) --limit=<limit>         only list first <limit> metric [${limit}]
 #
 # TheToolsProject - Tools System and Working Paradigm for IT Production
@@ -39,6 +39,9 @@ use LWP::UserAgent;
 use URI::Split qw( uri_split uri_join );
 
 use TTP::Telemetry;
+use TTP::Telemetry::Http;
+use TTP::Telemetry::Mqtt;
+use TTP::Telemetry::Text;
 
 my $defaults = {
 	help => 'no',
@@ -65,9 +68,9 @@ sub doListHttp {
 	msgOut( "listing metrics published on the HTTP PushGateway..." );
 	my $count = 0;
 	my $groups = {};
-	my $enabled = TTP::Telemetry::isHttpEnabled();
+	my $enabled = TTP::Telemetry::Http::isEnabled();
 	if( $enabled ){
-		my $url = TTP::Telemetry::getConfigurationValue([ 'withHttp', 'url' ]);
+		my $url = TTP::Telemetry::var([ 'withHttp', 'url' ]);
 		if( $url ){
 			# get the host part only
 			my ( $scheme, $auth, $path, $query, $frag ) = uri_split( $url );
@@ -95,7 +98,7 @@ sub doListHttp {
 			msgErr( "PushGateway HTTP URL is not configured" );
 		}
 	} else {
-		msgErr( "PushGateway is disabled by configuration" );
+		msgErr( "HTTP-based PushGateway is disabled by configuration" );
 	}
 	if( TTP::errs()){
 		msgErr( "NOT OK" );

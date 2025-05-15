@@ -15,6 +15,7 @@
     - Define a new 'aliveInterval' daemon configuration property, updating DaemonConfig and RunnerDaemon accordingly
     - Improve TTP::Reporter verbosity
     - dbms.pl restore MQTT executionReport no more has 'node' information (which is part of the topic)
+    - Introduce TTP::Telemetry::Http, Mqtt and Text modules
 
 ### 4.12.2
 
