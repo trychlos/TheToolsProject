@@ -472,6 +472,44 @@ sub DESTROY {
 ### as a class method 'TTP::Package->method()' or as a global function 'TTP::Package::method()',
 ### the former being preferred (hence the writing inside of the 'Class methods' block).
 
+# -------------------------------------------------------------------------------------------------
+# When requesting a DBMS configuration by key, we may address either global values or a service
+#  dedicated one, depending of whether a service is requested. Hence this global function
+# (I):
+# - either a single string or a reference to an array of keys to be read from (e.g. [ 'moveDir', 'byOS', 'MSWin32' ])
+#   each key can be itself an array ref of potential candidates for this level
+# - an optional options hash with following keys:
+#   > service: the TTP::Service object we are specifically requesting, defaulting to none
+# (O):
+# - the evaluated value of this variable, which may be undef
+
+sub var {
+	my ( $keys, $opts ) = @_;
+	$opts //= {};
+	msgDebug( __PACKAGE__."::var() keys=".( ref( $keys ) eq 'ARRAY' ? ( "[ ".join( ', ', @{$keys} )." ]" ) : "'$keys'" ));
+
+	my $value = undef;
+
+	# if we do not have DBMS somewhere, install it at the first place
+	unshift( @{$keys}, 'DBMS' ) if !grep( /^DBMS$/, @{$keys} );
+
+	# if we have a service, then ask it
+	if( $opts->{service} ){
+		my $ref = ref( $opts->{service} );
+		if( $ref eq 'TTP::Service' ){
+			$value = $opts->{service}->var( $keys );
+		} else {
+			msgErr( __PACKAGE__."::var() expects a 'TTP::Service', got '$ref'" );
+		}
+
+	# else ask at the global level
+	} else {
+		$value = TTP::var( $keys );
+	}
+
+	return $value;
+}
+
 1;
 
 __END__

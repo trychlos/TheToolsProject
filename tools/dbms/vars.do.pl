@@ -8,8 +8,10 @@
 # @(-) --[no]backupsPeriodic   display the periodic root of the DBMS backups [${backupsPeriodic}]
 # @(-) --[no]archivesRoot      display the root (non daily) of the DBMS archive path [${archivesRoot}]
 # @(-) --[no]archivesPeriodic  display the root of the periodic DBMS archive path [${archivesPeriodic}]
+# @(-) --key=<name[,...]>      the key which addresses the desired value, may be specified several times or as a comma-separated list [${key}]
+# @(-) --service=<name>        the service name to operate on when requesting by keys [${service}]
 #
-# @(@) Please remind that each of these directories can be in the service definition of a node, or at the
+# @(@) Please remind that each of the above directories can be in the service definition of a node, or at the
 # @(@) node level, or also as a value of the service definition, eventually defaulting to a site-level value.
 #
 # TheToolsProject - Tools System and Working Paradigm for IT Production
@@ -34,6 +36,7 @@ use strict;
 use utf8;
 use warnings;
 
+use TTP::DBMS;
 use TTP::Service;
 
 my $defaults = {
@@ -44,7 +47,9 @@ my $defaults = {
 	backupsRoot => 'no',
 	backupsPeriodic => 'no',
 	archivesRoot => 'no',
-	archivesPeriodic => 'no'
+	archivesPeriodic => 'no',
+	service => '',
+	key => ''
 };
 
 my $opt_backupsRoot = false;
@@ -53,6 +58,8 @@ my $opt_backupsPeriodic = false;
 my $opt_archivesRoot = false;
 my $opt_archivesDir = false;
 my $opt_archivesPeriodic = false;
+my $opt_service = $defaults->{service};
+my @opt_keys = ();
 
 # -------------------------------------------------------------------------------------------------
 # list archivesDir value - e.g. '\\ftpback-rbx7-618.ovh.net\ns3153065.ip-51-91-25.eu\WS12DEV1\SQLBackups\240101'
@@ -116,6 +123,16 @@ sub listBackupsRoot {
 	print " $str".EOL;
 }
 
+# -------------------------------------------------------------------------------------------------
+# Display the value accessible through the route of the provided successive keys
+
+sub listByKeys {
+	my $service = undef;
+	$service = TTP::Service->new( $ep, { service => $opt_service }) if $opt_service;
+	my $value = TTP::DBMS::var( \@opt_keys, { service => $service });
+	print "  [".join( ',', @opt_keys )."]: ".( defined( $value ) ? ( ref( $value ) ? Dumper( $value ) : $value.EOL ) : "(undef)".EOL );
+}
+
 # =================================================================================================
 # MAIN
 # =================================================================================================
@@ -130,7 +147,9 @@ if( !GetOptions(
 	"backupsPeriodic!"	=> \$opt_backupsPeriodic,
 	"archivesRoot!"		=> \$opt_archivesRoot,
 	"archivesDir!"		=> \$opt_archivesDir,
-	"archivesPeriodic!"	=> \$opt_archivesPeriodic )){
+	"archivesPeriodic!"	=> \$opt_archivesPeriodic,
+	"service=s"			=> \$opt_service,
+	"key=s"				=> \@opt_keys )){
 
 		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
@@ -150,13 +169,16 @@ msgVerbose( "got backupsPeriodic='".( $opt_backupsPeriodic ? 'true':'false' )."'
 msgVerbose( "got archivesRoot='".( $opt_archivesRoot ? 'true':'false' )."'" );
 msgVerbose( "got archivesDir='".( $opt_archivesDir ? 'true':'false' )."'" );
 msgVerbose( "got archivesPeriodic='".( $opt_archivesPeriodic ? 'true':'false' )."'" );
+msgVerbose( "got service='$opt_service'" );
+@opt_keys= split( /,/, join( ',', @opt_keys ));
+msgVerbose( "got keys='".join( ',', @opt_keys )."'" );
 
 # deprecated options
 msgWarn( "'--backupsDir' option is deprecated in favor of '--backupsPeriodic'. You should update your configurations and/or your code." ) if $opt_backupsDir;
 msgWarn( "'--archivesDir' option is deprecated in favor of '--archivesPeriodic'. You should update your configurations and/or your code." ) if $opt_archivesDir;
 
 # warn if no option has been requested
-msgWarn( "none of '--backupsRoot', '--backupsPeriodic', '--archivesRoot' or '--archivesPeriodic' options has been requested, nothing to do" ) if !$opt_backupsRoot && !$opt_backupsDir && !$opt_backupsPeriodic && !$opt_archivesRoot && !$opt_archivesDir && !$opt_archivesPeriodic;
+msgWarn( "none of '--backupsRoot', '--backupsPeriodic', '--archivesRoot', '--archivesPeriodic' or '--key' options has been requested, nothing to do" ) if !$opt_backupsRoot && !$opt_backupsDir && !$opt_backupsPeriodic && !$opt_archivesRoot && !$opt_archivesDir && !$opt_archivesPeriodic && !scalar( @opt_keys );
 
 if( !TTP::errs()){
 	listArchivesRoot() if $opt_archivesRoot;
@@ -165,6 +187,7 @@ if( !TTP::errs()){
 	listBackupsRoot() if $opt_backupsRoot;
 	listBackupsdir() if $opt_backupsDir;
 	listBackupsPeriodic() if $opt_backupsPeriodic;
+	listByKeys() if scalar @opt_keys;
 }
 
 TTP::exit();
