@@ -59,6 +59,9 @@ sub new {
 	$class = ref( $class ) || $class;
 	my $self = $class->SUPER::new( $ep );
 	bless $self, $class;
+
+	msgVerbose( __PACKAGE__."::new()" );
+
 	return $self;
 }
 

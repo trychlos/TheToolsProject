@@ -13,6 +13,7 @@
     - Make TTP::Service->new() just a bit less verbose on specific calls
     - ttp.pl push fix warning message
     - Define a new 'aliveInterval' daemon configuration property, updating DaemonConfig and RunnerDaemon accordingly
+    - Improve TTP::Reporter verbosity
 
 ### 4.12.2
 
