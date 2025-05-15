@@ -199,7 +199,7 @@ sub _do_terminate {
 
 sub _alive_advertise {
 	my ( $self ) = @_;
-	msgLog( $self->config()->name()." is alive" );
+	msgLog( "I'm alive" );
 }
 
 # ------------------------------------------------------------------------------------------------

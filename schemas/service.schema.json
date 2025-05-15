@@ -80,7 +80,11 @@
                     "default": true
                 },
                 "host": {
-                    "description": "The address name or IP, possibly with a colon and a port number, of the DBMS server, or a full connection string.",
+                    "description_array": [
+                        "The address name or IP, possibly with a colon and a port number, of the DBMS server, or a full connection string.",
+                        "This property should be rarely useful, but it lets the site administrator specify a particular host address for a node.",
+                        "E.g., addressing a SqlServer remote instance could be like \"host\": \"remote.node\\INSTANCE\"."
+                    ],
                     "type": "string",
                     "default": "localhost"
                 },

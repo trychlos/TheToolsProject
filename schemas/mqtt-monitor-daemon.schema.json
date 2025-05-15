@@ -67,7 +67,7 @@
             "description": "The interval which commands an 'alive' log line. The minimum accepted is 1000 ms. Set to zero or less to disable this log.",
             "type": "integer",
             "units": "ms",
-            "default": 5000
+            "default": 60000
         },
         "execPath": {
             "description": "Either the full path to the executable or just a filename. In this later case, the executable is searched for in TTP_ROOTS/libexec/daemons.",
