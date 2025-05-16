@@ -56,7 +56,7 @@ if [ ${_rc} -eq 0 -a -s "${_fout}" -a ! -s "${_ferr}" ]; then
     echo "OK"
     (( _count_ok += 1 ))
 else
-    color_red "NOTOK"
+    color_red "NOT OK"
     (( _count_notok += 1 ))
     cat "${_fout}" >> ${_fic_errors}
     cat "${_ferr}" >> ${_fic_errors}
@@ -70,7 +70,7 @@ if [ ${_count_lines} -eq ${_count_verb} ]; then
     echo "found ${_count_lines} - OK"
     (( _count_ok += 1 ))
 else
-    color_red "NOTOK"
+    color_red "NOT OK"
     (( _count_notok += 1 ))
     cat "${_fout}" >> ${_fic_errors}
     echo "count_lines=${_count_lines}" >> ${_fic_errors}
@@ -97,7 +97,7 @@ for _command in $(grep -v '^\[ttp.pl list] ' "${_fout}" | sed -e 's|^\s*||' -e '
             echo "found ${_count_lines} - OK"
             (( _count_ok += 1 ))
         else
-            color_red "NOTOK"
+            color_red "NOT OK"
             (( _count_notok += 1 ))
             cat "${_fout}" >> ${_fic_errors}
             echo "count_lines=${_count_lines}" >> ${_fic_errors}
@@ -117,7 +117,7 @@ for _command in $(grep -v '^\[ttp.pl list] ' "${_fout}" | sed -e 's|^\s*||' -e '
                 (( _count_ok += 1 ))
 
             else
-                color_red "NOTOK"
+                color_red "NOT OK"
                 (( _count_notok += 1 ))
                 cat "${_fverb}" >> ${_fic_errors}
                 cat "${_ferr}" >> ${_fic_errors}
@@ -132,7 +132,7 @@ for _command in $(grep -v '^\[ttp.pl list] ' "${_fout}" | sed -e 's|^\s*||' -e '
                 (( _count_ok += 1 ))
 
             else
-                color_red "NOTOK"
+                color_red "NOT OK"
                 (( _count_notok += 1 ))
                 cat "${_fverb}" >> ${_fic_errors}
                 cat "${_ferr}" >> ${_fic_errors}
@@ -142,7 +142,7 @@ for _command in $(grep -v '^\[ttp.pl list] ' "${_fout}" | sed -e 's|^\s*||' -e '
         rm -f "${_fverb}"
 
     else
-        color_red "NOTOK"
+        color_red "NOT OK"
         (( _count_notok += 1 ))
         cat "${_fout}" >> ${_fic_errors}
         cat "${_ferr}" >> ${_fic_errors}

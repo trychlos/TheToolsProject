@@ -62,7 +62,7 @@ _rc=$?
 echo -n "  [${thisbase}] without any site.json, checking that stdout is empty... "
 (( _count_total+=1 ))
 if [ -s "${_fout}" ]; then
-    color_red "NOTOK"
+    color_red "NOT OK"
     (( _count_notok += 1 ))
     cat "${_fout}" >> ${_fic_errors}
 else
@@ -75,7 +75,7 @@ if [ $(grep '(ERR) ' "${_ferr}" | wc -l) -eq 3 ]; then
     echo "OK"
     (( _count_ok += 1 ))
 else
-    color_red "NOTOK"
+    color_red "NOT OK"
     (( _count_notok += 1 ))
     cat "${_ferr}" >> ${_fic_errors}
 fi
@@ -85,7 +85,7 @@ if [ ${_rc} -eq 1 ]; then
     echo "OK"
     (( _count_ok += 1 ))
 else
-    color_red "NOTOK"
+    color_red "NOT OK"
     (( _count_notok += 1 ))
     echo "got rc=${_rc}" >> ${_fic_errors}
 fi
@@ -99,7 +99,7 @@ _rc=$?
 echo -n "  [${thisbase}] without any <node>.json, checking that stdout is empty... "
 (( _count_total+=1 ))
 if [ -s "${_fout}" ]; then
-    color_red "NOTOK"
+    color_red "NOT OK"
     (( _count_notok += 1 ))
     cat "${_fout}" >> ${_fic_errors}
 else
@@ -112,7 +112,7 @@ if [ $(grep '(ERR) ' "${_ferr}" | wc -l) -eq 2 ]; then
     echo "OK"
     (( _count_ok += 1 ))
 else
-    color_red "NOTOK"
+    color_red "NOT OK"
     (( _count_notok += 1 ))
     cat "${_ferr}" >> ${_fic_errors}
 fi
@@ -122,7 +122,7 @@ if [ ${_rc} -eq 1 ]; then
     echo "OK"
     (( _count_ok += 1 ))
 else
-    color_red "NOTOK"
+    color_red "NOT OK"
     (( _count_notok += 1 ))
     echo "got rc=${_rc}" >> ${_fic_errors}
 fi
@@ -139,14 +139,14 @@ if [ -s "${_fout}" ]; then
     echo "OK"
     (( _count_ok += 1 ))
 else
-    color_red "NOTOK"
+    color_red "NOT OK"
     (( _count_notok += 1 ))
     cat "${_fout}" >> ${_fic_errors}
 fi
 echo -n "  [${thisbase}] checking for an empty stderr... "
 (( _count_total+=1 ))
 if [ -s "${_ferr}" ]; then
-    color_red "NOTOK"
+    color_red "NOT OK"
     (( _count_notok += 1 ))
     cat "${_fout}" >> ${_fic_errors}
 else
@@ -159,7 +159,7 @@ if [ ${_rc} -eq 0 ]; then
     echo "OK"
     (( _count_ok += 1 ))
 else
-    color_red "NOTOK"
+    color_red "NOT OK"
     (( _count_notok += 1 ))
     echo "got rc=${_rc}" >> ${_fic_errors}
 fi
@@ -176,7 +176,7 @@ if [ $(grep '(WAR) ' "${_fout}" | wc -l) -eq 2 ]; then
     echo "OK"
     (( _count_ok += 1 ))
 else
-    color_red "NOTOK"
+    color_red "NOT OK"
     (( _count_notok += 1 ))
     cat "${_fout}" >> ${_fic_errors}
 fi
@@ -186,7 +186,7 @@ if [ $(grep '(ERR) ' "${_ferr}" | wc -l) -eq 3 ]; then
     echo "OK"
     (( _count_ok += 1 ))
 else
-    color_red "NOTOK"
+    color_red "NOT OK"
     (( _count_notok += 1 ))
     cat "${_ferr}" >> ${_fic_errors}
 fi
@@ -196,7 +196,7 @@ if [ ${_rc} -eq 1 ]; then
     echo "OK"
     (( _count_ok += 1 ))
 else
-    color_red "NOTOK"
+    color_red "NOT OK"
     (( _count_notok += 1 ))
     echo "got rc=${_rc}" >> ${_fic_errors}
 fi
@@ -210,7 +210,7 @@ _rc=$?
 echo -n "  [${thisbase}] with unexpected keys, checking stdout is empty... "
 (( _count_total+=1 ))
 if [ -s "${_fout}" ]; then
-    color_red "NOTOK"
+    color_red "NOT OK"
     (( _count_notok += 1 ))
     cat "${_fout}" >> ${_fic_errors}
 else
@@ -223,7 +223,7 @@ if [ $(grep '(ERR) ' "${_ferr}" | wc -l) -eq 3 ]; then
     echo "OK"
     (( _count_ok += 1 ))
 else
-    color_red "NOTOK"
+    color_red "NOT OK"
     (( _count_notok += 1 ))
     cat "${_ferr}" >> ${_fic_errors}
 fi
@@ -233,7 +233,7 @@ if [ ${_rc} -eq 1 ]; then
     echo "OK"
     (( _count_ok += 1 ))
 else
-    color_red "NOTOK"
+    color_red "NOT OK"
     (( _count_notok += 1 ))
     echo "got rc=${_rc}" >> ${_fic_errors}
 fi
@@ -251,7 +251,7 @@ if [ $(grep '(WAR) ' "${_fout}" | wc -l) -eq 2 ]; then
     echo "OK"
     (( _count_ok += 1 ))
 else
-    color_red "NOTOK"
+    color_red "NOT OK"
     (( _count_notok += 1 ))
     cat "${_fout}" >> ${_fic_errors}
 fi
@@ -261,7 +261,7 @@ if [ $(grep '(ERR) ' "${_ferr}" | wc -l) -eq 2 ]; then
     echo "OK"
     (( _count_ok += 1 ))
 else
-    color_red "NOTOK"
+    color_red "NOT OK"
     (( _count_notok += 1 ))
     cat "${_ferr}" >> ${_fic_errors}
 fi
@@ -271,7 +271,7 @@ if [ ${_rc} -eq 1 ]; then
     echo "OK"
     (( _count_ok += 1 ))
 else
-    color_red "NOTOK"
+    color_red "NOT OK"
     (( _count_notok += 1 ))
     echo "got rc=${_rc}" >> ${_fic_errors}
 fi
@@ -293,7 +293,7 @@ for _site_json in etc/site.json etc/toops.json etc/ttp.json etc/toops/site.json 
         echo "OK"
         (( _count_ok += 1 ))
     else
-        color_red "NOTOK"
+        color_red "NOT OK"
         (( _count_notok += 1 ))
         cat "${_fout}" >> ${_fic_errors}
         cat "${_ferr}" >> ${_fic_errors}
