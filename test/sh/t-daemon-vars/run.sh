@@ -30,30 +30,137 @@ thisbase="$(basename "${thisdir}")"
 _toolsdir="$(toolsdir)"
 color_blue "[${thisbase}] checking daemon.pl vars"
 
+# error management
+f_error(){
+    color_red "${_res} - NOT OK"
+    echo "$1" >> "${_fic_errors}"
+    cat "${_fout}" >> "${_fic_errors}"
+    cat "${_ferr}" >> "${_fic_errors}"
+    echo "res='${_res}'" >> "${_fic_errors}"
+    echo -n "site: " >> "${_fic_errors}"
+    cat "${_workdir}/etc/ttp/site.json" >> "${_fic_errors}"
+    echo -n "node: " >> "${_fic_errors}"
+    cat "${_workdir}/etc/nodes/$(hostname).json" >> "${_fic_errors}"
+    echo -n "daemon: " >> "${_fic_errors}"
+    cat "${_workdir}/etc/daemons/test.json" >> "${_fic_errors}"
+    (( _count_notok += 1 ))
+}
+
+# dynamically build an empty working environment
+_workdir="$(mktemp -d)"
+rm -fr "${_workdir}"
+mkdir -p "${_workdir}/etc/ttp"
+mkdir -p "${_workdir}/etc/nodes"
+mkdir -p "${_workdir}/etc/daemons"
+
+export TTP_ROOTS="${_toolsdir}:${_workdir}"
+export TTP_NODE=$(hostname)
+export PATH="/bin:/sbin:/usr/bin:/usr/sbin:$HOME/bin:$HOME/local/bin:${_toolsdir}/bin:${_workdir}/bin"
+export FPATH="${_toolsdir}/libexec/sh:${_workdir}/libexec/sh"
+export PERL5LIB="${_toolsdir}/libexec/perl:${_workdir}/libexec/perl"
+
+# test for standard options
+echo "{}" > "${_workdir}/etc/ttp/site.json"
+echo "{}" > "${_workdir}/etc/nodes/$(hostname).json"
+echo "{}" > "${_workdir}/etc/daemons/test.json"
+
 _fout="$(mktemp)"
 _ferr="$(mktemp)"
 
 for _keyword in $(daemon.pl  vars -help | grep -- '--' | grep -vE 'help|colored|dummy|verbose|key' | sed -e 's|^\s\+--\[no]||' | awk '{ print $1 }'); do
     (( _count_total += 1 ))
-    echo -n "  [${thisbase}] testing 'daemon.pl vars -${_keyword}'... "
+    _command="daemon.pl vars -${_keyword}"
+    echo -n "  [${thisbase}] testing '${_command}'... "
 
-    daemon.pl vars -${_keyword} 1>"${_fout}" 2>"${_ferr}"
+    ${_command} 1>"${_fout}" 2>"${_ferr}"
     _rc=$?
     _counterr=$(cat "${_ferr}" | wc -l)
     _countout=$(cat "${_fout}" | grep -v WAR | wc -l)
     _res="$(grep -v WAR "${_fout}" | awk '{ print $2 }')"
 
     if [ ${_rc} -eq 0 -a ${_counterr} -eq 0 -a ${_countout} -eq 1 -a ! -z ${_res} ]; then
-        echo "${_res} OK"
+        echo "${_res} - OK"
         (( _count_ok += 1 ))
     else
-        color_red "NOT OK"
-        echo "daemon.pl vars -${_keyword}" >> "${_fic_errors}"
-        cat "${_ferr}" >> "${_fic_errors}"
-        (( _count_notok += 1 ))
+        f_error "${_command}"
     fi
 done
 
+# test for an unknown key
 rm -f "${_fout}"
 rm -f "${_ferr}"
+_command="daemon.pl vars -name test -key not,exist"
+echo -n "  [${thisbase}] testing an unknown key '${_command}'... "
+(( _count_total += 1 ))
+${_command} 1>"${_fout}" 2>"${_ferr}"
+_rc=$?
+_counterr=$(cat "${_ferr}" | wc -l)
+_countout=$(cat "${_fout}" | grep -v WAR | wc -l)
+_res="$(grep -v WAR "${_fout}" | awk '{ print $2 }')"
+if [ ${_rc} -eq 0 -a ${_counterr} -eq 0 -a ${_countout} -eq 1 -a "${_res}" = "(undef)" ]; then
+    echo "${_res} - OK"
+    (( _count_ok += 1 ))
+else
+    f_error "${_command}"
+fi
+
+# test for a site-level key with 'site'
+rm -f "${_fout}"
+rm -f "${_ferr}"
+echo "{ \"daemon_key\": \"daemon_value\" }" > "${_workdir}/etc/daemons/test.json"
+_command="daemon.pl vars -name test -key daemon_key"
+echo -n "  [${thisbase}] testing a site key '${_command}'... "
+(( _count_total += 1 ))
+${_command} 1>"${_fout}" 2>"${_ferr}"
+_rc=$?
+_counterr=$(cat "${_ferr}" | wc -l)
+_countout=$(cat "${_fout}" | grep -v WAR | wc -l)
+_res="$(grep -v WAR "${_fout}" | awk '{ print $2 }')"
+if [ ${_rc} -eq 0 -a ${_counterr} -eq 0 -a ${_countout} -eq 1 -a "${_res}" = "daemon_value" ]; then
+    echo "${_res} - OK"
+    (( _count_ok += 1 ))
+else
+    f_error "${_command}"
+fi
+
+# verifying that keys can can be specified as several items
+rm -f "${_fout}"
+rm -f "${_ferr}"
+_command="daemon.pl vars -name test -key level1 -key level2 -key level3"
+echo "{ \"level1\": { \"level2\": { \"level3\": \"level123_value\" }}}" > "${_workdir}/etc/daemons/test.json"
+echo -n "  [${thisbase}] testing several specifications of keys '${_command}'... "
+(( _count_total += 1 ))
+${_command} 1>"${_fout}" 2>"${_ferr}"
+_rc=$?
+_counterr=$(cat "${_ferr}" | wc -l)
+_countout=$(cat "${_fout}" | grep -v WAR | wc -l)
+_res="$(grep -v WAR "${_fout}" | awk '{ print $2 }')"
+if [ ${_rc} -eq 0 -a ${_counterr} -eq 0 -a ${_countout} -eq 1 -a "${_res}" = "level123_value" ]; then
+    echo "${_res} - OK"
+    (( _count_ok += 1 ))
+else
+    f_error "${_command}"
+fi
+
+# verifying that keys can can be specified as a comma-separated list
+rm -f "${_fout}"
+rm -f "${_ferr}"
+_command="daemon.pl vars -name test -key level1,level2,level3"
+echo -n "  [${thisbase}] testing a comma-separated list of keys '${_command}'... "
+(( _count_total += 1 ))
+${_command} 1>"${_fout}" 2>"${_ferr}"
+_rc=$?
+_counterr=$(cat "${_ferr}" | wc -l)
+_countout=$(cat "${_fout}" | grep -v WAR | wc -l)
+_res="$(grep -v WAR "${_fout}" | awk '{ print $2 }')"
+if [ ${_rc} -eq 0 -a ${_counterr} -eq 0 -a ${_countout} -eq 1 -a "${_res}" = "level123_value" ]; then
+    echo "${_res} - OK"
+    (( _count_ok += 1 ))
+else
+    f_error "${_command}"
+fi
+
+rm -f "${_fout}"
+rm -f "${_ferr}"
+rm -fr "${_workdir}"
 ender

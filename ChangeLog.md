@@ -18,6 +18,7 @@
     - dbms.pl vars has now a '--key' option to be specified for a given service (todo #149)
     - Homogeneize error messages in DaemonConfig
     - Define test/sh for services.pl vars (todo #129)
+    - Improve test/sh/t-daemon-vars, t-dbms-vars, t-ttp-vars to test key overridings (todo #150)
 
 ### 4.13.0
 

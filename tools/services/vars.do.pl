@@ -44,20 +44,13 @@ my $opt_service = $defaults->{service};
 my @opt_keys = ();
 
 # -------------------------------------------------------------------------------------------------
+# Display the value accessible through the route of the provided successive keys
 
-sub displayVar {
-	msgOut( "displaying '".join( ',', @opt_keys )."' variable..." );
-	#print Dumper( $opt_keys );
-	my @initialKeys = @opt_keys;
-	my $service = TTP::Service->new( $ep, { service => $opt_service });
-	if( !TTP::errs()){
-		TTP::print( ' '.join( ',', @opt_keys ), $service->var( \@opt_keys ));
-	}
-	if( !TTP::errs()){
-		msgOut( "done" );
-	} else {
-		msgErr( "NOT OK" );
-	}
+sub listByKeys {
+	my $service = undef;
+	$service = TTP::Service->new( $ep, { service => $opt_service }) if $opt_service;
+	my $value = TTP::Service::serviceVar( \@opt_keys, { service => $service });
+	print "  [".join( ',', @opt_keys )."]: ".( defined( $value ) ? ( ref( $value ) ? Dumper( $value ) : $value.EOL ) : "(undef)".EOL );
 }
 
 # =================================================================================================
@@ -88,11 +81,11 @@ msgVerbose( "got service='$opt_service'" );
 @opt_keys = split( /,/, join( ',', @opt_keys ));
 msgVerbose( "got keys='".join( ',', @opt_keys )."'" );
 
-msgErr( "a service is required, but not found" ) if !$opt_service;
-msgErr( "at least a key is required, but none found" ) if !scalar( @opt_keys );
+# warn if no option has been requested
+msgWarn( "no '--key' option has been provided, nothing to do" ) if !scalar( @opt_keys );
 
 if( !TTP::errs()){
-	displayVar() if $opt_service && scalar( @opt_keys );
+	listByKeys() if scalar @opt_keys;
 }
 
 TTP::exit();

@@ -475,39 +475,31 @@ sub DESTROY {
 # -------------------------------------------------------------------------------------------------
 # When requesting a DBMS configuration by key, we may address either global values or a service
 #  dedicated one, depending of whether a service is requested. Hence this global function
+# Order of precedence is:
+#  1. node.services.<service>.DBMS.key	if a service is requested
+#  2. node.DBMS.key
+#  3. service.DBMS.key					if a service is requested
+#  4. site.DBMS.key
 # (I):
 # - either a single string or a reference to an array of keys to be read from (e.g. [ 'moveDir', 'byOS', 'MSWin32' ])
 #   each key can be itself an array ref of potential candidates for this level
 # - an optional options hash with following keys:
 #   > service: the TTP::Service object we are specifically requesting, defaulting to none
+#   > node: the TTP::Node object to be searched, defaulting to current execution node
 # (O):
 # - the evaluated value of this variable, which may be undef
 
-sub var {
+sub dbmsVar {
 	my ( $keys, $opts ) = @_;
 	$opts //= {};
-	msgDebug( __PACKAGE__."::var() keys=".( ref( $keys ) eq 'ARRAY' ? ( "[ ".join( ', ', @{$keys} )." ]" ) : "'$keys'" ));
+	msgDebug( __PACKAGE__."::dbmsVar() keys=".( ref( $keys ) eq 'ARRAY' ? ( "[ ".join( ', ', @{$keys} )." ]" ) : "'$keys'" ));
 
-	my $value = undef;
+	# if we do not have 'DBMS' key somewhere, install it at the first place
+	my @local_keys = ( @{$keys} );
+	unshift( @local_keys, 'DBMS' ) if !grep( /^DBMS$/, @{$keys} );
 
-	# if we do not have DBMS somewhere, install it at the first place
-	unshift( @{$keys}, 'DBMS' ) if !grep( /^DBMS$/, @{$keys} );
-
-	# if we have a service, then ask it
-	if( $opts->{service} ){
-		my $ref = ref( $opts->{service} );
-		if( $ref eq 'TTP::Service' ){
-			$value = $opts->{service}->var( $keys );
-		} else {
-			msgErr( __PACKAGE__."::var() expects a 'TTP::Service', got '$ref'" );
-		}
-
-	# else ask at the global level
-	} else {
-		$value = TTP::var( $keys );
-	}
-
-	return $value;
+	# let TTP::Service do the job
+	return TTP::Service::serviceVar( \@local_keys, $opts );
 }
 
 1;

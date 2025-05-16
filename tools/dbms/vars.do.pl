@@ -129,7 +129,7 @@ sub listBackupsRoot {
 sub listByKeys {
 	my $service = undef;
 	$service = TTP::Service->new( $ep, { service => $opt_service }) if $opt_service;
-	my $value = TTP::DBMS::var( \@opt_keys, { service => $service });
+	my $value = TTP::DBMS::dbmsVar( \@opt_keys, { service => $service });
 	print "  [".join( ',', @opt_keys )."]: ".( defined( $value ) ? ( ref( $value ) ? Dumper( $value ) : $value.EOL ) : "(undef)".EOL );
 }
 
