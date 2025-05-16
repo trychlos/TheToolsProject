@@ -113,10 +113,10 @@ sub _loadConfig {
 			my $msgRef = $self->ep()->runner()->dummy() ? \&msgWarn : \&msgErr;
 			# must have a valid listening interval
 			my $listeningInterval = $self->listeningInterval();
-			$msgRef->( "$args->{jsonPath}: daemon configuration doesn't define a valid 'listeningInterval' value, found '".( $listeningInterval ? $listeningInterval : '(undef)' )."'" ) if !$listeningInterval || $listeningInterval < MIN_LISTEN_INTERVAL;
+			$msgRef->( "$args->{jsonPath}: daemon configuration must define a valid 'listeningInterval' value, found '".( $listeningInterval ? $listeningInterval : '(undef)' )."'" ) if !$listeningInterval || $listeningInterval < MIN_LISTEN_INTERVAL;
 			# must have a valid listening port
 			my $listeningPort = $self->listeningPort();
-			$msgRef->( "$args->{jsonPath}: daemon configuration doesn't define a valid 'listeningPort' value, found '".( $listeningPort ? $listeningPort : '(undef)' )."'" ) if !$listeningPort || $listeningPort < 1;
+			$msgRef->( "$args->{jsonPath}: daemon configuration must define a valid 'listeningPort' value, found '".( $listeningPort ? $listeningPort : '(undef)' )."'" ) if !$listeningPort || $listeningPort < 1;
 			# must have an exec path
 			my $execPath = $self->execPath();
 			if( $execPath ){
@@ -126,7 +126,7 @@ sub _loadConfig {
 					$msgRef->( "$args->{jsonPath}: execPath='$execPath' not found or not readable" );
 				}
 			} else {
-				$msgRef->( "$args->{jsonPath}: daemon configuration must define an 'execPath' value, not found" );
+				$msgRef->( "$args->{jsonPath}: daemon configuration must define a valid 'execPath' value, not found" );
 			}
 		} else {
 			msgVerbose( "not checking daemon config as checkConfig='false'" );
