@@ -36,7 +36,6 @@ f_error(){
     echo "$1" >> "${_fic_errors}"
     cat "${_fout}" >> "${_fic_errors}"
     cat "${_ferr}" >> "${_fic_errors}"
-    echo "res='${_res}'" >> "${_fic_errors}"
     echo -n "site: " >> "${_fic_errors}"
     cat "${_workdir}/etc/ttp/site.json" >> "${_fic_errors}"
     echo -n "node: " >> "${_fic_errors}"
@@ -83,8 +82,6 @@ for _keyword in $(ttp.pl  vars -help | grep -- '--' | grep -vE 'help|colored|dum
 done
 
 # test for an unknown key
-rm -f "${_fout}"
-rm -f "${_ferr}"
 _command="ttp.pl vars -key not,exist"
 echo -n "  [${thisbase}] testing an unknown key '${_command}'... "
 (( _count_total += 1 ))
@@ -101,11 +98,9 @@ else
 fi
 
 # test for a site-level key with 'site'
-rm -f "${_fout}"
-rm -f "${_ferr}"
 echo "{ \"site\": { \"site_key\": \"site_site_value\" }}" > "${_workdir}/etc/ttp/site.json"
 _command="ttp.pl vars -key site,site_key"
-echo -n "  [${thisbase}] testing a site key '${_command}'... "
+echo -n "  [${thisbase}] testing a site-level key with site prefix '${_command}'... "
 (( _count_total += 1 ))
 ${_command} 1>"${_fout}" 2>"${_ferr}"
 _rc=$?
@@ -120,10 +115,8 @@ else
 fi
 
 # test for a site-level key without 'site'
-rm -f "${_fout}"
-rm -f "${_ferr}"
 _command="ttp.pl vars -key site_key"
-echo -n "  [${thisbase}] testing a site key '${_command}'... "
+echo -n "  [${thisbase}] testing a site-level key without site prefix '${_command}'... "
 (( _count_total += 1 ))
 ${_command} 1>"${_fout}" 2>"${_ferr}"
 _rc=$?
@@ -138,11 +131,9 @@ else
 fi
 
 # test for a global TTP key with 'TTP'
-rm -f "${_fout}"
-rm -f "${_ferr}"
 _command="ttp.pl vars -key TTP,ttp_key"
 echo "{ \"TTP\": { \"ttp_key\": \"site_ttp_value\" }}" > "${_workdir}/etc/ttp/site.json"
-echo -n "  [${thisbase}] testing a TTP global key '${_command}'... "
+echo -n "  [${thisbase}] testing a TTP global key with TTP prefix '${_command}'... "
 (( _count_total += 1 ))
 ${_command} 1>"${_fout}" 2>"${_ferr}"
 _rc=$?
@@ -157,10 +148,25 @@ else
 fi
 
 # test for a global TTP key without 'TTP'
-rm -f "${_fout}"
-rm -f "${_ferr}"
 _command="ttp.pl vars -key ttp_key"
-echo -n "  [${thisbase}] testing a TTP global key '${_command}'... "
+echo -n "  [${thisbase}] testing a TTP global key without any prefix on TTP-based '${_command}'... "
+(( _count_total += 1 ))
+${_command} 1>"${_fout}" 2>"${_ferr}"
+_rc=$?
+_counterr=$(cat "${_ferr}" | wc -l)
+_countout=$(cat "${_fout}" | grep -v WAR | wc -l)
+_res="$(grep -v WAR "${_fout}" | awk '{ print $2 }')"
+if [ ${_rc} -eq 0 -a ${_counterr} -eq 0 -a ${_countout} -eq 1 -a "${_res}" = "site_ttp_value" ]; then
+    echo "${_res} - OK"
+    (( _count_ok += 1 ))
+else
+    f_error "${_command} (global)"
+fi
+
+# test for a global toops key
+_command="ttp.pl vars -key ttp_key"
+echo "{ \"toops\": { \"ttp_key\": \"site_ttp_value\" }}" > "${_workdir}/etc/ttp/site.json"
+echo -n "  [${thisbase}] testing a TTP global key without any prefix on toops-based '${_command}'... "
 (( _count_total += 1 ))
 ${_command} 1>"${_fout}" 2>"${_ferr}"
 _rc=$?
@@ -175,8 +181,6 @@ else
 fi
 
 # test for the same previous key, overriden at the node level
-rm -f "${_fout}"
-rm -f "${_ferr}"
 _command="ttp.pl vars -key ttp_key"
 echo "{ \"ttp_key\": \"node_ttp_value\", \"site_key\": \"node_site_value\" }" > "${_workdir}/etc/nodes/$(hostname).json"
 echo -n "  [${thisbase}] testing a node-overriden TTP key '${_command}'... "
@@ -194,8 +198,6 @@ else
 fi
 
 # test for the site key, overriden at the node level
-rm -f "${_fout}"
-rm -f "${_ferr}"
 _command="ttp.pl vars -key site_key"
 echo -n "  [${thisbase}] testing a node-overriden site-level key '${_command}'... "
 (( _count_total += 1 ))
@@ -212,8 +214,6 @@ else
 fi
 
 # verifying that keys can can be specified as several items
-rm -f "${_fout}"
-rm -f "${_ferr}"
 _command="ttp.pl vars -key site -key site_key -key site_sublevel"
 echo "{ \"site\": { \"site_key\": { \"site_sublevel\": \"site_key_sublevel_value\" }}}" > "${_workdir}/etc/ttp/site.json"
 echo "{}" > "${_workdir}/etc/nodes/$(hostname).json"
@@ -232,8 +232,6 @@ else
 fi
 
 # verifying that keys can can be specified as a comma-separated list
-rm -f "${_fout}"
-rm -f "${_ferr}"
 _command="ttp.pl vars -key site,site_key,site_sublevel"
 echo -n "  [${thisbase}] testing a comma-separated list of keys '${_command}'... "
 (( _count_total += 1 ))

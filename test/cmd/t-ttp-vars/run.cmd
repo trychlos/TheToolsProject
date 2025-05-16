@@ -20,50 +20,368 @@
 	rem Check ttp.pl (standard) vars
 
 	call %maindir%\functions.cmd starter "%~dp0" "checking ttp.pl vars"
+	call %maindir%\functions.cmd getTempDir work
+	set TTP_ROOTS=%toolsdir%;%tempDir%
+	call %maindir%\functions.cmd deleteTree %tempDir%
+	mkdir %tempdir%\etc\nodes
+	mkdir %tempdir%\etc\ttp
+	echo {} > %tempdir%\etc\ttp\site.json
+	echo {} > %tempdir%\etc\nodes\%COMPUTERNAME%.json
 	call %maindir%\functions.cmd getTempFile out
 	set stdout=%tempFile%
 	call %maindir%\functions.cmd getTempFile err
 	set stderr=%tempFile%
-	call :checkListVars
+
+	call :checkStandardVars
+	call :checkUnknownKey
+	call :checkSiteLevelWithSite
+	call :checkSiteLevelWithoutSite
+	call :checkGlobalWithTTP
+	call :checkGlobalWithoutTTP
+	call :checkGlobalWithoutToops
+	call :checkNodeOverridenTTP
+	call :checkNodeOverridenSite
+	call :checkSeveralKeys
+	call :checkCommaSeparatedKeys
+
+	call %maindir%\functions.cmd deleteTree %tempDir%
 	call %maindir%\functions.cmd ender
 	del /S /F /Q %stdout% 1>nul 2>nul
 	del /S /F /Q %stderr% 1>nul 2>nul
 	exit /b
 
-:checkListVars
+:checkStandardVars
 	for /F "tokens=2,* delims=] " %%A in ('ttp.pl vars ^| findstr /C:"--" ^| findstr /V "help colored dummy verbose key"') do call :checkVar %%A
 	exit /b
 
 :checkVar
-	set _keyword=%1
-    <NUL set /P=%BS%  [%testbase%] testing 'ttp.pl vars -%_keyword%'... 
-
-	ttp.pl vars --%_keyword% | findstr /V WAR 1>%stdout% 2>%stderr%
+	set "_command=ttp.pl vars -%1"
+    <NUL set /P=%BS%  [%testbase%] testing '%_command%'... 
+	%_command% 2>%stderr% | findstr /V WAR 1>%stdout%
 	set _rc=%ERRORLEVEL%
 	set /A test_total+=1
 	if not %_rc% == 0 (
-		call :error %_keyword%
+		call :error %_command%
 		exit /b
 	)
 	call %maindir%\functions.cmd countLines %stderr%
 	if not %countLines% == 0 (
-		call :error %_keyword%
+		call :error %_command%
 		exit /b
 	)
 	call %maindir%\functions.cmd countLines %stdout%
 	if not %countLines% == 1 (
-		call :error %_keyword%
+		call :error %_command%
 		exit /b
 	)
 	for /F "tokens=2,* delims= " %%A in (%stdout%) do set _res=%%A
-	echo %_res% OK
+	echo %_res% - OK
+	set /A test_ok+=1
+	exit /b
+
+:checkUnknownKey
+	set "_command=ttp.pl vars -key not,exist"
+    <NUL set /P=%BS%  [%testbase%] testing an unknown key '%_command%'... 
+	%_command% 2>%stderr% | findstr /V WAR 1>%stdout%
+	set _rc=%ERRORLEVEL%
+	set /A test_total+=1
+	if not %_rc% == 0 (
+		call :error %_command%
+		exit /b
+	)
+	call %maindir%\functions.cmd countLines %stderr%
+	if not %countLines% == 0 (
+		call :error %_command%
+		exit /b
+	)
+	call %maindir%\functions.cmd countLines %stdout%
+	if not %countLines% == 1 (
+		call :error %_command%
+		exit /b
+	)
+	for /F "tokens=2,* delims= " %%A in (%stdout%) do set _res=%%A
+	if not "%_res%" == "(undef)" (
+		call :error %_command%
+		exit /b
+	)
+	@echo %_res% - OK
+	set /A test_ok+=1
+	exit /b
+
+:checkSiteLevelWithSite
+	echo { "site": { "site_key": "site_site_value" }} > %tempdir%\etc\ttp\site.json
+	set "_command=ttp.pl vars -key site,site_key"
+    <NUL set /P=%BS%  [%testbase%] testing a site-level key with site prefix '%_command%'... 
+	%_command% 2>%stderr% | findstr /V WAR 1>%stdout%
+	set _rc=%ERRORLEVEL%
+	set /A test_total+=1
+	if not %_rc% == 0 (
+		call :error %_command%
+		exit /b
+	)
+	call %maindir%\functions.cmd countLines %stderr%
+	if not %countLines% == 0 (
+		call :error %_command%
+		exit /b
+	)
+	call %maindir%\functions.cmd countLines %stdout%
+	if not %countLines% == 1 (
+		call :error %_command%
+		exit /b
+	)
+	for /F "tokens=2,* delims= " %%A in (%stdout%) do set _res=%%A
+	if not "%_res%" == "site_site_value" (
+		call :error %_command%
+		exit /b
+	)
+	@echo %_res% - OK
+	set /A test_ok+=1
+	exit /b
+
+:checkSiteLevelWithoutSite
+	set "_command=ttp.pl vars -key site_key"
+    <NUL set /P=%BS%  [%testbase%] testing a site-level key without site prefix '%_command%'... 
+	%_command% 2>%stderr% | findstr /V WAR 1>%stdout%
+	set _rc=%ERRORLEVEL%
+	set /A test_total+=1
+	if not %_rc% == 0 (
+		call :error %_command%
+		exit /b
+	)
+	call %maindir%\functions.cmd countLines %stderr%
+	if not %countLines% == 0 (
+		call :error %_command%
+		exit /b
+	)
+	call %maindir%\functions.cmd countLines %stdout%
+	if not %countLines% == 1 (
+		call :error %_command%
+		exit /b
+	)
+	for /F "tokens=2,* delims= " %%A in (%stdout%) do set _res=%%A
+	if not "%_res%" == "(undef)" (
+		call :error %_command%
+		exit /b
+	)
+	@echo %_res% - OK
+	set /A test_ok+=1
+	exit /b
+
+:checkGlobalWithTTP
+	echo { "TTP": { "ttp_key": "site_ttp_value" }} > %tempdir%\etc\ttp\site.json
+	set "_command=ttp.pl vars -key TTP,ttp_key"
+    <NUL set /P=%BS%  [%testbase%] testing a TTP global key with TTP prefix '%_command%'... 
+	%_command% 2>%stderr% | findstr /V WAR 1>%stdout%
+	set _rc=%ERRORLEVEL%
+	set /A test_total+=1
+	if not %_rc% == 0 (
+		call :error %_command%
+		exit /b
+	)
+	call %maindir%\functions.cmd countLines %stderr%
+	if not %countLines% == 0 (
+		call :error %_command%
+		exit /b
+	)
+	call %maindir%\functions.cmd countLines %stdout%
+	if not %countLines% == 1 (
+		call :error %_command%
+		exit /b
+	)
+	for /F "tokens=2,* delims= " %%A in (%stdout%) do set _res=%%A
+	if not "%_res%" == "site_ttp_value" (
+		call :error %_command%
+		exit /b
+	)
+	@echo %_res% - OK
+	set /A test_ok+=1
+	exit /b
+
+:checkGlobalWithoutTTP
+	set "_command=ttp.pl vars -key ttp_key"
+    <NUL set /P=%BS%  [%testbase%] testing a TTP global key witout any prefix on TTP-based '%_command%'... 
+	%_command% 2>%stderr% | findstr /V WAR 1>%stdout%
+	set _rc=%ERRORLEVEL%
+	set /A test_total+=1
+	if not %_rc% == 0 (
+		call :error %_command%
+		exit /b
+	)
+	call %maindir%\functions.cmd countLines %stderr%
+	if not %countLines% == 0 (
+		call :error %_command%
+		exit /b
+	)
+	call %maindir%\functions.cmd countLines %stdout%
+	if not %countLines% == 1 (
+		call :error %_command%
+		exit /b
+	)
+	for /F "tokens=2,* delims= " %%A in (%stdout%) do set _res=%%A
+	if not "%_res%" == "site_ttp_value" (
+		call :error %_command%
+		exit /b
+	)
+	@echo %_res% - OK
+	set /A test_ok+=1
+	exit /b
+
+:checkGlobalWithoutToops
+	echo { "toops": { "ttp_key": "site_ttp_value" }} > %tempdir%\etc\ttp\site.json
+	set "_command=ttp.pl vars -key ttp_key"
+    <NUL set /P=%BS%  [%testbase%] testing a TTP global key witout any prefix on toops-based '%_command%'... 
+	%_command% 2>%stderr% | findstr /V WAR 1>%stdout%
+	set _rc=%ERRORLEVEL%
+	set /A test_total+=1
+	if not %_rc% == 0 (
+		call :error %_command%
+		exit /b
+	)
+	call %maindir%\functions.cmd countLines %stderr%
+	if not %countLines% == 0 (
+		call :error %_command%
+		exit /b
+	)
+	call %maindir%\functions.cmd countLines %stdout%
+	if not %countLines% == 1 (
+		call :error %_command%
+		exit /b
+	)
+	for /F "tokens=2,* delims= " %%A in (%stdout%) do set _res=%%A
+	if not "%_res%" == "site_ttp_value" (
+		call :error %_command%
+		exit /b
+	)
+	@echo %_res% - OK
+	set /A test_ok+=1
+	exit /b
+
+:checkNodeOverridenTTP
+	echo { "ttp_key": "node_ttp_value", "site_key": "node_site_value" } > %tempdir%\etc\nodes\%COMPUTERNAME%.json
+	set "_command=ttp.pl vars -key ttp_key"
+    <NUL set /P=%BS%  [%testbase%] testing a node-overriden TTP key '%_command%'... 
+	%_command% 2>%stderr% | findstr /V WAR 1>%stdout%
+	set _rc=%ERRORLEVEL%
+	set /A test_total+=1
+	if not %_rc% == 0 (
+		call :error %_command%
+		exit /b
+	)
+	call %maindir%\functions.cmd countLines %stderr%
+	if not %countLines% == 0 (
+		call :error %_command%
+		exit /b
+	)
+	call %maindir%\functions.cmd countLines %stdout%
+	if not %countLines% == 1 (
+		call :error %_command%
+		exit /b
+	)
+	for /F "tokens=2,* delims= " %%A in (%stdout%) do set _res=%%A
+	if not "%_res%" == "node_ttp_value" (
+		call :error %_command%
+		exit /b
+	)
+	@echo %_res% - OK
+	set /A test_ok+=1
+	exit /b
+
+:checkNodeOverridenSite
+	set "_command=ttp.pl vars -key site_key"
+    <NUL set /P=%BS%  [%testbase%] testing a node-overriden site-level key '%_command%'... 
+	%_command% 2>%stderr% | findstr /V WAR 1>%stdout%
+	set _rc=%ERRORLEVEL%
+	set /A test_total+=1
+	if not %_rc% == 0 (
+		call :error %_command%
+		exit /b
+	)
+	call %maindir%\functions.cmd countLines %stderr%
+	if not %countLines% == 0 (
+		call :error %_command%
+		exit /b
+	)
+	call %maindir%\functions.cmd countLines %stdout%
+	if not %countLines% == 1 (
+		call :error %_command%
+		exit /b
+	)
+	for /F "tokens=2,* delims= " %%A in (%stdout%) do set _res=%%A
+	if not "%_res%" == "node_site_value" (
+		call :error %_command%
+		exit /b
+	)
+	@echo %_res% - OK
+	set /A test_ok+=1
+	exit /b
+
+:checkSeveralKeys
+	echo { "site": { "site_key": { "site_sublevel": "site_key_sublevel_value" }}} > %tempdir%\etc\ttp\site.json
+	set "_command=ttp.pl vars -key site -key site_key -key site_sublevel"
+    <NUL set /P=%BS%  [%testbase%] testing several specifications of keys '%_command%'... 
+	%_command% 2>%stderr% | findstr /V WAR 1>%stdout%
+	set _rc=%ERRORLEVEL%
+	set /A test_total+=1
+	if not %_rc% == 0 (
+		call :error %_command%
+		exit /b
+	)
+	call %maindir%\functions.cmd countLines %stderr%
+	if not %countLines% == 0 (
+		call :error %_command%
+		exit /b
+	)
+	call %maindir%\functions.cmd countLines %stdout%
+	if not %countLines% == 1 (
+		call :error %_command%
+		exit /b
+	)
+	for /F "tokens=2,* delims= " %%A in (%stdout%) do set _res=%%A
+	if not "%_res%" == "site_key_sublevel_value" (
+		call :error %_command%
+		exit /b
+	)
+	@echo %_res% - OK
+	set /A test_ok+=1
+	exit /b
+
+:checkCommaSeparatedKeys
+	set "_command=ttp.pl vars -key site,site_key,site_sublevel"
+    <NUL set /P=%BS%  [%testbase%] testing a comma-separated list of keys '%_command%'... 
+	%_command% 2>%stderr% | findstr /V WAR 1>%stdout%
+	set _rc=%ERRORLEVEL%
+	set /A test_total+=1
+	if not %_rc% == 0 (
+		call :error %_command%
+		exit /b
+	)
+	call %maindir%\functions.cmd countLines %stderr%
+	if not %countLines% == 0 (
+		call :error %_command%
+		exit /b
+	)
+	call %maindir%\functions.cmd countLines %stdout%
+	if not %countLines% == 1 (
+		call :error %_command%
+		exit /b
+	)
+	for /F "tokens=2,* delims= " %%A in (%stdout%) do set _res=%%A
+	if not "%_res%" == "site_key_sublevel_value" (
+		call :error %_command%
+		exit /b
+	)
+	@echo %_res% - OK
 	set /A test_ok+=1
 	exit /b
 
 :error
-	call %maindir%\functions.cmd color_red "NOT OK"
+	call %maindir%\functions.cmd color_red "%_res% - NOT OK"
 	set /A test_notok+=1
-	echo ttp.pl vars %1 >> %mainErrors%
+	echo %1 >> %mainErrors%
 	type %stdout% >> %mainErrors%
 	type %stderr% >> %mainErrors%
+	<NUL set /P=%BS%  site: >> %mainErrors%
+	type %tempdir%\etc\ttp\site.json >> %mainErrors%
+	<NUL set /P=%BS%  node: >> %mainErrors%
+	type %tempdir%\etc\nodes\%COMPUTERNAME%.json >> %mainErrors%
 	exit /b

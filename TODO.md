@@ -44,8 +44,6 @@
 |  147 | 2025- 5-13 | DaemonConfig should be Daemon to be consistent with Site, Node, Service where the class actually addresses or is based on a configuration file |
 |      |            | or: have a Daemon class which both gathers DaemonConfig and RunnerDaemon features |
 |      | 2025- 5-14 | DaemonConfig -> Daemon would imply $runner = TTP::RunerDaemon->bootstrap() and $daemon->config() -> $runner->daemon() |
-|  150 | 2025- 5-15 | improve ttp/daemon/dbms/services vars sh/cmd tests with some test data |
-|      | 2025- 5-16 | done for sh/ tests |
 |  151 | 2025- 5-16 | have ldap backup/restore |
 |  152 | 2025- 5-16 | DBMS.limitDatabases and DBMS.excludeDatabases should accept a perl regular expression |
 |  153 | 2025- 5-16 | DBMS should have an option to match the databases in a sensitive/insensitive way |
@@ -397,6 +395,9 @@
 |      | 2025- 5-16 | done |
 |  149 | 2025- 5-15 | have dbms.pl vars -key option |
 |      | 2025- 5-16 | done |
+|  150 | 2025- 5-15 | improve ttp/daemon/dbms/services vars sh/cmd tests with some test data |
+|      | 2025- 5-16 | done for sh/ tests |
+|      | 2025- 5-16 | done for cmd/ tests |
 
 ---
 P. Wieser

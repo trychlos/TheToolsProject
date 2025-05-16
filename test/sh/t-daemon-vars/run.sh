@@ -36,7 +36,6 @@ f_error(){
     echo "$1" >> "${_fic_errors}"
     cat "${_fout}" >> "${_fic_errors}"
     cat "${_ferr}" >> "${_fic_errors}"
-    echo "res='${_res}'" >> "${_fic_errors}"
     echo -n "site: " >> "${_fic_errors}"
     cat "${_workdir}/etc/ttp/site.json" >> "${_fic_errors}"
     echo -n "node: " >> "${_fic_errors}"
@@ -87,8 +86,6 @@ for _keyword in $(daemon.pl  vars -help | grep -- '--' | grep -vE 'help|colored|
 done
 
 # test for an unknown key
-rm -f "${_fout}"
-rm -f "${_ferr}"
 _command="daemon.pl vars -name test -key not,exist"
 echo -n "  [${thisbase}] testing an unknown key '${_command}'... "
 (( _count_total += 1 ))
@@ -104,12 +101,26 @@ else
     f_error "${_command}"
 fi
 
-# test for a site-level key with 'site'
-rm -f "${_fout}"
-rm -f "${_ferr}"
+# test for an unknown name
+_command="daemon.pl vars -name unknown -key anything"
+echo -n "  [${thisbase}] testing an unknown name '${_command}'... "
+(( _count_total += 1 ))
+${_command} 1>"${_fout}" 2>"${_ferr}"
+_rc=$?
+_counterr=$(cat "${_ferr}" | wc -l)
+_countout=$(cat "${_fout}" | grep -v WAR | wc -l)
+_res="$(grep -v WAR "${_fout}" | awk '{ print $2 }')"
+if [ ${_rc} -eq 1 -a ${_counterr} -eq 2 -a ${_countout} -eq 0 ]; then
+    echo "$OK"
+    (( _count_ok += 1 ))
+else
+    f_error "${_command}"
+fi
+
+# test for any key in the daemon config
 echo "{ \"daemon_key\": \"daemon_value\" }" > "${_workdir}/etc/daemons/test.json"
 _command="daemon.pl vars -name test -key daemon_key"
-echo -n "  [${thisbase}] testing a site key '${_command}'... "
+echo -n "  [${thisbase}] testing a daemon key '${_command}'... "
 (( _count_total += 1 ))
 ${_command} 1>"${_fout}" 2>"${_ferr}"
 _rc=$?
@@ -124,8 +135,6 @@ else
 fi
 
 # verifying that keys can can be specified as several items
-rm -f "${_fout}"
-rm -f "${_ferr}"
 _command="daemon.pl vars -name test -key level1 -key level2 -key level3"
 echo "{ \"level1\": { \"level2\": { \"level3\": \"level123_value\" }}}" > "${_workdir}/etc/daemons/test.json"
 echo -n "  [${thisbase}] testing several specifications of keys '${_command}'... "
@@ -143,8 +152,6 @@ else
 fi
 
 # verifying that keys can can be specified as a comma-separated list
-rm -f "${_fout}"
-rm -f "${_ferr}"
 _command="daemon.pl vars -name test -key level1,level2,level3"
 echo -n "  [${thisbase}] testing a comma-separated list of keys '${_command}'... "
 (( _count_total += 1 ))

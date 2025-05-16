@@ -36,7 +36,6 @@ f_error(){
     echo "$1" >> "${_fic_errors}"
     cat "${_fout}" >> "${_fic_errors}"
     cat "${_ferr}" >> "${_fic_errors}"
-    echo "res='${_res}'" >> "${_fic_errors}"
     echo -n "site: " >> "${_fic_errors}"
     cat "${_workdir}/etc/ttp/site.json" >> "${_fic_errors}"
     echo -n "node: " >> "${_fic_errors}"
@@ -86,8 +85,6 @@ for _keyword in $(dbms.pl  vars -help | grep -- '--' | grep -vE 'help|colored|du
 done
 
 # test for an unknown key
-rm -f "${_fout}"
-rm -f "${_ferr}"
 _command="dbms.pl vars -key not,exist"
 echo -n "  [${thisbase}] testing an unknown key '${_command}'... "
 (( _count_total += 1 ))
@@ -104,8 +101,6 @@ else
 fi
 
 # test for a site-level key
-rm -f "${_fout}"
-rm -f "${_ferr}"
 echo "{ \"TTP\": { \"DBMS\": { \"dbms_key\": \"dbms_site_value\" }}}" > "${_workdir}/etc/ttp/site.json"
 _command="dbms.pl vars -key dbms_key"
 echo -n "  [${thisbase}] testing a site-level key '${_command}'... "
@@ -123,8 +118,6 @@ else
 fi
 
 # test for the site key, overriden at the service level
-rm -f "${_fout}"
-rm -f "${_ferr}"
 _command="dbms.pl vars -service test -key dbms_key"
 echo "{ \"DBMS\": { \"dbms_key\": \"service_value\" }}" > "${_workdir}/etc/services/test.json"
 echo -n "  [${thisbase}] testing a service-level key '${_command}'... "
@@ -142,8 +135,6 @@ else
 fi
 
 # test for the same previous key, overriden at the node level
-rm -f "${_fout}"
-rm -f "${_ferr}"
 _command="dbms.pl vars -key dbms_key"
 echo "{ \"DBMS\": { \"dbms_key\": \"dbms_node_value\" }, \"services\": { \"test\": { \"DBMS\": { \"dbms_key\": \"dbms_node_service_value\" }}}}" > "${_workdir}/etc/nodes/$(hostname).json"
 echo -n "  [${thisbase}] testing a node-overriden key '${_command}'... "
@@ -161,10 +152,8 @@ else
 fi
 
 # test for the same previous key, overriden at the node level for this service
-rm -f "${_fout}"
-rm -f "${_ferr}"
 _command="dbms.pl vars -service test -key dbms_key"
-echo -n "  [${thisbase}] testing a node-overriden key '${_command}'... "
+echo -n "  [${thisbase}] testing a node-service-overriden key '${_command}'... "
 (( _count_total += 1 ))
 ${_command} 1>"${_fout}" 2>"${_ferr}"
 _rc=$?
@@ -179,8 +168,6 @@ else
 fi
 
 # verifying that keys can can be specified as several items
-rm -f "${_fout}"
-rm -f "${_ferr}"
 _command="dbms.pl vars -key dbms_key1 -key dbms_key2 -key dbms_key3"
 echo "{ \"TTP\": { \"DBMS\": { \"dbms_key1\": { \"dbms_key2\": { \"dbms_key3\": \"dbms123_value\" }}}}}" > "${_workdir}/etc/ttp/site.json"
 echo "{}" > "${_workdir}/etc/nodes/$(hostname).json"
@@ -200,8 +187,6 @@ else
 fi
 
 # verifying that keys can can be specified as a comma-separated list
-rm -f "${_fout}"
-rm -f "${_ferr}"
 _command="dbms.pl vars -key dbms_key1,dbms_key2,dbms_key3"
 echo -n "  [${thisbase}] testing a comma-separated list of keys '${_command}'... "
 (( _count_total += 1 ))
