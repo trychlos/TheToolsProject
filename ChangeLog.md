@@ -23,6 +23,7 @@
     - Improve test/cmd/t-daemon-vars, t-dbms-vars, t-ttp-vars to test key overridings (todo #150)
     - Define test/cmd for services.pl vars (todo #129)
     - Homogeneize the 'NOTOK' vs 'NOT OK' tests results
+    - Fix the count of elementary tests in t-pl-commands
 
 ### 4.13.0
 

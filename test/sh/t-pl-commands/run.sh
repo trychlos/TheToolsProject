@@ -78,7 +78,6 @@ else
 fi
 
 # iterate on every found command
-(( _count_total+=1 ))
 for _command in $(grep -v '^\[ttp.pl list] ' "${_fout}" | sed -e 's|^\s*||' -e 's|:.*$||'); do
 
     echo -n "  [${thisbase}] getting the list of '${_command}' available verbs... "
