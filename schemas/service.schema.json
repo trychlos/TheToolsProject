@@ -50,7 +50,14 @@
     "type": "object",
     "properties": {
         "DBMS": {
-            "description": "The DBMS description part of the service.",
+            "description_array": [
+                "The DBMS description part of the service.",
+                "As (at least some) DBMS properties can be specified both with or without being attached to a specific service, their precedence order is:",
+                "- 1. node: services.<SERVICE>.DBMS.key if a service is requested",
+                "- 2. node: DBMS.key",
+                "- 3. service: DBMS.key if a service is requested and this service has a dedicated JSON configuration file",
+                "- 4. site: DBMS.key"
+            ],
             "type": "object",
             "properties": {
                 "databases": {

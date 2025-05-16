@@ -229,35 +229,10 @@ sub var {
 		$jsonable = $self->ep()->node();
 	}
 	if( $jsonable ){
-		# search for the 'services' definition in the node
-		my @args = @{$args};
-		unshift( @args, 'services', $self->name());
-		$value = $jsonable->var( \@args );
-		# search for the 'Services' definition in the node - obsoleted as of v4.10
-		if( !defined( $value )){
-			@args = @{$args};
-			unshift( @args, 'Services', $self->name());
-			$value = $jsonable->var( \@args );
-			if( defined( $value ) && !$ep->{_warnings}{services} ){
-				msgWarn( "'Services' property is deprecated in favor of 'services'. You should update your configurations." );
-				$ep->{_warnings}{services} = true;
-			}
-		}
-		# search as a value general to the node
-		if( !defined( $value )){
-			@args = @{$args};
-			$value = $jsonable->var( \@args );
-		}
-		# search in this service definition (if it exists)
-		if( !defined( $value ) && $self->jsonLoaded()){
-			@args = @{$args};
-			$value = $self->TTP::IJSONable::var( \@args );
-		}
-		# last search for a default value at site level
-		if( !defined( $value )){
-			@args = @{$args};
-			$value = $self->ep()->site()->var( \@args );
-		}
+		$value = serviceVar( $args, {
+			service => $self,
+			node => $jsonable
+		});
 	}
 	return $value;
 }
@@ -473,6 +448,76 @@ sub DESTROY {
 ### Note for the developer: while a global function doesn't take any argument, it can be called both
 ### as a class method 'TTP::Package->method()' or as a global function 'TTP::Package::method()',
 ### the former being preferred (hence the writing inside of the 'Class methods' block).
+
+# -------------------------------------------------------------------------------------------------
+# Because the service.schema.json specifies that some service key can be defined at the site level,
+# we must have this global function in case no service is requested.
+# Order of precedence is:
+#  1. node.services.<service>.key	if a service is requested
+#  2. node.key
+#  3. service.key					if a service is requested
+#  4. site.key
+# (I):
+# - either a single string or a reference to an array of keys to be read from (e.g. [ 'moveDir', 'byOS', 'MSWin32' ])
+#   each key can be itself an array ref of potential candidates for this level
+# - an optional options hash with following keys:
+#   > service: the TTP::Service object we are specifically requesting, defaulting to none
+#   > node: the TTP::Node object to be searched, defaulting to current execution node
+# (O):
+# - the evaluated value of this variable, which may be undef
+
+sub serviceVar {
+	my ( $keys, $opts ) = @_;
+	$opts //= {};
+	msgDebug( __PACKAGE__."::serviceVar() keys=".( ref( $keys ) eq 'ARRAY' ? ( "[ ".join( ', ', @{$keys} )." ]" ) : "'$keys'" ));
+
+	my $value = undef;
+		
+	# if we have a service, check the reference
+	if( $opts->{service} ){
+		my $ref = ref( $opts->{service} );
+		if( $ref ne 'TTP::Service' ){
+			msgErr( __PACKAGE__."::serviceVar() expects a 'TTP::Service', got '$ref'" );
+			return $value;
+		}
+	}
+	my $jsonable = $opts->{node} || $ep->node();
+	my $ref = ref( $jsonable );
+	if( $ref ne 'TTP::Node' ){
+		msgErr( __PACKAGE__."::serviceVar() expects being able to search into a 'TTP::Node', got '$ref'" );
+		return $value;
+	}
+
+	# first order of precedence is the service definition inside of the node if a service is specified
+	if( $opts->{service} ){
+		my @first_keys = ( 'services', $opts->{service}->name(), @{$keys} );
+		$value = $jsonable->TTP::IJSONable::var( \@first_keys );
+		if( !defined( $value )){
+			@first_keys = ( 'Services', $opts->{service}->name(), @{$keys} );
+			$value = $jsonable->TTP::IJSONable::var( \@first_keys );
+			if( defined( $value ) && !$ep->{_warnings}{services} ){
+				msgWarn( "'Services' property is deprecated in favor of 'services'. You should update your configurations." );
+				$ep->{_warnings}{services} = true;
+			}
+		}
+		return $value if defined $value;
+	}
+
+	# second order of precedence is the node-level key
+	$value = $jsonable->TTP::IJSONable::var( $keys );
+	return $value if defined $value;
+
+	# third order of precedence is the service-level key if a service is specified
+	if( $opts->{service} && $opts->{service}->jsonLoaded()){
+		$value = $opts->{service}->TTP::IJSONable::var( $keys );
+		return $value if defined $value;
+	}
+
+	# last search at the site global level
+	$value = TTP::var( $keys );
+
+	return $value;
+}
 
 1;
 

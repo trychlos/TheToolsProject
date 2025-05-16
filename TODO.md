@@ -45,7 +45,11 @@
 |      |            | or: have a Daemon class which both gathers DaemonConfig and RunnerDaemon features |
 |      | 2025- 5-14 | DaemonConfig -> Daemon would imply $runner = TTP::RunerDaemon->bootstrap() and $daemon->config() -> $runner->daemon() |
 |  150 | 2025- 5-15 | improve ttp/daemon/dbms/services vars sh/cmd tests with some test data |
-|  151 |  |  |
+|      | 2025- 5-16 | done for sh/ tests |
+|  151 | 2025- 5-16 | have ldap backup/restore |
+|  152 | 2025- 5-16 | DBMS.limitDatabases and DBMS.excludeDatabases should accept a perl regular expression |
+|  153 | 2025- 5-16 | DBMS should have an option to match the databases in a sensitive/insensitive way |
+|  154 |  |  |
 
 ---
 ## Done
@@ -354,6 +358,7 @@
 |      | 2025- 5-15 | cmd done |
 |  129 | 2025- 4-29 | have a test for each of services.pl vars variables |
 |      | 2025- 5-15 | require a test service and some keys to request - so cancel at the moment |
+|      | 2025- 5-16 | reopened - done |
 |  130 | 2025- 4-29 | RunnerDaemon->run() takes a 'listener' argument which is never used - is there a use case ? or remove the code |
 |      | 2025- 5-12 | argument is removed |
 |  131 | 2025- 4-29 | remove unused ttp.pl test |

@@ -17,6 +17,7 @@
     - daemon.pl vars has now a '--key' option to be specified for a given daemon configuration (todo #148)
     - dbms.pl vars has now a '--key' option to be specified for a given service (todo #149)
     - Homogeneize error messages in DaemonConfig
+    - Define test/sh for services.pl vars (todo #129)
 
 ### 4.13.0
 

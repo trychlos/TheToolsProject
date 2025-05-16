@@ -34,7 +34,7 @@ _fcounts="$(mktemp)"
 _ferrors="$(mktemp)"
 
 if [ $# == 0 ]; then
-    dirs="t-perl t-ksh t-perl-std t-ttp-case t-ttp-load t-sh-bootstrap t-ttp-bootstrap t-pl-commands t-ttp-vars t-daemon-vars t-dbms-vars"
+    dirs="t-perl t-ksh t-perl-std t-ttp-case t-ttp-load t-sh-bootstrap t-ttp-bootstrap t-pl-commands t-ttp-vars t-daemon-vars t-dbms-vars t-services-vars"
 else
     dirs=$*
 fi
