@@ -18,27 +18,11 @@
 	rem see <http://www.gnu.org/licenses/>.
 	rem
 	rem Just run:
-	rem     $ test/run.sh
+	rem     $ test/sh/run.sh
 	rem or:
-	rem     C:\> test\run.cmd
+	rem     C:\> test\cmd\run.cmd
 	rem
 	rem Tests are executed with the current git branch.
-	rem
-	rem have to test:
-	rem - for Perl standard modules
-	rem - for Perl TTP modules
-	rem - sh bootstrapping
-	rem - ttp bootstrapping
-	rem cmd bootstrapping
-	rem - we do not have a site.json
-	rem - we do not have a node.json
-	rem - $ ttp.pl: gives a list exit=0
-	rem - $ ttp.pl list: gives an help, exit=0
-	rem - $ ttp.pl list -commands, gives a list, exit=0
-	rem $ ttp.pl push -noverb
-	rem $ ttp.pl vars -logsRoot
-	rem $ ttp.pl vars -key logs,rootDir
-	rem tests for daemons
 
 	rem https://stackoverflow.com/questions/27802376/create-unique-file-name-windows-batch
 	rem https://ss64.com/nt/setlocal.html
@@ -67,8 +51,12 @@
 	::define a variable containing a single backspace character
 	for /f %%A in ('"prompt $H &echo on &for %%B in (1) do rem"') do set BS=%%A
 
-	rem List of test directories
-	set test_dirs=t-perl t-perl-std t-ttp-case t-ttp-load t-cmd-bootstrap t-ttp-bootstrap t-pl-commands t-ttp-vars t-daemon-vars t-dbms-vars
+	rem list of test directories, maybe overriden via command-line
+	if "%~1"=="" (
+		set "test_dirs=t-perl t-perl-std t-ttp-case t-ttp-load t-cmd-bootstrap t-ttp-bootstrap t-pl-commands t-ttp-vars t-daemon-vars t-dbms-vars"
+	) else (
+		set "test_dirs=%*"
+	)
 
 	for %%D in (%test_dirs%) do (
 		if exist %maindir%\%%D\run.cmd (

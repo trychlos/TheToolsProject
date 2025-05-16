@@ -34,12 +34,12 @@ _fcounts="$(mktemp)"
 _ferrors="$(mktemp)"
 
 if [ $# == 0 ]; then
-    dirs="t-perl t-ksh t-perl-std t-ttp-case t-ttp-load t-sh-bootstrap t-ttp-bootstrap t-pl-commands t-ttp-vars t-daemon-vars t-dbms-vars t-services-vars"
+    test_dirs="t-perl t-ksh t-perl-std t-ttp-case t-ttp-load t-sh-bootstrap t-ttp-bootstrap t-pl-commands t-ttp-vars t-daemon-vars t-dbms-vars t-services-vars"
 else
-    dirs=$*
+    test_dirs=$*
 fi
 
-for _d in ${dirs}; do
+for _d in ${test_dirs}; do
     if [ -x "${thisdir}/${_d}/run.sh" ]; then
         "${thisdir}/${_d}/run.sh" "${_fcounts}" "${_ferrors}"
         _results="$(cat "${_fcounts}")"
