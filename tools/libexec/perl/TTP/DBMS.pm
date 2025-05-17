@@ -81,14 +81,16 @@ sub _isMemberOf {
 	my ( $self, $database, $list ) = @_;
 
 	my $member = false;
+
 	if( $list ){
 		my $ref = ref( $list );
 		if( $ref && $ref ne 'ARRAY' ){
 			msgErr( __PACKAGE__."::_isMemberOf() expects an array, got '$ref'" );
 		} else {
+			my $insensitive = $self->matchInsensitive();
 			my @list = $ref ? @{$list} : ( $list );
 			foreach my $it ( @list ){
-				if( $database =~ /^$it$/i ){
+				if(( $insensitive && $database =~ /^$it$/i ) || ( !$insensitive && $database =~ /^$it$/ )){
 					$member = true;
 					last;
 				}
@@ -361,6 +363,22 @@ sub limitedDatabases {
 	}
 
 	return $limit;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Getter
+# (I):
+# - none
+# (O):
+# - whether the database names should be matched insensitively, defaulting to false
+
+sub matchInsensitive {
+	my ( $self ) = @_;
+
+	my $insensitive = $self->service()->var([ 'DBMS', 'matchInsensitive' ]);
+	$insensitive = false if !defined $insensitive;
+
+	return $insensitive;
 }
 
 # ------------------------------------------------------------------------------------------------

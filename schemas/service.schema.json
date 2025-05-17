@@ -89,6 +89,11 @@
                     "type": "boolean",
                     "default": true
                 },
+                "matchInsensitive": {
+                    "description": "Whether database names should match insensitively.",
+                    "type": "boolean",
+                    "default": false
+                },
                 "host": {
                     "description_array": [
                         "The address name or IP, possibly with a colon and a port number, of the DBMS server, or a full connection string.",
