@@ -56,7 +56,10 @@
                 "- 1. node: services.<SERVICE>.DBMS.key if a service is requested",
                 "- 2. node: DBMS.key",
                 "- 3. service: DBMS.key if a service is requested and this service has a dedicated JSON configuration file",
-                "- 4. site: DBMS.key"
+                "- 4. site: DBMS.key",
+                "When 'limitDatabases' and 'excludeDatabases' properties are both specified, they must both be satisfied.",
+                "Regular expressions can be used as 'limitDatabases' and 'excludeDatabases' items. In this case, they must match the full name of the candidate database, ",
+                "as TTP will anchor them as '/^<re>$/'."
             ],
             "type": "object",
             "properties": {
@@ -65,20 +68,20 @@
                     "deprecated": true
                 },
                 "limitDatabases": {
-                    "description_array": [
-                        "The list of databases we are limited to view for this service in the DBMS server.",
-                        "If both 'limitDatabases' and 'excludeDatabases' are specified, then the properties must both be satisfied."
+                    "description": "The list of databases we are limited to view for this service in the DBMS server.",
+                    "type": [
+                        "array",
+                        "string"
                     ],
-                    "type": "array",
                     "items": "string",
                     "default": "the_full_list_of_databases"
                 },
                 "excludeDatabases": {
-                    "description_array": [
-                        "The list of databases we do not want view for this service in the DBMS server.",
-                        "If both 'limitDatabases' and 'excludeDatabases' are specified, then the properties must both be satisfied."
+                    "description": "The list of databases we do not want view for this service in the DBMS server.",
+                    "type": [
+                        "array",
+                        "string"
                     ],
-                    "type": "array",
                     "items": "string"
                 },
                 "excludeSystemDatabases": {

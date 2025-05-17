@@ -69,6 +69,36 @@ sub _getCredentials {
 	return ( $account, $passwd );
 }
 
+# -------------------------------------------------------------------------------------------------
+# check that the specified database is member of the provided list
+# (I):
+# - the database name
+# - an optional string or an optional array ref, each item maybe being a regular expression
+# (O):
+# - returns whether the database is member of the provided list
+
+sub _isMemberOf {
+	my ( $self, $database, $list ) = @_;
+
+	my $member = false;
+	if( $list ){
+		my $ref = ref( $list );
+		if( $ref && $ref ne 'ARRAY' ){
+			msgErr( __PACKAGE__."::_isMemberOf() expects an array, got '$ref'" );
+		} else {
+			my @list = $ref ? @{$list} : ( $list );
+			foreach my $it ( @list ){
+				if( $database =~ /^$it$/i ){
+					$member = true;
+					last;
+				}
+			}
+		}
+	}
+
+	return $member;
+}
+
 ### Public methods
 
 # ------------------------------------------------------------------------------------------------
@@ -161,10 +191,9 @@ sub dbFilteredbyExclude {
 	my ( $self, $database, $excluded ) = @_;
 
 	$excluded = $self->excludedDatabases() if !$excluded;
+	my $filtered = $self->_isMemberOf( $database, $excluded );
 
-	my $filtered = ( $excluded && grep( /^$database$/i, @{$excluded} ));
 	msgVerbose( __PACKAGE__."::dbFilteredbyExclude() filtering database='$database'" ) if $filtered;
-
 	return $filtered;
 }
 
@@ -180,10 +209,9 @@ sub dbFilteredbyLimit {
 	my ( $self, $database, $limited ) = @_;
 
 	$limited = $self->limitedDatabases() if !$limited;
+	my $filtered = !$self->_isMemberOf( $database, $limited );
 
-	my $filtered = ( $limited && !grep( /^$database$/i, @{$limited} ));
 	msgVerbose( __PACKAGE__."::dbFilteredbyLimit() filtering database='$database'" ) if $filtered;
-
 	return $filtered;
 }
 
@@ -199,8 +227,8 @@ sub dbFilteredBySystem {
 	my ( $self, $database, $systems ) = @_;
 
 	my $filtered = ( $self->excludeSystemDatabases() && grep( /^$database$/i, @{$systems} ));
-	msgVerbose( __PACKAGE__."::dbFilteredBySystem() filtering database='$database'" ) if $filtered;
 
+	msgVerbose( __PACKAGE__."::dbFilteredBySystem() filtering database='$database'" ) if $filtered;
 	return $filtered;
 }
 

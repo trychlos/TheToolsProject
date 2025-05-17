@@ -24,6 +24,7 @@
     - Define test/cmd for services.pl vars (todo #129)
     - Homogeneize the 'NOTOK' vs 'NOT OK' tests results
     - Fix the count of elementary tests in t-pl-commands
+    - DBMS.limitDatabases and DBMS.excludeDatabases accept a Perl regular expression (todo #152)
 
 ### 4.13.0
 
