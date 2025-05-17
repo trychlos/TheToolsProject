@@ -870,7 +870,7 @@ sub telemetryLabels {
 	my ( $self ) = @_;
 
 	my $labels = [ "daemon=".$self->name() ];
-	my $env = $self->ep()->node()->environment();
+	my $env = $self->ep()->node()->environment() || '';
 	push( @{$labels}, "environment=$env" ) if $env;
 	push( @{$labels}, "command=".$self->command());
 	# get only the first other (the second) qualifier

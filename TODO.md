@@ -43,7 +43,7 @@
 |  146 | 2025- 5-11 | maybe a site may/want/should define its own test suite, to be run after the TTP own test suite |
 |  147 | 2025- 5-13 | DaemonConfig should be Daemon to be consistent with Site, Node, Service where the class actually addresses or is based on a configuration file |
 |      |            | or: have a Daemon class which both gathers DaemonConfig and RunnerDaemon features |
-|      | 2025- 5-14 | DaemonConfig -> Daemon would imply $runner = TTP::RunerDaemon->bootstrap() and $daemon->config() -> $runner->daemon() |
+|      | 2025- 5-14 | DaemonConfig -> Daemon would imply $runner = TTP::RunnerDaemon->bootstrap() and $daemon->config() -> $runner->daemon() |
 |  151 | 2025- 5-16 | have ldap backup/restore |
 |  154 |  |  |
 

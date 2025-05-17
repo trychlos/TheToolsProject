@@ -177,7 +177,7 @@ sub _telemetry {
 	if( $opt_mqtt || $opt_http || $opt_text ){
 		my ( $proto, $path ) = split( /:\/\//, $opt_url );
 		my @labels = @opt_prepends;
-		push( @labels, "environment=".$ep->node()->environment());
+		push( @labels, "environment=".( $ep->node()->environment() || '' ));
 		push( @labels, "service=".$opt_service ) if $opt_service;
 		push( @labels, "command=".$ep->runner()->command());
 		push( @labels, "verb=".$ep->runner()->verb());

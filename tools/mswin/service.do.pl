@@ -142,7 +142,7 @@ sub doServiceState {
 	# publish the result in all cases, and notably even if there was an error
 	if( $opt_mqtt || $opt_http || $opt_text ){
 		my @labels = ( @opt_prepends,
-			"environment=".$ep->node()->environment(), "command=".$ep->runner()->command(), "verb=".$ep->runner()->verb(), "role=$opt_name",
+			"environment=".( $ep->node()->environment() || '' ), "command=".$ep->runner()->command(), "verb=".$ep->runner()->verb(), "role=$opt_name",
 			@opt_appends );
 		TTP::Metric->new( $ep, {
 			name => 'state',
@@ -154,7 +154,7 @@ sub doServiceState {
 		});
 		foreach my $key ( keys( %{$serviceStates} )){
 			my @labels = ( @opt_prepends,
-				"environment=".$ep->node()->environment(), "command=".$ep->runner()->command(), "verb=".$ep->runner()->verb(), 
+				"environment=".( $ep->node()->environment() || '' ), "command=".$ep->runner()->command(), "verb=".$ep->runner()->verb(), 
 				"role=$opt_name", "state=$serviceStates->{$key}",
 				@opt_appends );
 			TTP::Metric->new( $ep, {

@@ -219,7 +219,7 @@ sub worker {
 			TTP::commandExec( $cmd, {
 				macros => {
 					NODE => $node->name(),
-					ENVIRONMENT => $node->environment()
+					ENVIRONMENT => $node->environment() || ''
 				}
 			});
 		}
@@ -241,7 +241,7 @@ sub worker {
 					TTP::commandExec( $cmd, {
 						macros => {
 							NODE => $node->name(),
-							ENVIRONMENT => $node->environment(),
+							ENVIRONMENT => $node->environment() || '',
 							SERVICE => $service->name()
 						}
 					});

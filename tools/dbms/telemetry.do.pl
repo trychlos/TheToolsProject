@@ -107,7 +107,7 @@ sub doDbSize {
 		# we got several metrics per database
 		# that we publish separately as mqtt-based names are slightly different from Prometheus ones
 		my @labels = ( @opt_prepends,
-			"environment=".$ep->node()->environment(), "service=".$opt_service, "command=".$ep->runner()->command(), "verb=".$ep->runner()->verb(), "database=$db", @opt_appends );
+			"environment=".( $ep->node()->environment() || '' ), "service=".$opt_service, "command=".$ep->runner()->command(), "verb=".$ep->runner()->verb(), "database=$db", @opt_appends );
 		foreach my $key ( keys %{$set} ){
 			TTP::Metric->new( $ep, {
 				name => $key,
@@ -165,7 +165,7 @@ sub doTablesCount {
 			# mqtt value: <table_rows_count>
 			if( $opt_mqtt ){
 				my @labels = ( @opt_prepends,
-					"environment=".$ep->node()->environment(), "service=".$opt_service, "command=".$ep->runner()->command(), "verb=".$ep->runner()->verb(), "database=$db", @opt_appends );
+					"environment=".( $ep->node()->environment() || '' ), "service=".$opt_service, "command=".$ep->runner()->command(), "verb=".$ep->runner()->verb(), "database=$db", @opt_appends );
 				TTP::Metric->new( $ep, {
 					name => $tab,
 					value => $rowscount,
@@ -180,7 +180,7 @@ sub doTablesCount {
 			# http value: <table_rows_count>
 			if( $opt_http || $opt_text ){
 				my @labels = ( @opt_prepends,
-					"environment=".$ep->node()->environment(), "service=".$opt_service, "command=".$ep->runner()->command(), "verb=".$ep->runner()->verb(), "database=$db", "table=$tab", @opt_appends );
+					"environment=".( $ep->node()->environment() || '' ), "service=".$opt_service, "command=".$ep->runner()->command(), "verb=".$ep->runner()->verb(), "database=$db", "table=$tab", @opt_appends );
 				TTP::Metric->new( $ep, {
 					name => 'rowscount',
 					value => $rowscount,

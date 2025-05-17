@@ -431,7 +431,8 @@ sub findByService_addCandidate {
 		msgVerbose( __PACKAGE__."::findByService_addCandidate() '".$self->name()."' is inhibited by option" );
 
 	} else {
-		if( $self->hasService( $service ) && $self->environment() eq $environment ){
+		if( $self->hasService( $service ) &&
+			(( $self->environment() && $environment && $self->environment() eq $environment ) || ( !$self->environment() && !$environment ))){
 			my $alreadyAdded = false;
 			foreach my $node ( @{$founds} ){
 				if( $node->name() eq $self->name()){

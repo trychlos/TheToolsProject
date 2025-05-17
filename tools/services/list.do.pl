@@ -127,7 +127,7 @@ sub _taskOrder {
 
 sub listEnvironment {
 	msgOut( "displaying environment for ".$ep->node()->name()." node..." );
-	my $env = $ep->node()->environment();
+	my $env = $ep->node()->environment() || '';
 	my $count = 0;
 	if( !$env ){
 		msgOut( "no environment registered with this machine" );
@@ -156,7 +156,7 @@ sub listServiceMachines {
 	foreach my $host ( @{$hosts} ){
 		msgVerbose( "examining '$host'" );
 		my $node = TTP::Node->new( $ep, { node => $host });
-		if( $node && ( !$opt_identifier || $node->environment() eq $opt_identifier ) && $node->hasService( $opt_service )){
+		if( $node && ( !$opt_identifier || ( $node->environment() && $node->environment() eq $opt_identifier )) && $node->hasService( $opt_service )){
 			log_print( " ".( $node->environment() || '' ).": $host" );
 			$count += 1;
 		}

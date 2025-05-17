@@ -26,6 +26,7 @@
     - Fix the count of elementary tests in t-pl-commands
     - DBMS.limitDatabases and DBMS.excludeDatabases accept a Perl regular expression (todo #152)
     - Define new DBMS.matchInsensitive property to match database names (todo #153)
+    - Protect against undefined node environment
 
 ### 4.13.0
 
