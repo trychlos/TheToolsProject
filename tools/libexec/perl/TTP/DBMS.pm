@@ -45,21 +45,22 @@ use TTP::Path;
 # ------------------------------------------------------------------------------------------------
 # returns the first account defined for this DBMS service
 # (I):
-# - none
+# - an optional account, defaulting to the first one found
 # (O):
 # - an array ( username, password )
 
 sub _getCredentials {
-	my ( $self ) = @_;
+	my ( $self, $account ) = @_;
 
 	my $credentials = TTP::Credentials::get([ 'services', $self->service()->name() ], { jsonable => $self->node() });
 	#print STDERR "credentials=".TTP::chompDumper( $credentials ).EOL;
-	my $account = undef;
 	my $passwd = undef;
 
 	if( $credentials ){
-		$account = ( keys %{$credentials} )[0];
-		$passwd = $credentials->{$account};
+		if( !$account ){
+			$account = ( keys %{$credentials} )[0];
+		}
+		$passwd = $credentials->{$account} || undef;
 		msgVerbose( __PACKAGE__."::_getCredentials() got account='".( $account || '(undef)' )."'" );
 
 	} else {
