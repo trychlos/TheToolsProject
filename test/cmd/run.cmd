@@ -53,7 +53,7 @@
 
 	rem list of test directories, maybe overriden via command-line
 	if "%~1"=="" (
-		set "test_dirs=t-perl t-perl-std t-ttp-case t-ttp-load t-cmd-bootstrap t-ttp-bootstrap t-pl-commands t-ttp-vars t-daemon-vars t-dbms-vars"
+		set "test_dirs=t-perl t-perl-std t-ttp-case t-ttp-load t-cmd-bootstrap t-ttp-bootstrap t-pl-commands t-ttp-vars t-daemon-vars t-dbms-vars t-services-vars"
 	) else (
 		set "test_dirs=%*"
 	)
