@@ -352,12 +352,12 @@ sub _enumTestSingle {
 
 # ------------------------------------------------------------------------------------------------
 # Returns the first available node which host the named service in the specified environment
-# there should be at most one candidate node, though we do not check that here
 # (I):
-# - environment identifier
+# - environment identifier, which may be undef
 # - service name
 # - an optional options hash with following keys:
 #   > inhibit: a node or a list of node names to prevent from being candidates
+#   > target: a target node to be chosen among the found candidates
 # (O):
 # - the first found node as a TTP::Node instance, or undef
 
@@ -365,7 +365,7 @@ sub findByService {
 	my ( $class, $environment, $service, $opts ) = @_;
 	$class = ref( $class ) || $class;
 	$opts //= {};
-	msgDebug( __PACKAGE__."::findByService() environment='$environment' service='$service'" );
+	msgDebug( __PACKAGE__."::findByService() environment=".( "'$environment'" || '(undef)' )." service='$service'" );
 
 	my $founds = [];
 	my $candidate = undef;
@@ -387,8 +387,8 @@ sub findByService {
 	$candidate = $ep->node();
 	$candidate->findByService_addCandidate( $environment, $service, $founds, $inhibits ) if $candidate;
 
-	# if it is candidate, this node will be chosen
-	# scan the full list a) to find others and b) to be able to emit a warning when several nodes are found
+	# if it is candidate, this node will be chosen by default
+	# scan the full list a) to find others b) to be able to emit a warning when several nodes are found and c) to honor the target option
 	my $nodeNames = $class->list();
 	foreach my $name ( @{$nodeNames} ){
 		$candidate = $class->new( $ep, { node => $name });
@@ -399,28 +399,40 @@ sub findByService {
 	my $found = undef;
 	my $count = scalar( @{$founds} );
 	if( $count == 0 ){
-		msgErr( "unable to find an hosting node for '$service' service in '$environment' environment" ) ;
+		msgErr( "unable to find an hosting node for '$service' service in ".( "'$environment'" || '(undef)' )." environment" ) ;
 
 	# it is possible to have several candidates and we choose the first one
-	# we emit a warning in this case
+	# we emit a warning when several candidates are found but no target is specified
 	} else {
-		$found = $founds->[0];
-		if( $count > 1 ){
-			my $names = [];
-			my $objService = TTP::Service->new( $ep, { service => $service });
-			if( $objService->warnOnMultipleHostingNodes()){
-				foreach my $it ( @{$founds} ){
-					push( @{$names}, $it->name());
-				}
-				msgWarn( "found $count hosting nodes [".join( ',', @{$names} )."] for '$service' service in '$environment' environment, choosing the first one (".$found->name().")" ) ;
+		my $names = [];
+		foreach my $it ( @{$founds} ){
+			push( @{$names}, $it->name());
+		}
+		if( $opts->{target} ){
+			if( grep( /$opts->{target}/, @{$founds} )){
+				$found = $opts->{target};
+				msgVerbose( "target='$opts->{target}' found among candidates [".join( ',', @{$names} )."] and is chosen" );
 			} else {
-				msgVerbose( "found $count hosting nodes [".join( ',', @{$names} )."] for '$service' service in '$environment' environment, choosing the first one (".$found->name().")" ) ;
+				msgErr( "target='$opts->{target}' not found among candidates [".join( ',', @{$names} )."]" );
+			}
+		} else {
+			$found = $founds->[0];
+			if( $count > 1 ){
+				my $objService = TTP::Service->new( $ep, { service => $service });
+				my $msg = "found $count hosting nodes [".join( ',', @{$names} )."] for '$service' service in ".( "'$environment'" || '(undef)' )." environment, choosing the first one (".$found->name().")";
+				if( $objService->warnOnMultipleHostingNodes()){
+					msgWarn( $msg ) ;
+				} else {
+					msgVerbose( $msg ) ;
+				}
 			}
 		}
 	}
 
 	return $found;
 }
+
+# $environment may be undef
 
 sub findByService_addCandidate {
 	my ( $self, $environment, $service, $founds, $inhibits ) = @_;

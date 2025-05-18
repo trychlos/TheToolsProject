@@ -426,7 +426,7 @@ sub errs {
 # remotely execute the provided command
 # (I):
 # - the target node
-# - the command to be executed
+# - the command to be executed, defaulting to the current command, verb and arguments
 # (O):
 # - doesn't return anything
 # - set the runner errors count to the return code of the command
