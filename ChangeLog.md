@@ -31,6 +31,7 @@
     - TTP::Telemetry::Mqtt::publish() fix metric name when prefixed
     - Introduce TTP::MariaDB and make all verbs available (todo #137)
     - Define new ttp.pl version verb
+    - Move DBMS.wantsLocal property to service schema
 
 ### 4.13.0
 

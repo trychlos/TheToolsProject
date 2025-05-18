@@ -33,8 +33,6 @@ use strict;
 use utf8;
 use warnings;
 
-use Carp;
-use Config;
 use Data::Dumper;
 use Getopt::Long;
 use Role::Tiny::With;

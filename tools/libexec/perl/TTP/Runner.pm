@@ -51,6 +51,19 @@ my $Const = {
 ### Public methods
 
 # -------------------------------------------------------------------------------------------------
+# Getter
+# (I):
+# - none
+# (O):
+# - the initial ARGV element as an array ref
+
+sub argv {
+	my ( $self ) = @_;
+
+	return $self->{_runner}{ARGV};
+}
+
+# -------------------------------------------------------------------------------------------------
 # Returns the minimal count of arguments needed by the running executable
 # Below this minimal count, we automatically display the runner's help
 # (I):
@@ -93,6 +106,12 @@ sub new {
 	$class = ref( $class ) || $class;
 	my $self = $class->SUPER::new( $ep );
 	bless $self, $class;
+
+	$self->{_runner} = {};
+
+	# keep initial - unchanged - arguments
+	my @argv = @ARGV;
+	$self->{_runner}{ARGV} = \@argv;
 
 	return $self;
 }
