@@ -100,14 +100,16 @@ sub runnableBNameShort {
 };
 
 # -------------------------------------------------------------------------------------------------
-# Getter
+# Getter/Setter
 # (I):
-# - none
+# - an optional error code to be set
 # (O):
 # - returns the current count of errors
 
 sub runnableErrs {
-	my ( $self ) = @_;
+	my ( $self, $code ) = @_;
+
+	$self->{_irunnable}{errs} = $code if defined $code;
 
 	return $self->{_irunnable}{errs};
 };

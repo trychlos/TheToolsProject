@@ -423,6 +423,41 @@ sub errs {
 }
 
 # -------------------------------------------------------------------------------------------------
+# remotely execute the provided command
+# (I):
+# - the target node
+# - the command to be executed
+# (O):
+# - doesn't return anything
+# - set the runner errors count to the return code of the command
+
+sub execRemote {
+	my ( $target, $command ) = @_;
+
+	if( !$target ){
+		msgErr( __PACKAGE__."::execRemote() expects a target, not specified" );
+		TTP::stackTrace();
+	}
+
+	$command = $ep->runner()->command()." ".join( " ", @{$ep->runner()->argv()} ) if !$command;
+	my $cmd = "ssh $target \". ~/.ttp_remote; $command\"";
+	msgOut( __PACKAGE__."::execRemote() $cmd on $target" );
+	#msgVerbose( __PACKAGE__."::execRemote() $cmd" );
+	if( false ){
+		my $res = TTP::commandExec( $cmd );
+		print $res->{stdout};
+		if( !$res->{success} ){
+			print STDERR TTP::chompDumper( $res->{stderr} ).EOL;
+		}
+		return $res;
+	}
+	if( true ){
+		my $rc = system( $cmd );
+		$ep->runner()->runnableErrs( $rc );
+	}
+}
+
+# -------------------------------------------------------------------------------------------------
 # report an execution
 # The exact data, the target to report to and the used medium are up to the caller.
 # But at the moment we manage a) a JSON execution report file and b) a MQTT message.
