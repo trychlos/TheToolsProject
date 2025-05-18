@@ -30,6 +30,7 @@
     - Introduce new DBMS.account property
     - TTP::Telemetry::Mqtt::publish() fix metric name when prefixed
     - Introduce TTP::MariaDB and make all verbs available (todo #137)
+    - Define new ttp.pl version verb
 
 ### 4.13.0
 

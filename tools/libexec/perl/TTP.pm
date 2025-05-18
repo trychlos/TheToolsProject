@@ -1096,19 +1096,8 @@ sub var {
 sub version {
 	my $version = undef;
 
-	# simpler than provide a code ref to IFindable
-	my @roots = split( /$Config{path_sep}/, $ENV{TTP_ROOTS} );
-	my $versions = [];
-	foreach my $it ( @roots ){
-		my $parent = dirname( $it );
-		my $candidate = File::Spec->catfile( $parent, ".VERSION" );
-		if( -r $candidate ){
-			$version = path( $candidate )->slurp_utf8;
-			chomp $version;
-			push( @{$versions}, SemVer->new( $version ));
-		}
-	}
 	# compute the max found version
+	my $versions = TTP::versions();
 	foreach my $it ( @{$versions} ){
 		if( $version ){
 			if( $it > $version ){
@@ -1121,6 +1110,31 @@ sub version {
 
 	# on Windows SemVer 0.10.0, '$version' is a single string instead of being a SemVer object
 	return ref( $version ) ? $version->normal : $version;
+}
+
+# -------------------------------------------------------------------------------------------------
+# Returns the list of inline versions
+# (I):
+# - none
+# (O):
+# - a ref to the array of inline versions
+
+sub versions {
+	my $versions = [];
+
+	# simpler than provide a code ref to IFindable
+	my @roots = split( /$Config{path_sep}/, $ENV{TTP_ROOTS} );
+	foreach my $it ( @roots ){
+		my $parent = dirname( $it );
+		my $candidate = File::Spec->catfile( $parent, ".VERSION" );
+		if( -r $candidate ){
+			my $version = path( $candidate )->slurp_utf8;
+			chomp $version;
+			push( @{$versions}, SemVer->new( $version ));
+		}
+	}
+
+	return $versions;
 }
 
 1;
