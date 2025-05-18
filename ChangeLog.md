@@ -27,6 +27,7 @@
     - DBMS.limitDatabases and DBMS.excludeDatabases accept a Perl regular expression (todo #152)
     - Define new DBMS.matchInsensitive property to match database names (todo #153)
     - Protect against undefined node environment
+    - Introduce new DBMS.account property
 
 ### 4.13.0
 

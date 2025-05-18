@@ -63,6 +63,11 @@
             ],
             "type": "object",
             "properties": {
+                "account": {
+                    "description": "The account to be used when accessing the DBMS",
+                    "type": "string",
+                    "default": "the first provided in the list of DBMS credentials"
+                },
                 "databases": {
                     "description": "The list of databases we are limited to view for this service in the DBMS server. Deprecated in favor of 'limitDatabases' in v4.12.",
                     "deprecated": true

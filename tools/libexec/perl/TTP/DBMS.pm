@@ -57,9 +57,8 @@ sub _getCredentials {
 	my $passwd = undef;
 
 	if( $credentials ){
-		if( !$account ){
-			$account = ( keys %{$credentials} )[0];
-		}
+		$account = $self->account() if !$account;
+		$account = ( keys %{$credentials} )[0] if !$account;
 		$passwd = $credentials->{$account} || undef;
 		msgVerbose( __PACKAGE__."::_getCredentials() got account='".( $account || '(undef)' )."'" );
 
@@ -103,6 +102,21 @@ sub _isMemberOf {
 }
 
 ### Public methods
+
+# ------------------------------------------------------------------------------------------------
+# Getter
+# (I):
+# - none
+# (O):
+# - the configured access account, or undef
+
+sub account {
+	my ( $self ) = @_;
+
+	my $str = $self->service()->var([ 'DBMS', 'account' ]);
+
+	return $str;
+}
 
 # ------------------------------------------------------------------------------------------------
 # compute the default backup output filename for the current machine/service/database
@@ -150,7 +164,7 @@ sub computeDefaultBackupFilename {
 sub connectionString {
 	my ( $self ) = @_;
 
-	my $str = $self->service()->var([ 'DBMS', 'host' ]);
+	my $str = $self->service()->var([ 'DBMS', 'host' ], $self->node());
 
 	return $str;
 }
@@ -418,7 +432,7 @@ sub package {
 sub server {
 	my ( $self ) = @_;
 
-	my $server = $self->service()->var([ 'DBMS', 'host' ], $self->node()) || $self->node()->name();
+	my $server = $self->connectionString() || $self->node()->name();
 
 	return $server;
 }

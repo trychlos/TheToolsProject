@@ -78,7 +78,7 @@ sub _connect {
 	} else {
 		my( $account, $passwd ) = $self->_getCredentials();
 		if( length $account && length $passwd ){
-			my $server = $self->service()->var([ 'DBMS', 'host' ], $self->node()) || 'localhost:27017';
+			my $server = $self->connectionString() || 'localhost:27017';
 			$handle = MongoDB::MongoClient->new( host => $server, username => $account, password => $passwd );
 			$self->{_dbms}{connect} = $handle;
 			if( $handle ){
