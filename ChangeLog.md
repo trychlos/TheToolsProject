@@ -28,6 +28,7 @@
     - Define new DBMS.matchInsensitive property to match database names (todo #153)
     - Protect against undefined node environment
     - Introduce new DBMS.account property
+    - TTP::Telemetry::Mqtt::publish() fix metric name when prefixed
 
 ### 4.13.0
 

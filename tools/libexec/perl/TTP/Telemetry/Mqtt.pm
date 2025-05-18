@@ -119,6 +119,7 @@ sub publish {
 		# when substituting the macros to build the topic, replace commas (',') with slashes ('/')
 		# making sure we do not have any empty level (thus replacing all '//' with single '/')
 		my $macros = $metric->macros();
+		$macros->{NAME} = $name;
 		$topic = TTP::substituteMacros( $topic, $macros );
 		$topic =~ s/,/\//g;
 		$topic =~ s/\/+/\//g;
