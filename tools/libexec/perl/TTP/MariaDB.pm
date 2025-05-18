@@ -16,10 +16,10 @@
 # along with TheToolsProject; see the file COPYING. If not,
 # see <http://www.gnu.org/licenses/>.
 #
-# A package dedicated to MongoDB
+# A package dedicated to MariaDB
 
-package TTP::MongoDB;
-die __PACKAGE__ . " must be loaded as TTP::MongoDB\n" unless __PACKAGE__ eq 'TTP::MongoDB';
+package TTP::MariaDB;
+die __PACKAGE__ . " must be loaded as TTP::MariaDB\n" unless __PACKAGE__ eq 'TTP::MariaDB';
 
 use base qw( TTP::DBMS );
 our $VERSION = '1.00';
@@ -31,9 +31,12 @@ use warnings;
 use Config;
 use Capture::Tiny qw( :all );
 use Data::Dumper;
+#use DBD::MariaDB;	# this is expected to be dynamically loaded by DBI; we mention it here just to be able to check its installation
+use DBI;
+use DBI::Const::GetInfoType;
+#use DBIx::MultiStatementDo;
 use File::Spec;
 use File::Temp qw( tempdir );
-use MongoDB;
 use Path::Tiny;
 use Time::Moment;
 
@@ -45,9 +48,10 @@ use TTP::Message qw( :all );
 my $Const = {
 	# the list of system databases to be excluded
 	systemDatabases => [
-		'admin',
-		'config',
-		'local'
+		'information_schema',
+		'mysql',
+		'performance_schema',
+		'sys'
 	],
 	# the list of system tables to be excluded
 	systemTables => [
@@ -62,30 +66,38 @@ my $Const = {
 ### Private methods
 
 # ------------------------------------------------------------------------------------------------
-# get a connection to the MongoDB server instance
+# get a connection to the MariaDB server instance
+# keep here one handle per database
+#
+# https://metacpan.org/dist/DBD-MariaDB/view/lib/DBD/MariaDB.pod
+# The database is not a required attribute, but please note that MariaDB and MySQL has no such thing
+# as a default database. If you don't specify the database at connection time your active database
+# will be null and you'd need to prefix your tables with the database name; i.e. SELECT * FROM mydb.mytable.
+#
 # (I):
-# - none
+# - an optional database name (as DBI likes databases)
 # (O):
 # - an opaque handle on the connection, or undef
 
 sub _connect {
-	my ( $self ) = @_;
+	my ( $self, $database ) = @_;
 
-	my $handle = $self->{_dbms}{connect};
+	my $key = $database || 'DEFAULT';
+	my $handle = $self->{_dbms}{connect}{$key};
 	if( $handle ){
 		msgVerbose( __PACKAGE__."::_connect() already connected" );
 
 	} else {
 		my( $account, $passwd ) = $self->_getCredentials();
 		if( length $account && length $passwd ){
-			my $server = $self->connectionString() || 'localhost:27017';
-			$handle = MongoDB::MongoClient->new( host => $server, username => $account, password => $passwd );
-			$self->{_dbms}{connect} = $handle;
+			my $server = $self->connectionString() || 'localhost:3306';
+			my $dsn = "DBI:MariaDB:";
+			$dsn .= $database if $database;
+			$dsn .= ";host=$server";
+			$handle = DBI->connect( $dsn, $account, $passwd, { PrintError => 0 }) or msgErr( $DBI::errstr );
+			$self->{_dbms}{connect}{$key} = $handle;
 			if( $handle ){
-				#print STDERR Dumper( $handle );
 				msgVerbose( __PACKAGE__."::_connect() successfully connected" );
-			} else {
-				msgErr( __PACKAGE__."::_connect() unable to connect to '$server' host" );
 			}
 		} else {
 			msgErr( __PACKAGE__."::_connect() unable to get account/password couple" );
@@ -97,18 +109,24 @@ sub _connect {
 
 # ------------------------------------------------------------------------------------------------
 # execute a command on the server
+# this is to be used when we expect some rows to be returned (else call do())
 # (I):
-# - the DBMS instance
-# - the command
-# - an optional options hash
+# - this instance
+# - the sql
+# - an optional options hash with following keys:
+#   > dbh: the DBI database handle to be used, defaulting to the default 'DEFAULT' connection
 # (O):
 # - the result as a hash ref with following keys:
 #   > ok: true|false
+#   > result: a ref to an array of hash refs
 
-sub _noSql {
+sub _sqlExec {
 	my ( $self, $command, $opts ) = @_;
 	$opts //= {};
-	msgErr( __PACKAGE__."::_noSql() command is mandatory, but is not specified" ) if !$command;
+	msgErr( __PACKAGE__."::_sqlExec() command is mandatory, but is not specified" ) if !$command;
+	if( TTP::errs()){
+		TTP::stackTrace();
+	}
 	my $res = {
 		ok => false,
 		result => [],
@@ -116,15 +134,22 @@ sub _noSql {
 		stderr => []
 	};
 	if( !TTP::errs()){
-		my $handle = $self->_connect();
-		#if( $handle ){
-		#	my $hdb = $handle->db( 'admin' );
-		#	if( $hdb ){
-		#		my $result = $hdb->run_command( $command );
-		#		print Dumper( $result );
-		#	}
-		#}
+		my $dbh = $opts->{dbh} || $self->_connect();
+		if( $dbh ){
+			my $sth = $dbh->prepare( $command );
+			my $rc = $sth->execute();
+			$res->{ok} = defined $rc ? true : false;
+			if ($res->{ok} ){
+				while ( my $ref = $sth->fetchrow_hashref()){
+					push( @{$res->{result}}, $ref );
+				}
+			} else {
+				msgErr( $DBI::errstr );
+				msgErr( "sql='$command'", { incErr => false });
+			}
+		}
 	}
+	#print "res ".Dumper( $res );
 	return $res;
 }
 
@@ -132,7 +157,7 @@ sub _noSql {
 
 # -------------------------------------------------------------------------------------------------
 # Backup a database
-# There is no backup/restore primitive in MongoDB Perl driver, we so must stuck to
+# There is no backup/restore primitive in MariaDB Perl driver, we so must stuck to
 #  mongodump/mongorestore command-line utilities.
 # As of 4.11.0-rc.0, we are only able to do full backups :(
 # (I):
@@ -200,23 +225,21 @@ sub backupDatabase {
 # (I):
 # - database name
 # (O):
-# - returns a hash with four items { key, value } describing the four different sizes which may be considered
+# - returns a hash with four items { key, value } describing the six different sizes to be considered
 
 sub databaseSize {
 	my ( $self, $database ) = @_;
 	my $result = {};
-	my $handle = $self->_connect();
-	if( $handle ){
-		my $dbh = $handle->get_database( $database );
-		if( $dbh ){
-			my $stats = $dbh->run_command([ dbStats => 1 ]);
-			$result->{dataSize} = $stats->{dataSize};
-			$result->{indexSize} = $stats->{indexSize};
-			$result->{storageSize} = $stats->{storageSize};
-			$result->{totalSize} = $stats->{totalSize};
-		} else {
-			msgErr( __PACKAGE__."::databaseSize() unable to get a handle on '$database' database" );
-		}
+	my $dbh = $self->_connect( $database );
+	if( $dbh ){
+		my $sql = "select sum(data_length) as data_length,sum(index_length) as index_length from information_schema.tables where table_schema='$database'";
+		my $res = $self->_sqlExec( $sql, {
+			dbh => $dbh
+		});
+		$result->{dataSize} = $res->{result}[0]{data_length};
+		$result->{indexSize} = $res->{result}[0]{index_length};
+	} else {
+		msgErr( __PACKAGE__."::databaseSize() unable to get a handle on '$database' database" );
 	}
 	return $result;
 }
@@ -253,16 +276,13 @@ sub databaseState {
 		state => 0,
 		state_desc => $Const->{dbStates}{'0'}
 	};
-	my $handle = $self->_connect();
-	if( $handle ){
-		my $dbh = $handle->get_database( $database );
-		if( $dbh ){
-			my $stats = $dbh->run_command([ dbStats => 1 ]);
-			$result->{state} = $stats->{ok};
-			$result->{state_desc} = $Const->{dbStates}{$stats->{ok}};
-		} else {
-			msgErr( __PACKAGE__."::databaseState() unable to get a handle on '$database' database" );
-		}
+	my $dbh = $self->_connect( $database );
+	if( $dbh ){
+		my $res = $dbh->ping();
+		$result->{state} = $res ? '1' : '0';
+		$result->{state_desc} = $Const->{dbStates}{$result->{state}};
+	} else {
+		msgErr( __PACKAGE__."::databaseState() unable to get a handle on '$database' database" );
 	}
 	return $result;
 }
@@ -284,7 +304,6 @@ sub dbStatuses {
 
 # -------------------------------------------------------------------------------------------------
 # execute a sql command
-# not managed by MongoDB driver as of v4.11
 # (I):
 # - the command string to be executed
 # - an optional options hash which may contain following keys:
@@ -298,8 +317,35 @@ sub dbStatuses {
 
 sub execSqlCommand {
 	my ( $self, $command, $opts ) = @_;
+	$opts //= {};
 	my $result = { ok => false };
-	msgErr( __PACKAGE__."::execSqlCommand() doesn't manage SQL commands as MongoDB is a NoSQL database" );
+	msgErr( __PACKAGE__."::execSqlCommand() command is mandatory, but not specified" ) if !$command;
+	if( TTP::errs()){
+		TTP::stackTrace();
+	}
+
+	my $sqlres = $self->_sqlExec( $command );
+	$result->{ok} = $sqlres->{ok};
+
+	if( $result->{ok} ){
+		$result->{result} = $sqlres->{result};
+		# tabular output if asked for
+		my $tabular = true;
+		$tabular = $opts->{tabular} if defined $opts->{tabular};
+		if( $tabular ){
+			TTP::displayTabular( $sqlres->{result} );
+		} else {
+			msgVerbose( "do not display tabular result as opts->{tabular}='false'" );
+		}
+		# json output if asked for
+		my $json = '';
+		$json = $opts->{json} if defined $opts->{json};
+		if( $json ){
+			TTP::jsonOutput( $sqlres->{result}, $json );
+		} else {
+			msgVerbose( "do not save JSON result as opts->{json} is not set" );
+		}
+	}
 	return $result;
 }
 
@@ -318,10 +364,13 @@ sub getDatabases {
 	if( defined( $databases )){
 		msgVerbose( __PACKAGE__."::getDatabases() got cached databases [ ". join( ', ', @{$databases} )." ]" );
 	} else {
-		my $handle = $self->_connect();
-		if( $handle ){
-			my @dbs = $handle->list_databases;
-			$databases = $self->filterGotDatabases( \@dbs, $Const->{systemDatabases} );
+		my $res = $self->_sqlExec( 'show databases' );
+		if( $res->{ok} ){
+			my $dbs = [];
+			foreach my $it ( @{$res->{result}} ){
+				push( @{$dbs}, { name => $it->{Database}} );
+			}
+			$databases = $self->filterGotDatabases( $dbs, $Const->{systemDatabases} );
 		}
 	}
 
@@ -338,15 +387,20 @@ sub getDatabases {
 sub getDatabaseTables {
 	my ( $self, $database ) = @_;
 
-	my @collections = ();
-	my $handle = $self->_connect();
-	if( $handle ){
-		my $db = $handle->get_database( $database );
-		@collections = $db->collection_names;
-		msgVerbose( __PACKAGE__."::getDatabasesTables() got ".scalar( @collections )." collection(s)" );
+	my $tables = [];
+	my $dbh = $self->_connect( $database );
+	if ($dbh ){
+		my $res = $self->_sqlExec( "show tables", { dbh => $dbh });
+		if( $res->{ok} ){
+			my $key = 'Tables_in_'.$database;
+			foreach my $it ( @{$res->{result}} ){
+				push( @{$tables}, $it->{$key} );
+			}
+		}
 	}
 
-	return \@collections;
+	msgVerbose( __PACKAGE__."::getDatabasesTables() got ".scalar( @{$tables} )." tables(s)" );
+	return $tables;
 }
 
 # ------------------------------------------------------------------------------------------------
@@ -362,11 +416,18 @@ sub getProperties {
 	# get common properties
 	my $props = $self->TTP::DBMS::getProperties();
 
+	my $dbh = $self->_connect();
+	#print Dumper( %GetInfoType );
+	if( $dbh ){
+		my $res = $dbh->get_info( $GetInfoType{SQL_DBMS_VERSION} );
+		push( @{$props}, { name => 'DbmsVersion', value => $res });
+	}
+
 	return $props;
 }
 
 # ------------------------------------------------------------------------------------------------
-# returns the count of documents in the collection of the database
+# returns the count of rows in the table of the database
 # (I):
 # - database
 # - table
@@ -377,22 +438,13 @@ sub getTableRowsCount {
 	my ( $self, $database, $table ) = @_;
 
 	my $count = 0;
-	my $handle = $self->_connect();
-	if( $handle ){
-		my $dbh = $handle->get_database( $database );
-		if( $dbh ){
-			my $coll = $dbh->get_collection( $table );
-			if( $coll ){
-				$count = $coll->count_documents({});
-			} else {
-				msgErr( __PACKAGE__."::getTableRowscount() unable to get a handle on '$table' collection" );
-			}
-		} else {
-			msgErr( __PACKAGE__."::getTableRowscount() unable to get a handle on '$database' database" );
-		}
+	my $sql = "select count(*) as count from $database.$table";
+	my $res = $self->_sqlExec( $sql );
+	if( $res->{ok} ){
+		$count = $res->{result}[0]{count};
 	}
 
-	msgVerbose( __PACKAGE__."::getTableRowscount() database='$database' collection='$table' count=$count" );
+	msgVerbose( __PACKAGE__."::getTableRowscount() database='$database' table='$table' count=$count" );
 	return $count;
 }
 
@@ -490,6 +542,7 @@ sub new {
 
 	if( $self ){
 		bless $self, $class;
+		$self->{_dmbs}{connect} = {};
 		msgVerbose( __PACKAGE__."::new() node='".$args->{node}->name()."' service='".$args->{service}->name()."'" );
 	}
 

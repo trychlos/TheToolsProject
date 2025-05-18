@@ -607,13 +607,13 @@ sub getProperties {
 	# get SqlServer-specific properties
 	my $res = $self->_sqlExec( "SELECT \@\@SERVICENAME as name" );
 	if( $res->{ok} ){
-		push( @{$props}, { name => 'serviceName', value => $res->{result}[0]{name} });
+		push( @{$props}, { name => 'ServiceName', value => $res->{result}[0]{name} });
 	}
 	$res = $self->_sqlExec( "SELECT \@\@VERSION as version" );
 	if( $res->{ok} ){
 		# limit to the first line of the version
 		my @lines = split( /[\r\n]/,  $res->{result}[0]{version} );
-		push( @{$props}, { name => 'version', value => $lines[0] });
+		push( @{$props}, { name => 'DbmsVersion', value => $lines[0] });
 	}
 
 	return $props;

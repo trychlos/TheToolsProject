@@ -351,10 +351,16 @@ sub getProperties {
 
 	my $props = [];
 
-	push( @{$props}, { name => 'excludeSystemDatabases', value => $self->excludeSystemDatabases() ? 'true' : 'false' });
-	push( @{$props}, { name => 'wantsLocal', value => $self->wantsLocal() ? 'true' : 'false' });
-	push( @{$props}, { name => 'package', value => $self->package() });
+	push( @{$props}, { name => 'account', value => $self->account() || '(undef)' });
 	push( @{$props}, { name => 'connectionString', value => $self->connectionString() || '(undef)' });
+	my $excluded = $self->excludedDatabases();
+	push( @{$props}, { name => 'excludeDatabases', value => ( $excluded ? "[".join( ',', @{$excluded} )."]" : '(undef)' )});
+	push( @{$props}, { name => 'excludeSystemDatabases', value => $self->excludeSystemDatabases() ? 'true' : 'false' });
+	my $limited = $self->limitedDatabases();
+	push( @{$props}, { name => 'limitDatabases', value => ( $limited ? "[".join( ',', @{$limited} )."]" : '(undef)' )});
+	push( @{$props}, { name => 'matchInsensitive', value => $self->matchInsensitive() ? 'true' : 'false' });
+	push( @{$props}, { name => 'package', value => $self->package() });
+	push( @{$props}, { name => 'wantsLocal', value => $self->wantsLocal() ? 'true' : 'false' });
 
 	return $props;
 }
