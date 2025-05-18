@@ -28,7 +28,6 @@ use strict;
 use utf8;
 use warnings;
 
-use Config;
 use Capture::Tiny qw( :all );
 use Data::Dumper;
 use File::Spec;
@@ -153,7 +152,7 @@ sub backupDatabase {
 	my $result = { ok => false };
 	msgErr( __PACKAGE__."::backupDatabase() database is mandatory, but is not specified" ) if !$parms->{database};
 	msgErr( __PACKAGE__."::backupDatabase() mode must be 'full' or 'diff', found '$parms->{mode}'" ) if $parms->{mode} ne 'full' && $parms->{mode} ne 'diff';
-	msgErr( __PACKAGE__."::backupDatabase() differential mode is not managed here" ) if $parms->{mode} eq 'diff';
+	msgErr( __PACKAGE__."::backupDatabase() differential mode is not supported" ) if $parms->{mode} eq 'diff';
 	if( TTP::errs()){
 		TTP::stackTrace();
 	}
@@ -401,6 +400,7 @@ sub getTableRowsCount {
 # As backups are managed with mongodump, restores are to be managed with mongorestore
 # (I):
 # - parms is a hash ref with keys:
+#   > database: mandatory
 #   > full: mandatory, the full backup file
 # (O):
 # - returns a hash with following keys:
@@ -411,8 +411,8 @@ sub restoreDatabase {
 
 	my $result = { ok => false };
 	msgErr( __PACKAGE__."::restoreDatabase() full is mandatory, not specified" ) if !$parms->{full};
-	msgErr( __PACKAGE__."::restoreDatabase() --verifyonly option is not supported here" ) if $parms->{verifyonly};
-	msgErr( __PACKAGE__."::restoreDatabase() --diff option is not supported here" ) if $parms->{diff};
+	msgErr( __PACKAGE__."::restoreDatabase() --verifyonly option is not supported" ) if $parms->{verifyonly};
+	msgErr( __PACKAGE__."::restoreDatabase() --diff option is not supported" ) if $parms->{diff};
 	if( TTP::errs()){
 		TTP::stackTrace();
 	}
@@ -437,7 +437,7 @@ sub restoreDatabase {
 		}
 		my $opt = "";
 		$opt = "-z" if $gziped;
-		msgVerbose( __PACKAGE__."::restoreDatabase() compute that provided dump file is ".( $gziped ? '' : 'NOT ' )."gzip'ed" );
+		msgVerbose( __PACKAGE__."::restoreDatabase() found that provided dump file is ".( $gziped ? '' : 'NOT ' )."gzip'ed" );
 		# find the source database name in the dump file
 		# this should be the first element of the paths
 		$cmd = "tar -t $opt -f $parms->{full}";

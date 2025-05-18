@@ -92,6 +92,8 @@ sub doBackup {
 			mode => $mode,
 			compress => $opt_compress
 		});
+		# print the output file if not provided as a command-line argument
+		msgOut( "  output is '$res->{output}'" ) if !$opt_output;
 		# retain last full and last diff
 		my $data = {
 			service => $opt_service,

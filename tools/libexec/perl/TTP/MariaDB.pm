@@ -28,15 +28,12 @@ use strict;
 use utf8;
 use warnings;
 
-use Config;
 use Capture::Tiny qw( :all );
 use Data::Dumper;
-#use DBD::MariaDB;	# this is expected to be dynamically loaded by DBI; we mention it here just to be able to check its installation
+use DBD::MariaDB;	# this is dynamically loaded by DBI; we mention it here to be checked in test suite
 use DBI;
 use DBI::Const::GetInfoType;
-#use DBIx::MultiStatementDo;
 use File::Spec;
-use File::Temp qw( tempdir );
 use Path::Tiny;
 use Time::Moment;
 
@@ -178,7 +175,7 @@ sub backupDatabase {
 	my $result = { ok => false };
 	msgErr( __PACKAGE__."::backupDatabase() database is mandatory, but is not specified" ) if !$parms->{database};
 	msgErr( __PACKAGE__."::backupDatabase() mode must be 'full' or 'diff', found '$parms->{mode}'" ) if $parms->{mode} ne 'full' && $parms->{mode} ne 'diff';
-	msgErr( __PACKAGE__."::backupDatabase() differential mode is not managed here" ) if $parms->{mode} eq 'diff';
+	msgErr( __PACKAGE__."::backupDatabase() differential mode is not supported" ) if $parms->{mode} eq 'diff';
 	if( TTP::errs()){
 		TTP::stackTrace();
 	}
@@ -195,23 +192,23 @@ sub backupDatabase {
 	if( !TTP::errs()){
 		msgVerbose( __PACKAGE__."::backupDatabase() entering with service='".$self->service()->name()."' database='$parms->{database}' mode='$parms->{mode}'..." );
 		my $output = $parms->{output} || $self->computeDefaultBackupFilename( $parms );
-		# mongodump dumps to a directory (piping to stdout in only possible for a single collection)
-		# so have to create a temp dir, and then tar.gzip it and remove the temp dir at end
+		# mysqldump dumps the database to stdout
 		my $tmpdir = tempdir( CLEANUP => 1 );
-		my $cmd = "mongodump";
-		$cmd .= " --host ".$self->server();
-		$cmd .= " --username $account";
-		$cmd .= " --password $passwd";
-		$cmd .= " --authenticationDatabase admin";
-		$cmd .= " --db $parms->{database}";
-		$cmd .= " --out $tmpdir";
-		my $opt = "";
-		$opt = "-z" if $parms->{compress};
-		$cmd .= " && (cd $tmpdir; tar -c $opt -f - $parms->{database} > $output)";
+		my $cmd = "mysqldump";
+		$cmd .= " --host=".$self->server();
+		$cmd .= " --user=$account";
+		$cmd .= " --password=$passwd";
+		$cmd .= " --compress";
+		$cmd .= " $parms->{database}";
+		if( $parms->{compress} ){
+			$cmd .= " | gzip";
+			$output .= ".gz";
+		}
+		$cmd .= " > $output";
 		my $res = TTP::commandExec( $cmd );
-		# mongodump provides its output on stderr, while stdout is empty
+		# mysqldump provides no output on stdout
 		$result->{ok} = $res->{success};
-		$result->{stdout} = $res->{stderr};
+		$result->{stderr} = $res->{stderr};
 		#msgLog( __PACKAGE__."::backupDatabase() stdout='".TTP::chompDumper( $result->{stdout} )."'" );
 		$result->{output} = $output;
 	}
@@ -450,9 +447,9 @@ sub getTableRowsCount {
 
 # -------------------------------------------------------------------------------------------------
 # Restore a file into a database
-# As backups are managed with mongodump, restores are to be managed with mongorestore
 # (I):
 # - parms is a hash ref with keys:
+#   > database: mandatory
 #   > full: mandatory, the full backup file
 # (O):
 # - returns a hash with following keys:
@@ -463,8 +460,8 @@ sub restoreDatabase {
 
 	my $result = { ok => false };
 	msgErr( __PACKAGE__."::restoreDatabase() full is mandatory, not specified" ) if !$parms->{full};
-	msgErr( __PACKAGE__."::restoreDatabase() --verifyonly option is not supported here" ) if $parms->{verifyonly};
-	msgErr( __PACKAGE__."::restoreDatabase() --diff option is not supported here" ) if $parms->{diff};
+	msgErr( __PACKAGE__."::restoreDatabase() --verifyonly option is not supported" ) if $parms->{verifyonly};
+	msgErr( __PACKAGE__."::restoreDatabase() --diff option is not supported" ) if $parms->{diff};
 	if( TTP::errs()){
 		TTP::stackTrace();
 	}
@@ -479,43 +476,28 @@ sub restoreDatabase {
 	}
 	if( !TTP::errs()){
 		msgVerbose( __PACKAGE__."::restoreDatabase() entering with service='".$self->service()->name()."' database='$parms->{database}'..." );
-		my $tmpdir = tempdir( CLEANUP => 1 );
 		# do we have a compressed archive file ?
-		my $cmd = "file $parms->{full}";
-		my $res = TTP::commandExec( $cmd );
+		my $res = TTP::commandExec( "file $parms->{full}" );
 		my $gziped = false;
-		if( grep( /gzip/, @{$res->{stdout}} )){
-			$gziped = true;
+		if( $res->{success} ){
+			$gziped = true if grep( /gzip/, @{$res->{stdout}} );
+			msgVerbose( __PACKAGE__."::restoreDatabase() found that provided dump file is ".( $gziped ? '' : 'NOT ' )."gzip'ed" );
+			# and restore, making sure the database exists
+			my $cmd = "(";
+			$cmd .= " echo 'drop database if exists $parms->{database};';";
+			$cmd .= " echo 'create database $parms->{database};';";
+			$cmd .= " echo 'use $parms->{database};';";
+			$cmd .= $gziped ? " gzip -cd" : " cat";
+			$cmd .= " $parms->{full} )";
+			$cmd .= " | mysql";
+			$cmd .= " --host=".$self->server();
+			$cmd .= " --user=$account";
+			$cmd .= " --password=$passwd";
+			$res = TTP::commandExec( $cmd );
+			$result->{ok} = $res->{success};
+			#$result->{stdout} = $res->{stderr};
+			#msgLog( __PACKAGE__."::backupDatabase() stdout='".TTP::chompDumper( $result->{stdout} )."'" );
 		}
-		my $opt = "";
-		$opt = "-z" if $gziped;
-		msgVerbose( __PACKAGE__."::restoreDatabase() compute that provided dump file is ".( $gziped ? '' : 'NOT ' )."gzip'ed" );
-		# find the source database name in the dump file
-		# this should be the first element of the paths
-		$cmd = "tar -t $opt -f $parms->{full}";
-		$res = TTP::commandExec( $cmd );
-		my $sourcedb = $res->{stdout}[0];
-		$sourcedb =~ s/\/$//;
-		msgVerbose( __PACKAGE__."::restoreDatabase() find source database='$sourcedb'" );
-		# and restore
-		# if source and target database don't have the same name, then rename
-		$cmd = "tar -x $opt -f $parms->{full} --directory $tmpdir";
-		$cmd .= " && mongorestore";
-		$cmd .= " --host ".$self->server();
-		$cmd .= " --username $account";
-		$cmd .= " --password $passwd";
-		$cmd .= " --authenticationDatabase admin";
-		$cmd .= " --drop";
-		if( $sourcedb ne $parms->{database} ){
-			$cmd .= " --nsFrom '$sourcedb.*'";
-			$cmd .= " --nsTo '$parms->{database}.*'";
-		}
-		$cmd .= " $tmpdir";
-		$res = TTP::commandExec( $cmd );
-		# mongodump provides its output on stderr, while stdout is empty
-		$result->{ok} = $res->{success};
-		#$result->{stdout} = $res->{stderr};
-		#msgLog( __PACKAGE__."::backupDatabase() stdout='".TTP::chompDumper( $result->{stdout} )."'" );
 	}
 
 	msgVerbose( __PACKAGE__."::restoreDatabase() result='".( $result->{ok} ? 'true' : 'false' )."'" );

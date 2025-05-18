@@ -29,7 +29,7 @@
     - Protect against undefined node environment
     - Introduce new DBMS.account property
     - TTP::Telemetry::Mqtt::publish() fix metric name when prefixed
-    - Introduce TTP::MariaDB
+    - Introduce TTP::MariaDB and make all verbs available (todo #137)
 
 ### 4.13.0
 

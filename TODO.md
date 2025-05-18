@@ -37,7 +37,6 @@
 |  123 | 2025- 4-29 | have a test for alerts-monitor-daemon |
 |  124 | 2025- 4-29 | have a test for mqtt-monitor-daemon |
 |  125 | 2025- 4-29 | have a test for node-monitor-daemon |
-|  137 | 2025- 5- 7 | have mariadb backup/restore |
 |  139 | 2025- 5- 9 | when accessing a service, should be able to specify a target node in the case where the service is available on several nodes in this environment |
 |  141 | 2025- 5-10 | MongoDB::backupDatabase() and restoreDatabase() command-lines should be configurable somewhere |
 |  146 | 2025- 5-11 | maybe a site may/want/should define its own test suite, to be run after the TTP own test suite |
@@ -45,7 +44,10 @@
 |      |            | or: have a Daemon class which both gathers DaemonConfig and RunnerDaemon features |
 |      | 2025- 5-14 | DaemonConfig -> Daemon would imply $runner = TTP::RunnerDaemon->bootstrap() and $daemon->config() -> $runner->daemon() |
 |  151 | 2025- 5-16 | have ldap backup/restore |
-|  154 |  |  |
+|  154 | 2025- 5-18 | have execRemote() |
+|  155 | 2025- 5-18 | change dbms.pl list --listdb and --listtables to --list-db and --list-tables |
+|  156 | 2025- 5-18 | change dbms.pl backup/restore --report defaulting to true to --report-mqtt and --report-file both defaulting to false |
+|  157 |  |  |
 
 ---
 ## Done
@@ -373,6 +375,8 @@
 |      | 2025- 5- 7 | fixed, . ttp.sh switch (sourced) still display error messages which is the wanted behavior |
 |  136 | 2025- 5- 7 | have mongodb backup/restore |
 |      | 2025- 5-10 | done |
+|  137 | 2025- 5- 7 | have mariadb backup/restore |
+|      | 2025- 5-18 | done |
 |  138 | 2025- 5- 7 | dbms.pl verbs should emphasize that --instance is a SqlServer-specific option and see how to either avoid or generalize that |
 |      | 2025- 5- 7 | emphasize is done - but not generalization |
 |      | 2025- 5- 9 | dbms.pl list no more have --instance option has useless for SqlServer |

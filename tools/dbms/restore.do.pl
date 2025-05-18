@@ -40,6 +40,7 @@ use warnings;
 
 use TTP::Node;
 use TTP::Service;
+use TTP::MariaDB;
 
 my $defaults = {
 	help => 'no',
