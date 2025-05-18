@@ -11,6 +11,8 @@
 # @(-) --[no]wait              wait for actual termination [${wait}]
 # @(-) --timeout=<timeout>     timeout in sec. when waiting for termination [${timeout}]
 #
+# @(@) daemon.pl command and all its verbs only work on the local node.
+#
 # TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
 # Copyright (©) 2023-2025 PWI Consulting

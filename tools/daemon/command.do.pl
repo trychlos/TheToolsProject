@@ -11,6 +11,7 @@
 # @(-) --timeout=<timeout>     command timeout in sec. [${timeout}]
 #
 # @(@) A command is a simple string. The daemon is expected to (at least) acknowledge it.
+# @(@) daemon.pl command and all its verbs only work on the local node.
 #
 # TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)

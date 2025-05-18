@@ -10,6 +10,8 @@
 # @(-) --name=<name>           the daemon name to operate on when requesting by keys [${name}]
 # @(-) --key=<name[,...]>      the key which addresses the desired value, may be specified several times or as a comma-separated list [${key}]
 #
+# @(@) daemon.pl command and all its verbs only work on the local node.
+#
 # TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
 # Copyright (©) 2023-2025 PWI Consulting
