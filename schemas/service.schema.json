@@ -112,11 +112,6 @@
                     "description": "The Perl TTP package to be use'd when working with this DBMS service.",
                     "type": "string",
                     "default": ""
-                },
-                "wantsLocal": {
-                    "description": "Whether this DBMS instance is bound only to local connections.",
-                    "type": "boolean",
-                    "default": true
                 }
             }
         },
@@ -129,6 +124,11 @@
             "description": "Whether this service is hidden from 'services.pl list --services' command result.",
             "type": "boolean",
             "default": false
+        },
+        "wantsLocal": {
+            "description": "Whether this DBMS instance is bound only to local connections.",
+            "type": "boolean",
+            "default": true
         },
         "warnOnMultipleHostingNodes": {
             "description_array": [

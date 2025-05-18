@@ -237,6 +237,22 @@ sub var {
 	return $value;
 }
 
+# ------------------------------------------------------------------------------------------------
+# Getter
+# (I):
+# - none
+# (O):
+# - whether this service is only bound to local connections, defaulting to true
+
+sub wantsLocal {
+	my ( $self ) = @_;
+
+	my $wantsLocal = $self->var([ 'wantsLocal' ]);
+	$wantsLocal = true if !defined $wantsLocal;
+
+	return $wantsLocal;
+}
+
 # -------------------------------------------------------------------------------------------------
 # Whether we should warn when several hosting nodes are found is rather a site-level property.
 # it is nonetheless overridable on a per-service or per-node basis. Hence this method.

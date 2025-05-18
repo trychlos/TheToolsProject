@@ -360,7 +360,7 @@ sub getProperties {
 	push( @{$props}, { name => 'limitDatabases', value => ( $limited ? "[".join( ',', @{$limited} )."]" : '(undef)' )});
 	push( @{$props}, { name => 'matchInsensitive', value => $self->matchInsensitive() ? 'true' : 'false' });
 	push( @{$props}, { name => 'package', value => $self->package() });
-	push( @{$props}, { name => 'wantsLocal', value => $self->wantsLocal() ? 'true' : 'false' });
+	push( @{$props}, { name => 'wantsLocal', value => $self->service()->wantsLocal() ? 'true' : 'false' });
 
 	return $props;
 }
@@ -454,22 +454,6 @@ sub service {
 	my ( $self ) = @_;
 
 	return $self->{_dbms}{service};
-}
-
-# ------------------------------------------------------------------------------------------------
-# Getter
-# (I):
-# - none
-# (O):
-# - whether this DBMS instance is only bound to local connections, defaulting to true
-
-sub wantsLocal {
-	my ( $self ) = @_;
-
-	my $wantsLocal = $self->service()->var([ 'DBMS', 'wantsLocal' ]);
-	$wantsLocal = true if !defined $wantsLocal;
-
-	return $wantsLocal;
 }
 
 ### Class methods
