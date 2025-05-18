@@ -46,19 +46,19 @@ my $opt_get = false;
 my $opt_wait = $defaults->{wait};
 
 # the MQTT connection
-my $mqtt = undef;
-my $loop = true;
 my $last = 0;
 my $count = 0;
 
 # -------------------------------------------------------------------------------------------------
 # get and output the retained messages
+#  default to wait 5 sec after last received message before disconnecting..
 
 sub doGetRetained {
 	msgOut( "getting the retained messages..." );
 
-	$mqtt = TTP::MQTT::connect();
+	my $mqtt = TTP::MQTT::connect();
 	if( $mqtt ){
+		my $loop = true;
 		$mqtt->subscribe( '#' => \&doWork );
 		while( $loop ){
 			$mqtt->tick( 1 );
@@ -81,7 +81,7 @@ sub doGetRetained {
 
 # -------------------------------------------------------------------------------------------------
 # triggered on the published message
-#  wait 2sec after last received before disconnecting..
+
 sub doWork {
 	my ( $topic, $payload, $retain ) = @_;
 	if( $retain ){
