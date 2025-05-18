@@ -487,26 +487,27 @@ sub execSqlCommand {
 	$opts //= {};
 	my $result = { ok => false };
 	msgErr( __PACKAGE__."::execSqlCommand() command is mandatory, but not specified" ) if !$command;
-
-	if( !TTP::errs()){
-		msgVerbose( __PACKAGE__."::execSqlCommand() entering with service='".$self->service()->name()."' sql='$command'" );
-		my $resultStyle = undef;
-		my $colinfoStyle = undef;
-		my $rowStyle = undef;
-		if( $Config{osname} eq "MSWin32" ){
-			$resultStyle = Win32::SqlServer::SINGLESET;
-			$resultStyle = Win32::SqlServer::MULTISET if $opts->{multiple};
-			$colinfoStyle = Win32::SqlServer::COLINFO_NONE;
-			$colinfoStyle = Win32::SqlServer::COLINFO_FULL if $opts->{columns};
-			$rowStyle = Win32::SqlServer::HASH;
-		}
-		my $args = {
-			resultStyle => $resultStyle,
-			colinfoStyle => $colinfoStyle,
-			rowStyle => $rowStyle
-		};
-		$result = $self->_sqlExec( $command, $args );
+	if( TTP::errs()){
+		TTP::stackTrace();
 	}
+
+	msgVerbose( __PACKAGE__."::execSqlCommand() entering with service='".$self->service()->name()."' sql='$command'" );
+	my $resultStyle = undef;
+	my $colinfoStyle = undef;
+	my $rowStyle = undef;
+	if( $Config{osname} eq "MSWin32" ){
+		$resultStyle = Win32::SqlServer::SINGLESET;
+		$resultStyle = Win32::SqlServer::MULTISET if $opts->{multiple};
+		$colinfoStyle = Win32::SqlServer::COLINFO_NONE;
+		$colinfoStyle = Win32::SqlServer::COLINFO_FULL if $opts->{columns};
+		$rowStyle = Win32::SqlServer::HASH;
+	}
+	my $args = {
+		resultStyle => $resultStyle,
+		colinfoStyle => $colinfoStyle,
+		rowStyle => $rowStyle
+	};
+	$result = $self->_sqlExec( $command, $args );
 	msgVerbose( __PACKAGE__."::execSqlCommand() result='".( $result->{ok} ? 'true' : 'false' )."'" );
 
 	#print Dumper( $parms );
