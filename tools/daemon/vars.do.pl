@@ -34,6 +34,8 @@ use strict;
 use utf8;
 use warnings;
 
+use Config;
+
 use TTP::DaemonConfig;
 use TTP::Finder;
 
