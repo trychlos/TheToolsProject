@@ -405,13 +405,15 @@ sub findByService {
 	# we emit a warning when several candidates are found but no target is specified
 	} else {
 		my $names = [];
+		my $founds_hash = {};
 		foreach my $it ( @{$founds} ){
 			push( @{$names}, $it->name());
+			$founds_hash->{$it->name()} = $it;
 		}
 		if( $opts->{target} ){
-			if( grep( /$opts->{target}/, @{$founds} )){
-				$found = $opts->{target};
-				msgVerbose( "target='$opts->{target}' found among candidates [".join( ',', @{$names} )."] and is chosen" );
+			if( defined( $founds_hash->{$opts->{target}} )){
+				$found = $founds_hash->{$opts->{target}};
+				msgVerbose( "found target='$opts->{target}' among candidates [".join( ',', @{$names} )."]" );
 			} else {
 				msgErr( "target='$opts->{target}' not found among candidates [".join( ',', @{$names} )."]" );
 			}
@@ -433,6 +435,7 @@ sub findByService {
 }
 
 # $environment may be undef
+# $founds is an (ordered) array ref of current candidates
 
 sub findByService_addCandidate {
 	my ( $self, $environment, $service, $founds, $inhibits ) = @_;

@@ -603,6 +603,35 @@
                         }
                     }
                 },
+				"execRemote": {
+					"description_array": [
+						"The configuration for remote executions.",
+						"The command has access to <TARGET> and <COMMAND> macros."
+					],
+					"type": "object",
+					"properties": {
+						"command": {
+							"description": "The command to be run to remotely execute a command.",
+							"type": [
+								"object",
+								"string"
+							],
+							"properties": {
+								"byOS": {
+									"description": "Let a command be specific to the running OS.",
+									"type": "object",
+									"patternProperties": {
+										"^.*$": {
+											"description": "The OS name as reported by Perl-Config, the value being the command to be applied for this OS.",
+											"type": "string"
+										}
+									}
+								}
+							},
+							"default": "ssh <TARGET> \". ~/.ttp_remote; <COMMAND>\""
+						}
+					}
+				},
                 "executionReports": {
                     "description_array": [
                         "The configuration of execution reports.",

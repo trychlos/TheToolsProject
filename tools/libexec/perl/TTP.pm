@@ -434,27 +434,27 @@ sub errs {
 sub execRemote {
 	my ( $target, $command ) = @_;
 
+	# target is mandatory
 	if( !$target ){
 		msgErr( __PACKAGE__."::execRemote() expects a target, not specified" );
 		TTP::stackTrace();
 	}
 
+	# command defaults to the current command and verb and its arguments
 	$command = $ep->runner()->command()." ".join( " ", @{$ep->runner()->argv()} ) if !$command;
-	my $cmd = "ssh $target \". ~/.ttp_remote; $command\"";
-	msgOut( __PACKAGE__."::execRemote() $cmd on $target" );
-	#msgVerbose( __PACKAGE__."::execRemote() $cmd" );
-	if( false ){
-		my $res = TTP::commandExec( $cmd );
-		print $res->{stdout};
-		if( !$res->{success} ){
-			print STDERR TTP::chompDumper( $res->{stderr} ).EOL;
-		}
-		return $res;
-	}
-	if( true ){
-		my $rc = system( $cmd );
-		$ep->runner()->runnableErrs( $rc );
-	}
+	
+	# remote execution can be configured at site/node level
+	my $remote = TTP::commandByOS([ 'execRemote' ], { withCommand => true });
+	$remote = "ssh <TARGET> \". ~/.ttp_remote; <COMMAND>\"" if !$remote;
+	$remote = TTP::substituteMacros( $remote, {
+		TARGET => $target,
+		COMMAND => $command
+	});
+
+	# and execute
+	msgOut( __PACKAGE__."::execRemote() $remote" );
+	my $rc = system( $remote );
+	$ep->runner()->runnableErrs( $rc );
 }
 
 # -------------------------------------------------------------------------------------------------
