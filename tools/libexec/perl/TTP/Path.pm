@@ -454,11 +454,9 @@ sub logsCommands {
 		$dir = $ep->var([ 'logs', 'commandsDir' ]);
 		if( !$dir ){
 			$dir = $ep->var( 'logsCommands' );
-			if( $dir ){
-				if( !$ep->{_warnings}{logscommands} ){
-					msgWarn( "'logsCommands' property is deprecated in favor of 'logs.commandsDir'. You should update your configurations." );
-					$ep->{_warnings}{logscommands} = true;
-				}
+			if( $dir && $ep->bootstrapped() && !$ep->{_warnings}{logscommands} && !$ENV{ttp_me} ){
+				msgWarn( "'logsCommands' property is deprecated in favor of 'logs.commandsDir'. You should update your configurations." );
+				$ep->{_warnings}{logscommands} = true;
 			}
 		}
 		if( !$dir ){
@@ -485,11 +483,9 @@ sub logsMain {
 		$file = $ep->var([ 'logs', 'mainFile' ]);
 		if( !$file ){
 			$file = $ep->var( 'logsMain' );
-			if( $file ){
-				if( !$ep->{_warnings}{logsmain} ){
-					msgWarn( "'logsMain' property is deprecated in favor of 'logs.mainFile'. You should update your configurations." );
-					$ep->{_warnings}{logsmain} = true;
-				}
+			if( $file && $ep->bootstrapped() && !$ep->{_warnings}{logsmain} && !$ENV{ttp_me} ){
+				msgWarn( "'logsMain' property is deprecated in favor of 'logs.mainFile'. You should update your configurations." );
+				$ep->{_warnings}{logsmain} = true;
 			}
 		}
 		if( !$file ){
@@ -516,11 +512,9 @@ sub logsPeriodic {
 		$dir = $ep->var([ 'logs', 'periodicDir' ]);
 		if( !$dir ){
 			$dir = $ep->var( 'logsDaily' );
-			if( $dir ){
-				if( !$ep->{_warnings}{logsdaily} ){
-					msgWarn( "'logsDaily' property is deprecated in favor of 'logs.periodicDir'. You should update your configurations." );
-					$ep->{_warnings}{logsdaily} = true;
-				}
+			if( $dir && $ep->bootstrapped() && !$ep->{_warnings}{logsdaily} && !$ENV{ttp_me} ){
+				msgWarn( "'logsDaily' property is deprecated in favor of 'logs.periodicDir'. You should update your configurations." );
+				$ep->{_warnings}{logsdaily} = true;
 			}
 		}
 		if( !$dir ){
@@ -546,11 +540,9 @@ sub logsRoot {
 		$dir = $ep->var([ 'logs', 'rootDir' ]);
 		if( !$dir ){
 			$dir = $ep->var( 'logsRoot' );
-			if( $dir ){
-				if( !$ep->{_warnings}{logsroot} ){
-					msgWarn( "'logsRoot' property is deprecated in favor of 'logs.rootDir'. You should update your configurations." );
-					$ep->{_warnings}{logsroot} = true;
-				}
+			if( $dir && $ep->bootstrapped() && !$ep->{_warnings}{logsroot} && !$ENV{ttp_me} ){
+				msgWarn( "'logsRoot' property is deprecated in favor of 'logs.rootDir'. You should update your configurations." );
+				$ep->{_warnings}{logsroot} = true;
 			}
 		}
 		if( !$dir ){

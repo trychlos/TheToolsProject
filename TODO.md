@@ -44,7 +44,10 @@
 |      |            | or: have a Daemon class which both gathers DaemonConfig and RunnerDaemon features |
 |      | 2025- 5-14 | DaemonConfig -> Daemon would imply $runner = TTP::RunnerDaemon->bootstrap() and $daemon->config() -> $runner->daemon() |
 |  151 | 2025- 5-16 | have ldap backup/restore |
-|  157 |  |  |
+|  157 | 2025- 5-19 | may happen that a node is a member (is referenced by) several sites |
+|      |            | so maybe should have a site domain identifier, and node.environment be an object site.domain => environment.id |
+|  158 | 2025- 5-19 | reviews the way MQTTGateway and SMTPGateway take their username/password (should be same than DBMS) |
+|  159 |  |  |
 
 ---
 ## Done

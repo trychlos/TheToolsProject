@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - Fix deep recursion when the site.json uses obsolete properties
 
 ### 4.14.0
 

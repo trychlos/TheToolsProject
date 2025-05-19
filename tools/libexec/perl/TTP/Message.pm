@@ -412,11 +412,9 @@ sub _printMsg_color {
 		$color = $ep->var([ 'messages', $Const->{$level}{key}, 'color' ]) || '';
 		if( !$color ){
 			$color = $ep->var([ 'Message', $Const->{$level}{key}, 'color' ]) || '';
-			if( $color ){
-				if( !$ep->{_warnings}{message} ){
-					msgWarn( "'Message' property is deprecated in favor of 'messages'. You should update your configurations." );
-					$ep->{_warnings}{message} = true;
-				}
+			if( $color && $ep->boostrapped() && !$ep->{_warnings}{message} && !$ENV{ttp_me} ){
+				msgWarn( "'Message' property is deprecated in favor of 'messages'. You should update your configurations." );
+				$ep->{_warnings}{message} = true;
 			}
 		}
 	}
@@ -438,11 +436,9 @@ sub _printMsg_marker {
 		$marker = $ep->var([ 'messages', $Const->{$level}{key}, 'marker' ]) || '';
 		if( !$marker ){
 			$marker = $ep->var([ 'Message', $Const->{$level}{key}, 'marker' ]) || '';
-			if( $marker ){
-				if( !$ep->{_warnings}{message} ){
-					msgWarn( "'Message' property is deprecated in favor of 'messages'. You should update your configurations." );
-					$ep->{_warnings}{message} = true;
-				}
+			if( $marker && $ep->boostrapped() && !$ep->{_warnings}{message} && !$ENV{ttp_me} ){
+				msgWarn( "'Message' property is deprecated in favor of 'messages'. You should update your configurations." );
+				$ep->{_warnings}{message} = true;
 			}
 		}
 	}
@@ -467,11 +463,9 @@ sub _printMsg_withColor {
 		my $value = $ep->var([ 'messages', $Const->{$level}{key}, 'withColor' ]);
 		if( !defined $value ){
 			$value = $ep->var([ 'Message', $Const->{$level}{key}, 'withColor' ]);
-			if( defined $value ){
-				if( !$ep->{_warnings}{message} ){
-					msgWarn( "'Message' property is deprecated in favor of 'messages'. You should update your configurations." );
-					$ep->{_warnings}{message} = true;
-				}
+			if( defined $value && $ep->boostrapped() && !$ep->{_warnings}{message} && !$ENV{ttp_me} ){
+				msgWarn( "'Message' property is deprecated in favor of 'messages'. You should update your configurations." );
+				$ep->{_warnings}{message} = true;
 			}
 		}
 		$withColor = $value if defined $value;
@@ -492,11 +486,9 @@ sub _printMsg_withLog {
 		my $value = $ep->var([ 'messages', $Const->{$level}{key}, 'withLog' ]);
 		if( !defined $value ){
 			$value = $ep->var([ 'Message', $Const->{$level}{key}, 'withLog' ]);
-			if( defined $value ){
-				if( !$ep->{_warnings}{message} ){
-					msgWarn( "'Message' property is deprecated in favor of 'messages'. You should update your configurations." );
-					$ep->{_warnings}{message} = true;
-				}
+			if( defined $value && $ep->boostrapped() && !$ep->{_warnings}{message} && !$ENV{ttp_me} ){
+				msgWarn( "'Message' property is deprecated in favor of 'messages'. You should update your configurations." );
+				$ep->{_warnings}{message} = true;
 			}
 		}
 		$withLog = $value if defined $value;
