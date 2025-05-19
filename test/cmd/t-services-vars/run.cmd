@@ -50,7 +50,7 @@
 	exit /b
 
 :checkUnknownKeyWith
-	set "_command=services.pl vars -service key -key not,exist"
+	set "_command=services.pl vars -service test -key not,exist"
     <NUL set /P=%BS%  [%testbase%] testing an unknown key with service '%_command%'... 
 	%_command% 2>%stderr% | findstr /V WAR 1>%stdout%
 	set _rc=%ERRORLEVEL%
