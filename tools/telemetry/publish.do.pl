@@ -17,8 +17,8 @@
 # @(-) --prepend=<name=value>  label to be prepended to the telemetry metrics, may be specified several times or as a comma-separated list [${prepend}]
 # @(-) --append=<name=value>   label to be appended to the telemetry metrics, may be specified several times or as a comma-separated list [${append}]
 #
-# @(@) This verb let you publish a metric to any enabled medium, among (MQTT-based) messaging system, or (http-based) Prometheus PushGateway or
-# @(@) (text-based) Prometheus TextFile Collector.
+# @(@) Note 1: this verb let you publish a metric to any enabled medium, among (MQTT-based) messaging system, or (http-based) Prometheus PushGateway
+# @(@)         or (text-based) Prometheus TextFile Collector.
 #
 # TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)

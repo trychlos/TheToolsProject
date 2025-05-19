@@ -10,7 +10,7 @@
 # @(-) --exclude-files=<file>  exclude these files from the copy [${excludefiles}]
 # @(-) --options=<options>     additional options to be passed to the command [${options}]
 #
-# @(@) When specified, the '--exclude-dir' and '--exclude-file' options override the corresponding values from the site configuration.
+# @(@) Note 1: when specified, the '--exclude-dir' and '--exclude-file' options override the corresponding values from the site configuration.
 #
 # TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)

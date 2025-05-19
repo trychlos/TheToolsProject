@@ -24,11 +24,11 @@
 # @(-) --password=<password>   the corresponding password [${password}]
 # @(-) --pwdkeys=<pwdkeys>     a comma-separated list of the keys to get the password from credentials [${pwdkeys}]
 #
-# @(@) Among other uses, this verb is notably used to check which machine answers to a given URL in an architecture which wants take advantage of
-# @(@) IP Failover system. But, in such a system, all physical hosts are configured with this FO IP, and so answers are seen as originating from
-# @(@) this same physical host. In order to get accurate result in such a case, this verb must so be run from outside of the involved physical hosts.
-# @(@) '--epoch' option let the verb publish an epoch-based telemetry. This is very specific to the use of the telemetry by Grafana in order
-# @(@) to be able to both identify the last live node, and to set a status on this last live node to current or not.
+# @(@) Note 1: among other uses, this verb is notably used to check which machine answers to a given URL in an architecture which wants take advantage of
+# @(@)         IP Failover system. But, in such a system, all physical hosts are configured with this FO IP, and so answers are seen as originating from
+# @(@)         this same physical host. In order to get accurate result in such a case, this verb must so be run from outside of the involved physical hosts.
+# @(@) Note 2: '--epoch' option let the verb publish an epoch-based telemetry. This is very specific to the use of the telemetry by Grafana in order
+# @(@)         to be able to both identify the last live node, and to set a status on this last live node to current or not.
 #
 # TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)

@@ -11,8 +11,8 @@
 # @(-) --key=<name[,...]>      the key which addresses the desired value, may be specified several times or as a comma-separated list [${key}]
 # @(-) --service=<name>        the service name to operate on when requesting by keys [${service}]
 #
-# @(@) Please remind that each of the above directories can be in the service definition of a node, or at the
-# @(@) node level, or also as a value of the service definition, eventually defaulting to a site-level value.
+# @(@) Note 1: please remind that each of the above directories can be in the service definition of a node, or at the
+# @(@)         node level, or also as a value of the service definition, eventually defaulting to a site-level value.
 #
 # TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)

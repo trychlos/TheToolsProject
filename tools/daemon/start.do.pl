@@ -7,10 +7,10 @@
 # @(-) --json=<name>           the JSON file which characterizes this daemon [${json}]
 # @(-) --name=<name>           the daemon name [${name}]
 #
-# @(@) TheToolsProject is able to manage any daemons with these very same verbs.
-# @(@) Each separate daemon is characterized by its own JSON properties which uniquely identifies it from the TTP point of view.
-# @(@) This script accepts other options, after a '--' double dash, which will be passed to the run daemon program.
-# @(@) daemon.pl command and all its verbs only work on the local node.
+# @(@) Note 1: TheToolsProject is able to manage any daemons with these very same verbs.
+# @(@)         Each separate daemon is characterized by its own JSON properties which uniquely identifies it from the TTP point of view.
+# @(@)         This script accepts other options, after a '--' double dash, which will be passed to the run daemon program.
+# @(@) Note 2: "daemon.pl" command and all its verbs only work on the local node.
 #
 # TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)

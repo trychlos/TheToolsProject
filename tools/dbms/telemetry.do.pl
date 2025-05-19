@@ -15,8 +15,8 @@
 # @(-) --prepend=<name=value>  label to be appended to the telemetry metrics, may be specified several times or as a comma-separated list [${prepend}]
 # @(-) --append=<name=value>   label to be appended to the telemetry metrics, may be specified several times or as a comma-separated list [${append}]
 #
-# @(@) When limiting the published messages, be conscious that the '--dbsize' option provides 6 metrics per database.
-# @(@) This verb manages itself different telemetry prefixes depending of the targeted system.
+# @(@) Note 1: when limiting the published messages, be conscious that the '--dbsize' option provides 6 metrics per database.
+# @(@) Note 2: this verb manages itself different telemetry prefixes depending of the targeted system.
 #
 # TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)

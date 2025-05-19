@@ -7,7 +7,7 @@
 # @(-) --service=<name>        acts on the named service [${service}]
 # @(-) --key=<name[,...]>      the key to be searched for in JSON configuration file, may be specified several times or as a comma-separated list [${key}]
 #
-# @(@) The specified keys must eventually address an array of the to-be-executed commands or a single command string.
+# @(@) Note 1: the specified keys must eventually address an array of the to-be-executed commands or a single command string.
 #
 # TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)

@@ -7,9 +7,9 @@
 # @(-) --fromhost=<name>       pull from this host [${fromhost}]
 # @(-) --options=<options>     additional options to be passed to the command [${options}]
 #
-# @(@) When pulling from the default host, you should take care of specifying at least one of '--nohelp' or '--noverbose' (or '--verbose').
-# @(@) Also be warned that this script deletes the destination before installing the refreshed version, and will not be able of that if
-# @(@) a user is inside of the tree (either through a file explorer or a command prompt).
+# @(@) Note 1: When pulling from the default host, you should take care of specifying at least one of '--nohelp' or '--noverbose' (or '--verbose').
+# @(@) Note 2: Also be warned that this script deletes the destination before installing the refreshed version, and will not be able of that if
+# @(@)         a user is inside of the tree (either through a file explorer or a command prompt).
 #
 # TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
