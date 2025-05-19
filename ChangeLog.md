@@ -32,6 +32,7 @@
     - Introduce TTP::MariaDB and make all verbs available (todo #137)
     - Define new ttp.pl version verb
     - Move DBMS.wantsLocal property to service schema
+    - Change dbms.pl list --listdb and --listtables options to --list-db and --list-tables (todo #155)
 
 ### 4.13.0
 

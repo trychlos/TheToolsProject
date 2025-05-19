@@ -44,7 +44,6 @@
 |      |            | or: have a Daemon class which both gathers DaemonConfig and RunnerDaemon features |
 |      | 2025- 5-14 | DaemonConfig -> Daemon would imply $runner = TTP::RunnerDaemon->bootstrap() and $daemon->config() -> $runner->daemon() |
 |  151 | 2025- 5-16 | have ldap backup/restore |
-|  155 | 2025- 5-18 | change dbms.pl list --listdb and --listtables to --list-db and --list-tables |
 |  156 | 2025- 5-18 | change dbms.pl backup/restore --report defaulting to true to --report-mqtt and --report-file both defaulting to false |
 |  157 |  |  |
 
@@ -404,6 +403,8 @@
 |  153 | 2025- 5-16 | DBMS should have an option to match the databases in a sensitive/insensitive way |
 |      | 2025- 5-17 | done |
 |  154 | 2025- 5-18 | have execRemote() |
+|      | 2025- 5-19 | done |
+|  155 | 2025- 5-18 | change dbms.pl list --listdb and --listtables to --list-db and --list-tables |
 |      | 2025- 5-19 | done |
 
 ---

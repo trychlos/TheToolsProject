@@ -6,9 +6,9 @@
 # @(-) --[no]verbose           run verbosely [${verbose}]
 # @(-) --service=<name>        acts on the named service [${service}]
 # @(-) --[no]properties        display specific properties of the named service [${properties}]
-# @(-) --[no]listdb            list the available databases on the named service [${listdb}]
+# @(-) --[no]list-db           list the available databases on the named service [${listdb}]
 # @(-) --database=<name>       acts on the named database [${database}]
-# @(-) --[no]listtables        list the available tables of the named database [${listtables}]
+# @(-) --[no]list-tables       list the available tables of the named database [${listtables}]
 #
 # @(@) with:
 # @(@)   'dbms.pl list -service <service> -properties' displays specific properties for this service
@@ -114,9 +114,9 @@ if( !GetOptions(
 	"verbose!"			=> sub { $ep->runner()->verbose( @_ ); },
 	"service=s"			=> \$opt_service,
 	"properties!"		=> \$opt_properties,
-	"listdb!"			=> \$opt_listdb,
+	"list-db!"			=> \$opt_listdb,
 	"database=s"		=> \$opt_database,
-	"listtables!"		=> \$opt_listtables )){
+	"list-tables!"		=> \$opt_listtables )){
 
 		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
