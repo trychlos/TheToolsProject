@@ -6,6 +6,7 @@
 # @(-) --[no]verbose           run verbosely [${verbose}]
 # @(-) --[no]greatest          display the greatest inline version [${greatest}]
 # @(-) --[no]all               display all inline versions [${all}]
+# @(-) --target=<name>         target node [${target}]
 #
 # TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
@@ -35,11 +36,13 @@ my $defaults = {
 	dummy => 'no',
 	verbose => 'no',
 	greatest => 'no',
-	all => 'no'
+	all => 'no',
+	target => ''
 };
 
 my $opt_greatest = false;
 my $opt_all = false;
+my $opt_target = $defaults->{target};
 
 # -------------------------------------------------------------------------------------------------
 # Display all inline versions
@@ -69,7 +72,8 @@ if( !GetOptions(
 	"dummy!"			=> sub { $ep->runner()->dummy( @_ ); },
 	"verbose!"			=> sub { $ep->runner()->verbose( @_ ); },
 	"greatest!"			=> \$opt_greatest,
-	"all!"				=> \$opt_all )){
+	"all!"				=> \$opt_all,
+	"target=s"			=> \$opt_target )){
 
 		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
@@ -85,6 +89,13 @@ msgVerbose( "got dummy='".( $ep->runner()->dummy() ? 'true':'false' )."'" );
 msgVerbose( "got verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got greatest='".( $opt_greatest ? 'true':'false' )."'" );
 msgVerbose( "got all='".( $opt_all ? 'true':'false' )."'" );
+msgVerbose( "got target='$opt_target'" );
+
+# if a target is specified, then exec remote
+if( $opt_target ){
+	TTP::execRemote( $opt_target );
+	TTP::exit();
+}
 
 # warn if no option has been requested
 msgWarn( "neither '--greatest' nor '--all' options have been provided, nothing to do" ) if !$opt_greatest && !$opt_all;

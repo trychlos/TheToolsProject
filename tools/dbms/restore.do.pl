@@ -5,6 +5,7 @@
 # @(-) --[no]dummy             dummy run [${dummy}]
 # @(-) --[no]verbose           run verbosely [${verbose}]
 # @(-) --service=<name>        acts of this service [${service}]
+# @(-) --target=<name>         target node [${target}]
 # @(-) --database=<name>       target database name [${database}]
 # @(-) --full=<filename>       restore from this full backup [${full}]
 # @(-) --diff=<filename>       restore with this differential backup [${diff}]
@@ -15,7 +16,6 @@
 #
 # @(@) Note 1: you must at least provide a full backup to restore, and may also provide an additional differential backup file.
 # @(@) Note 2: target database is mandatory unless you only want a backup restorability check, in which case '--dummy' option is not honored.
-# @(@) Note 3: "dbms.pl restore" provides an execution report according to the configured options.
 #
 # TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
@@ -48,6 +48,7 @@ my $defaults = {
 	dummy => 'no',
 	verbose => 'no',
 	service => '',
+	target => '',
 	database => '',
 	full => '',
 	diff => '',
@@ -56,6 +57,7 @@ my $defaults = {
 };
 
 my $opt_service = $defaults->{service};
+my $opt_target = $defaults->{target};
 my $opt_database = $defaults->{database};
 my $opt_full = $defaults->{full};
 my $opt_diff = $defaults->{diff};
@@ -154,6 +156,7 @@ if( !GetOptions(
 	"dummy!"			=> sub { $ep->runner()->dummy( @_ ); },
 	"verbose!"			=> sub { $ep->runner()->verbose( @_ ); },
 	"service=s"			=> \$opt_service,
+	"target=s"			=> \$opt_target,
 	"database=s"		=> \$opt_database,
 	"full=s"			=> \$opt_full,
 	"diff=s"			=> \$opt_diff,
@@ -175,6 +178,7 @@ msgVerbose( "got colored='".( $ep->runner()->colored() ? 'true':'false' )."'" );
 msgVerbose( "got dummy='".( $ep->runner()->dummy() ? 'true':'false' )."'" );
 msgVerbose( "got verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got service='$opt_service'" );
+msgVerbose( "got target='$opt_target'" );
 msgVerbose( "got database='$opt_database'" );
 msgVerbose( "got full='$opt_full'" );
 msgVerbose( "got diff='$opt_diff'" );
@@ -188,11 +192,16 @@ msgVerbose( "got inhibit='$opt_inhibit'" );
 # and check that the service is DBMS-aware
 if( $opt_service ){
 	$objNode = TTP::Node->findByService( $ep->node()->environment(), $opt_service, {
-		inhibit => $opt_inhibit
+		inhibit => $opt_inhibit,
+		target => $opt_target
 	});
 	if( $objNode ){
 		msgVerbose( "got hosting node='".$objNode->name()."'" );
 		$objService = TTP::Service->new( $ep, { service => $opt_service });
+		if( $objService->wantsLocal() && $objNode->name() ne $ep->node()->name()){
+			TTP::execRemote( $objNode->name());
+			TTP::exit();
+		}
 		$objDbms = $objService->newDbms({ node => $objNode });
 	}
 } else {

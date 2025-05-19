@@ -10,7 +10,7 @@
 # @(@) Note 1: dummy mode is honored here by using msgWarn() instead of msgErr() when checking the JSON daemon configurations
 # @(@)         (if '--check' option has been set). Please be conscious that any of these two options may so return a different
 # @(@)         result set of the one returned by the standard (default) run.
-# @(@) Note 2: "daemon.pl" command and all its verbs only work on the local node.
+# @(@) Note 2: "daemon.pl" command and all its verbs only act on the local node.
 #
 # TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)

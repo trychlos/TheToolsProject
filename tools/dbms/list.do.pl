@@ -5,6 +5,7 @@
 # @(-) --[no]dummy             dummy run [${dummy}]
 # @(-) --[no]verbose           run verbosely [${verbose}]
 # @(-) --service=<name>        acts on the named service [${service}]
+# @(-) --target=<name>         target node [${target}]
 # @(-) --[no]properties        display specific properties of the named service [${properties}]
 # @(-) --[no]list-db           list the available databases on the named service [${listdb}]
 # @(-) --database=<name>       acts on the named database [${database}]
@@ -46,6 +47,7 @@ my $defaults = {
 	dummy => 'no',
 	verbose => 'no',
 	service => '',
+	target => '',
 	properties => 'no',
 	listdb => 'no',
 	database => '',
@@ -53,6 +55,7 @@ my $defaults = {
 };
 
 my $opt_service = $defaults->{service};
+my $opt_target = $defaults->{target};
 my $opt_properties = false;
 my $opt_listdb = false;
 my $opt_database = $defaults->{database};
@@ -113,6 +116,7 @@ if( !GetOptions(
 	"dummy!"			=> sub { $ep->runner()->dummy( @_ ); },
 	"verbose!"			=> sub { $ep->runner()->verbose( @_ ); },
 	"service=s"			=> \$opt_service,
+	"target=s"			=> \$opt_target,
 	"properties!"		=> \$opt_properties,
 	"list-db!"			=> \$opt_listdb,
 	"database=s"		=> \$opt_database,
@@ -131,6 +135,7 @@ msgVerbose( "got colored='".( $ep->runner()->colored() ? 'true':'false' )."'" );
 msgVerbose( "got dummy='".( $ep->runner()->dummy() ? 'true':'false' )."'" );
 msgVerbose( "got verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got service='$opt_service'" );
+msgVerbose( "got target='$opt_target'" );
 msgVerbose( "got properties='".( $opt_properties ? 'true':'false' )."'" );
 msgVerbose( "got listdb='".( $opt_listdb ? 'true':'false' )."'" );
 msgVerbose( "got database='$opt_database'" );
@@ -140,10 +145,14 @@ msgVerbose( "got listtables='".( $opt_listtables ? 'true':'false' )."'" );
 # find the node which hosts this service in this same environment (should be at most one)
 # and check that the service is DBMS-aware
 if( $opt_service ){
-	$objNode = TTP::Node->findByService( $ep->node()->environment(), $opt_service );
+	$objNode = TTP::Node->findByService( $ep->node()->environment(), $opt_service, { target => $opt_target });
 	if( $objNode ){
 		msgVerbose( "got hosting node='".$objNode->name()."'" );
 		$objService = TTP::Service->new( $ep, { service => $opt_service });
+		if( $objService->wantsLocal() && $objNode->name() ne $ep->node()->name()){
+			TTP::execRemote( $objNode->name());
+			TTP::exit();
+		}
 		$objDbms = $objService->newDbms({ node => $objNode });
 	}
 } else {

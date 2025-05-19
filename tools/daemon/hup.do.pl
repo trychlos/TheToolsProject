@@ -8,7 +8,7 @@
 # @(-) --name=<name>           the daemon name [${name}]
 # @(-) --port=<port>           the port number to address [${port}]
 #
-# @(@) Note 1: "daemon.pl" command and all its verbs only work on the local node.
+# @(@) Note 1: "daemon.pl" command and all its verbs only act on the local node.
 #
 # TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)

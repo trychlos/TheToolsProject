@@ -16,8 +16,7 @@
 #
 # @(@) Note 1: remind that differential backup is the difference of the current state and the last full backup.
 # @(@) Note 2: the default output filename is computed as:
-# @(@)         <instance_backup_path>\<yymmdd>\<host>-<instance>-<database>-<yymmdd>-<hhmiss>-<mode>.backup
-# @(@) Note 3: "dbms.pl backup" provides an execution report according to the configured options.
+# @(@)         <instance_backup_path>\<yymmdd>\<host>-<instance>-<database>-<yymmdd>-<hhmiss>-<mode>.backup.
 #
 # TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)

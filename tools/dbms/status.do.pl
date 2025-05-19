@@ -5,6 +5,7 @@
 # @(-) --[no]dummy             dummy run (ignored here) [${dummy}]
 # @(-) --[no]verbose           run verbosely [${verbose}]
 # @(-) --service=<name>        acts on the named service [${service}]
+# @(-) --target=<name>         target node [${target}]
 # @(-) --database=<name>       database name [${database}]
 # @(-) --[no]state             get state [${state}]
 # @(-) --[no]mqtt              publish the metrics to the (MQTT-based) messaging system [${mqtt}]
@@ -48,6 +49,7 @@ my $defaults = {
 	dummy => 'no',
 	verbose => 'no',
 	service => '',
+	target => '',
 	database => '',
 	state => 'no',
 	mqtt => 'no',
@@ -58,6 +60,7 @@ my $defaults = {
 };
 
 my $opt_service = $defaults->{service};
+my $opt_target = $defaults->{target};
 my $opt_database = $defaults->{database};
 my $opt_state = false;
 my $opt_mqtt = false;
@@ -156,6 +159,7 @@ if( !GetOptions(
 	"dummy!"			=> sub { $ep->runner()->dummy( @_ ); },
 	"verbose!"			=> sub { $ep->runner()->verbose( @_ ); },
 	"service=s"			=> \$opt_service,
+	"target=s"			=> \$opt_target,
 	"database=s"		=> \$opt_database,
 	"state!"			=> \$opt_state,
 	"mqtt!"				=> \$opt_mqtt,
@@ -177,6 +181,7 @@ msgVerbose( "got colored='".( $ep->runner()->colored() ? 'true':'false' )."'" );
 msgVerbose( "got dummy='".( $ep->runner()->dummy() ? 'true':'false' )."'" );
 msgVerbose( "got verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got service='$opt_service'" );
+msgVerbose( "got target='$opt_target'" );
 msgVerbose( "got database='$opt_database'" );
 msgVerbose( "got state='".( $opt_state ? 'true':'false' )."'" );
 msgVerbose( "got mqtt='".( $opt_mqtt ? 'true':'false' )."'" );
@@ -191,10 +196,14 @@ msgVerbose( "got appends='".join( ',', @opt_appends )."'" );
 # find the node which hosts this service in this same environment (should be at most one)
 # and check that the service is DBMS-aware
 if( $opt_service ){
-	$objNode = TTP::Node->findByService( $ep->node()->environment(), $opt_service );
+	$objNode = TTP::Node->findByService( $ep->node()->environment(), $opt_service, { target => $opt_target });
 	if( $objNode ){
 		msgVerbose( "got hosting node='".$objNode->name()."'" );
 		$objService = TTP::Service->new( $ep, { service => $opt_service });
+		if( $objService->wantsLocal() && $objNode->name() ne $ep->node()->name()){
+			TTP::execRemote( $objNode->name());
+			TTP::exit();
+		}
 		$objDbms = $objService->newDbms({ node => $objNode });
 	}
 } else {

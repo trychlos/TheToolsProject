@@ -5,6 +5,7 @@
 # @(-) --[no]dummy             dummy run (ignored here) [${dummy}]
 # @(-) --[no]verbose           run verbosely [${verbose}]
 # @(-) --service=<name>        acts on the named service [${service}]
+# @(-) --target=<name>         target node [${target}]
 # @(-) --key=<name[,...]>      the key to be searched for in JSON configuration file, may be specified several times or as a comma-separated list [${key}]
 #
 # @(@) Note 1: the specified keys must eventually address an array of the to-be-executed commands or a single command string.
@@ -39,11 +40,18 @@ my $defaults = {
 	dummy => 'no',
 	verbose => 'no',
 	service => '',
+	target => '',
 	key => ''
 };
 
 my $opt_service = $defaults->{service};
+my $opt_target = $defaults->{target};
 my @opt_keys = ();
+
+# the node which hosts the requested service
+my $objNode = undef;
+# the service object
+my $objService = undef;
 
 # -------------------------------------------------------------------------------------------------
 # execute the commands registered for the service for the specified key(s)
@@ -53,15 +61,12 @@ my $count = 0;
 sub executeCommands {
 	msgOut( "executing '$opt_service [".join( ',', @opt_keys )."]' commands..." );
 	my $cmdCount = 0;
-	my $service = TTP::Service->new( $ep, { service => $opt_service });
-	if( $service ){
-		# addressed value can be a scalar or an array of scalars
-		my $value = $service->var( \@opt_keys );
-		if( $value && $value->{commands} ){
-			_execute( $service, $value->{commands} );
-		} else {
-			msgErr( "unable to find the requested information" );
-		}
+	# addressed value can be a scalar or an array of scalars
+	my $value = $objService->var( \@opt_keys );
+	if( $value && $value->{commands} ){
+		_execute( $objService, $value->{commands} );
+	} else {
+		msgErr( "unable to find the requested information" );
 	}
 	if( TTP::errs()){
 		msgErr( "NOT OK", { incErr => false });
@@ -103,6 +108,7 @@ if( !GetOptions(
 	"dummy!"			=> sub { $ep->runner()->dummy( @_ ); },
 	"verbose!"			=> sub { $ep->runner()->verbose( @_ ); },
 	"service=s"			=> \$opt_service,
+	"target=s"			=> \$opt_target,
 	"key=s@"			=> \@opt_keys )){
 
 		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
@@ -118,14 +124,32 @@ msgVerbose( "got colored='".( $ep->runner()->colored() ? 'true':'false' )."'" );
 msgVerbose( "got dummy='".( $ep->runner()->dummy() ? 'true':'false' )."'" );
 msgVerbose( "got verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got service='$opt_service'" );
+msgVerbose( "got target='$opt_target'" );
 @opt_keys = split( /,/, join( ',', @opt_keys ));
 msgVerbose( "got keys='".join( ',', @opt_keys )."'" );
 
-msgErr( "'--service' service name is required, but not found" ) if !$opt_service;
-msgErr( "at least a key is required, but none found" ) if !scalar( @opt_keys );
+# must have --service option
+# find the node which hosts this service in this same environment (should be at most one)
+# and check that the service is DBMS-aware
+if( $opt_service ){
+	$objNode = TTP::Node->findByService( $ep->node()->environment(), $opt_service, { target => $opt_target });
+	if( $objNode ){
+		msgVerbose( "got hosting node='".$objNode->name()."'" );
+		$objService = TTP::Service->new( $ep, { service => $opt_service });
+		if( $objService->wantsLocal() && $objNode->name() ne $ep->node()->name()){
+			TTP::execRemote( $objNode->name());
+			TTP::exit();
+		}
+	}
+} else {
+	msgErr( "'--service' option is mandatory, but is not specified" );
+}
+
+# mandatory options
+msgErr( "at least one key is required, but none has been found" ) if !scalar( @opt_keys );
 
 if( !TTP::errs()){
-	executeCommands() if $opt_service && scalar( @opt_keys );
+	executeCommands() if $objService;
 }
 
 TTP::exit();

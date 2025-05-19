@@ -38,7 +38,6 @@
 |  123 | 2025- 4-29 | have a test for alerts-monitor-daemon |
 |  124 | 2025- 4-29 | have a test for mqtt-monitor-daemon |
 |  125 | 2025- 4-29 | have a test for node-monitor-daemon |
-|  139 | 2025- 5- 9 | when accessing a service, should be able to specify a target node in the case where the service is available on several nodes in this environment |
 |  141 | 2025- 5-10 | MongoDB::backupDatabase() and restoreDatabase() command-lines should be configurable somewhere |
 |  146 | 2025- 5-11 | maybe a site may/want/should define its own test suite, to be run after the TTP own test suite |
 |  147 | 2025- 5-13 | DaemonConfig should be Daemon to be consistent with Site, Node, Service where the class actually addresses or is based on a configuration file |
@@ -379,6 +378,8 @@
 |      | 2025- 5- 7 | emphasize is done - but not generalization |
 |      | 2025- 5- 9 | dbms.pl list no more have --instance option has useless for SqlServer |
 |      | 2025- 5-10 | --instance option is full removed from all dbms.pl verbs |
+|  139 | 2025- 5- 9 | when accessing a service, should be able to specify a target node in the case where the service is available on several nodes in this environment |
+|      | 2025- 5-19 | done |
 |  140 | 2025- 5-10 | TTP::IFindable::_find_run() whether to log should be a run option activated only on some situations (because this is too much verbose) |
 |      |            | and same for all other jsonRead(), TTP::IEnableable:enabled(), TTP::IJSONable::jsonLoad() |
 |      |            | and same for evaluate() functions |

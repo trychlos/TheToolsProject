@@ -13,6 +13,7 @@
 #
 # @(@) Note 1: please remind that each of the above directories can be in the service definition of a node, or at the
 # @(@)         node level, or also as a value of the service definition, eventually defaulting to a site-level value.
+# @(@) Note 2: "dbms.pl vars" only acts on the local node.
 #
 # TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)

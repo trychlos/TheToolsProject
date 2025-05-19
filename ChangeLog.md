@@ -36,6 +36,7 @@
     - Change dbms.pl backup/restore --report defaulting to true to --mqtt and --file both defaulting to false (todo #156)
 	- Define (and honor) new execRemote property to manage specifics execRemote commands
     - Homogeneize verbs notes
+    - Relevant verbs have now a '--target' option which may trigger a remote execution (todo #139)
 
 ### 4.13.0
 
