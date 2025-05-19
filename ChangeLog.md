@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.14.1-rc.0
+### 4.14.1
 
-    Release date: 
+    Release date: 2025- 5-19
 
     - Fix deep recursion when the site.json uses obsolete properties
 
