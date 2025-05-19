@@ -41,7 +41,6 @@ use warnings;
 
 use TTP::Node;
 use TTP::Service;
-use TTP::MariaDB;
 
 my $defaults = {
 	help => 'no',
@@ -63,11 +62,11 @@ my $opt_diff = $defaults->{diff};
 my $opt_verifyonly = false;
 my $opt_inhibit = $defaults->{inhibit};
 
-my $opt_mqtt = TTP::var([ 'executionReport', 'withMqtt', 'default' ]);
+my $opt_mqtt = TTP::var([ 'executionReports', 'withMqtt', 'default' ]);
 $opt_mqtt = false if !defined $opt_mqtt;
 $defaults->{mqtt} = $opt_mqtt ? 'yes' : 'no';
 
-my $opt_file = TTP::var([ 'executionReport', 'withFile', 'default' ]);
+my $opt_file = TTP::var([ 'executionReports', 'withFile', 'default' ]);
 $opt_file = false if !defined $opt_file;
 $defaults->{file} = $opt_file ? 'yes' : 'no';
 
