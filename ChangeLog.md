@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.14.0-rc.0
+### 4.14.0
 
-    Release date: 
+    Release date: 2025- 5-19
 
     - Write 'moveDir' schema (todo #110)
     - Define test/sh for ttp.pl vars (todo #126)
@@ -450,4 +450,4 @@
 
 ---
 P. Wieser
-- Last updated on 2025, May 14th
+- Last updated on 2025, May 19th
