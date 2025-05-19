@@ -31,6 +31,7 @@
 |  109 | 2025- 4-20 | site.schema for executionReports |
 |      | 2025- 4-22 | done - has to be honored |
 |      | 2025- 5- 7 | TTP::executionReport() honors 'enabled' configuration |
+|      | 2025- 5-19 | dbms.pl backup/restore both honor withFile/withMqtt.default property |
 |  111 | 2025- 4-20 | site.schema for telemetry |
 |      | 2025- 4-22 | done - has to be honored |
 |      | 2025- 5-11 | Mqtt honors it |
@@ -44,7 +45,6 @@
 |      |            | or: have a Daemon class which both gathers DaemonConfig and RunnerDaemon features |
 |      | 2025- 5-14 | DaemonConfig -> Daemon would imply $runner = TTP::RunnerDaemon->bootstrap() and $daemon->config() -> $runner->daemon() |
 |  151 | 2025- 5-16 | have ldap backup/restore |
-|  156 | 2025- 5-18 | change dbms.pl backup/restore --report defaulting to true to --report-mqtt and --report-file both defaulting to false |
 |  157 |  |  |
 
 ---
@@ -405,6 +405,8 @@
 |  154 | 2025- 5-18 | have execRemote() |
 |      | 2025- 5-19 | done |
 |  155 | 2025- 5-18 | change dbms.pl list --listdb and --listtables to --list-db and --list-tables |
+|      | 2025- 5-19 | done |
+|  156 | 2025- 5-18 | change dbms.pl backup/restore --report defaulting to true to --report-mqtt and --report-file both defaulting to false |
 |      | 2025- 5-19 | done |
 
 ---

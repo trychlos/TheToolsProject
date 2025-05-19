@@ -9,7 +9,8 @@
 # @(-) --full=<filename>       restore from this full backup [${full}]
 # @(-) --diff=<filename>       restore with this differential backup [${diff}]
 # @(-) --[no]verifyonly        only check the backup restorability [${verifyonly}]
-# @(-) --[no]report            whether an execution report should be provided [${report}]
+# @(-) --[no]mqtt              whether an execution report should be published to MQTT [${mqtt}]
+# @(-) --[no]file              whether an execution report should be provided by file [${file}]
 # @(-) --inhibit=<node>        make sure to not restore on that node [${inhibit}]
 #
 # @(@) Note 1: you must at least provide a full backup to restore, and may also provide an additional differential backup file.
@@ -52,7 +53,6 @@ my $defaults = {
 	full => '',
 	diff => '',
 	verifyonly => 'no',
-	report => 'yes',
 	inhibit => ''
 };
 
@@ -61,8 +61,15 @@ my $opt_database = $defaults->{database};
 my $opt_full = $defaults->{full};
 my $opt_diff = $defaults->{diff};
 my $opt_verifyonly = false;
-my $opt_report = true;
 my $opt_inhibit = $defaults->{inhibit};
+
+my $opt_mqtt = TTP::var([ 'executionReport', 'withMqtt', 'default' ]);
+$opt_mqtt = false if !defined $opt_mqtt;
+$defaults->{mqtt} = $opt_mqtt ? 'yes' : 'no';
+
+my $opt_file = TTP::var([ 'executionReport', 'withFile', 'default' ]);
+$opt_file = false if !defined $opt_file;
+$defaults->{file} = $opt_file ? 'yes' : 'no';
 
 # the node which hosts the requested service
 my $objNode = undef;
@@ -104,12 +111,9 @@ sub doRestore {
 			msgOut( "executing '$cmd'" );
 			TTP::commandExec( $cmd );
 		}
-		# honors --report option
-		if( $opt_report ){
+		# honors --mqtt option
+		if( $opt_mqtt ){
 			TTP::executionReport({
-				file => {
-					data => $data
-				},
 				mqtt => {
 					data => $data,
 					topic => $objNode->name().'/executionReport/'.$ep->runner()->command().'/'.$ep->runner()->verb()."/$opt_service/$opt_database",
@@ -122,6 +126,14 @@ sub doRestore {
 						'verb',
 						'node'
 					]
+				}
+			});
+		}
+		# honors --file option
+		if( $opt_file ){
+			TTP::executionReport({
+				file => {
+					data => $data
 				}
 			});
 		}
@@ -147,7 +159,8 @@ if( !GetOptions(
 	"full=s"			=> \$opt_full,
 	"diff=s"			=> \$opt_diff,
 	"verifyonly!"		=> \$opt_verifyonly,
-	"report!"			=> \$opt_report,
+	"mqtt!"				=> \$opt_mqtt,
+	"file!"				=> \$opt_file,
 	"inhibit=s"			=> \$opt_inhibit )){
 
 		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
@@ -167,7 +180,8 @@ msgVerbose( "got database='$opt_database'" );
 msgVerbose( "got full='$opt_full'" );
 msgVerbose( "got diff='$opt_diff'" );
 msgVerbose( "got verifyonly='".( $opt_verifyonly ? 'true':'false' )."'" );
-msgVerbose( "got report='".( $opt_report ? 'true':'false' )."'" );
+msgVerbose( "got mqtt='".( $opt_mqtt ? 'true':'false' )."'" );
+msgVerbose( "got file='".( $opt_file ? 'true':'false' )."'" );
 msgVerbose( "got inhibit='$opt_inhibit'" );
 
 # must have --service option

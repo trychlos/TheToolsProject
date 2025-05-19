@@ -33,6 +33,7 @@
     - Define new ttp.pl version verb
     - Move DBMS.wantsLocal property to service schema
     - Change dbms.pl list --listdb and --listtables options to --list-db and --list-tables (todo #155)
+    - Change dbms.pl backup/restore --report defaulting to true to --mqtt and --file both defaulting to false (todo #156)
 
 ### 4.13.0
 

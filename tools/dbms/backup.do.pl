@@ -11,7 +11,8 @@
 # @(-) --[no]diff              operate a differential backup [${diff}]
 # @(-) --[no]compress          compress the outputed backup [${compress}]
 # @(-) --output=<filename>     target filename [${output}]
-# @(-) --[no]report            whether an execution report should be provided [${report}]
+# @(-) --[no]mqtt              whether an execution report should be published to MQTT [${mqtt}]
+# @(-) --[no]file              whether an execution report should be provided by file [${file}]
 #
 # @(@) Note 1: remind that differential backup is the difference of the current state and the last full backup.
 # @(@) Note 2: the default output filename is computed as:
@@ -56,8 +57,7 @@ my $defaults = {
 	full => 'no',
 	diff => 'no',
 	compress => 'no',
-	output => 'DEFAUT',
-	report => 'yes'
+	output => 'DEFAUT'
 };
 
 my $opt_service = $defaults->{service};
@@ -67,7 +67,14 @@ my $opt_full = false;
 my $opt_diff = false;
 my $opt_compress = false;
 my $opt_output = '';
-my $opt_report = true;
+
+my $opt_mqtt = TTP::var([ 'executionReport', 'withMqtt', 'default' ]);
+$opt_mqtt = false if !defined $opt_mqtt;
+$defaults->{mqtt} = $opt_mqtt ? 'yes' : 'no';
+
+my $opt_file = TTP::var([ 'executionReport', 'withFile', 'default' ]);
+$opt_file = false if !defined $opt_file;
+$defaults->{file} = $opt_file ? 'yes' : 'no';
 
 # the node which hosts the requested service
 my $objNode = undef;
@@ -104,12 +111,9 @@ sub doBackup {
 			output => ( $res->{ok} ? $res->{output} : "" ),
 			compress => $opt_compress
 		};
-		# honors --report option
-		if( $opt_report ){
+		# honors --mqtt option
+		if( $opt_mqtt ){
 			TTP::executionReport({
-				file => {
-					data => $data
-				},
 				mqtt => {
 					topic => $objNode->name()."/executionReport/".$ep->runner()->command().'/'.$ep->runner()->verb()."/$opt_service/$db",
 					data => $data,
@@ -120,8 +124,16 @@ sub doBackup {
 						'cmdline',
 						'command',
 						'verb',
-						'host'
+						'node'
 					]
+				}
+			});
+		}
+		# honors --file option
+		if( $opt_file ){
+			TTP::executionReport({
+				file => {
+					data => $data
 				}
 			});
 		}
@@ -152,7 +164,8 @@ if( !GetOptions(
 	"diff!"				=> \$opt_diff,
 	"compress!"			=> \$opt_compress,
 	"output=s"			=> \$opt_output,
-	"report!"			=> \$opt_report )){
+	"mqtt!"				=> \$opt_mqtt,
+	"file!"				=> \$opt_file )){
 
 		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
@@ -173,7 +186,8 @@ msgVerbose( "got full='".( $opt_full ? 'true':'false' )."'" );
 msgVerbose( "got diff='".( $opt_diff ? 'true':'false' )."'" );
 msgVerbose( "got compress='".( $opt_compress ? 'true':'false' )."'" );
 msgVerbose( "got output='$opt_output'" );
-msgVerbose( "got report='".( $opt_report ? 'true':'false' )."'" );
+msgVerbose( "got mqtt='".( $opt_mqtt ? 'true':'false' )."'" );
+msgVerbose( "got file='".( $opt_file ? 'true':'false' )."'" );
 
 # must have --service option
 # find the node which hosts this service in this same environment (should be at most one)
