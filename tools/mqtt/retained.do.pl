@@ -60,6 +60,7 @@ sub doGetRetained {
 	if( $mqtt ){
 		my $loop = true;
 		$mqtt->subscribe( '#' => \&doWork );
+		msgVerbose( "subscribed to '#'" );
 		while( $loop ){
 			$mqtt->tick( 1 );
 			my $now = Time::Moment->now->epoch;

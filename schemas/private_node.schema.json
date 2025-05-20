@@ -1,0 +1,44 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "org.trychlos.TheToolsProject/schemas/private_node.schema.json",
+    "title": "Credentials of the node",
+    "description_array": [
+		"The 'private/<node>.json' configuration file contains credentials applyable to this particular node.",
+		"It is searched for among 'etc/credentials/<node>.json' or 'etc/private/<node>.json' in each path of TTP_ROOTS environment variable.",
+		"The first found wins.",
+		"",
+		"Windows notes:",
+		"- Take care of doubling your backslashes",
+		"",
+		"Dynamic values:",
+		" May make use - in values only - of parameters between square brackets as [eval:...]",
+		" 'eval' may be prefixed with an underscore in order to delay the eval (e.g. if it refers to another dynamic variable which needs to be resolved first)."
+    ],
+    "type": "object",
+    "properties": {
+        "services": {
+            "description": "The credentials applyable to the services running on this node.",
+            "type": "object",
+            "properties": {
+                "patternProperties": {
+                    "^.*$": {
+                        "description": "The name of the service as configured in the nodes/<node>.json file.",
+                        "type": "object",
+                        "properties": {
+                            "DBMS": {
+                                "description": "The configuration of DBMS credentials.",
+                                "type": "object",
+                                "patternProperties": {
+                                    "^.*$": {
+                                        "description": "The account, the value being the corresponding password.",
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

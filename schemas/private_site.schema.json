@@ -1,0 +1,64 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "org.trychlos.TheToolsProject/schemas/private_site.schema.json",
+    "title": "Credentials of the site",
+    "description_array": [
+		"The 'private/site.json' configuration file contains global credentials for TTP.",
+		"It is searched for among 'etc/credentials/site.json', 'etc/credentials/toops.json', 'etc/credentials/ttp.json', 'etc/private/site.json', 'etc/private/toops.json'  or 'etc/private/ttp.json' in each path of TTP_ROOTS environment variable.",
+		"The first found wins.",
+		"",
+		"Windows notes:",
+		"- Take care of doubling your backslashes",
+		"",
+		"Dynamic values:",
+		" May make use - in values only - of parameters between square brackets as [eval:...]",
+		" 'eval' may be prefixed with an underscore in order to delay the eval (e.g. if it refers to another dynamic variable which needs to be resolved first).",
+        "",
+        "Unless otherwise specified, below values are overridable on a per-bode basis."
+    ],
+    "type": "object",
+    "properties": {
+        "MQTTGateway": {
+            "description_array": [
+                "The credentials to be used to access the MQTT gateway.",
+                "Several host can be configured here."
+            ],
+            "type": "object",
+            "properties": {
+                "patternProperties": {
+                    "^.*$": {
+                        "description": "The host name of the MQTT gateway as configured in the site.json file.",
+                        "type": "object",
+                        "patternProperties": {
+                            "^.*$": {
+                                "description": "The account, the value being the corresponding password.",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "SMTPGateway": {
+            "description_array": [
+                "The credentials to be used to access the SMTP gateway (aka the MTA).",
+                "Several host can be configured here."
+            ],
+            "type": "object",
+            "properties": {
+                "patternProperties": {
+                    "^.*$": {
+                        "description": "The host name of the SMTP gateway as configured in the site.json file.",
+                        "type": "object",
+                        "patternProperties": {
+                            "^.*$": {
+                                "description": "The account, the value being the corresponding password.",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

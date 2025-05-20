@@ -45,6 +45,32 @@ use TTP::Credentials;
 use TTP::Message qw( :all );
 
 # ------------------------------------------------------------------------------------------------
+# returns the first account defined for the SMTP service
+# (I):
+# - the host gateway as defined in the site.json
+# - an optional account, defaulting to the first one found
+# (O):
+# - an array ( username, password )
+
+sub _getCredentials {
+	my ( $host, $account ) = @_;
+
+	my $credentials = TTP::Credentials::get([ 'SMTPGateway', $host ]);
+	my $passwd = undef;
+
+	if( $credentials ){
+		$account = ( keys %{$credentials} )[0] if !$account;
+		$passwd = $credentials->{$account} || undef;
+		msgVerbose( __PACKAGE__."::_getCredentials() got account='".( $account || '(undef)' )."'" );
+
+	} else {
+		msgErr( __PACKAGE__."::_getCredentials() unable to get credentials for host='$host', account=".( $account ? "'$account'" : '(undef)' ));
+	}
+
+	return ( $account, $passwd );
+}
+
+# ------------------------------------------------------------------------------------------------
 # send a mail through the addressed SMTP gateway
 # (I):
 # - a hashref with following keys:
@@ -100,7 +126,6 @@ sub send {
 		if( !$opts->{host} ){
 			msgVerbose( "no configured MTA: just sending" );
 			$res = $email->send;
-			# returns "bless( {}, 'Email::Sender::Success' )"
 			$res = ( ref( $res ) eq "Email::Sender::Success" );
 
 		# a MTA is configured, use it
@@ -116,10 +141,9 @@ sub send {
 			$debug = $msg->{debug} if defined $msg->{debug};
 
 			# use Credentials package to manage username and password (if any)
-			my $username = TTP::Credentials::get([ 'SMTPGateway', 'username' ]);
-			my $password = TTP::Credentials::get([ 'SMTPGateway', 'password' ]);
-			$opts->{sasl_username} = $username if $username;
-			$opts->{sasl_password} = $password if $username;
+			my ( $account, $password ) = _getCredentials( $opts->{host} );
+			$opts->{sasl_username} = $account if $account;
+			$opts->{sasl_password} = $password if $account && $password;
 
 			$opts->{helo} = $ep->var([ 'SMTPGateway', 'helo' ]) || $ep->node()->name();
 			$opts->{ssl} = $ep->var([ 'SMTPGateway', 'security' ]);

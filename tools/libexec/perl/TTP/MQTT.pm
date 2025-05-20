@@ -74,13 +74,10 @@ sub connect {
 	}
 	msgErr( __PACKAGE__."::connect() broker is not configured nor provided as an argument" ) if !$broker;
 
-	my $username = $args->{username};
-	$username = TTP::Credentials::get([ 'MQTTGateway', $broker, 'username' ]) if !$username;
-	msgErr( __PACKAGE__."::connect() username is not configured nor provided as an argument" ) if !$username;
-
-	my $password = $args->{password};
-	$password = TTP::Credentials::get([ 'MQTTGateway', $broker, 'password' ]) if !$password;
-	msgErr( __PACKAGE__."::connect() password is not configured nor provided as an argument" ) if !$password;
+	my ( $account, $password ) = _getCredentials( $broker );
+	if( !$account || !$password ){
+		msgErr( __PACKAGE__."::connect() account and/or password credentials not found" );
+	}
 
 	if( !TTP::errs()){
 		$mqtt = Net::MQTT::Simple->new( $broker, $sockopts );
@@ -99,7 +96,7 @@ sub connect {
 				}
 			}
 			# login
-			my $logged = $mqtt->login( $username, $password );
+			my $logged = $mqtt->login( $account, $password );
 			msgVerbose( __PACKAGE__."::connect() logged-in to '$broker' with '$logged' account" );
 		} else {
 			msgErr( __PACKAGE__."::connect() unable to instanciate a new connection against '".( $broker ? $broker : '(undef)' )."' broker" );
@@ -133,6 +130,32 @@ sub disconnect {
 		msgErr( __PACKAGE__."::disconnect() undefined connection handle" );
 		TTP::stackTrace();
 	}
+}
+
+# ------------------------------------------------------------------------------------------------
+# returns the first account defined for this MQTT service
+# (I):
+# - the host gateway as defined in the site.json
+# - an optional account, defaulting to the first one found
+# (O):
+# - an array ( username, password )
+
+sub _getCredentials {
+	my ( $host, $account ) = @_;
+
+	my $credentials = TTP::Credentials::get([ 'MQTTGateway', $host ]);
+	my $passwd = undef;
+
+	if( $credentials ){
+		$account = ( keys %{$credentials} )[0] if !$account;
+		$passwd = $credentials->{$account} || undef;
+		msgVerbose( __PACKAGE__."::_getCredentials() got account='".( $account || '(undef)' )."'" );
+
+	} else {
+		msgErr( __PACKAGE__."::_getCredentials() unable to get credentials for host='$host', account=".( $account ? "'$account'" : '(undef)' ));
+	}
+
+	return ( $account, $passwd );
 }
 
 # ------------------------------------------------------------------------------------------------
