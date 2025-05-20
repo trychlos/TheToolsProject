@@ -113,6 +113,32 @@ sub disallowed {
 	return $self->{_disallowed};
 }
 
+# ------------------------------------------------------------------------------------------------
+# Override the 'IJSONable::evaluate()' method to manage the macros substitutions
+# (I):
+# - an optional options hash with following keys:
+#   > warnOnUninitialized, defaulting to true
+# (O):
+# - this same object
+
+sub evaluate {
+	my ( $self, $opts ) = @_;
+	$opts //= {};
+
+	print STDERR __PACKAGE__."::evaluate() entering".EOL if $ENV{TTP_EVAL};
+	$self->TTP::IJSONable::evaluate( $opts );
+
+	my $node = $self->ep()->node();
+	if( $node ){
+		print STDERR __PACKAGE__."::evaluate() substitute <NODE> macro".EOL if $ENV{TTP_EVAL};
+		TTP::substituteMacros( $self->jsonData(), {
+			NODE => $node->name()
+		});
+	}
+
+	return $self;
+}
+
 # -------------------------------------------------------------------------------------------------
 # returns the content of a var read from the site
 # (I):

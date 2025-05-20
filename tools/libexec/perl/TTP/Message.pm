@@ -193,8 +193,12 @@ sub knownLevels {
 # (O):
 # - the message is printed on STDERR until TTP::EP has been bootstrapped - is logged after that
 
+my $_inside_debug_ = false;
+
 sub msgDebug {
-	my ( $msg, $opts ) = @_;
+	my ( $msg ) = @_;
+	return if $_inside_debug_;
+	$_inside_debug_ = true;
 	if( $ENV{TTP_DEBUG} ){
 		if( $ep && $ep->bootstrapped()){
 			msgLog( "$Const->{DEBUG}{marker} $msg" );
@@ -202,6 +206,7 @@ sub msgDebug {
 			print STDERR "$Const->{DEBUG}{marker} $msg".EOL;
 		}
 	}
+	$_inside_debug_ = false;
 }
 
 # -------------------------------------------------------------------------------------------------

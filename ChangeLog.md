@@ -11,6 +11,7 @@
     - Rename schemas according to their directory
     - Define new 'wantsAccount' and 'wantsPassword' for MQTT and SMTP gateways
     - Fix EP bootstrapping when main log file is not defined
+    - Fix NODE macro evaluation in site.json
 
 
 ### 4.14.1
