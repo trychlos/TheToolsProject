@@ -12,6 +12,7 @@
     - Define new 'wantsAccount' and 'wantsPassword' for MQTT and SMTP gateways
     - Fix EP bootstrapping when main log file is not defined
     - Fix NODE macro evaluation in site.json
+    - Sort keys when choosing a credential account so that result is kept predictable
 
 
 ### 4.14.1

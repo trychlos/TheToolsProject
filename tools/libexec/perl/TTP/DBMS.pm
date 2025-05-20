@@ -58,7 +58,7 @@ sub _getCredentials {
 
 	if( $credentials ){
 		$account = $self->account() if !$account;
-		$account = ( keys %{$credentials} )[0] if !$account;
+		$account = ( sort keys %{$credentials} )[0] if !$account;
 		$passwd = $credentials->{$account} || undef;
 		msgVerbose( __PACKAGE__."::_getCredentials() got account='".( $account || '(undef)' )."'" );
 

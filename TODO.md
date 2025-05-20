@@ -44,8 +44,6 @@
 |      |            | or: have a Daemon class which both gathers DaemonConfig and RunnerDaemon features |
 |      | 2025- 5-14 | DaemonConfig -> Daemon would imply $runner = TTP::RunnerDaemon->bootstrap() and $daemon->config() -> $runner->daemon() |
 |  151 | 2025- 5-16 | have ldap backup/restore |
-|  157 | 2025- 5-19 | may happen that a node is a member (is referenced by) several sites |
-|      |            | so maybe should have a site domain identifier, and node.environment be an object site.domain => environment.id |
 |  159 |  |  |
 
 ---
@@ -411,6 +409,9 @@
 |      | 2025- 5-19 | done |
 |  156 | 2025- 5-18 | change dbms.pl backup/restore --report defaulting to true to --report-mqtt and --report-file both defaulting to false |
 |      | 2025- 5-19 | done |
+|  157 | 2025- 5-19 | may happen that a node is a member (is referenced by) several sites |
+|      |            | so maybe should have a site domain identifier, and node.environment be an object site.domain => environment.id |
+|      | 2025- 5-20 | no: the node is referenced in two site hierarchies, and so can have two environments |
 |  158 | 2025- 5-19 | reviews the way MQTTGateway and SMTPGateway take their username/password (should be same than DBMS) |
 |      | 2025- 5-20 | done |
 
