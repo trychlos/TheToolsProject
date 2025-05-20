@@ -187,19 +187,19 @@ sub knownLevels {
 
 # -------------------------------------------------------------------------------------------------
 # debug message
+# can be called very early, for example while a sh bootstrap
 # (I):
 # - the message to be printed
 # (O):
 # - the message is printed on STDERR until TTP::EP has been bootstrapped - is logged after that
 
 sub msgDebug {
-	my ( $msg ) = @_;
+	my ( $msg, $opts ) = @_;
 	if( $ENV{TTP_DEBUG} ){
-		# can be called very early, for example for a sh bootstrap
 		if( $ep && $ep->bootstrapped()){
-			print STDERR "$Const->{DEBUG}{marker} $msg".EOL;
-		} else {
 			msgLog( "$Const->{DEBUG}{marker} $msg" );
+		} else {
+			print STDERR "$Const->{DEBUG}{marker} $msg".EOL;
 		}
 	}
 }
@@ -208,14 +208,22 @@ sub msgDebug {
 # dummy message
 # (I):
 # - the message to be printed (usually the command to be run in dummy mode)
+# - an optional options hash with following keys:
+#   > withLog: whether to (try to) log the message, defaulting to true
 # (O):
 # - returns true to simulate a successful operation
 
 sub msgDummy {
+	msgDebug( __PACKAGE__."::msgDummy() ".TTP::chompDumper( @_ ));
+	my ( $msg, $opts ) = @_;
+	$opts //= {};
+	my $withLog = true;
+	$withLog = $opts->{withLog} if defined $opts->{withLog};
 	if( $ep && $ep->runner() && $ep->runner()->dummy()){
 		_printMsg({
-			msg => shift,
-			level => DUMMY
+			msg => $msg,
+			level => DUMMY,
+			withLog => $withLog
 		});
 	}
 	return true;
@@ -227,17 +235,21 @@ sub msgDummy {
 # - the message to be printed on STDERR
 # - an optional options hash with following keys:
 #   > incErr: whether increment the errors count, defaulting to true
+#   > withLog: whether to (try to) log the message, defaulting to true
 # (O):
 # - increments the exit code
 
 sub msgErr {
+	msgDebug( __PACKAGE__."::msgErr() ".TTP::chompDumper( @_ ));
 	my ( $msg, $opts ) = @_;
 	$opts //= {};
-	# send the message
+	my $withLog = true;
+	$withLog = $opts->{withLog} if defined $opts->{withLog};
 	_printMsg({
 		msg => $msg,
 		level => ERR,
-		handle => \*STDERR
+		handle => \*STDERR,
+		withLog => $withLog
 	});
 	my $increment = true;
 	$increment = $opts->{incErr} if defined $opts->{incErr};
@@ -253,6 +265,7 @@ sub msgErr {
 #   > logFile: the path to the log file to be appended
 
 sub msgLog {
+	msgDebug( __PACKAGE__."::msgLog() ".TTP::chompDumper( @_ ));
 	my ( $msg, $opts ) = @_;
 	$opts //= {};
 	my $ref = ref( $msg );
@@ -303,10 +316,18 @@ sub _msgLogAppend {
 # standard message on stdout
 # (I):
 # - the message to be outputed
+# - an optional options hash with following keys:
+#   > withLog: whether to (try to) log the message, defaulting to true
 
 sub msgOut {
+	msgDebug( __PACKAGE__."::msgOut() ".TTP::chompDumper( @_ ));
+	my ( $msg, $opts ) = @_;
+	$opts //= {};
+	my $withLog = true;
+	$withLog = $opts->{withLog} if defined $opts->{withLog};
 	_printMsg({
-		msg => shift
+		msg => $msg,
+		withLog => $withLog
 	});
 }
 
@@ -325,16 +346,23 @@ sub _msgPrefix {
 # Verbose message
 # (I):
 # - the message to be outputed
+# - an optional options hash with following keys:
+#   > withLog: whether to (try to) log the message, defaulting to true
 
 sub msgVerbose {
-	my $msg = shift;
+	msgDebug( __PACKAGE__."::msgVerbose() ".TTP::chompDumper( @_ ));
+	my ( $msg, $opts ) = @_;
+	$opts //= {};
+	my $withLog = true;
+	$withLog = $opts->{withLog} if defined $opts->{withLog};
 	# be verbose to console ?
 	my $verbose = false;
 	$verbose = $ep->runner()->verbose() if $ep && $ep->runner();
 	_printMsg({
 		msg => $msg,
 		level => VERBOSE,
-		withConsole => $verbose
+		withConsole => $verbose,
+		withLog => $withLog
 	});
 }
 
@@ -342,11 +370,19 @@ sub msgVerbose {
 # Warning message - always logged
 # (E):
 # - the single warning message
+# - an optional options hash with following keys:
+#   > withLog: whether to (try to) log the message, defaulting to true
 
 sub msgWarn {
+	msgDebug( __PACKAGE__."::msgWarn() ".TTP::chompDumper( @_ ));
+	my ( $msg, $opts ) = @_;
+	$opts //= {};
+	my $withLog = true;
+	$withLog = $opts->{withLog} if defined $opts->{withLog};
 	_printMsg({
 		msg => shift,
-		level => WARN
+		level => WARN,
+		withLog => $withLog
 	});
 }
 
@@ -358,8 +394,10 @@ sub msgWarn {
 # - handle, the output handle, defaulting to STDOUT
 # - withConsole: whether to output to the console, defaulting to true
 # - withPrefix: whether to output the "[command.pl verb]" prefix, defaulting to true
+# - withLog: whether to log the message, defaulting to true
 
 sub _printMsg {
+	msgDebug( __PACKAGE__."::_printMsg() ".TTP::chompDumper( @_ ));
 	my ( $args ) = @_;
 	if( defined( $ep )){
 		$args //= {};
@@ -377,7 +415,9 @@ sub _printMsg {
 		$line .= $args->{msg} if defined $args->{msg};
 		# writes in log ?
 		# the computed one defaults to (hardcoded) true which hopefully covers all non-particular cases
-		_msgLogAppend( $line ) if _printMsg_withLog( $level );
+		my $withLog = true;
+		$withLog = $args->{withLog} if defined $args->{withLog};
+		_msgLogAppend( $line ) if $withLog && _printMsg_withLog( $level );
 		# output to the console ?
 		my $withConsole = true;
 		$withConsole = $args->{withConsole} if defined $args->{withConsole};

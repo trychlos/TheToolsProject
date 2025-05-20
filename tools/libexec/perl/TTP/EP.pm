@@ -85,6 +85,15 @@ sub bootstrap {
 	$node->evaluate();
 	msgDebug( __PACKAGE__."::bootstrap() ".ref( $node )." last evaluated" );
 
+	# before saying that EP is successfully bootstrapped, and because logging is considered very important in TTP
+	# make sure that it is righly configured
+	my $logMain = TTP::logsMain();
+	if( $logMain =~ m/\(undef\)/ ){
+		msgWarn( "logMain='$logMain': the '(undef)' part is most probably the result of an erroneous configuration file, you should fix it", { withLog => false });
+		msgErr( "cowardly refuse to bootstrap TTP while we do not have logs", { withLog => false });
+		TTP::exit( 1 );
+	}
+
 	# EntryPoint is bootstrapped
 	$self->{_bootstrapped} = true;
 	msgVerbose( __PACKAGE__."::bootstrap() ".ref( $self )." v".TTP::version()." successfully bootstrapped" );

@@ -489,7 +489,8 @@ sub logsMain {
 			}
 		}
 		if( !$file ){
-			$file = File::Spec->catfile( TTP::Path::logsCommands(), 'main.log' );
+			my $logsCommands = TTP::Path::logsCommands();
+			$file = $logsCommands ? File::Spec->catfile( $logsCommands, 'main.log' ) : undef;
 		}
 	}
 	msgDebug( __PACKAGE__."::logsMain() returning with file=".( $file ? "'$file'" : '(undef)' ));
@@ -548,7 +549,8 @@ sub logsRoot {
 		if( !$dir ){
 			# do not msgXxxx() anything here as this would create a loop searching for logMain.
 			#TTP::Message::msgWarn( "'logs.rootDir' is not defined in site nor in node configurations" );
-			$dir = File::Spec->catdir( TTP::tempDir(), 'TTP', 'logs' );
+			my $temp = TTP::tempDir();
+			$dir = $temp ? File::Spec->catdir( $temp, 'TTP', 'logs' ) : undef;
 		}
 	}
 	return $dir;
