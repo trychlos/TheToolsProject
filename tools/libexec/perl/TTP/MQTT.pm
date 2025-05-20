@@ -75,8 +75,15 @@ sub connect {
 	msgErr( __PACKAGE__."::connect() broker is not configured nor provided as an argument" ) if !$broker;
 
 	my ( $account, $password ) = _getCredentials( $broker );
-	if( !$account || !$password ){
-		msgErr( __PACKAGE__."::connect() account and/or password credentials not found" );
+	my $wantsAccount = $ep->var([ 'MQTTGateway', 'wantsAccount' ]);
+	$wantsAccount = true if !defined $wantsAccount;
+	my $wantsPassword = $ep->var([ 'MQTTGateway', 'wantsPassword' ]);
+	$wantsPassword = true if !defined $wantsPassword;
+	if( $wantsAccount && !$account ){
+		msgErr( __PACKAGE__."::connect() account not found while required by configuration" );
+	}
+	if( $wantsPassword && !$password ){
+		msgErr( __PACKAGE__."::connect() password not found while required by the configuration" );
 	}
 
 	if( !TTP::errs()){

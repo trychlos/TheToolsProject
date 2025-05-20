@@ -142,29 +142,42 @@ sub send {
 
 			# use Credentials package to manage username and password (if any)
 			my ( $account, $password ) = _getCredentials( $opts->{host} );
-			$opts->{sasl_username} = $account if $account;
-			$opts->{sasl_password} = $password if $account && $password;
-
-			$opts->{helo} = $ep->var([ 'SMTPGateway', 'helo' ]) || $ep->node()->name();
-			$opts->{ssl} = $ep->var([ 'SMTPGateway', 'security' ]);
-			if( $opts->{port} && !$opts->{ssl} ){
-				$opts->{ssl} = 'ssl' if $opts->{port} == 465;
-				$opts->{ssl} = 'starttls' if $opts->{port} == 587;
+			my $wantsAccount = $ep->var([ 'SMTPGateway', 'wantsAccount' ]);
+			$wantsAccount = true if !defined $wantsAccount;
+			my $wantsPassword = $ep->var([ 'SMTPGateway', 'wantsPassword' ]);
+			$wantsPassword = true if !defined $wantsPassword;
+			if( $wantsAccount && !$account ){
+				msgErr( __PACKAGE__."::send() account not found while required by configuration" );
 			}
-			$opts->{timeout} = $ep->var([ 'SMTPGateway', 'timeout' ]) || 60;
-			$opts->{debug} = $debug;
-			$opts->{ssl_options} = { SSL_verify_mode => IO::Socket::SSL::SSL_VERIFY_NONE };
-			my $transport = Email::Sender::Transport::SMTP->new( $opts );
-			$email->transport( $transport );
-			msgVerbose( "sending with opts=".Dumper( $opts ));
+			if( $wantsPassword && !$password ){
+				msgErr( __PACKAGE__."::send() password not found while required by the configuration" );
+			}
 
-			try {
-				# see https://github.com/rjbs/Email-Stuffer/issues/17
-				$res = $email->send({ to => [ @{$msg->{to}}, @{$msg->{bcc}} ] });
-			} catch {
-				msgWarn( "Mail::send() $!" );
-				print Dumper( $res );
-			};
+			if( !TTP::errs()){
+				$opts->{sasl_username} = $account if $account;
+				$opts->{sasl_password} = $password if $account && $password;
+
+				$opts->{helo} = $ep->var([ 'SMTPGateway', 'helo' ]) || $ep->node()->name();
+				$opts->{ssl} = $ep->var([ 'SMTPGateway', 'security' ]);
+				if( $opts->{port} && !$opts->{ssl} ){
+					$opts->{ssl} = 'ssl' if $opts->{port} == 465;
+					$opts->{ssl} = 'starttls' if $opts->{port} == 587;
+				}
+				$opts->{timeout} = $ep->var([ 'SMTPGateway', 'timeout' ]) || 60;
+				$opts->{debug} = $debug;
+				$opts->{ssl_options} = { SSL_verify_mode => IO::Socket::SSL::SSL_VERIFY_NONE };
+				my $transport = Email::Sender::Transport::SMTP->new( $opts );
+				$email->transport( $transport );
+				msgVerbose( "sending with opts=".Dumper( $opts ));
+
+				try {
+					# see https://github.com/rjbs/Email-Stuffer/issues/17
+					$res = $email->send({ to => [ @{$msg->{to}}, @{$msg->{bcc}} ] });
+				} catch {
+					msgWarn( "Mail::send() $!" );
+					print Dumper( $res );
+				};
+			}
 		}
 	}
 	return $res;

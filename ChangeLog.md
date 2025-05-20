@@ -9,6 +9,7 @@
     - Fix mqtt code only disconnecting when connection was OK
     - Change the schema of MQTT and SMTP credentials to make them same than those of DBMS (todo #158)
     - Rename schemas according to their directory
+    - Define new 'wantsAccount' and 'wantsPassword' for MQTT and SMTP gateways
 
 
 ### 4.14.1

@@ -964,6 +964,16 @@
                         "port": {
                             "description": "The broker port number to connect to. Deprecated in favor of 'host' in v4.7",
                             "deprecated": true
+                        },
+                        "wantsAccount": {
+                            "description": "Whether this MQTT gateway wants identified connections.",
+                            "type": "boolean",
+                            "default": true
+                        },
+                        "wantsPassword": {
+                            "description": "Whether this MQTT gateway wants authenticated connections.",
+                            "type": "boolean",
+                            "default": true
                         }
                     }
                 },
@@ -1088,6 +1098,16 @@
                             "description": "Default email emitter.",
                             "type": "string",
                             "default": "No Reply <no-reply@localhost>"
+                        },
+                        "wantsAccount": {
+                            "description": "Whether this SMTP gateway wants identified connections.",
+                            "type": "boolean",
+                            "default": true
+                        },
+                        "wantsPassword": {
+                            "description": "Whether this SMTP gateway wants authenticated connections.",
+                            "type": "boolean",
+                            "default": true
                         }
                     }
                 },
