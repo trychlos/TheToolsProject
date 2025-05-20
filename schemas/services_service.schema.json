@@ -141,6 +141,38 @@
                     "type": "object",
                     "properties": {
                         "commands": {
+                            "description_array": [
+                                "The list of commands to be executed.",
+                                "It honors the following macros:",
+                                "- <OUTPUT>: the full output filename, defaulting to '<backupsPeriodicDir>/<NODE>-<SERVICE>-<date-ymd-hms>'."
+                            ],
+                            "type": "array",
+                            "items": [
+                                "string",
+                                "object"
+                            ],
+                            "properties": {
+                                "byOS": {
+                                    "description": "Let a command be specific to the running OS.",
+                                    "type": "object",
+                                    "patternProperties": {
+                                        "^.*$": {
+                                            "description_array": [
+                                                "The OS name as reported by Perl-Config, the value being the command to be applied for this OS."
+                                            ],
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "restores": {
+                    "description": "The configuration of the restores.",
+                    "type": "object",
+                    "properties": {
+                        "commands": {
                             "description": "The list of commands to be executed.",
                             "type": "array",
                             "items": [
@@ -154,14 +186,17 @@
                                     "patternProperties": {
                                         "^.*$": {
                                             "description_array": [
-                                                "The OS name as reported by Perl-Config, the value being the command to be applied for this OS.",
-                                                "The value (the command) honors <SOURCE>, <TARGET> <EXCLUDEDIRS>>, <EXCLUDEFILES> and <OPTIONS> macros."
+                                                "The OS name as reported by Perl-Config, the value being the command to be applied for this OS."
                                             ],
                                             "type": "string"
                                         }
                                     }
                                 }
                             }
+                        },
+                        "username": {
+                            "description": "The OS username which must be used to run the above commands.",
+                            "type": "string"
                         }
                     }
                 }

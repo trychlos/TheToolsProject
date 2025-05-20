@@ -365,7 +365,8 @@ sub dbmsBackupsRoot {
 		}
 		if( !$dir ){
 			TTP::Message::msgWarn( "'backups.rootDir' is not defined in site.json nor in node configuration" );
-			$dir = File::Spec->catdir( TTP::tempDir(), 'TTP', 'backups' );
+			my $tempdir = TTP::tempDir();
+			$dir = $tempdir ? File::Spec->catdir( $tempdir, 'TTP', 'backups' ) : undef;
 		}
 	}
 	if( $dir && $ep->bootstrapped() && !$ep->evaluating()){
@@ -381,6 +382,7 @@ sub dbmsBackupsRoot {
 #   > makeDirExist: whether to create the directory if it doesn't yet exist, defaulting to true
 # (O):
 # - the (maybe daily) execution reports directory
+
 sub execReportsDir {
 	my ( $opts ) = @_;
 	$opts //= {};
@@ -391,6 +393,8 @@ sub execReportsDir {
 		makeDirExist( $dir ) if $makeDirExist;
 	} else {
 		TTP::Message::msgWarn( "'executionReports/withFile/dropDir' is not defined in toops.json nor in host configuration" );
+		my $tempdir = TTP::tempDir();
+		$dir = $tempdir ? File::Spec->catdir( $tempdir, 'TTP', 'execReports' ) : undef;
 	}
 	return $dir;
 }

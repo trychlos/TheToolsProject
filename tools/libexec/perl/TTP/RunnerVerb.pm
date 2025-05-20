@@ -105,7 +105,7 @@ sub _commandHelp {
 
 	# verbs are displayed alpha sorted
 	foreach my $it ( sort keys %{$verbsHelp} ){
-		print "  $it: $verbsHelp->{$it}".EOL;
+		print " $it: $verbsHelp->{$it}".EOL;
 		$count += 1;
 	}
 

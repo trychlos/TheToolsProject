@@ -486,17 +486,28 @@ sub execRemote {
 
 sub executionReport {
 	my ( $args ) = @_;
+	$args //= {};
+	$args->{data} //= {};
+	# gather common macros
+	my $macros = {
+		COMMAND => $ep->runner()->command(),
+		NODE => $args->{data}{node} || $ep->node()->name(),
+		OPTIONS => '',
+		SERVICE => $args->{data}{service} || '',
+		STAMP => Time::Moment->now->strftime( '%Y%m%d%H%M%S%6N' ),
+		VERB => $ep->runner()->verb()
+	};
 	# write JSON file if configuration enables that and relevant arguments are provided
 	my $enabled = $ep->var([ 'executionReports', 'withFile', 'enabled' ]);
 	$enabled = true if !defined $enabled;
 	if( $enabled && $args->{file} ){
-		_executionReportToFile( $args->{file} );
+		_executionReportToFile( $args->{file}, $macros );
 	}
 	# publish MQTT message if configuration enables that and relevant arguments are provided
 	$enabled = $ep->var([ 'executionReports', 'withMqtt', 'enabled' ]);
 	$enabled = true if !defined $enabled;
 	if( $enabled && $args->{mqtt} ){
-		_executionReportToMqtt( $args->{mqtt} );
+		_executionReportToMqtt( $args->{mqtt}, $macros );
 	}
 }
 
@@ -526,28 +537,22 @@ sub _executionReportCompleteData {
 # - returns true|false
 
 sub _executionReportToFile {
-	my ( $args ) = @_;
+	my ( $args, $macros ) = @_;
 	my $res = false;
 	my $data = undef;
 	$data = $args->{data} if defined $args->{data};
 	if( defined $data ){
 		$data = _executionReportCompleteData( $data );
-		my $command = $ep->var([ 'executionReports', 'withFile', 'command' ]);
-		if( $command ){
-			my $json = JSON->new;
-			my $str = $json->encode( $data );
-			# protect the double quotes against the CMD.EXE command-line
-			$str =~ s/"/\\"/g;
-			$command =~ s/<DATA>/$str/;
-			my $dummy = $ep->runner()->dummy() ? "-dummy" : "-nodummy";
-			my $verbose = $ep->runner()->verbose() ? "-verbose" : "-noverbose";
-			my $cmd = "$command -nocolored $dummy $verbose";
-			msgOut( "executing '$cmd'" );
-			my $result = TTP::commandExec( $cmd );
-			$res = $result->{success};
-		} else {
-			msgErr( __PACKAGE__."::_executionReportToFile() expected a 'command' argument, not found" );
+		my $command = TTP::commandByOS([ 'executionReports', 'withFile' ], { withCommand => true });
+		if( !$command ){
+			my $dropdir = TTP::Path::execReportsDir();
+			my $template = 'report-'.Time::Moment->now->strftime( '%y%m%d%H%M%S' ).'-XXXXXX';
+			$command = "ttp.pl writejson -dir $dropdir -template $template -suffix .json -data '<JSON>'";
 		}
+		my %macros = %{$macros};
+		$macros{JSON} = encode_json( $data );
+		my $result = TTP::commandExec( $command, { macros => \%macros });
+		$res = $result->{success};
 	} else {
 		msgErr( __PACKAGE__."::_executionReportToFile() expected a 'data' argument, not found" );
 		TTP::stackTrace();
@@ -563,12 +568,12 @@ sub _executionReportToFile {
 # (I):
 # - a hash ref with following keys:
 #   > data, a hash ref
-#   > topic, as a string
+#   > topic, as a string, defaulting to <node>/executionReport/<command>/<verb>
 #   > options, as a string
 #   > excludes, the list of data keys to be excluded
 
 sub _executionReportToMqtt {
-	my ( $args ) = @_;
+	my ( $args, $macros ) = @_;
 	my $res = false;
 	my $data = undef;
 	$data = $args->{data} if defined $args->{data};
@@ -576,36 +581,26 @@ sub _executionReportToMqtt {
 		$data = _executionReportCompleteData( $data );
 		my $topic = undef;
 		$topic = $args->{topic} if defined $args->{topic};
+		if( !$topic ){
+			$topic = $ep->node()->name()."/executionReport/".$ep->runner()->command()."/".$ep->runner()->verb();
+		}
 		my $excludes = [];
 		$excludes = $args->{excludes} if defined $args->{excludes} && ref $args->{excludes} eq 'ARRAY' && scalar $args->{excludes} > 0;
-		if( $topic ){
-			my $dummy = $ep->runner()->dummy() ? "-dummy" : "-nodummy";
-			my $verbose = $ep->runner()->verbose() ? "-verbose" : "-noverbose";
-			my $command = $ep->var([ 'executionReports', 'withMqtt', 'command' ]);
-			if( $command ){
-				foreach my $key ( keys %{$data} ){
-					if( !grep( /$key/, @{$excludes} )){
-						#my $json = JSON->new;
-						#my $str = $json->encode( $data );
-						my $cmd = $command;
-						$cmd =~ s/<SUBJECT>/$topic\/$key/;
-						$cmd =~ s/<DATA>/$data->{$key}/;
-						my $options = $args->{options} ? $args->{options} : "";
-						$cmd =~ s/<OPTIONS>/$options/;
-						$cmd = "$cmd -nocolored $dummy $verbose";
-						msgOut( "executing '$cmd'" );
-						my $result = TTP::commandExec( $cmd );
-						$res = $result->{success};
-					} else {
-						msgVerbose( "do not publish excluded '$key' key" );
-					}
-				}
+		my $command = TTP::commandByOS([ 'executionReports', 'withMqtt' ], { withCommand => true });
+		$command = "mqtt.pl publish -topic <TOPIC> -payload '<JSON>'" if !$command;
+		my $json = {};
+		foreach my $key ( keys %{$data} ){
+			if( !grep( /$key/, @{$excludes} )){
+				$json->{$key} = $data->{$key};
 			} else {
-				msgErr( __PACKAGE__."::_executionReportToMqtt() expected a 'command' argument, not found" );
+				msgVerbose( "do not publish excluded '$key' key" );
 			}
-		} else {
-			msgErr( __PACKAGE__."::_executionReportToMqtt() expected a 'topic' argument, not found" );
 		}
+		my %macros = %{$macros};
+		$macros{TOPIC} = $topic;
+		$macros{JSON} = encode_json( $json );
+		my $result = TTP::commandExec( $command, { macros => { \%macros }});
+		$res = $result->{success};
 	} else {
 		msgErr( __PACKAGE__."::_executionReportToMqtt() expected a 'data' argument, not found" );
 		TTP::stackTrace();

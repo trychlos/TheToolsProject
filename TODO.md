@@ -44,6 +44,7 @@
 |      |            | or: have a Daemon class which both gathers DaemonConfig and RunnerDaemon features |
 |      | 2025- 5-14 | DaemonConfig -> Daemon would imply $runner = TTP::RunnerDaemon->bootstrap() and $daemon->config() -> $runner->daemon() |
 |  151 | 2025- 5-16 | have ldap backup/restore |
+|      | 2025- 5-21 | have ldap backup |
 |  159 |  |  |
 
 ---

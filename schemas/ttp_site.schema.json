@@ -732,11 +732,17 @@
                         "- enabled: whether this medium is enabled; will be fully ignored when disabled; defaulting to true (enabled).",
                         "- default: whether this medium is a default for execution reports; defaulting to false.",
                         "- command: either a single string, or an object 'command.byOS.<osname>; defaulting dependant of the exact used medium.",
-                        "  Provided commands have access to <STAMP>, <OPTIONS> and <JSON> macros,",
-                        "  the <JSON> macro being resolved with a stringified version of the execution report JSON data.",
+                        "  Provided commands have access to following macros:",
+                        "  <COMMAND> the current command,",
+                        "  <JSON> a stringified version of the execution report JSON data,",
+                        "  <NODE> the nofe name,",
+                        "  <OPTIONS> options maybe provided to the verb,",
+                        "  <SERVICE> the service name,",
+                        "  <STAMP> the current timestamp as 'yyyymmddhhmisscccccc',",
+                        "  <VERB> the current verb.",
                         "When specifying a command, either as a simple string or as a 'byOS' object, you should take care that the specified command will not",
                         "inherit of '--dummy' or '--verbose' options of the parent command. Be cautious about what you exactly want.",
-                        "As of v4.9, only DBMS backup and restore operations provide execution reports."
+                        "As of v4.15, DBMS and LDAP backup and restore operations provide execution reports."
                     ],
                     "type": "object",
                     "properties": {
@@ -827,9 +833,9 @@
                                     "default": "mqtt.pl publish -topic <TOPIC> -payload \"<JSON>\""
                                 },
                                 "topic": {
-                                    "description": "A command which echoes the topic on stdout.",
+                                    "description": "The topic to be used.",
                                     "type": "string",
-                                    "default": ""
+                                    "default": "<NODE>/executionReport/<COMMAND>/<VERB>"
                                 }
                             }
                         }

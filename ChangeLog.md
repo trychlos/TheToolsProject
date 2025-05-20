@@ -14,6 +14,7 @@
     - Fix NODE macro evaluation in site.json
     - Sort keys when choosing a credential account so that result is kept predictable
     - msgXxxx() now all accept an array of messages
+    - Define new ldap.pl backup (todo #151)
 
 
 ### 4.14.1
