@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - Fix mqtt code only disconnecting when connection was OK
 
 ### 4.14.1
 

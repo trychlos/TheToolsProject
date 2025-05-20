@@ -381,5 +381,5 @@ if( TTP::errs()){
 $daemon->declareSleepables( $commands );
 $daemon->sleepableStart();
 
-TTP::MQTT::disconnect( $mqtt );
+TTP::MQTT::disconnect( $mqtt ) if $mqtt;
 $daemon->terminate();

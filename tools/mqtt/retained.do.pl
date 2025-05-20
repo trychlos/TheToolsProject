@@ -69,8 +69,8 @@ sub doGetRetained {
 				sleep( 1 );
 			}
 		}
+		TTP::MQTT::disconnect( $mqtt );
 	}
-	TTP::MQTT::disconnect( $mqtt );
 	my $result = true;
 	if( $result ){
 		msgOut( "success: $count got messages" );

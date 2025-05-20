@@ -261,7 +261,7 @@ sub _initListener {
 		$self->{_mqtt} = TTP::MQTT::connect({
 			will => $self->_lastwill()
 		});
-		TTP::MQTT::keepalive( $self->{_mqtt}, $self->config()->messagingTimeout());
+		TTP::MQTT::keepalive( $self->{_mqtt}, $self->config()->messagingTimeout()) if $self->{_mqtt};
 	}
 
 	# Ctrl+C handling
