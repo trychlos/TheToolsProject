@@ -94,10 +94,7 @@
                                     "type": "object",
                                     "patternProperties": {
                                         "^.*$": {
-                                            "description_array": [
-                                                "The OS name as reported by Perl-Config, the value being the command to be applied for this OS.",
-                                                "The value (the command) honors <SOURCE>, <TARGET> and <OPTIONS> macros."
-                                            ],
+                                            "description": "The OS name as reported by Perl-Config, the value being the command to be applied for this OS.",
                                             "type": "string"
                                         }
                                     }

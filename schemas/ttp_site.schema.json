@@ -20,7 +20,8 @@
 		" Variables values can be accessed though TTP::var([ 'site', 'my', 'other', 'key' ]) the same way than TTP configuration variables.",
 		" See below 'site' object.",
         "",
-        "Unless otherwise specified, below values are overridable on a per-bode basis."
+        "Unless otherwise specified, below values are overridable on a per-bode basis.",
+        "Most of commands here accept a <NODE> macro which is evaluated as TTP::nodeName()."
     ],
     "type": "object",
     "properties": {
@@ -84,6 +85,18 @@
                                         "string",
                                         "object"
                                     ],
+                                    "properties": {
+                                        "byOS": {
+                                            "description": "Let a command be specific to the running OS.",
+                                            "type": "object",
+                                            "patternProperties": {
+                                                "^.*$": {
+                                                    "description": "The OS name as reported by Perl-Config, the value being the command to be applied for this OS.",
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    },
                                     "default": "ttp.pl writejson into below dropDir"
                                 },
                                 "prettyJson": {
@@ -118,6 +131,18 @@
                                         "string",
                                         "object"
                                     ],
+                                    "properties": {
+                                        "byOS": {
+                                            "description": "Let a command be specific to the running OS.",
+                                            "type": "object",
+                                            "patternProperties": {
+                                                "^.*$": {
+                                                    "description": "The OS name as reported by Perl-Config, the value being the command to be applied for this OS.",
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    },
                                     "default": "mqtt.pl publish -topic [eval:TTP::nodeName()]/alert -payload \"<JSON>\" <OPTIONS>"
                                 },
                                 "topic": {
@@ -152,7 +177,19 @@
                                     "type": [
                                         "string",
                                         "object"
-                                    ]
+                                    ],
+                                    "properties": {
+                                        "byOS": {
+                                            "description": "Let a command be specific to the running OS.",
+                                            "type": "object",
+                                            "patternProperties": {
+                                                "^.*$": {
+                                                    "description": "The OS name as reported by Perl-Config, the value being the command to be applied for this OS.",
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    }
                                 },
                                 "prettyJson": {
                                     "description": "Whether the JSON string should be prettified.",
@@ -193,6 +230,18 @@
                                         "string",
                                         "object"
                                     ],
+                                    "properties": {
+                                        "byOS": {
+                                            "description": "Let a command be specific to the running OS.",
+                                            "type": "object",
+                                            "patternProperties": {
+                                                "^.*$": {
+                                                    "description": "The OS name as reported by Perl-Config, the value being the command to be applied for this OS.",
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    },
                                     "default": "smtp.pl send -to <RECIPIENTS> -subject \"<TITLE>\" -text \"<MESSAGE>\" <OPTIONS>"
                                 },
                                 "prefixTitle": {
@@ -239,10 +288,7 @@
                                     "type": "object",
                                     "patternProperties": {
                                         "^.*$": {
-                                            "description_array": [
-                                                "The OS name as reported by Perl-Config, the value being the command to be applied for this OS.",
-                                                "The value (the command) honors <SOURCE>, <TARGET> <EXCLUDEDIRS>>, <EXCLUDEFILES> and <OPTIONS> macros."
-                                            ],
+                                            "description": "The OS name as reported by Perl-Config, the value being the command to be applied for this OS.",
                                             "type": "string"
                                         }
                                     }
@@ -271,7 +317,16 @@
                     "type": "object",
                     "properties": {
                         "command": {
-                            "description": "The command to be used.",
+                            "description_array": [
+                                "The command to be used. It honors following macros:",
+                                "- <SOURCE> the source volume, directory and filename,",
+                                "- <SOURCEDIR> the source volume and directory,",
+                                "- <SOURCEFILE> the source filename,",
+                                "- <TARGET> the target volume, directory and filename,",
+                                "- <TARGETDIR> the target volume and directory",
+                                "- <TARGETFILE> the target filename",
+                                "- <OPTIONS> the options provided to the command."
+                            ],
                             "type": [
                                 "object",
                                 "string"
@@ -282,17 +337,7 @@
                                     "type": "object",
                                     "patternProperties": {
                                         "^.*$": {
-                                            "description_array": [
-                                                "The OS name as reported by Perl-Config, the value being the command to be applied for this OS.",
-                                                "The value (the command) honors following macros:",
-                                                "- <SOURCE> the source volume, directory and filename,",
-                                                "- <SOURCEDIR> the source volume and directory,",
-                                                "- <SOURCEFILE> the source filename,",
-                                                "- <TARGET> the target volume, directory and filename,",
-                                                "- <TARGETDIR> the target volume and directory",
-                                                "- <TARGETFILE> the target filename",
-                                                "- <OPTIONS> the options provided to the command."
-                                            ],
+                                            "description": "The OS name as reported by Perl-Config, the value being the command to be applied for this OS.",
                                             "type": "string"
                                         }
                                     }
@@ -408,6 +453,18 @@
                                                         "string",
                                                         "object"
                                                     ],
+                                                    "properties": {
+                                                        "byOS": {
+                                                            "description": "Let a command be specific to the running OS.",
+                                                            "type": "object",
+                                                            "patternProperties": {
+                                                                "^.*$": {
+                                                                    "description": "The OS name as reported by Perl-Config, the value being the command to be applied for this OS.",
+                                                                    "type": "string"
+                                                                }
+                                                            }
+                                                        }
+                                                    },
                                                     "default": "ttp.pl writejson into below dropDir"
                                                 },
                                                 "prettyJson": {
@@ -440,6 +497,18 @@
                                                         "string",
                                                         "object"
                                                     ],
+                                                    "properties": {
+                                                        "byOS": {
+                                                            "description": "Let a command be specific to the running OS.",
+                                                            "type": "object",
+                                                            "patternProperties": {
+                                                                "^.*$": {
+                                                                    "description": "The OS name as reported by Perl-Config, the value being the command to be applied for this OS.",
+                                                                    "type": "string"
+                                                                }
+                                                            }
+                                                        }
+                                                    },
                                                     "default": "mqtt.pl publish -topic <TOPIC> -payload \"<JSON>\""
                                                 },
                                                 "topic": {
@@ -506,6 +575,18 @@
                                                         "string",
                                                         "object"
                                                     ],
+                                                    "properties": {
+                                                        "byOS": {
+                                                            "description": "Let a command be specific to the running OS.",
+                                                            "type": "object",
+                                                            "patternProperties": {
+                                                                "^.*$": {
+                                                                    "description": "The OS name as reported by Perl-Config, the value being the command to be applied for this OS.",
+                                                                    "type": "string"
+                                                                }
+                                                            }
+                                                        }
+                                                    },
                                                     "default": "ttp.pl writejson into below dropDir"
                                                 },
                                                 "prettyJson": {
@@ -538,6 +619,18 @@
                                                         "string",
                                                         "object"
                                                     ],
+                                                    "properties": {
+                                                        "byOS": {
+                                                            "description": "Let a command be specific to the running OS.",
+                                                            "type": "object",
+                                                            "patternProperties": {
+                                                                "^.*$": {
+                                                                    "description": "The OS name as reported by Perl-Config, the value being the command to be applied for this OS.",
+                                                                    "type": "string"
+                                                                }
+                                                            }
+                                                        }
+                                                    },
                                                     "default": "mqtt.pl publish -topic <TOPIC> -payload \"<JSON>\""
                                                 },
                                                 "topic": {
@@ -670,6 +763,18 @@
                                         "string",
                                         "object"
                                     ],
+                                    "properties": {
+                                        "byOS": {
+                                            "description": "Let a command be specific to the running OS.",
+                                            "type": "object",
+                                            "patternProperties": {
+                                                "^.*$": {
+                                                    "description": "The OS name as reported by Perl-Config, the value being the command to be applied for this OS.",
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    },
                                     "default": "ttp.pl writejson into below dropDir"
                                 },
                                 "prettyJson": {
@@ -707,6 +812,18 @@
                                         "string",
                                         "object"
                                     ],
+                                    "properties": {
+                                        "byOS": {
+                                            "description": "Let a command be specific to the running OS.",
+                                            "type": "object",
+                                            "patternProperties": {
+                                                "^.*$": {
+                                                    "description": "The OS name as reported by Perl-Config, the value being the command to be applied for this OS.",
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    },
                                     "default": "mqtt.pl publish -topic <TOPIC> -payload \"<JSON>\""
                                 },
                                 "topic": {

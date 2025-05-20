@@ -125,6 +125,48 @@
             "type": "boolean",
             "default": false
         },
+        "LDAP": {
+            "description_array": [
+                "The LDAP description part of the service.",
+                "As (at least some) LDAP properties can be specified both with or without being attached to a specific service, their precedence order is:",
+                "- 1. node: services.<SERVICE>.LDAP.key if a service is requested",
+                "- 2. node: LDAP.key",
+                "- 3. service: LDAP.key if a service is requested and this service has a dedicated JSON configuration file",
+                "- 4. site: LDAP.key"
+            ],
+            "type": "object",
+            "properties": {
+                "backups": {
+                    "description": "The configuration of the backups.",
+                    "type": "object",
+                    "properties": {
+                        "commands": {
+                            "description": "The list of commands to be executed.",
+                            "type": "array",
+                            "items": [
+                                "string",
+                                "object"
+                            ],
+                            "properties": {
+                                "byOS": {
+                                    "description": "Let a command be specific to the running OS.",
+                                    "type": "object",
+                                    "patternProperties": {
+                                        "^.*$": {
+                                            "description_array": [
+                                                "The OS name as reported by Perl-Config, the value being the command to be applied for this OS.",
+                                                "The value (the command) honors <SOURCE>, <TARGET> <EXCLUDEDIRS>>, <EXCLUDEFILES> and <OPTIONS> macros."
+                                            ],
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "wantsLocal": {
             "description": "Whether this DBMS instance is bound only to local connections.",
             "type": "boolean",
