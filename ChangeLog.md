@@ -13,6 +13,7 @@
     - Fix EP bootstrapping when main log file is not defined
     - Fix NODE macro evaluation in site.json
     - Sort keys when choosing a credential account so that result is kept predictable
+    - msgXxxx() now all accept an array of messages
 
 
 ### 4.14.1

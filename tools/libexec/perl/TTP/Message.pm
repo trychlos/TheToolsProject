@@ -248,14 +248,24 @@ sub msgErr {
 	msgDebug( __PACKAGE__."::msgErr() ".TTP::chompDumper( @_ ));
 	my ( $msg, $opts ) = @_;
 	$opts //= {};
-	my $withLog = true;
-	$withLog = $opts->{withLog} if defined $opts->{withLog};
-	_printMsg({
-		msg => $msg,
-		level => ERR,
-		handle => \*STDERR,
-		withLog => $withLog
-	});
+	my $ref = ref( $msg );
+	if( $ref eq 'ARRAY' ){
+		foreach my $it ( @{$msg} ){
+			msgErr( $it, $opts );
+		}
+	} elsif( !$ref ){
+		my $withLog = true;
+		$withLog = $opts->{withLog} if defined $opts->{withLog};
+		_printMsg({
+			msg => $msg,
+			level => ERR,
+			handle => \*STDERR,
+			withLog => $withLog
+		});
+	} else {
+		msgErr( __PACKAGE__."::msgErr() unmanaged type '$ref' for '$msg'" );
+		TTP::stackTrace();
+	}
 	my $increment = true;
 	$increment = $opts->{incErr} if defined $opts->{incErr};
 	$ep->runner()->runnableErrInc() if $ep && $ep->runner() and $increment;
@@ -282,7 +292,7 @@ sub msgLog {
 	} elsif( !$ref ){
 		_msgLogAppend( _msgPrefix().$msg, $opts );
 	} else {
-		msgWarn( __PACKAGE__."::msgLog() unmanaged type '$ref' for '$msg'" );
+		msgErr( __PACKAGE__."::msgLog() unmanaged type '$ref' for '$msg'" );
 		TTP::stackTrace();
 	}
 }
@@ -328,12 +338,22 @@ sub msgOut {
 	msgDebug( __PACKAGE__."::msgOut() ".TTP::chompDumper( @_ ));
 	my ( $msg, $opts ) = @_;
 	$opts //= {};
-	my $withLog = true;
-	$withLog = $opts->{withLog} if defined $opts->{withLog};
-	_printMsg({
-		msg => $msg,
-		withLog => $withLog
-	});
+	my $ref = ref( $msg );
+	if( $ref eq 'ARRAY' ){
+		foreach my $it ( @{$msg} ){
+			msgOut( $it, $opts );
+		}
+	} elsif( !$ref ){
+		my $withLog = true;
+		$withLog = $opts->{withLog} if defined $opts->{withLog};
+		_printMsg({
+			msg => $msg,
+			withLog => $withLog
+		});
+	} else {
+		msgErr( __PACKAGE__."::msgOut() unmanaged type '$ref' for '$msg'" );
+		TTP::stackTrace();
+	}
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -358,17 +378,27 @@ sub msgVerbose {
 	msgDebug( __PACKAGE__."::msgVerbose() ".TTP::chompDumper( @_ ));
 	my ( $msg, $opts ) = @_;
 	$opts //= {};
-	my $withLog = true;
-	$withLog = $opts->{withLog} if defined $opts->{withLog};
-	# be verbose to console ?
-	my $verbose = false;
-	$verbose = $ep->runner()->verbose() if $ep && $ep->runner();
-	_printMsg({
-		msg => $msg,
-		level => VERBOSE,
-		withConsole => $verbose,
-		withLog => $withLog
-	});
+	my $ref = ref( $msg );
+	if( $ref eq 'ARRAY' ){
+		foreach my $it ( @{$msg} ){
+			msgVerbose( $it, $opts );
+		}
+	} elsif( !$ref ){
+		my $withLog = true;
+		$withLog = $opts->{withLog} if defined $opts->{withLog};
+		# be verbose to console ?
+		my $verbose = false;
+		$verbose = $ep->runner()->verbose() if $ep && $ep->runner();
+		_printMsg({
+			msg => $msg,
+			level => VERBOSE,
+			withConsole => $verbose,
+			withLog => $withLog
+		});
+	} else {
+		msgErr( __PACKAGE__."::msgVerbose() unmanaged type '$ref' for '$msg'" );
+		TTP::stackTrace();
+	}
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -382,13 +412,23 @@ sub msgWarn {
 	msgDebug( __PACKAGE__."::msgWarn() ".TTP::chompDumper( @_ ));
 	my ( $msg, $opts ) = @_;
 	$opts //= {};
-	my $withLog = true;
-	$withLog = $opts->{withLog} if defined $opts->{withLog};
-	_printMsg({
-		msg => shift,
-		level => WARN,
-		withLog => $withLog
-	});
+	my $ref = ref( $msg );
+	if( $ref eq 'ARRAY' ){
+		foreach my $it ( @{$msg} ){
+			msgWarn( $it, $opts );
+		}
+	} elsif( !$ref ){
+		my $withLog = true;
+		$withLog = $opts->{withLog} if defined $opts->{withLog};
+		_printMsg({
+			msg => shift,
+			level => WARN,
+			withLog => $withLog
+		});
+	} else {
+		msgErr( __PACKAGE__."::msgWarn() unmanaged type '$ref' for '$msg'" );
+		TTP::stackTrace();
+	}
 }
 
 # -------------------------------------------------------------------------------------------------
