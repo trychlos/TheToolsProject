@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - Add missing ttp_remote
 
 ### 4.15.0
 
