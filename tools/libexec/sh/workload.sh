@@ -56,7 +56,13 @@ function f_execute
 	# remove the script name from the list of arguments
 	shift
 	# first argument is now expected to be the workload name
-	services.pl list -workload $1 -commands -hidden $2 $3 $4 $5 $6 $7 $8 $9 -nocolored | grep -vE 'services.pl' | while read _line; do f_command ${_line} $2 $3 $4 $5 $6 $7 $8 $9; done
+	typeset _tmpfile="$(mktemp)"
+	services.pl list -workload "${_workload}" -commands -hidden "$@" -nocolored | grep -vE 'services.pl' > "${_tmpfile}"
+	while read _line; do
+		f_command ${_line} "$@"
+	done < "${_tmpfile}"
+	rm -f "${_tmpfile}"
+
 	# and run workload summary
 	env | grep res_
 	services.pl workload-summary -workload $1 -commands res_command -start res_start -end res_end -rc res_rc -count $i $2 $3 $4 $5 $6 $7 $8 $9

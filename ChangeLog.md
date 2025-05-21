@@ -8,7 +8,6 @@
 
     - Add tools/libexec/cmd/workload.cmd as a new TheToolsProject resource
     - Add tools/libexec/sh/workload.sh as a new TheToolsProject resource
-    - Define new services.pl workload-summary verb
 
 ### 4.15.2
 
