@@ -93,6 +93,7 @@ my $databases = [];
 sub doDbSize {
 	msgOut( "publishing databases size on '$opt_service'..." );
 	my $dbcount = 0;
+	my $dbignored = 0;
 	my $mqttcount = 0;
 	my $httpcount = 0;
 	my $textcount = 0;
@@ -103,39 +104,45 @@ sub doDbSize {
 		msgOut( "database '$db'" );
 		$dbcount += 1;
 		my $set = $objDbms->databaseSize( $db );
-		# -> stdout
-		foreach my $key ( sort keys %{$set} ){
-			print " $key: $set->{$key}".EOL;
-		}
-		# we got several metrics per database
-		# that we publish separately as mqtt-based names are slightly different from Prometheus ones
-		my @labels = ( @opt_prepends,
-			"environment=".( $ep->node()->environment() || '' ), "service=".$opt_service, "command=".$ep->runner()->command(), "verb=".$ep->runner()->verb(), "database=$db", @opt_appends );
-		foreach my $key ( keys %{$set} ){
-			TTP::Metric->new( $ep, {
-				name => $key,
-				value => $set->{$key},
-				type => 'gauge',
-				help => 'Database used space',
-				labels => \@labels
-			})->publish({
-				mqtt => $opt_mqtt,
-				mqttPrefix => 'dbsize/',
-				http => $opt_http,
-				httpPrefix => 'dbms_dbsize_',
-				text => $opt_text,
-				textPrefix => 'dbms_dbsize_'
-			});
-			$mqttcount += 1 if $opt_mqtt;
-			$httpcount += 1 if $opt_http;
-			$textcount += 1 if $opt_text;
-			last if $dbcount >= $opt_limit && $opt_limit >= 0;
+		my @sorted = sort keys %{$set};
+		if( scalar( @sorted ) > 0 ){
+			# we got several metrics per database
+			# that we publish separately as mqtt-based names are slightly different from Prometheus ones
+			my @labels = ( @opt_prepends,
+				"environment=".( $ep->node()->environment() || '' ), "service=".$opt_service, "command=".$ep->runner()->command(), "verb=".$ep->runner()->verb(), "database=$db", @opt_appends );
+			# -> stdout
+			foreach my $key ( @sorted ){
+				my $value = $set->{$key};
+				print " $key: ".( $value || '(undef)' ).EOL;
+				if( defined( $value )){
+					TTP::Metric->new( $ep, {
+						name => $key,
+						value => $set->{$key},
+						type => 'gauge',
+						help => 'Database used space',
+						labels => \@labels
+					})->publish({
+						mqtt => $opt_mqtt,
+						mqttPrefix => 'dbsize/',
+						http => $opt_http,
+						httpPrefix => 'dbms_dbsize_',
+						text => $opt_text,
+						textPrefix => 'dbms_dbsize_'
+					});
+					$mqttcount += 1 if $opt_mqtt;
+					$httpcount += 1 if $opt_http;
+					$textcount += 1 if $opt_text;
+				}
+				last if $dbcount >= $opt_limit && $opt_limit >= 0;
+			}
+		} else {
+			$dbignored += 1;
 		}
 	}
 	if( TTP::errs()){
 		msgErr( "NOT OK" );
 	} else {
-		msgOut( "got $dbcount database size(s)" );
+		msgOut( "got $dbcount database size(s), $dbignored ignored" );
 		msgOut( "published $mqttcount metric(s) to MQTT bus, $httpcount metric(s) to HTTP gateway, $textcount metric(s) to text files" );
 		msgOut( "done" );
 	}
