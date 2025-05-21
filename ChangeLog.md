@@ -12,6 +12,7 @@
     - Fix TTP::MariaDB wrong use of File::Temp::tempdir() function
     - Fix TTP::_executionReportToMqtt() wrong usage of %macros hash
     - Fix dbms.pl telemetry when the database driver doesn't return a defined value
+    - Fix ldap.pl execution permissions
 
 ### 4.15.0
 
