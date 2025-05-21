@@ -599,7 +599,7 @@ sub _executionReportToMqtt {
 		my %macros = %{$macros};
 		$macros{TOPIC} = $topic;
 		$macros{JSON} = encode_json( $json );
-		my $result = TTP::commandExec( $command, { macros => { \%macros }});
+		my $result = TTP::commandExec( $command, { macros => \%macros });
 		$res = $result->{success};
 	} else {
 		msgErr( __PACKAGE__."::_executionReportToMqtt() expected a 'data' argument, not found" );

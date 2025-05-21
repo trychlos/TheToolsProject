@@ -10,6 +10,7 @@
     - Fix TTP::MariaDB default connection string as MariaDB doesn't accept a port number associated to 'localhost'
     - Fix TTP::MariaDB data source build
     - Fix TTP::MariaDB wrong use of File::Temp::tempdir() function
+    - Fix TTP::_executionReportToMqtt() wrong usage of %macros hash
 
 ### 4.15.0
 
