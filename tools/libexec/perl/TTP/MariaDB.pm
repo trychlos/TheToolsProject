@@ -88,9 +88,11 @@ sub _connect {
 		my( $account, $passwd ) = $self->_getCredentials();
 		if( length $account && length $passwd ){
 			my $server = $self->connectionString() || 'localhost';
+			my @words = split( /:/, $server );
 			my $dsn = "DBI:MariaDB:";
 			$dsn .= $database if $database;
-			$dsn .= ";host=$server";
+			$dsn .= ";host=$words[0]";
+			$dsn .= ";port=$words[1]" if $words[1];
 			$handle = DBI->connect( $dsn, $account, $passwd, { PrintError => 0 }) or msgErr( $DBI::errstr );
 			$self->{_dbms}{connect}{$key} = $handle;
 			if( $handle ){
