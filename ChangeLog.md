@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.14.2-rc.0
+### 4.15.0
 
-    Release date: 
+    Release date: 2025- 5-21
 
     - Fix mqtt code only disconnecting when connection was OK
     - Change the schema of MQTT and SMTP credentials to make them same than those of DBMS (todo #158)
@@ -471,4 +471,4 @@
 
 ---
 P. Wieser
-- Last updated on 2025, May 19th
+- Last updated on 2025, May 21th
