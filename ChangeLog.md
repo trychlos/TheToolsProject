@@ -6,7 +6,8 @@
 
     Release date: 
 
-    - 
+    - Add tools/libexec/cmd/workload.cmd as a new TheToolsProject resource
+    - Add tools/libexec/sh/workload.sh as a new TheToolsProject resource
 
 ### 4.15.2
 
