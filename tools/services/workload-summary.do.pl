@@ -78,6 +78,7 @@ my $opt_count = $defaults->{count};
 
 sub printSummary {
 	# get the results from the environment
+<<<<<<< HEAD
 	print Dumper( %ENV );
 	my @results = ();
 	my $maxLength = 0;
@@ -89,6 +90,18 @@ sub printSummary {
 			start => $ENV{$opt_start.'['.$i.']'},
 			end => $ENV{$opt_end.'['.$i.']'},
 			rc => $ENV{$opt_rc.'['.$i.']'}
+=======
+	my @results = ();
+	my $maxLength = 0;
+	for( my $i=0 ; $i<$opt_count ; ++$i ){
+		my $command = $ENV{$opt_commands."_".$i};
+		msgVerbose( "pushing i=$i command='$command'" );
+		push( @results, {
+			command => $command,
+			start => $ENV{$opt_start."_".$i},
+			end => $ENV{$opt_end."_".$i},
+			rc => $ENV{$opt_rc."_".$i}
+>>>>>>> 26a9c52 (Define new services.pl workload-summary verb)
 		});
 		if( length $command > $maxLength ){
 			$maxLength = length $command;

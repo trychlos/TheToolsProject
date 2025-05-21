@@ -31,10 +31,9 @@ let -i i=0
 # this function executes one task of the workload
 # (I):
 # - the task command-line and its arguments
-function f_command
+f_command()
 {
 	f_logLine "executing $*"
-	(( i += 1 ))
 	typeset _start="$(date '+%Y-%m-%d %H:%M:%S')"
 	$*
 	typeset -i _rc=$?
@@ -44,17 +43,24 @@ function f_command
 	export res_start_$i="${_start}"
 	export res_end_$i="${_end}"
 	export res_rc_$i="${_rc}"
+	(( i += 1 ))
 }
 
 # this function executes all the task of the specified workload
 # (I):
 # - script name
 # - command-line arguments
-function f_execute
+f_execute()
 {
 	f_logLine "executing $*"
+
 	# remove the script name from the list of arguments
 	shift
+
+	# get the workload name
+	typeset _workload="$1"
+	shift
+
 	# first argument is now expected to be the workload name
 	typeset _tmpfile="$(mktemp)"
 	services.pl list -workload "${_workload}" -commands -hidden "$@" -nocolored | grep -vE 'services.pl' > "${_tmpfile}"
@@ -64,8 +70,7 @@ function f_execute
 	rm -f "${_tmpfile}"
 
 	# and run workload summary
-	env | grep res_
-	services.pl workload-summary -workload $1 -commands res_command -start res_start -end res_end -rc res_rc -count $i $2 $3 $4 $5 $6 $7 $8 $9
+	services.pl workload-summary -workload "${_workload}" -commands res_command -start res_start -end res_end -rc res_rc -count "$i" "$@"
 }
 
 # this function computes the log pathname as '/myDir/dailyLogs/250521/TTP/WS12DEV1-daily.morning-20250521-050002.log'
@@ -73,7 +78,7 @@ function f_execute
 # - the workload name
 # (O):
 # - outputs the result on stdout
-function f_logFile
+f_logFile()
 {
 	typeset _workload="${1}"
 	_logsdir=$(ttp.pl vars -logsCommands -nocolored | grep -vE 'ttp.pl' | awk '{ print $2 }')
@@ -83,7 +88,7 @@ function f_logFile
 # this function logs a line to the logfile
 # (I):
 # - the line to be logged
-function f_logLine
+f_logLine()
 {
 	echo "$(date '+%Y-%m-%d %H:%M:%S') ${ME} $*" >> "${log_file}"
 }
