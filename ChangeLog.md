@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.15.1-rc.0
+### 4.15.1
 
-    Release date: 
+    Release date: 2025- 5-21
 
     - Add missing ttp_remote
     - Fix TTP::MariaDB default connection string as MariaDB doesn't accept a port number associated to 'localhost'
