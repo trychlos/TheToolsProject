@@ -7,6 +7,7 @@
     Release date: 
 
     - Add missing ttp_remote
+    - Fix TTP::MariaDB default connection string as MariaDB doesn't accept a port number associated to 'localhost'
 
 ### 4.15.0
 

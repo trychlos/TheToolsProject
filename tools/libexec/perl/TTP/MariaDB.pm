@@ -87,7 +87,7 @@ sub _connect {
 	} else {
 		my( $account, $passwd ) = $self->_getCredentials();
 		if( length $account && length $passwd ){
-			my $server = $self->connectionString() || 'localhost:3306';
+			my $server = $self->connectionString() || 'localhost';
 			my $dsn = "DBI:MariaDB:";
 			$dsn .= $database if $database;
 			$dsn .= ";host=$server";
