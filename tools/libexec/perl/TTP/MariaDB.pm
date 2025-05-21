@@ -195,7 +195,6 @@ sub backupDatabase {
 		msgVerbose( __PACKAGE__."::backupDatabase() entering with service='".$self->service()->name()."' database='$parms->{database}' mode='$parms->{mode}'..." );
 		my $output = $parms->{output} || $self->computeDefaultBackupFilename( $parms );
 		# mysqldump dumps the database to stdout
-		my $tmpdir = tempdir( CLEANUP => 1 );
 		my $cmd = "mysqldump";
 		$cmd .= " --host=".$self->server();
 		$cmd .= " --user=$account";
