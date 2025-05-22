@@ -10,6 +10,7 @@
     - Add tools/libexec/sh/workload.sh as a new TheToolsProject resource
     - Define new services.pl workload-summary verb
     - Define site.workloadSummary properties, updating services.pl workload-summary accordingly
+    - ttp.pl alert now accepts a '--tts' option to manage test-to-speech
 
 ### 4.15.2
 

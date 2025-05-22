@@ -12,6 +12,7 @@
 # @(-) --[no]mqtt              send the alert on the MQTT bus [${mqtt}]
 # @(-) --[no]smtp              send the alert by SMTP [${smtp}]
 # @(-) --[no]sms               send the alert by SMS [${sms}]
+# @(-) --[no]tts               send the alert with text-to-speech [${tts}]
 # @(-) --list-levels           display the known alert levels [${listLevels}]
 # @(-) --options=<options>     additional options to be passed to the command [${options}]
 #
@@ -84,6 +85,11 @@ my $opt_sms = TTP::var([ 'alerts', 'withSms', 'default' ]);
 $opt_sms = false if !defined $opt_sms;
 $defaults->{sms} = $opt_sms ? 'yes' : 'no';
 my $opt_sms_set = false;
+
+my $opt_tts = TTP::var([ 'alerts', 'withTextToSpeech', 'default' ]);
+$opt_tts = false if !defined $opt_tts;
+$defaults->{tts} = $opt_tts ? 'yes' : 'no';
+my $opt_tts_set = false;
 
 my $alertStamp = Time::Moment->now;
 
@@ -282,6 +288,30 @@ $mailfrom
 }
 
 # -------------------------------------------------------------------------------------------------
+# send the alert by Text-To-Speech
+
+sub doTextToSpeechAlert {
+	msgOut( "publishing a '$opt_level' alert with Text-To-Speech..." );
+	my $command = TTP::commandByOS([ 'alerts', 'withTextToSpeech' ], { withCommand => true });
+	if( $command ){
+		my $text = TTP::var([ 'alerts', 'withTextToSpeech', 'text' ]);
+		$text = "Alert from <EMITTER> <TITLE> <MESSAGE>" if !$text;
+		my $data = buildAlertData();
+		my $macros = {
+			EMITTER => $opt_emitter,
+			LEVEL => $opt_level,
+			TITLE => $opt_title,
+			MESSAGE => $opt_message,
+			JSON => encode_json( $data ),
+			STAMP => $data->{stamp},
+			OPTIONS => $opt_options,
+			TEXT => $text
+		};
+		execute( $command, $macros, "success", "alert by TTS NOT OK" );
+	}
+}
+
+# -------------------------------------------------------------------------------------------------
 # execute the prepared command
 # (I):
 # - the command
@@ -334,6 +364,11 @@ if( !GetOptions(
 		$opt_sms = $value;
 		$opt_sms_set = true;
 	},
+	"tts!"				=> sub {
+		my( $name, $value ) = @_;
+		$opt_tts = $value;
+		$opt_tts_set = true;
+	},
 	"list-levels!"		=> \$opt_listLevels,
 	"options=s"			=> \$opt_options )){
 		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
@@ -356,6 +391,7 @@ msgVerbose( "got file='".( $opt_file ? 'true':'false' )."'" );
 msgVerbose( "got mqtt='".( $opt_mqtt ? 'true':'false' )."'" );
 msgVerbose( "got smtp='".( $opt_smtp ? 'true':'false' )."'" );
 msgVerbose( "got sms='".( $opt_sms ? 'true':'false' )."'" );
+msgVerbose( "got tts='".( $opt_tts ? 'true':'false' )."'" );
 msgVerbose( "got list-levels='".( $opt_listLevels ? 'true':'false' )."'" );
 msgVerbose( "got options='$opt_options'" );
 
@@ -419,10 +455,22 @@ if( $opt_listLevels ){
 			}
 		}
 	}
+	if( $opt_tts ){
+		my $enabled = $ep->var([ 'alerts', 'withTextToSpeech', 'enabled' ]);
+		$enabled = true if !defined $enabled;
+		if( !$enabled ){
+			if( $opt_tts_set ){
+				msgErr( "Text-To-Speech medium is disabled, --tts option is not valid" );
+			} else {
+				msgWarn( "Text-To-Speech medium is disabled and thus ignored" );
+				$opt_tts = false;
+			}
+		}
+	}
 
 	# at least one medium must be specified
-	if( !$opt_file && !$opt_mqtt && !$opt_smtp && !$opt_sms ){
-		msgWarn( "at least one of '--file', '--mqtt', '--smtp' or '--sms' options should be specified" );
+	if( !$opt_file && !$opt_mqtt && !$opt_smtp && !$opt_sms && !$opt_tts ){
+		msgWarn( "at least one of '--file', '--mqtt', '--smtp', '--sms' or '--tts' options should be specified" );
 	}
 }
 
@@ -435,6 +483,7 @@ if( !TTP::errs()){
 		doMqttAlert() if $opt_mqtt;
 		doSmtpAlert() if $opt_smtp;
 		doSmsAlert() if $opt_sms;
+		doTextToSpeechAlert() if $opt_tts;
 	}
 }
 

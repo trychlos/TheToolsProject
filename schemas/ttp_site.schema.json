@@ -263,6 +263,47 @@
                                     ]
                                 }
                             }
+                        },
+                        "withTextToSpeech": {
+                            "description": "Whether and how send the alert by text-to-speech (TTS).",
+                            "type": "object",
+                            "properties": {
+                                "default": {
+                                    "description": "Whether publishing alerts with TTS is a default of the 'ttp.pl alert' command.",
+                                    "type": "boolean",
+                                    "default": false
+                                },
+                                "enabled": {
+                                    "description": "Whether publishing alerts with TTS is an enabled capability of the site.",
+                                    "type": "boolean",
+                                    "default": true
+                                },
+                                "command": {
+                                    "description_array": [
+                                        "The command to be used to send the alert with text-to-speech.",
+                                        "The command has access to following additional macros:",
+                                        " <TEXT> the message to be said."
+                                    ],
+                                    "type": "string",
+                                    "properties": {
+                                        "byOS": {
+                                            "description": "Let a command be specific to the running OS.",
+                                            "type": "object",
+                                            "patternProperties": {
+                                                "^.*$": {
+                                                    "description": "The OS name as reported by Perl-Config, the value being the command to be applied for this OS.",
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "text": {
+                                    "description": "The message to be said.",
+                                    "type": "string",
+                                    "default": "Alert from <EMITTER> <TITLE> <MESSAGE>"
+                                }
+                            }
                         }
                     }
                 },

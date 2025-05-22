@@ -244,6 +244,11 @@ sub commandExec {
 				my $value = $opts->{macros}{$key} || '';
 				$result->{evaluated} =~ s/<$key>/$value/g;
 			}
+			# do that twice to make sure a macro doesn't leave another macro inside
+			foreach my $key ( sort keys %{$opts->{macros}} ){
+				my $value = $opts->{macros}{$key} || '';
+				$result->{evaluated} =~ s/<$key>/$value/g;
+			}
 		}
 		# make sure <NODE> macro is always evaluated
 		my $nodeName = nodeName();
