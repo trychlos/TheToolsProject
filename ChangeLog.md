@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - Fix mqtt.pl retained when there is no retained message
 
 ### 4.17.1
 

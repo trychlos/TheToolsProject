@@ -63,10 +63,14 @@ sub doGetRetained {
 		msgVerbose( "subscribed to '#'" );
 		while( $loop ){
 			$mqtt->tick( 1 );
-			my $now = Time::Moment->now->epoch;
-			if( $last && $now - $last > $opt_wait ){
-				$loop = false;
+			msgVerbose( "after tick" );
+			if( $last ){
+				my $now = Time::Moment->now->epoch;
+				if( $now - $last > $opt_wait ){
+					$loop = false;
+				}
 			} else {
+				$last = Time::Moment->now->epoch;
 				sleep( 1 );
 			}
 		}
