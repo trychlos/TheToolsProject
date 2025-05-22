@@ -53,6 +53,11 @@
 				"default": false,
 				"command": "smtp.pl send -to alerts@example.com -subject <TITLE> -text <MESSAGE> <OPTIONS>",
 				"prettyJson": true
+			},
+			"withTextToSpeech" : {
+				"enabled": true,
+				"default": false,
+				"prettyJson": true
 			}
 		},
 

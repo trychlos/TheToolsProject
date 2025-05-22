@@ -79,19 +79,19 @@ sub commands {
 
 	# search in this same service definition if exists
 	if( $self->jsonLoaded()){
-		my $part = TTP::commandByOS( $keys, { withCommands => true, jsonable => $self });
-		push( @{$commands}, @{$part} ) if $part;
+		my $parts = TTP::commandByOS( $keys, { jsonable => $self });
+		push( @{$commands}, @{$parts} ) if $parts && scalar( @{$parts} );
 	}
 
 	# search in 'services'
 	my $serviceKeys = [ 'services', $self->name(), @{$keys} ];
-	my $part = TTP::commandByOS( $serviceKeys, { withCommands => true, jsonable => $ep->node() });
-	push( @{$commands}, @{$part} ) if $part;
+	my $parts = TTP::commandByOS( $serviceKeys, { jsonable => $ep->node() });
+	push( @{$commands}, @{$parts} ) if $parts && scalar( @{$parts} );
 
 	# search in (deprecated in v4.10) 'Services'
 	$serviceKeys = [ 'Services', $self->name(), @{$keys} ];
-	$part = TTP::commandByOS( $serviceKeys, { withCommands => true, jsonable => $ep->node() });
-	push( @{$commands}, @{$part} ) if $part;
+	$parts = TTP::commandByOS( $serviceKeys, { jsonable => $ep->node() });
+	push( @{$commands}, @{$parts} ) if $parts && scalar( @{$parts} );
 
 	return $commands;
 }

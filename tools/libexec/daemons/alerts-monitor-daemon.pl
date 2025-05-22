@@ -154,8 +154,8 @@ sub doWithNew {
 		# tries to execute all defined actions
 		foreach my $do ( @{$actions} ){
 			my $jsonable = TTP::JSONable->new( $ep, $do );
-			my $command = TTP::commandByOS([], { jsonable => $jsonable, withCommand => true });
-			if( $command ){
+			my $commands = TTP::commandByOS([], { jsonable => $jsonable });
+			if( $commands && scalar( @{$commands} )){
 				my $levelMatch = true;
 				if( $do->{levelRe} ){
 					$levelMatch = ( $data->{level} =~ m/$do->{levelRe}/ );
@@ -185,18 +185,20 @@ sub doWithNew {
 					msgVerbose( "no 'messageRe' regular expression");
 				}
 				if( $levelMatch && $emitterMatch && $titleMatch && $messageMatch ){
-					my $res = TTP::commandExec( $command, {
-						macros => {
-							LEVEL => $data->{level},
-							EMITTER => $data->{emitter},
-							TITLE => $data->{title},
-							MESSAGE => $data->{message},
-							STAMP => $data->{stamp},
-							JSON => encode_json( $data ),
-							FILEPATH => $file
-						}
-					});
-					#print "result: ".Dumper( $res );
+					foreach my $cmd ( @{$commands} ){
+						my $res = TTP::commandExec( $cmd, {
+							macros => {
+								LEVEL => $data->{level},
+								EMITTER => $data->{emitter},
+								TITLE => $data->{title},
+								MESSAGE => $data->{message},
+								STAMP => $data->{stamp},
+								JSON => encode_json( $data ),
+								FILEPATH => $file
+							}
+						});
+						#print "result: ".Dumper( $res );
+					}
 				}
 			}
 		}

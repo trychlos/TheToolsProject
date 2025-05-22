@@ -146,7 +146,11 @@
                                 "It honors the following macros:",
                                 "- <OUTPUT>: the full output filename, defaulting to '<backupsPeriodicDir>/<NODE>-<SERVICE>-<date-ymd-hms>'."
                             ],
-                            "type": "array",
+                            "type": [
+                                "string",
+                                "array",
+                                "object"
+                            ],
                             "items": [
                                 "string",
                                 "object"
@@ -174,7 +178,11 @@
                     "properties": {
                         "commands": {
                             "description": "The list of commands to be executed.",
-                            "type": "array",
+                            "type": [
+                                "string",
+                                "array",
+                                "object"
+                            ],
                             "items": [
                                 "string",
                                 "object"
@@ -243,7 +251,11 @@
                 },
                 "commands": {
                     "description": "The commands of the workload, either as strings or as by OS commands.",
-                    "type": "array",
+                    "type": [
+                        "string",
+                        "array",
+                        "object"
+                    ],
                     "items": [
                         "string",
                         "object"

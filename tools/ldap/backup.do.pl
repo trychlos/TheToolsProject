@@ -92,7 +92,7 @@ sub _computeDefaultBackupFilename {
 
 sub doBackup {
 	msgOut( "backuping LDAP directory server '$opt_service'..." );
-	my $commands = TTP::commandByOS([ 'LDAP', 'backups' ], { withCommands => true, jsonable => $objService });
+	my $commands = TTP::commandByOS([ 'LDAP', 'backups' ], { jsonable => $objService });
 	my $count = 0;
 	my $ok = 0;
 	if( $commands && scalar( @{$commands} )){

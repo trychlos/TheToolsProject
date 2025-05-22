@@ -108,92 +108,137 @@ sub chompDumper {
 }
 
 # -------------------------------------------------------------------------------------------------
-# Read from configuration either a command as a string or as a byOS-command.
-# We are searching for a 'command' property below the provided keys.
-# This command may be a simple string or an object 'command.byOS.<OSname>'.
+# Read from configuration either a 'command' or a 'commands' property.
+# 'command' itself is obsoleted starting with v4.16
+# Both 'command' and 'commands' accept:
+# - either a single string
+# - or an array
+#   when each item is either a single string or an object with a 'byOS' property
+# - or an object with a 'byOS' property.
 # (I):
 # - the list of keys before the 'command' as an array ref
 # - an optional options hash ref with following keys:
-#   > withCommand: whether to have a top 'command' property before 'byOS', defaulting to false
-#   > withCommands: whether to have a top 'commands' property before 'byOS', defaulting to false
-#	  NB: must have one and only one of 'withCommand' and 'withCommands'!
 #   > jsonable: a IJSONable to be searched for for the provided keys, defaulting to node/site data
 # (O):
-# - the found command as a string, or undef
+# - in a list context, returns:
+#   > a flag true|false, true if no error has been detected (which doesn't mean there is any valid command)
+#   > a ref to an array of the found command(s), which may be empty
+# - in a scalar context, returns a ref to an array of the found command(s), which may be empty
 
 sub commandByOS {
 	my ( $keys, $opts ) = @_;
 	$opts //= {};
-	my $command = undef;
-	my @locals = @{$keys};
-	# have withCommand or withCommands ?
-	my $withCommand = $opts->{withCommand};
-	$withCommand = false if !defined $withCommand;
-	my $withCommands = $opts->{withCommands};
-	$withCommands = false if !defined( $withCommands );
-	my $count = 0;
-	$count += 1 if $withCommand;
-	$count += 1 if $withCommands;
-	if( $count == 0 ){
-		msgErr( __PACKAGE__."::commandByOS() must have one of 'withCommand' or 'withCommands', found none" );
-		TTP::stackTrace();
-	} elsif( $count > 1 ){
-		msgErr( __PACKAGE__."::commandByOS() must have one of 'withCommand' or 'withCommands', found both" );
-		TTP::stackTrace();
-	} else {
-		push( @locals, 'command' ) if $withCommand;
-		push( @locals, 'commands' ) if $withCommands;
-		# search...
-		my $obj = $ep->var( \@locals, $opts );
-		if( defined( $obj )){
-			my $ref = ref( $obj );
-			# a single command: expects a command or a 'byOS' object
-			if( $withCommand ){
-				$command = commandByOS_getObject( \@locals, $obj, $opts );
-			# several commands: expects an array here
-			} elsif( $withCommands ){
-				if( $ref eq 'ARRAY' ){
-					$command = [];
-					foreach my $it ( @{$obj} ){
-						push( @{$command}, commandByOS_getObject( \@locals, $it, $opts ));
-					}
-				} else {
-					msgErr( __PACKAGE__."::commandByOS() unexpected object found in [".join( ', ', @locals )."] configuration: $obj ($ref)." );
-				}
-			} else {
-				msgErr( __PACKAGE__."::commandByOS() unexpected 'withCommand(s)' mode" );
-				TTP::stackTrace();
-			}
+	my $commands = [];
+
+	# search for a 'command' property
+	my @locals = ( @{$keys}, 'command' );
+	my ( $res, $obj ) = command_getObject( \@locals, $opts );
+	if( $res ){
+		if( $obj ){
+			msgWarn( "'command' property has been obsoleted in favor of 'commands'. You should update your configurations." );
+		# search for a 'commands' property
 		} else {
-			msgVerbose( __PACKAGE__."::commandByOS() nothing found at [ ".join( ', ', @locals )." ]" );
+			@locals = ( @{$keys}, 'commands' );
+			( $res, $obj ) = command_getObject( \@locals, $opts );
 		}
 	}
-	return $command;
+
+	# if no error and something has been found, resolve the 'byOS' configs
+	if( $res && $obj ){
+		my $ref = ref( $obj );
+		if( $ref eq 'ARRAY' ){
+			foreach my $it ( @{$obj} ){
+				push( @{$commands}, commandByOS_resolveItem( $it ));
+			}
+		} elsif( $ref eq 'HASH' ){
+			push( @{$commands}, commandByOS_resolveHash( $obj ));
+
+		} else {
+			push( @{$commands}, $obj );
+		}
+	}
+
+	# returns either in list or scalar context
+	return wantarray ? ( $res, $commands ) : $commands;
 }
 
-sub commandByOS_getObject {
-	my ( $locals, $parent, $opts ) = @_;
-	my $command = undef;
-	my $ref = ref( $parent );
-	if( $ref eq 'HASH' ){
-		my @locals = @{$locals};
-		push( @locals, 'byOS', $Config{osname} );
-		my $obj = $ep->var( \@locals, $opts );
-		if( defined( $obj )){
-			$ref = ref( $obj );
-			if( !$ref ){
-				$command = $obj;
-				msgVerbose( __PACKAGE__."::commandByOS() found command '$command' at [ ".join( ', ', @locals )." ]" );
-			} else {
-				msgErr( __PACKAGE__."::commandByOS() unexpected object found in [".join( ', ', @locals )."] configuration: $obj ($ref)." );
-			}
-		} else {
-			msgWarn( __PACKAGE__."::commandByOS() nothing found at [ ".join( ', ', @locals )." ]" );
+# a hash must have a single 'byOS' key
+sub commandByOS_checkHash {
+	my ( $hash ) = @_;
+	my $ok = true;
+	my @keys = sort keys( %{$hash} );
+	if( scalar @keys == 1 ){
+		if( !defined( $hash->{byOS} )){
+			msgErr( __PACKAGE__."::commandByOS_checkHash() expects a single 'byOS' which has not been found" );
+			$ok = false;
 		}
 	} else {
-		$command = $parent;
+		msgErr( __PACKAGE__."::commandByOS_checkHash() expects a single 'byOS', but found [ ".join( ', ', @keys )." ] key(s)" );
+		$ok = false;
 	}
-	return $command;
+	return $ok;
+}
+
+# an item can be either a single string or a byOS hash
+sub commandByOS_checkItem {
+	my ( $item ) = @_;
+	my $ok = true;
+	my $ref = ref( $item );
+	if( $ref ){
+		if( $ref eq 'HASH' ){
+			$ok = commandByOS_checkHash( $item );
+		} else {
+			msgErr( __PACKAGE__."::commandByOS_checkItem() unexpected object found as $item ($ref)" );
+			$ok = false;
+		}
+	}
+	return $ok;
+}
+
+# expects either a string or an array or a hash with a byOS key
+# returns:
+# - a true|false error success indicator, false as soon as an error is detectzed
+# - a ref to the found array, which may be undef or empty
+
+sub commandByOS_getObject {
+	my ( $locals, $opts ) = @_;
+	my $ok = true;
+	my $obj = $ep->var( $locals, $opts );
+	if( $obj ){
+		my $ref = ref( $obj );
+		if( $ref eq 'ARRAY' ){
+			foreach my $it ( @{$obj} ){
+				$ok = commandByOS_checkItem( $it );
+				last if !$ok;
+			}
+		} elsif( $ref eq 'HASH' ){
+			$ok = commandByOS_checkHash( $obj );
+
+		} elsif( $ref ){
+			msgErr( __PACKAGE__."::commandByOS_getObject() unexpected object found in [".join( ', ', @{$locals} )."] configuration: $obj ($ref)" );
+			$ok = false;
+		}
+	}
+	return ( $ok, $obj );
+}
+
+# a hash is expected to have a byOS key
+sub commandByOS_resolveHash {
+	my ( $hash ) = @_;
+	return $hash->{byOS}{$Config{osname}};
+}
+
+# an item can be either a single string or a byOS hash
+sub commandByOS_resolveItem {
+	my ( $item ) = @_;
+	my $ref = ref( $item );
+	if( $ref ){
+		if( $ref eq 'HASH' ){
+			return commandByOS_resolveHash( $item );
+		}
+		# other cases are expected to have been previously filtered
+	}
+	return $item;
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -440,7 +485,9 @@ sub execRemote {
 	$command = $ep->runner()->command()." ".join( " ", @{$ep->runner()->argv()} ) if !$command;
 	
 	# remote execution can be configured at site/node level
-	my $remote = TTP::commandByOS([ 'execRemote' ], { withCommand => true });
+	# expect a single command
+	my $commands = TTP::commandByOS([ 'execRemote' ]);
+	my $remote = $commands->[0] if $commands && scalar( @{$commands} );
 	$remote = "ssh <TARGET> \". ~/.ttp_remote; <COMMAND>\"" if !$remote;
 	$remote = TTP::substituteMacros( $remote, {
 		TARGET => $target,
@@ -550,14 +597,16 @@ sub _executionReportToFile {
 	if( defined $data ){
 		$data = _executionReportCompleteData( $data );
 		my $macros = _executionReportBuildMacros( $data );
-		my $command = TTP::commandByOS([ 'executionReports', 'withFile' ], { withCommand => true });
-		if( !$command ){
+		my $commands = TTP::commandByOS([ 'executionReports', 'withFile' ]);
+		if( !$commands || !scalar( @{$commands} )){
 			my $dropdir = TTP::Path::execReportsDir();
 			my $template = 'report-'.Time::Moment->now->strftime( '%y%m%d%H%M%S' ).'-XXXXXX';
-			$command = "ttp.pl writejson -dir $dropdir -template $template -suffix .json -data \"<JSON>\"";
+			$commands = [ "ttp.pl writejson -dir $dropdir -template $template -suffix .json -data \"<JSON>\"" ];
 		}
-		my $result = TTP::commandExec( $command, { macros => $macros });
-		$res = $result->{success};
+		foreach my $cmd ( @{$commands} ){
+			my $result = TTP::commandExec( $cmd, { macros => $macros });
+			$res &= $result->{success};
+		}
 	} else {
 		msgErr( __PACKAGE__."::_executionReportToFile() expected a 'data' argument, not found" );
 		TTP::stackTrace();
@@ -589,8 +638,10 @@ sub _executionReportToMqtt {
 		my $topic = $args->{topic};
 		$topic = $ep->node()->name()."/executionReport/".$ep->runner()->command()."/".$ep->runner()->verb() if !$topic;
 		# have a command
-		my $command = TTP::commandByOS([ 'executionReports', 'withMqtt' ], { withCommand => true });
-		$command = "mqtt.pl publish -topic <TOPIC>/<KEYNAME> -payload \"<KEYVALUE>\" -retain <OPTIONS>" if !$command;
+		my $commands = TTP::commandByOS([ 'executionReports', 'withMqtt' ]);
+		if( !$commands || !scalar( @{$commands} )){
+			$commands = [ "mqtt.pl publish -topic <TOPIC>/<KEYNAME> -payload \"<KEYVALUE>\" -retain <OPTIONS>" ];
+		}
 		# publish each key
 		my $excludes = [];
 		$excludes = $args->{excludes} if defined $args->{excludes} && ref $args->{excludes} eq 'ARRAY' && scalar $args->{excludes} > 0;
@@ -601,8 +652,10 @@ sub _executionReportToMqtt {
 				$macros->{TOPIC} = $topic;
 				$macros->{KEYNAME} = $key;
 				$macros->{KEYVALUE} = $data->{$key};
-				my $result = TTP::commandExec( $command, { macros => $macros });
-				$res = $result->{success};
+				foreach my $cmd ( @{$commands} ){
+					my $result = TTP::commandExec( $cmd, { macros => $macros });
+					$res = $result->{success};
+				}
 			}
 		}
 	} else {

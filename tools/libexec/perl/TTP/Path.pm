@@ -72,19 +72,21 @@ sub copyDir {
 		TTP::Message::msgVerbose( __PACKAGE__."::copyDir() doesn't empty target tree before copying as emptyTree is false" );
 	}
 	# have a command or use dircopy() or use fcopy()
-	my $command = TTP::commandByOS([ 'copyDir' ], { withCommand => true });
-	if( $command ){
-		TTP::Message::msgVerbose( __PACKAGE__."::copyDir() found command='$command', executing it" );
-		my $cmdres = TTP::commandExec( $command, {
-			macros => {
-				SOURCE => $source,
-				TARGET => $target,
-				EXCLUDEDIRS => $opts->{excludeDirs},
-				EXCLUDEFILES => $opts->{excludeFiles},
-				OPTIONS => $opts->{options}
-			}
-		});
-		$result = $cmdres->{success};
+	my $commands = TTP::commandByOS([ 'copyDir' ]);
+	if( $commands && scalar( @{$commands} )){
+		TTP::Message::msgVerbose( __PACKAGE__."::copyDir() found command=[".join( ',', @{$commands} )."], executing" );
+		foreach my $cmd ( @{$commands} ){
+			my $cmdres = TTP::commandExec( $cmd, {
+				macros => {
+					SOURCE => $source,
+					TARGET => $target,
+					EXCLUDEDIRS => $opts->{excludeDirs},
+					EXCLUDEFILES => $opts->{excludeFiles},
+					OPTIONS => $opts->{options}
+				}
+			});
+			$result = $cmdres->{success};
+		}
 
 	} elsif( $ep->runner()->dummy()){
 		TTP::Message::msgDummy( __PACKAGE__."::copyDir( $source, $target )" );
@@ -97,7 +99,7 @@ sub copyDir {
 			$opts->{work}{target} = $target;
 			$opts->{work}{errors_count} = 0;
 			$opts->{work}{makeDirExist} = true;
-			$opts->{work}{command} = TTP::commandByOS([ 'copyFile' ], { withCommand => true });
+			$opts->{work}{commands} = TTP::commandByOS([ 'copyFile' ]);
 			find( sub { _copy_to( $opts, $_ ); }, $source );
 			$result = !$opts->{work}{errors_count};
 			$opts->{work} = undef;
@@ -194,7 +196,7 @@ sub _copy_match_file {
 #   > 'makeDirExist', when using fcopy(), whether a source directory must be created on the target, defaulting to false
 #      fcopy() default behavior is to refuse to copy just a directory (because it wants copy files!), and returns an error message
 #      this option let us reverse this behavior, e.g. when copying a directory tree with empty dirs
-#   > 'command': the to-be-used command
+#   > 'commands': the to-be-used commands
 # (O):
 # returns true|false
 
@@ -203,25 +205,27 @@ sub copyFile {
 	$opts //= {};
 	my $result = false;
 	TTP::Message::msgVerbose( __PACKAGE__."::copyFile() entering with source='$source' target='$target'" );
-	my $command = $opts->{command} || TTP::commandByOS([ 'copyFile' ], { withCommand => true });
-	if( $command ){
+	my $commands = $opts->{commands} || TTP::commandByOS([ 'copyFile' ]);
+	if( $commands && scalar( @{$commands} )){
 		my ( $src_vol, $src_dir, $src_file ) = File::Spec->splitpath( $source );
 		my $src_path = File::Spec->catpath( $src_vol, $src_dir, "" );
 		my ( $target_vol, $target_dir, $target_file ) = File::Spec->splitpath( $target );
 		my $target_path = File::Spec->catpath( $target_vol, $target_dir, "" );
 		#TTP::Message::msgVerbose( __PACKAGE__."::copyFile() sourcedir='$src_path' sourcefile='$src_file' targetdir='$target_path' targetfile='$target_file'" );
-		my $cmdres = TTP::commandExec( $command, {
-			macros => {
-				SOURCE => $source,
-				SOURCEDIR => $src_path,
-				SOURCEFILE => $src_file,
-				TARGET => $target,
-				TARGETDIR => $target_path,
-				TARGETFILE => $target_file,
-				OPTIONS => $opts->{options}
-			}
-		});
-		$result = $cmdres->{success};
+		foreach my $cmd ( @{$commands} ){
+			my $cmdres = TTP::commandExec( $cmd, {
+				macros => {
+					SOURCE => $source,
+					SOURCEDIR => $src_path,
+					SOURCEFILE => $src_file,
+					TARGET => $target,
+					TARGETDIR => $target_path,
+					TARGETFILE => $target_file,
+					OPTIONS => $opts->{options}
+				}
+			});
+			$result = $cmdres->{success};
+		}
 
 	} elsif( $ep->runner()->dummy()){
 		TTP::Message::msgDummy( __PACKAGE__."::copyFile( $source, $target )" );

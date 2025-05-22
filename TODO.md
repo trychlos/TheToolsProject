@@ -41,7 +41,6 @@
 |      | 2025- 5-14 | DaemonConfig -> Daemon would imply $runner = TTP::RunnerDaemon->bootstrap() and $daemon->config() -> $runner->daemon() |
 |  151 | 2025- 5-16 | have ldap backup/restore |
 |      | 2025- 5-21 | have ldap backup |
-|  159 | 2025- 5-22 | all 'command' in schemas should be 'commands' and accept either a single command string or an array of commands + precise how to specify array of commands by OS |
 |  160 |  |  |
 
 ---
@@ -417,6 +416,8 @@
 |      | 2025- 5-20 | no: the node is referenced in two site hierarchies, and so can have two environments |
 |  158 | 2025- 5-19 | reviews the way MQTTGateway and SMTPGateway take their username/password (should be same than DBMS) |
 |      | 2025- 5-20 | done |
+|  159 | 2025- 5-22 | all 'command' in schemas should be 'commands' and accept either a single command string or an array of commands + precise how to specify array of commands by OS |
+|      | 2025- 5-22 | done |
 
 ---
 P. Wieser

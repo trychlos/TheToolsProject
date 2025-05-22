@@ -21,7 +21,31 @@
 		" See below 'site' object.",
         "",
         "Unless otherwise specified, below values are overridable on a per-bode basis.",
-        "Most of commands here accept a <NODE> macro which is evaluated as TTP::nodeName()."
+        "",
+        "Starting with v4.16, 'command' and 'commands' properties both accept either a single string command or an array of commands,",
+        " where each individual command can be either a single string or an object with a 'byOS' property.",
+        " We can so have:",
+        " - \"command\": \"a simple command\"",
+        " - \"commands\": \"another simple command\"",
+        " - \"commands\": [",
+        "       \"yet another command -with -an -argument\"",
+        "       {",
+        "           \"byOS\": {",
+        "               \"Linux\": \"scp -rp <SOURCE> <TARGET>\"",
+        "               \"MSWin32\": \"robocopy <SOURCE> <TARGET> /MIR\"",
+        "           }",
+        "       }",
+        "   ]",
+        " - \"commands\": {",
+        "       {",
+        "           \"byOS\": {",
+        "               \"linux\": \"scp -rp <SOURCE> <TARGET>\"",
+        "               \"MSWin32\": \"robocopy <SOURCE> <TARGET> /MIR\"",
+        "           }",
+        "       }",
+        "   }",
+        "Commands all accept a <NODE> macro which is evaluated as TTP::nodeName().",
+        "When several commands are specified, they are executed, inconditionnally, in sequence."
     ],
     "type": "object",
     "properties": {
@@ -55,8 +79,14 @@
                         "- enabled: whether this medium is enabled; will be fully ignored when disabled; defaulting to true (enabled).",
                         "- default: whether this medium is a default for 'ttp.pl alert' command; defaulting to false.",
                         "- command: either a single string, or an object 'command.byOS.<osname>; defaulting dependant of the exact used medium.",
-                        "  Provided commands have access to <EMITTER>, <LEVEL>, <TITLE>, <MESSAGE>, <STAMP>, <OPTIONS> and <JSON> macros,",
-                        "  the <JSON> macro being resolved with a stringified version of the alert JSON data.",
+                        "  Provided commands have access to following macros:",
+                        "  - <EMITTER> the emitter node,",
+                        "  - <LEVEL> the alert level (see ttp.alert --list-levels to get the list of available levels),",
+                        "  - <TITLE> the title of the alert,",
+                        "  - <MESSAGE>the message of the alert,",
+                        "  - <STAMP> the timestamp as a string 'yyyy-mm-dd hh:mi:ss.cccccc +02:00',",
+                        "  - <OPTIONS> additional options provided to the alert,",
+                        "  - <JSON> a JSON stringified version of the alert data.",
                         "When specifying a command, either as a simple string or as a 'byOS' object, you should take care that the specified command will not",
                         "inherit of '--dummy' or '--verbose' options of the parent command. Be cautious about what you exactly want."
                     ],
@@ -77,11 +107,20 @@
                                     "default": true
                                 },
                                 "command": {
+                                    "description": "The command to be used to create the JSON alert file. Deprecated in favor of 'commands' in v4.16.",
+                                    "deprecated": true
+                                },
+                                "commands": {
                                     "description_array": [
-                                        "The command to be used to create the JSON alert file.",
+                                        "The command(s) to be used to create the JSON alert file.",
                                         "The default command creates an 'alert-yyyymmddhhmisscccccc.json' file in the below dropDir directory."
                                     ],
                                     "type": [
+                                        "string",
+                                        "array",
+                                        "object"
+                                    ],
+                                    "items": [
                                         "string",
                                         "object"
                                     ],
@@ -99,15 +138,15 @@
                                     },
                                     "default": "ttp.pl writejson into below dropDir"
                                 },
-                                "prettyJson": {
-                                    "description": "Whether the JSON string should be prettified.",
-                                    "type": "boolean",
-                                    "default": true
-                                },
                                 "dropDir": {
                                     "description": "The directory where alert files must be created.",
                                     "type": "string",
                                     "default": "[eval:File::Spec->catdir( TTP::tempDir(), 'TTP', 'alerts' )]"
+                                },
+                                "prettyJson": {
+                                    "description": "Whether the JSON string should be prettified.",
+                                    "type": "boolean",
+                                    "default": true
                                 }
                             }
                         },
@@ -126,8 +165,17 @@
                                     "default": true
                                 },
                                 "command": {
-                                    "description": "The command to be used to publish to the MQTT bus.",
+                                    "description": "The command to be used to publish to the MQTT bus. Deprecated in favor of 'commands' in v4.16.",
+                                    "deprecated": true
+                                },
+                                "commands": {
+                                    "description": "The command(s) to be used to publish to the MQTT bus.",
                                     "type": [
+                                        "string",
+                                        "array",
+                                        "object"
+                                    ],
+                                    "items": [
                                         "string",
                                         "object"
                                     ],
@@ -167,14 +215,23 @@
                                     "default": true
                                 },
                                 "command": {
+                                    "description": "The command to be used to send the alert by SMS. Deprecated in favor of 'commands' in v4.16.",
+                                    "deprecated": true
+                                },
+                                "commands": {
                                     "description_array": [
-                                        "The command to be used to send the alert by SMS.",
+                                        "The command(s) to be used to send the alert by SMS.",
                                         "The command has access to additional macros:",
                                         "- <RECIPIENTS> is resolved with a comma-separated list of the recipients,",
                                         "- <CONTENTFNAME> is the filename of a text file which contains the full message.",
                                         "No default command is provided as of v4.1"
                                     ],
                                     "type": [
+                                        "string",
+                                        "array",
+                                        "object"
+                                    ],
+                                    "items": [
                                         "string",
                                         "object"
                                     ],
@@ -220,13 +277,22 @@
                                     "default": true
                                 },
                                 "command": {
+                                    "description": "The command to be used to send the alert by email. Deprecated in favor of 'commands' in v4.16.",
+                                    "deprecated": true
+                                },
+                                "commands": {
                                     "description_array": [
-                                        "The command to be used to send the alert by email.",
+                                        "The command(s) to be used to send the alert by email.",
                                         "The command has access to additional macros:",
                                         "- <RECIPIENTS> is resolved with a comma-separated list of the recipients,",
                                         "- <CONTENTFNAME> is the filename of a text file which contains the full message."
                                     ],
                                     "type": [
+                                        "string",
+                                        "array",
+                                        "object"
+                                    ],
+                                    "items": [
                                         "string",
                                         "object"
                                     ],
@@ -279,12 +345,24 @@
                                     "default": true
                                 },
                                 "command": {
+                                    "description": "The command to be used to send the alert with text-to-speech. Deprecated in favor of 'commands' in v4.16.",
+                                    "deprecated": true
+                                },
+                                "commands": {
                                     "description_array": [
-                                        "The command to be used to send the alert with text-to-speech.",
+                                        "The command(s) to be used to send the alert with text-to-speech.",
                                         "The command has access to following additional macros:",
                                         " <TEXT> the message to be said."
                                     ],
-                                    "type": "string",
+                                    "type": [
+                                        "string",
+                                        "array",
+                                        "object"
+                                    ],
+                                    "items": [
+                                        "string",
+                                        "object"
+                                    ],
                                     "properties": {
                                         "byOS": {
                                             "description": "Let a command be specific to the running OS.",
@@ -318,10 +396,19 @@
                     "type": "object",
                     "properties": {
                         "command": {
-                            "description": "The command to be used to copy a directory, either as a string or a 'byOS' object.",
+                            "description": "The command to be used to copy a directory, either as a string or a 'byOS' object. Deprecated in favor of 'commands' in v4.16.",
+                            "deprecated": true
+                        },
+                        "commands": {
+                            "description": "The command(s) to be used to copy a directory, either as a string or a 'byOS' object.",
                             "type": [
-                                "object",
-                                "string"
+                                "string",
+                                "array",
+                                "object"
+                            ],
+                            "items": [
+                                "string",
+                                "object"
                             ],
                             "properties": {
                                 "byOS": {
@@ -352,25 +439,32 @@
                 },
                 "copyFile": {
                     "description_array": [
-                        "The command used by TheToolsProject each time a file must be copied from a source to a target.",
-                        "This can be either a simple command string or a byOS command."
+                        "The command(s) used by TheToolsProject each time a file must be copied from a source to a target.",
+                        "The commands honor following macros:",
+                        "- <SOURCE> the source volume, directory and filename,",
+                        "- <SOURCEDIR> the source volume and directory,",
+                        "- <SOURCEFILE> the source filename,",
+                        "- <TARGET> the target volume, directory and filename,",
+                        "- <TARGETDIR> the target volume and directory",
+                        "- <TARGETFILE> the target filename",
+                        "- <OPTIONS> the options provided to the command."
                     ],
                     "type": "object",
                     "properties": {
                         "command": {
-                            "description_array": [
-                                "The command to be used. It honors following macros:",
-                                "- <SOURCE> the source volume, directory and filename,",
-                                "- <SOURCEDIR> the source volume and directory,",
-                                "- <SOURCEFILE> the source filename,",
-                                "- <TARGET> the target volume, directory and filename,",
-                                "- <TARGETDIR> the target volume and directory",
-                                "- <TARGETFILE> the target filename",
-                                "- <OPTIONS> the options provided to the command."
-                            ],
+                            "description": "The command to be used. Deprecated in favor of 'commands' in v4.16.",
+                            "deprecated": true
+                        },
+                        "commands": {
+                            "description": "The command to be used.",
                             "type": [
-                                "object",
-                                "string"
+                                "string",
+                                "array",
+                                "object"
+                            ],
+                            "items": [
+                                "string",
+                                "object"
                             ],
                             "properties": {
                                 "byOS": {
@@ -486,11 +580,20 @@
                                                     "default": false
                                                 },
                                                 "command": {
+                                                    "description": "The command to be used to create the JSON execution report file. Deprecated in favor of 'commands' in v4.16.",
+                                                    "deprecated": true
+                                                },
+                                                "commands": {
                                                     "description_array": [
-                                                        "The command to be used to create the JSON execution report file.",
+                                                        "The command(s) to be used to create the JSON execution report file.",
                                                         "The default command creates a 'report-yyyymmddhhmisscccccc.json' file in the below dropDir directory."
                                                     ],
                                                     "type": [
+                                                        "string",
+                                                        "array",
+                                                        "object"
+                                                    ],
+                                                    "items": [
                                                         "string",
                                                         "object"
                                                     ],
@@ -508,15 +611,15 @@
                                                     },
                                                     "default": "ttp.pl writejson into below dropDir"
                                                 },
-                                                "prettyJson": {
-                                                    "description": "Whether the JSON string should be prettified.",
-                                                    "type": "boolean",
-                                                    "default": true
-                                                },
                                                 "dropDir": {
                                                     "description": "The directory where execution report files must be created.",
                                                     "type": "string",
                                                     "default": "[eval:File::Spec->catdir( TTP::tempDir(), 'TTP', 'executionReports' )]"
+                                                },
+                                                "prettyJson": {
+                                                    "description": "Whether the JSON string should be prettified.",
+                                                    "type": "boolean",
+                                                    "default": true
                                                 }
                                             }
                                         },
@@ -530,11 +633,20 @@
                                                     "default": false
                                                 },
                                                 "command": {
+                                                    "description": "The command to be used to create the MQTT-based execution report topics. Deprecated in favor of 'commands' in v4.16.",
+                                                    "deprecated": true
+                                                },
+                                                "commands": {
                                                     "description_array": [
-                                                        "The command to be used to create the MQTT-based execution report topics.",
+                                                        "The command(s) to be used to create the MQTT-based execution report topics.",
                                                         "The command has access to <TOPIC> macro."
                                                     ],
                                                     "type": [
+                                                        "string",
+                                                        "array",
+                                                        "object"
+                                                    ],
+                                                    "items": [
                                                         "string",
                                                         "object"
                                                     ],
@@ -608,11 +720,20 @@
                                                     "default": false
                                                 },
                                                 "command": {
+                                                    "description": "The command to be used to create the JSON execution report file. Deprecated in favor of 'commands' in v4.16.",
+                                                    "deprecated": true
+                                                },
+                                                "commands": {
                                                     "description_array": [
-                                                        "The command to be used to create the JSON execution report file.",
+                                                        "The command(s) to be used to create the JSON execution report file.",
                                                         "The default command creates a 'report-yyyymmddhhmisscccccc.json' file in the below dropDir directory."
                                                     ],
                                                     "type": [
+                                                        "string",
+                                                        "array",
+                                                        "object"
+                                                    ],
+                                                    "items": [
                                                         "string",
                                                         "object"
                                                     ],
@@ -652,11 +773,20 @@
                                                     "default": false
                                                 },
                                                 "command": {
+                                                    "description": "The command to be used to create the MQTT-based execution report topics. Deprecated in favor of 'commands' in v4.16.",
+                                                    "deprecated": true
+                                                },
+                                                "commands": {
                                                     "description_array": [
-                                                        "The command to be used to create the MQTT-based execution report topics.",
+                                                        "The command(s) to be used to create the MQTT-based execution report topics.",
                                                         "The command has access to <TOPIC> macro."
                                                     ],
                                                     "type": [
+                                                        "string",
+                                                        "array",
+                                                        "object"
+                                                    ],
+                                                    "items": [
                                                         "string",
                                                         "object"
                                                     ],
@@ -745,11 +875,20 @@
 					"type": "object",
 					"properties": {
 						"command": {
-							"description": "The command to be run to remotely execute a command.",
-							"type": [
-								"object",
-								"string"
-							],
+							"description": "The command to be run to remotely execute a command. Deprecated in favor of 'commands' in v4.16.",
+                            "deprecated": true
+                        },
+						"commands": {
+							"description": "The command(s) to be run to remotely execute a command.",
+                            "type": [
+                                "string",
+                                "array",
+                                "object"
+                            ],
+                            "items": [
+                                "string",
+                                "object"
+                            ],
 							"properties": {
 								"byOS": {
 									"description": "Let a command be specific to the running OS.",
@@ -802,11 +941,20 @@
                                     "default": true
                                 },
                                 "command": {
+                                    "description": "The command to be used to create the JSON execution report file. Deprecated in favor of 'commands' in v4.16.",
+                                    "deprecated": true
+                                },
+                                "commands": {
                                     "description_array": [
-                                        "The command to be used to create the JSON execution report file.",
+                                        "The command(s) to be used to create the JSON execution report file.",
                                         "The default command creates a 'report-yyyymmddhhmisscccccc.json' file in the below dropDir directory."
                                     ],
                                     "type": [
+                                        "string",
+                                        "array",
+                                        "object"
+                                    ],
+                                    "items": [
                                         "string",
                                         "object"
                                     ],
@@ -859,8 +1007,17 @@
                                     "default": true
                                 },
                                 "command": {
-                                    "description": "The command to be used to create the MQTT-based execution report topics.",
+                                    "description": "The command to be used to create the MQTT-based execution report topics. Deprecated in favor of 'commands' in v4.16.",
+                                    "deprecated": true
+                                },
+                                "commands": {
+                                    "description": "The command(s) to be used to create the MQTT-based execution report topics.",
                                     "type": [
+                                        "string",
+                                        "array",
+                                        "object"
+                                    ],
+                                    "items": [
                                         "string",
                                         "object"
                                     ],
@@ -1334,10 +1491,19 @@
                                     "default": true
                                 },
                                 "command": {
-                                    "description": "The command to be run to publish a telemetry to the HTTP gateway.",
+                                    "description": "The command to be run to publish a telemetry to the HTTP gateway. Deprecated in favor of 'commands' in v4.16.",
+                                    "deprecated": true
+                                },
+                                "commands": {
+                                    "description": "The command(s) to be run to publish a telemetry to the HTTP gateway.",
                                     "type": [
-                                        "object",
-                                        "string"
+                                        "string",
+                                        "array",
+                                        "object"
+                                    ],
+                                    "items": [
+                                        "string",
+                                        "object"
                                     ],
                                     "properties": {
                                         "byOS": {
@@ -1369,10 +1535,19 @@
                                     "default": true
                                 },
                                 "command": {
-                                    "description": "The command to be run to publish a telemetry on the MQTT bus.",
+                                    "description": "The command to be run to publish a telemetry on the MQTT bus. Deprecated in favor of 'commands' in v4.16.",
+                                    "deprecated": true
+                                },
+                                "commands": {
+                                    "description": "The command(s) to be run to publish a telemetry on the MQTT bus.",
                                     "type": [
-                                        "object",
-                                        "string"
+                                        "string",
+                                        "array",
+                                        "object"
+                                    ],
+                                    "items": [
+                                        "string",
+                                        "object"
                                     ],
                                     "properties": {
                                         "byOS": {
@@ -1422,18 +1597,27 @@
                     "description_array": [
                         "The configuration of how to publish a workloads summary.",
                         "The configured command has access to following macros:",
-                        " <RECIPIENTS> a comma-separated list of email recipients,",
-                        " <SUBJECT> a label title,",
-                        " <TEXTFNAME> the path to a temporary file which contains the workload summary,",
-                        " <WORKLOAD> the workload name."
+                        "- <RECIPIENTS> a comma-separated list of email recipients,",
+                        "- <SUBJECT> a label title,",
+                        "- <TEXTFNAME> the path to a temporary file which contains the workload summary,",
+                        "- <WORKLOAD> the workload name."
                     ],
                     "type": "object",
                     "properties": {
                         "command": {
-                            "description": "The command to be run to publish a workload summary.",
+                            "description": "The command to be run to publish a workload summary. Deprecated in favor of 'commands' in v4.16.",
+                            "deprecated": true
+                        },
+                        "commands": {
+                            "description": "The command(s) to be run to publish a workload summary.",
                             "type": [
-                                "object",
-                                "string"
+                                "string",
+                                "array",
+                                "object"
+                            ],
+                            "items": [
+                                "string",
+                                "object"
                             ],
                             "properties": {
                                 "byOS": {

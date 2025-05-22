@@ -119,22 +119,24 @@ sub printSummary {
 	$stdout .= "+".TTP::pad( "", $totLength-2, '=' )."+".EOL;
 	# both send the summary to the log (here to stdout) and execute the provided command
 	# must manage SUBJECT and OPTIONS macros
-	my $command = TTP::commandByOS([ 'workloadSummary' ], { withCommand => true });
-	$command = "smtp.pl send -subject \"<SUBJECT>\" -to <RECIPIENTS> -textfname <TEXTFNAME>" if !$command;
+	my $commands = TTP::commandByOS([ 'workloadSummary' ]);
+	$commands = [ "smtp.pl send -subject \"<SUBJECT>\" -to <RECIPIENTS> -textfname <TEXTFNAME>" ] if !$commands || !scalar( @{$commands} );
 	my $textfname = TTP::getTempFileName();
 	my $fh = path( $textfname );
 	$fh->spew( $stdout );
 	# this script is not interactive but written to be executed as part of a batch
 	# -> there is so no reason to log stdout of the command because all msgXxxx() of the command are already logged
 	my $recipients = TTP::var([ 'workloadSummary', 'recipients' ]) || [ 'root\@localhost' ];
-	TTP::commandExec( $command, {
-		macros => {
-			RECIPIENTS => join( ',', @{$recipients} ),
-			SUBJECT => TTP::var([ 'workloadSummary', 'subject' ]) || "[<WORKLOAD>\@<NODE>] workload summary",
-			TEXTFNAME => $textfname,
-			WORKLOAD => $opt_workload
-		}
-	});
+	foreach my $cmd ( @{$commands} ){
+		TTP::commandExec( $cmd, {
+			macros => {
+				RECIPIENTS => join( ',', @{$recipients} ),
+				SUBJECT => TTP::var([ 'workloadSummary', 'subject' ]) || "[<WORKLOAD>\@<NODE>] workload summary",
+				TEXTFNAME => $textfname,
+				WORKLOAD => $opt_workload
+			}
+		});
+	}
 	# and to stdout (at last) which sends the summary to the enclosing log
 	print $stdout;
 }

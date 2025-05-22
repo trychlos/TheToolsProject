@@ -99,16 +99,25 @@
             "items": "object",
             "properties": {
                 "command": {
+                    "description": "The command to be executed when a new alert has been identified. Deprecated in favor of 'commands' in v4.16.",
+                    "deprecated": true
+                },
+                "commands": {
                     "description_array": [
-                        "The command to be executed when a new alert has been identified, either as a single string or as a 'byOS' object.",
+                        "The command(s) to be executed when a new alert has been identified, either as a single string or as a 'byOS' object.",
                         "The provided command can take advantage of following macros:",
-                        "- the individual alert items: <EMITTER>, <LEVEL>, <TITLE>, <MESSAGE>, <STAMP>,",
-                        "- a stringified version of the alert data: <JSON>,",
-                        "- the full filename: <FILEPATH>."
+                        "- <EMITTER>, <LEVEL>, <TITLE>, <MESSAGE>, <STAMP> as the individual alert items,",
+                        "- <JSON> a JSON stringified version of the alert data,",
+                        "- <FILEPATH> the full filename."
                     ],
                     "type": [
-                        "object",
-                        "string"
+                        "string",
+                        "array",
+                        "object"
+                    ],
+                    "items": [
+                        "string",
+                        "object"
                     ],
                     "properties": {
                         "byOS": {

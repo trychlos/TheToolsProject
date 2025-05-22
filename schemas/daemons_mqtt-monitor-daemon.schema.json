@@ -176,13 +176,22 @@
                                 "default": false
                             },
                             "command": {
+                                "description": "The command to be executed when a topic is matched, Deprecated in favor of 'commands' in v4.16.",
+                                "deprecated": true
+                            },
+                            "commands": {
                                 "description_array": [
-                                    "The command to be executed when a topic is matched, either as a single string or as a 'byOS' object.",
+                                    "The command(s) to be executed when a topic is matched, either as a single string or as a 'byOS' object.",
                                     "The provided command can take advantage of <TOPIC> and <PAYLOAD> macros."
                                 ],
                                 "type": [
-                                    "object",
-                                    "string"
+                                    "string",
+                                    "array",
+                                    "object"
+                                ],
+                                "items": [
+                                    "string",
+                                    "object"
                                 ],
                                 "properties": {
                                     "byOS": {

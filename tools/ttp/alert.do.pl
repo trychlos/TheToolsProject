@@ -135,12 +135,12 @@ sub doDisplayLevels {
 
 sub doFileAlert {
 	msgOut( "creating a new '$opt_level' JSON file alert..." );
-	my $command = TTP::commandByOS([ 'alerts', 'withFile' ], { withCommand => true });
+	my $commands = TTP::commandByOS([ 'alerts', 'withFile' ]);
 	my $dir = TTP::alertsFileDropdir();
-	if( !$command ){
+	if( !$commands || !scalar( @{$commands} )){
 		my $file = File::Spec->catfile( $dir, 'alert-'.$alertStamp->strftime( '%Y%m%d%H%M%S%6N' ).'.json' );
 		my $verbose = $ep->runner()->verbose() ? "-verbose" : "-noverbose";
-		$command = "ttp.pl writejson -nocolored $verbose -file $file -data \"<JSON>\" <OPTIONS>";
+		$commands = [ "ttp.pl writejson -nocolored $verbose -file $file -data \"<JSON>\" <OPTIONS>" ];
 	}
 	TTP::Path::makeDirExist( $dir );
 	my $prettyJson = $ep->var([ 'alerts', 'withFile', 'prettyJson' ]);
@@ -159,7 +159,7 @@ sub doFileAlert {
 		STAMP => $data->{stamp},
 		OPTIONS => $opt_options
 	};
-	execute( $command, $macros, "success", "alert by File NOT OK" );
+	execute( $commands, $macros, "success", "alert by File NOT OK" );
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -170,10 +170,10 @@ sub doMqttAlert {
 	msgOut( "publishing a '$opt_level' alert on MQTT bus..." );
 	my $data = buildAlertData();
 	my $topic = $ep->var([ 'alerts', 'withMqtt', 'topic' ]) || $ep->node()->name()."/alerts/".$alertStamp->strftime( '%Y%m%d%H%M%S%6N' );
-	my $command = TTP::commandByOS([ 'alerts', 'withMqtt' ], { withCommand => true });
-	if( !$command ){
+	my $commands = TTP::commandByOS([ 'alerts', 'withMqtt' ]);
+	if( !$commands || !scalar( @{$commands} )){
 		my $verbose = $ep->runner()->verbose() ? "-verbose" : "-noverbose";
-		$command = "mqtt.pl publish -nocolored $verbose -topic $topic -payload \"<JSON>\" <OPTIONS>";
+		$commands = [ "mqtt.pl publish -nocolored $verbose -topic $topic -payload \"<JSON>\" <OPTIONS>" ];
 	}
 	my $json = JSON->new->encode( $data );
 	# protect the double quotes against the CMD.EXE command-line
@@ -187,7 +187,7 @@ sub doMqttAlert {
 		STAMP => $data->{stamp},
 		OPTIONS => $opt_options
 	};
-	execute( $command, $macros, "success", "alert by MQTT NOT OK" );
+	execute( $commands, $macros, "success", "alert by MQTT NOT OK" );
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -197,13 +197,8 @@ sub doMqttAlert {
 
 sub doSmsAlert {
 	msgOut( "sending a '$opt_level' alert by SMS..." );
-	my $command = TTP::commandByOS([ 'alerts', 'withSms' ], { withCommand => true });
-	if( !$command ){
-		my $verbose = $ep->runner()->verbose() ? "-verbose" : "-noverbose";
-		# it is up to the site to know if and how send SMS
-		#$command = "smtp.pl send -nocolored $verbose -to <RECIPIENTS> -subject <TITLE> -text <MESSAGE> <OPTIONS>";
-	}
-	if( $command ){
+	my $commands = TTP::commandByOS([ 'alerts', 'withSms' ]);
+	if( $commands && scalar( @{$commands} )){
 		my $recipients = $ep->var([ 'alerts', 'withSms', 'recipients' ]) || [];
 		if( scalar( @{$recipients} )){
 			my $prettyJson = $ep->var([ 'alerts', 'withSms', 'prettyJson' ]);
@@ -224,7 +219,7 @@ sub doSmsAlert {
 				RECIPIENTS => join( ',', @{$recipients} ),
 				CONTENTFNAME => $textfname
 			};
-			execute( $command, $macros, "success", "alert by SMS NOT OK" );
+			execute( $commands, $macros, "success", "alert by SMS NOT OK" );
 		} else {
 			msgWarn( "no recipients is provided by the site: it is not possible to send SMS" );
 		}
@@ -239,10 +234,10 @@ sub doSmsAlert {
 
 sub doSmtpAlert {
 	msgOut( "publishing a '$opt_level' alert by SMTP..." );
-	my $command = TTP::commandByOS([ 'alerts', 'withSmtp' ], { withCommand => true });
-	if( !$command ){
+	my $commands = TTP::commandByOS([ 'alerts', 'withSmtp' ]);
+	if( !$commands || !scalar( @{$commands} )){
 		my $verbose = $ep->runner()->verbose() ? "-verbose" : "-noverbose";
-		$command = "smtp.pl send -nocolored $verbose -to <RECIPIENTS> -subject \"<TITLE>\" -textfname <CONTENTFNAME> <OPTIONS>";
+		$commands = [ "smtp.pl send -nocolored $verbose -to <RECIPIENTS> -subject \"<TITLE>\" -textfname <CONTENTFNAME> <OPTIONS>" ];
 	}
 	my $recipients = $ep->var([ 'alerts', 'withSmtp', 'recipients' ]) || [ 'root@localhost' ];
 	my $prefixTitle = $ep->var([ 'alerts', 'withSmtp', 'prefixTitle' ]);
@@ -284,7 +279,7 @@ $mailfrom
 		RECIPIENTS => join( ',', @{$recipients} ),
 		CONTENTFNAME => $textfname
 	};
-	execute( $command, $macros, "success", "alert by SMTP NOT OK" );
+	execute( $commands, $macros, "success", "alert by SMTP NOT OK" );
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -292,8 +287,8 @@ $mailfrom
 
 sub doTextToSpeechAlert {
 	msgOut( "publishing a '$opt_level' alert with Text-To-Speech..." );
-	my $command = TTP::commandByOS([ 'alerts', 'withTextToSpeech' ], { withCommand => true });
-	if( $command ){
+	my $commands = TTP::commandByOS([ 'alerts', 'withTextToSpeech' ]);
+	if( $commands && scalar( @{$commands} )){
 		my $text = TTP::var([ 'alerts', 'withTextToSpeech', 'text' ]);
 		$text = "Alert from <EMITTER> <TITLE> <MESSAGE>" if !$text;
 		my $data = buildAlertData();
@@ -307,27 +302,29 @@ sub doTextToSpeechAlert {
 			OPTIONS => $opt_options,
 			TEXT => $text
 		};
-		execute( $command, $macros, "success", "alert by TTS NOT OK" );
+		execute( $commands, $macros, "success", "alert by TTS NOT OK" );
 	}
 }
 
 # -------------------------------------------------------------------------------------------------
 # execute the prepared command
 # (I):
-# - the command
+# - the commands array ref
 # - the macros to be substituted
 # - the message to be displayed in case of success
 # - the message to be displayed in case of an error
 
 sub execute {
-	my ( $command, $macros, $msgok, $msgerr ) = @_;
-	my $result = TTP::commandExec( $command, {
-		macros => $macros
-	});
-	if( $result->{success} ){
-		msgOut( $msgok );
-	} else {
-		msgErr( $msgerr );
+	my ( $commands, $macros, $msgok, $msgerr ) = @_;
+	foreach my $cmd ( @{$commands} ){
+		my $result = TTP::commandExec( $cmd, {
+			macros => $macros
+		});
+		if( $result->{success} ){
+			msgOut( $msgok );
+		} else {
+			msgErr( $msgerr );
+		}
 	}
 }
 

@@ -96,13 +96,13 @@ sub publish {
 
 	if( isEnabled()){
 		# get the command
-		my $command = TTP::commandByOS([ 'telemetry', 'withMqtt' ], { withCommand => true });
-		if( !$command ){
-			$command = TTP::commandByOS([ 'Telemetry', 'withMqtt' ], { withCommand => true });
-			if( $command ){
+		my $commands = TTP::commandByOS([ 'telemetry', 'withMqtt' ]);
+		if( !$commands || !scalar( @{$commands} )){
+			$commands = TTP::commandByOS([ 'Telemetry', 'withMqtt' ]);
+			if( $commands && scalar( @{$commands} )){
 				msgWarn( "'Telemetry' property is obsoleted is favor of 'telemetry'. You should update your configurations" );
 			} else {
-				$command = "mqtt.pl publish -topic <TOPIC> -payload \"<VALUE>\"";
+				$commands = [ "mqtt.pl publish -topic <TOPIC> -payload \"<VALUE>\"" ];
 			}
 		}
 		# get and maybe prefix the name
@@ -125,10 +125,12 @@ sub publish {
 		$topic =~ s/\/+/\//g;
 		$macros->{TOPIC} = $topic;
 		# when running the command, takes care that the provided command may not honor nor even accept standard options - do not modify it
-		my $result = TTP::commandExec( $command, {
-			macros => $macros
-		});
-		$res = $result->{success} ? 0 : MQTT_COMMAND_ERROR;
+		foreach my $cmd ( @{$commands} ){
+			my $result = TTP::commandExec( $cmd, {
+				macros => $macros
+			});
+			$res = $result->{success} ? 0 : MQTT_COMMAND_ERROR if !$res;
+		}
 	} else {
 		$res = MQTT_DISABLED_BY_CONFIGURATION;
 	}

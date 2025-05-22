@@ -14,6 +14,7 @@
     - TTP::MariaDB can return databaseSize() as undef when database is not fully defined
     - Fix TTP::commandExec() when a macro value is falsy but not undef
     - Improve TTP::substituteMacros() to iter while some substitutions are still possible
+    - 'command' property is obsoleted in favor of 'commands' and both accept either a string or an array, of strings or objects (todo #159)
 
 ### 4.15.2
 

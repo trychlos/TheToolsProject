@@ -212,7 +212,7 @@ sub worker {
 	my $node = $ep->node();
 	my $keys = configKeys();
 	msgVerbose( "searching for monitoring commands at the node level" );
-	my $commands = TTP::commandByOS( $keys, { withCommands => true, jsonable => $ep->node() });
+	my $commands = TTP::commandByOS( $keys, { jsonable => $ep->node() });
 	if( hasCommands( $commands )){
 		foreach my $cmd ( @{$commands} ){
 			msgVerbose( "found command='$cmd'" );
