@@ -245,6 +245,10 @@ sub commandExec {
 				$result->{evaluated} =~ s/<$key>/$value/g;
 			}
 		}
+		# make sure <NODE> macro is always evaluated
+		my $nodeName = nodeName();
+		$result->{evaluated} =~ s/<NODE>/$nodeName/g;
+		# and go
 		msgVerbose( __PACKAGE__."::commandExec() evaluated to '$result->{evaluated}'" );
 		if( $ep->runner()->dummy()){
 			msgDummy( $result->{evaluated} );

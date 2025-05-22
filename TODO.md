@@ -28,10 +28,6 @@
 |      | 2025- 4-14 | node-monitor-daemon.pl is moved to libexec/daemons |
 |      | 2025- 4-17 | mqtt-monitor-daemon.pl is moved to libexec/daemons |
 |      | 2025- 4-17 | at the moment, still exists backup-monitor-daemon in site tree - to be evaluated |
-|  109 | 2025- 4-20 | site.schema for executionReports |
-|      | 2025- 4-22 | done - has to be honored |
-|      | 2025- 5- 7 | TTP::executionReport() honors 'enabled' configuration |
-|      | 2025- 5-19 | dbms.pl backup/restore both honor withFile/withMqtt.default property |
 |  111 | 2025- 4-20 | site.schema for telemetry |
 |      | 2025- 4-22 | done - has to be honored |
 |      | 2025- 5-11 | Mqtt honors it |
@@ -309,6 +305,11 @@
 |      | 2025- 4-19 | fixed |
 |  108 | 2025- 4-20 | site.schema for DBMS |
 |      | 2025- 4-21 | done |
+|  109 | 2025- 4-20 | site.schema for executionReports |
+|      | 2025- 4-22 | done - has to be honored |
+|      | 2025- 5- 7 | TTP::executionReport() honors 'enabled' configuration |
+|      | 2025- 5-19 | dbms.pl backup/restore both honor withFile/withMqtt.default property |
+|      | 2025- 5-22 | done |
 |  110 | 2025- 4-20 | site.schema for moveDir |
 |      | 2025- 5-15 | done |
 |  112 | 2025- 4-20 | service.schema |

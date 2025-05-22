@@ -9,6 +9,7 @@
     - Add tools/libexec/cmd/workload.cmd as a new TheToolsProject resource
     - Add tools/libexec/sh/workload.sh as a new TheToolsProject resource
     - Define new services.pl workload-summary verb
+    - Define site.workloadSummary properties, updating services.pl workload-summary accordingly
 
 ### 4.15.2
 

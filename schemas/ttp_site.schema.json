@@ -1376,6 +1376,52 @@
                             }
                         }
                     }
+                },
+                "workloadSummary": {
+                    "description_array": [
+                        "The configuration of how to publish a workloads summary.",
+                        "The configured command has access to following macros:",
+                        " <RECIPIENTS> a comma-separated list of email recipients,",
+                        " <SUBJECT> a label title,",
+                        " <TEXTFNAME> the path to a temporary file which contains the workload summary,",
+                        " <WORKLOAD> the workload name."
+                    ],
+                    "type": "object",
+                    "properties": {
+                        "command": {
+                            "description": "The command to be run to publish a workload summary.",
+                            "type": [
+                                "object",
+                                "string"
+                            ],
+                            "properties": {
+                                "byOS": {
+                                    "description": "Let a command be specific to the running OS.",
+                                    "type": "object",
+                                    "patternProperties": {
+                                        "^.*$": {
+                                            "description": "The OS name as reported by Perl-Config, the value being the command to be applied for this OS.",
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            },
+                            "default": "smtp.pl send -subject \"<SUBJECT>\" -to <RECIPIENTS> -textfname <TEXTFNAME>"
+                        },
+                        "recipients": {
+                            "description": "The list of the email recipients of the workload summary",
+                            "type": "array",
+                            "items": "string",
+                            "default": [
+                                "root@localhost"
+                            ]
+                        },
+                        "subject": {
+                            "description": "An arbitrary label which may use when building, for example, an email subject.",
+                            "type": "string",
+                            "default": "[<WORKLOAD>@<NODE>] workload summary"
+                        }
+                    }
                 }
             }
         }

@@ -119,25 +119,23 @@ sub printSummary {
 	$stdout .= "+".TTP::pad( "", $totLength-2, '=' )."+".EOL;
 	# both send the summary to the log (here to stdout) and execute the provided command
 	# must manage SUBJECT and OPTIONS macros
-	my $command = $ep->var([ 'site', 'workloadSummary', 'command' ]);
-	if( $command ){
-		my $host = $ep->node()->name();
-		my $textfname = TTP::getTempFileName();
-		my $fh = path( $textfname );
-		$fh->spew( $stdout );
-		my $subject = sprintf( "[%s\@%s] workload summary", $opt_workload, $host );
-		msgOut( "subject='$subject'" );
-		my $dummy = $ep->runner()->dummy() ? "-dummy" : "";
-		my $verbose = $ep->runner()->verbose() ? "-verbose" : "";
-		# this script is not interactive but written to be executed as part of a batch - there is so no reason to log stdout of the command because all msgXxxx() of the command are already logged
-		TTP::commandExec( "$command -nocolored $dummy $verbose", {
-			macros => {
-				SUBJECT => $subject,
-				OPTIONS => "-textfname $textfname"
-			}
-		});
-	}
-	# and to stdout (at last)
+	my $command = TTP::commandByOS([ 'workloadSummary' ], { withCommand => true });
+	$command = "smtp.pl send -subject \"<SUBJECT>\" -to <RECIPIENTS> -textfname <TEXTFNAME>" if !$command;
+	my $textfname = TTP::getTempFileName();
+	my $fh = path( $textfname );
+	$fh->spew( $stdout );
+	# this script is not interactive but written to be executed as part of a batch
+	# -> there is so no reason to log stdout of the command because all msgXxxx() of the command are already logged
+	my $recipients = TTP::var([ 'workloadSummary', 'recipients' ]) || [ 'root\@localhost' ];
+	TTP::commandExec( $command, {
+		macros => {
+			RECIPIENTS => join( ',', @{$recipients} ),
+			SUBJECT => TTP::var([ 'workloadSummary', 'subject' ]) || "[<WORKLOAD>\@<NODE>] workload summary",
+			TEXTFNAME => $textfname,
+			WORKLOAD => $opt_workload
+		}
+	});
+	# and to stdout (at last) which sends the summary to the enclosing log
 	print $stdout;
 }
 
