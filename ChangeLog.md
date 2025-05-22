@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.17.1-rc.0
+### 4.17.1
 
-    Release date: 
+    Release date: 2025- 5-22
 
     - Fix ttp.pl push git tagging
 
