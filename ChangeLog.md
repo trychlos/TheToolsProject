@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - Fix dbms.pl backup excludes again 'service' key, ignore obsoleted 'instance'
 
 ### 4.15.1
 

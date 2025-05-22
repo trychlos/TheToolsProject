@@ -101,7 +101,7 @@ sub doBackup {
 			compress => $opt_compress
 		});
 		# print the output file if not provided as a command-line argument
-		msgOut( "  output is '$res->{output}'" ) if !$opt_output;
+		msgOut( "output is '$res->{output}'" ) if !$opt_output;
 		# retain last full and last diff
 		my $data = {
 			service => $opt_service,
@@ -118,7 +118,7 @@ sub doBackup {
 					data => $data,
 					options => "-retain",
 					excludes => [
-						'instance',
+						'service',
 						'database',
 						'cmdline',
 						'command',
