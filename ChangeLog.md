@@ -11,6 +11,7 @@
       May consider that 'command' would be used when a single command is expected, and 'commands' when several commands are possible.
     - Remove 'stdinFromNull' option from TTP::commandExec() function - Introduced in v4.6, disabled in v4.13
 	  Rationale: https://metacpan.org/pod/Capture::Tiny#LIMITATIONS prevents against acting on standard filehandles before capture() call
+    - TTP::commandExec() now accepts an array of commands, returning a consolidated result
 
 ### 4.16.1
 

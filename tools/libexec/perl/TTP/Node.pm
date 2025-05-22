@@ -105,8 +105,8 @@ sub _rootMountPoints {
 	my $command = $Const->{mountPoints}{$Config{osname}}{command};
 	msgDebug( __PACKAGE__."::_rootMountPoints() command='$command'" );
 	if( $command ){
-		my $res = TTP::commandExec( $command );
-		foreach my $path ( @{$res->{stdout}} ){
+		my $res = TTP::filter( $command );
+		foreach my $path ( @{$res} ){
 			chomp $path;
 			my ( $volume, $directories, $file ) = File::Spec->splitpath( $path, true );
 			my @dirs = File::Spec->splitdir( $directories );

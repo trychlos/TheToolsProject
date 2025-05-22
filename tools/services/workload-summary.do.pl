@@ -127,16 +127,14 @@ sub printSummary {
 	# this script is not interactive but written to be executed as part of a batch
 	# -> there is so no reason to log stdout of the command because all msgXxxx() of the command are already logged
 	my $recipients = TTP::var([ 'workloadSummary', 'recipients' ]) || [ 'root\@localhost' ];
-	foreach my $cmd ( @{$commands} ){
-		TTP::commandExec( $cmd, {
-			macros => {
-				RECIPIENTS => join( ',', @{$recipients} ),
-				SUBJECT => TTP::var([ 'workloadSummary', 'subject' ]) || "[<WORKLOAD>\@<NODE>] workload summary",
-				TEXTFNAME => $textfname,
-				WORKLOAD => $opt_workload
-			}
-		});
-	}
+	TTP::commandExec( $commands, {
+		macros => {
+			RECIPIENTS => join( ',', @{$recipients} ),
+			SUBJECT => TTP::var([ 'workloadSummary', 'subject' ]) || "[<WORKLOAD>\@<NODE>] workload summary",
+			TEXTFNAME => $textfname,
+			WORKLOAD => $opt_workload
+		}
+	});
 	# and to stdout (at last) which sends the summary to the enclosing log
 	print $stdout;
 }

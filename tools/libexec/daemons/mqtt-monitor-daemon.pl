@@ -275,18 +275,16 @@ sub doMatched {
 					my $jsonable = TTP::JSONable->new( $ep, $do );
 					my $commands = TTP::commandByOS([], { jsonable => $jsonable });
 					if( $commands && scalar( @{$commands} )){
-						foreach my $cmd ( @{$commands} ){
-							my $res = TTP::commandExec( $cmd, {
-								macros => {
-									TOPIC => $topic,
-									PAYLOAD => $payload
-								}
-							});
-							if( $res->{success} ){
-								$successCount += 1;
-							} else {
-								$failedCount += 1;
+						my $res = TTP::commandExec( $commands, {
+							macros => {
+								TOPIC => $topic,
+								PAYLOAD => $payload
 							}
+						});
+						if( $res->{success} ){
+							$successCount += 1;
+						} else {
+							$failedCount += 1;
 						}
 					} else {
 						msgVerbose( "$topic: action n° $totalCount doesn't have a command" );

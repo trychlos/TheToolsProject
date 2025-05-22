@@ -90,7 +90,7 @@ sub doServicesList {
 	my $command = "sc query | find \"SERVICE_NAME:\"";
 	my $res = TTP::commandExec( $command );
 	my $count = 0;
-	foreach my $it ( sort { "\L$a" cmp "\L$b" } @{$res->{stdout}} ){
+	foreach my $it ( sort { "\L$a" cmp "\L$b" } @{$res->{stdouts}} ){
 		my @words = split( /\s+/, $it );
 		print " $words[1]".EOL;
 		$count += 1;
@@ -112,13 +112,13 @@ sub doServiceState {
 	# note that we do not should execute directly a pipe'd command as we want the return code of the 'sc' one
 	# find STATE in the line if the command has been successful
 	# in case of an error we get the error message in the last non-blank line
-	my $count = scalar( @{$res->{stdout}} );
+	my $count = scalar( @{$res->{stdouts}} );
 	my $label = undef;
 	my $value = undef;
 	my $error = undef;
 	if( $res->{success} ){
 		my $state = undef;
-		foreach my $line ( @{$res->{stdout}} ){
+		foreach my $line ( @{$res->{stdouts}} ){
 			if( $line =~ m/STATE/ ){
 				my @words = split( /\s+/, $line );
 				$label = $words[scalar( @words )-1];
@@ -127,7 +127,7 @@ sub doServiceState {
 			}
 		}
 	} else {
-		my @lines = @{$res->{stdout}};
+		my @lines = @{$res->{stdouts}};
 		for( my $i=$count ; $i ; --$i ){
 			if( $lines[$i-1] && length $lines[$i-1] ){
 				$error = $lines[$i-1];

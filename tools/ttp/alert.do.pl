@@ -316,15 +316,13 @@ sub doTextToSpeechAlert {
 
 sub execute {
 	my ( $commands, $macros, $msgok, $msgerr ) = @_;
-	foreach my $cmd ( @{$commands} ){
-		my $result = TTP::commandExec( $cmd, {
-			macros => $macros
-		});
-		if( $result->{success} ){
-			msgOut( $msgok );
-		} else {
-			msgErr( $msgerr );
-		}
+	my $result = TTP::commandExec( $commands, {
+		macros => $macros
+	});
+	if( $result->{success} ){
+		msgOut( $msgok );
+	} else {
+		msgErr( $msgerr );
 	}
 }
 

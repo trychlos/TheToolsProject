@@ -209,7 +209,7 @@ sub backupDatabase {
 		my $res = TTP::commandExec( $cmd );
 		# mysqldump provides no output on stdout
 		$result->{ok} = $res->{success};
-		$result->{stderr} = $res->{stderr};
+		$result->{stderr} = $res->{stderrs};
 		#msgLog( __PACKAGE__."::backupDatabase() stdout='".TTP::chompDumper( $result->{stdout} )."'" );
 		$result->{output} = $output;
 	}
@@ -486,27 +486,25 @@ sub restoreDatabase {
 	if( !TTP::errs()){
 		msgVerbose( __PACKAGE__."::restoreDatabase() entering with service='".$self->service()->name()."' database='$parms->{database}'..." );
 		# do we have a compressed archive file ?
-		my $res = TTP::commandExec( "file $parms->{full}" );
+		my $res = TTP::filter( "file $parms->{full}" );
 		my $gziped = false;
-		if( $res->{success} ){
-			$gziped = true if grep( /gzip/, @{$res->{stdout}} );
-			msgVerbose( __PACKAGE__."::restoreDatabase() found that provided dump file is ".( $gziped ? '' : 'NOT ' )."gzip'ed" );
-			# and restore, making sure the database exists
-			my $cmd = "(";
-			$cmd .= " echo 'drop database if exists $parms->{database};';";
-			$cmd .= " echo 'create database $parms->{database};';";
-			$cmd .= " echo 'use $parms->{database};';";
-			$cmd .= $gziped ? " gzip -cd" : " cat";
-			$cmd .= " $parms->{full} )";
-			$cmd .= " | mysql";
-			$cmd .= " --host=".$self->server();
-			$cmd .= " --user=$account";
-			$cmd .= " --password=$passwd";
-			$res = TTP::commandExec( $cmd );
-			$result->{ok} = $res->{success};
-			#$result->{stdout} = $res->{stderr};
-			#msgLog( __PACKAGE__."::backupDatabase() stdout='".TTP::chompDumper( $result->{stdout} )."'" );
-		}
+		$gziped = true if grep( /gzip/, @{$res} );
+		msgVerbose( __PACKAGE__."::restoreDatabase() found that provided dump file is ".( $gziped ? '' : 'NOT ' )."gzip'ed" );
+		# and restore, making sure the database exists
+		my $cmd = "(";
+		$cmd .= " echo 'drop database if exists $parms->{database};';";
+		$cmd .= " echo 'create database $parms->{database};';";
+		$cmd .= " echo 'use $parms->{database};';";
+		$cmd .= $gziped ? " gzip -cd" : " cat";
+		$cmd .= " $parms->{full} )";
+		$cmd .= " | mysql";
+		$cmd .= " --host=".$self->server();
+		$cmd .= " --user=$account";
+		$cmd .= " --password=$passwd";
+		$res = TTP::commandExec( $cmd );
+		$result->{ok} = $res->{success};
+		#$result->{stdout} = $res->{stderr};
+		#msgLog( __PACKAGE__."::backupDatabase() stdout='".TTP::chompDumper( $result->{stdout} )."'" );
 	}
 
 	msgVerbose( __PACKAGE__."::restoreDatabase() result='".( $result->{ok} ? 'true' : 'false' )."'" );

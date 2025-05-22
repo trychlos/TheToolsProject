@@ -140,12 +140,12 @@ sub doPush_gitCheck {
 	$allowed = $tree->{'git-check'} if defined $tree->{'git-check'};
 	if( $allowed ){
 		msgOut( "checking source='$tree->{source}'" );
-		my $res = TTP::commandExec( "git -C $tree->{source} status" );
+		my $res = TTP::filter( "git -C $tree->{source} status" );
 		my $branch = '';
 		my $changes = false;
 		my $untracked = false;
 		my $clean = false;
-		foreach my $line ( @{$res->{stdout}} ){
+		foreach my $line ( @{$res} ){
 			if( $line =~ /^On branch/ ){
 				$branch = $line;
 				$branch =~ s/^On branch //;

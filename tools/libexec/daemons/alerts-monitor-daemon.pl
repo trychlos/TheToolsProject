@@ -185,20 +185,18 @@ sub doWithNew {
 					msgVerbose( "no 'messageRe' regular expression");
 				}
 				if( $levelMatch && $emitterMatch && $titleMatch && $messageMatch ){
-					foreach my $cmd ( @{$commands} ){
-						my $res = TTP::commandExec( $cmd, {
-							macros => {
-								LEVEL => $data->{level},
-								EMITTER => $data->{emitter},
-								TITLE => $data->{title},
-								MESSAGE => $data->{message},
-								STAMP => $data->{stamp},
-								JSON => encode_json( $data ),
-								FILEPATH => $file
-							}
-						});
-						#print "result: ".Dumper( $res );
-					}
+					my $res = TTP::commandExec( $commands, {
+						macros => {
+							LEVEL => $data->{level},
+							EMITTER => $data->{emitter},
+							TITLE => $data->{title},
+							MESSAGE => $data->{message},
+							STAMP => $data->{stamp},
+							JSON => encode_json( $data ),
+							FILEPATH => $file
+						}
+					});
+					#print "result: ".Dumper( $res );
 				}
 			}
 		}

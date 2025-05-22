@@ -148,15 +148,13 @@ sub _moveDir {
 	my $commands = TTP::commandByOS([ 'moveDir' ]);
 	if( $commands && scalar( @{$commands} )){
 		$result = true;
-		foreach my $cmd ( @{$commands} ){
-			my $res = TTP::commandExec( $cmd, {
-				macros => {
-					SOURCE => $source,
-					TARGET => $target
-				}
-			});
-			$result &= $res->{success};
-		}
+		my $res = TTP::commandExec( $commands, {
+			macros => {
+				SOURCE => $source,
+				TARGET => $target
+			}
+		});
+		$result &= $res->{success};
 	} else {
 		$result = TTP::Path::copyDir( $source, $target ) && TTP::Path::removeTree( $source );
 	}

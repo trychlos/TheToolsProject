@@ -125,12 +125,10 @@ sub publish {
 		$topic =~ s/\/+/\//g;
 		$macros->{TOPIC} = $topic;
 		# when running the command, takes care that the provided command may not honor nor even accept standard options - do not modify it
-		foreach my $cmd ( @{$commands} ){
-			my $result = TTP::commandExec( $cmd, {
-				macros => $macros
-			});
-			$res = $result->{success} ? 0 : MQTT_COMMAND_ERROR if !$res;
-		}
+		my $result = TTP::commandExec( $commands, {
+			macros => $macros
+		});
+		$res = $result->{success} ? 0 : MQTT_COMMAND_ERROR;
 	} else {
 		$res = MQTT_DISABLED_BY_CONFIGURATION;
 	}

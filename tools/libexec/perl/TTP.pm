@@ -247,69 +247,128 @@ sub commandByOS_resolveItem {
 # The provided command is not modified at all. If it should support say --verbose or --[no]colored,
 # then these options should be specified by the caller.
 # (I):
-# - the command to be evaluated and executed
+# - the command to be evaluated and executed as a single string or as an array ref of strings
 # - an optional options hash with following keys:
 #   > macros: a hash of the macros to be replaced where:
 #     - key is the macro name, must be labeled in the toops.json as '<macro>' (i.e. between angle brackets)
 #     - value is the replacement value
 # (O):
 # returns a hash with following keys:
-# - evaluated: the evaluated command after macros replacements
-# - stdout: stdout as a reference to the array of lines
-# - stderr: stderr as a reference to the array of lines
-# - exit: original exit code of the command
-# - success: true|false
+# - success: true|false the consolidated result of each command (true only if all were ok)
+# - stdouts: the consolidated stdout's
+# - stderrs: the consolidated stderr's
+# - results: an array ref of hashes with following keys:
+#   > evaluated: the evaluated commands after macros replacements
+#   > stdout: stdout as a reference to the array of lines
+#   > stderr: stderr as a reference to the array of lines
+#   > exit: original exit code of the command
+#   > success: true|false
 
 sub commandExec {
-	my ( $command, $opts ) = @_;
+	my ( $commands, $opts ) = @_;
 	$opts //= {};
 	my $result = {
+		success => true,
+		count => 0,
+		results => [],
+		stdouts => [],
+		stderrs => []
+	};
+	if( !$commands ){
+		msgErr( __PACKAGE__."::commandExec() undefined command" );
+		stackTrace();
+	}
+	my $ref = ref( $commands );
+	if( $ref && $ref ne 'ARRAY' ){
+		msgErr( __PACKAGE__."::commandExec() expects a single string or an array of strings, got $commands ($ref)" );
+		stackTrace();
+	}
+	if( $ref ){
+		foreach my $cmd ( @{$commands} ){
+			$result = commandExec_item( $cmd, $opts, $result );
+		}
+	} else {
+		$result = commandExec_item( $commands, $opts, $result );
+	}
+	return $result;
+}
+
+# consolidate the results
+# (I):
+# - the consolidated result (to be returned)
+# - the result of the last command
+
+sub commandExec_consolidate {
+	my ( $result, $res ) = @_;
+
+	$result->{success} &= $res->{success};
+	push( @{$result->{results}}, $res );
+	foreach my $it ( @{$res->{stdout}} ){
+		chomp $it;
+		push( @{$result->{stdouts}}, $it ) if $it;
+	}
+	foreach my $it ( @{$res->{stderr}} ){
+		chomp $it;
+		push( @{$result->{stderrs}}, $it ) if $it;
+	}
+	$result->{count} += 1;
+
+	return $result;
+}
+
+# execute a command results
+
+sub commandExec_item {
+	my ( $command, $opts, $result ) = @_;
+	# if the command is undefined or empty, just ignore it
+	if( !$command ){
+		return $result;
+	}
+	# else execute it
+	my $res = {
 		stdout => [],
 		stderr => [],
 		exit => -1,
-		success => false
+		success => true,
+		evaluated => undef
 	};
-	if( !$command ){
-		msgErr( __PACKAGE__."::commandExec() undefined command" );
-		stackTrace();
+	msgVerbose( __PACKAGE__."::commandExec_item() got command='".( $command )."'" );
+	$res->{evaluated} = $command;
+	$res->{success} = true;
+	$res->{evaluated} = TTP::substituteMacros( $res->{evaluated}, $opts->{macros} ) if $opts->{macros};
+	msgVerbose( __PACKAGE__."::commandExec() evaluated to '$res->{evaluated}'" );
+	# and go
+	if( $ep->runner()->dummy()){
+		msgDummy( $res->{evaluated} );
 	} else {
-		msgVerbose( __PACKAGE__."::commandExec() got command='".( $command )."'" );
-		$result->{evaluated} = $command;
-		$result->{evaluated} = TTP::substituteMacros( $result->{evaluated}, $opts->{macros} ) if $opts->{macros};
-		# and go
-		msgVerbose( __PACKAGE__."::commandExec() evaluated to '$result->{evaluated}'" );
-		if( $ep->runner()->dummy()){
-			msgDummy( $result->{evaluated} );
-			$result->{success} = true;
-		} else {
-			# https://stackoverflow.com/questions/799968/whats-the-difference-between-perls-backticks-system-and-exec
-			# as of v4.12 choose to use system() instead of backtits, this later not returning stderr
-			my ( $res_out, $res_err, $res_code ) = capture { system( $result->{evaluated} ); };
-			# https://www.perlmonks.org/?node_id=81640
-			# Thus, the exit value of the subprocess is actually ($? >> 8), and $? & 127 gives which signal, if any, the
-			# process died from, and $? & 128 reports whether there was a core dump.
-			# https://ss64.com/nt/robocopy-exit.html
-			$result->{exit} = $res_code;
-			$result->{success} = ( $res_code == 0 ) ? true : false;
-			msgVerbose( "TTP::commandExec() return_code=$res_code firstly interpreted as success=".( $result->{success} ? 'true' : 'false' ));
-			if( $result->{evaluated} =~ /^\s*robocopy/i ){
-				$res_code = ( $res_code >> 8 );
-				$result->{success} = ( $res_code <= 7 ) ? true : false;
-				msgVerbose( "TTP::commandExec() robocopy specific interpretation res=$res_code success=".( $result->{success} ? 'true' : 'false' ));
-			}
-			# stdout
-			chomp $res_out;
-			msgVerbose( "TTP::commandExec() stdout='$res_out'" );
-			my @res_out = split( /[\r\n]/, $res_out );
-			$result->{stdout} = \@res_out;
-			# stderr
-			chomp $res_err;
-			msgVerbose( "TTP::commandExec() stderr='$res_err'" );
-			my @res_err = split( /[\r\n]/, $res_err );
-			$result->{stderr} = \@res_err;
+		# https://stackoverflow.com/questions/799968/whats-the-difference-between-perls-backticks-system-and-exec
+		# as of v4.12 choose to use system() instead of backtits, this later not returning stderr
+		my ( $res_out, $res_err, $res_code ) = capture { system( $res->{evaluated} ); };
+		# https://www.perlmonks.org/?node_id=81640
+		# Thus, the exit value of the subprocess is actually ($? >> 8), and $? & 127 gives which signal, if any, the
+		# process died from, and $? & 128 reports whether there was a core dump.
+		# https://ss64.com/nt/robocopy-exit.html
+		$res->{exit} = $res_code;
+		$res->{success} = ( $res_code == 0 ) ? true : false;
+		msgVerbose( "TTP::commandExec() return_code=$res_code firstly interpreted as success=".( $res->{success} ? 'true' : 'false' ));
+		if( $res->{evaluated} =~ /^\s*robocopy/i ){
+			$res_code = ( $res_code >> 8 );
+			$res->{success} = ( $res_code <= 7 ) ? true : false;
+			msgVerbose( "TTP::commandExec() robocopy specific interpretation res=$res_code success=".( $res->{success} ? 'true' : 'false' ));
 		}
-		msgVerbose( "TTP::commandExec() success=".( $result->{success} ? 'true' : 'false' ));
+		# stdout
+		chomp $res_out;
+		msgVerbose( "TTP::commandExec() stdout='$res_out'" );
+		my @res_out = split( /[\r\n]/, $res_out );
+		$res->{stdout} = \@res_out;
+		# stderr
+		chomp $res_err;
+		msgVerbose( "TTP::commandExec() stderr='$res_err'" );
+		my @res_err = split( /[\r\n]/, $res_err );
+		$res->{stderr} = \@res_err;
 	}
+	msgVerbose( "TTP::commandExec() success=".( $res->{success} ? 'true' : 'false' ));
+	$result = commandExec_consolidate( $result, $res );
 	return $result;
 }
 
@@ -594,10 +653,8 @@ sub _executionReportToFile {
 			my $template = 'report-'.Time::Moment->now->strftime( '%y%m%d%H%M%S' ).'-XXXXXX';
 			$commands = [ "ttp.pl writejson -dir $dropdir -template $template -suffix .json -data \"<JSON>\"" ];
 		}
-		foreach my $cmd ( @{$commands} ){
-			my $result = TTP::commandExec( $cmd, { macros => $macros });
-			$res &= $result->{success};
-		}
+		my $result = TTP::commandExec( $commands, { macros => $macros });
+		$res = $result->{success};
 	} else {
 		msgErr( __PACKAGE__."::_executionReportToFile() expected a 'data' argument, not found" );
 		TTP::stackTrace();
@@ -643,10 +700,8 @@ sub _executionReportToMqtt {
 				$macros->{TOPIC} = $topic;
 				$macros->{KEYNAME} = $key;
 				$macros->{KEYVALUE} = $data->{$key};
-				foreach my $cmd ( @{$commands} ){
-					my $result = TTP::commandExec( $cmd, { macros => $macros });
-					$res = $result->{success};
-				}
+				my $result = TTP::commandExec( $commands, { macros => $macros });
+				$res = $result->{success};
 			}
 		}
 	} else {
@@ -675,21 +730,23 @@ sub exit {
 # given a command, executes it and extracts the [command.pl verb] lines from stdout, returning the
 # rest as an array
 # (I):
-# - the command string
+# - the command string, or a ref to an array of command strings
 # - an optional options argument to be passed to TTP::commandExec()
 # (O):
 # - a ref to an array of stdout outputed lines, having removed the "[command.pl verb]" lines
 
 sub filter {
-	my ( $command, $opts ) = @_;
+	my ( $commands, $opts ) = @_;
 	$opts //= {};
 
 	my @result = ();
-	my $res = TTP::commandExec( $command, $opts );
-	foreach my $it ( @{$res->{stdout}} ){
-		$it =~ s/^\s*//;
-		$it =~ s/\s*$//;
-		push( @result, $it ) if $it !~ /\(DBG|DUM|ERR|VER|WAR\)/ && $it !~ /^\[\w[\w\.\s]*\]/;
+	my $res = TTP::commandExec( $commands, $opts );
+	foreach my $item ( @{$res->{results}} ){
+		foreach my $it ( @{$item->{stdout}} ){
+			$it =~ s/^\s*//;
+			$it =~ s/\s*$//;
+			push( @result, $it ) if $it !~ /\(DBG|DUM|ERR|VER|WAR\)/ && $it !~ /^\[\w[\w\.\s]*\]/;
+		}
 	}
 
 	return \@result;

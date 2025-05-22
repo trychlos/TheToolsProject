@@ -75,18 +75,16 @@ sub copyDir {
 	my $commands = TTP::commandByOS([ 'copyDir' ]);
 	if( $commands && scalar( @{$commands} )){
 		TTP::Message::msgVerbose( __PACKAGE__."::copyDir() found command=[".join( ',', @{$commands} )."], executing" );
-		foreach my $cmd ( @{$commands} ){
-			my $cmdres = TTP::commandExec( $cmd, {
-				macros => {
-					SOURCE => $source,
-					TARGET => $target,
-					EXCLUDEDIRS => $opts->{excludeDirs},
-					EXCLUDEFILES => $opts->{excludeFiles},
-					OPTIONS => $opts->{options}
-				}
-			});
-			$result = $cmdres->{success};
-		}
+		my $cmdres = TTP::commandExec( $commands, {
+			macros => {
+				SOURCE => $source,
+				TARGET => $target,
+				EXCLUDEDIRS => $opts->{excludeDirs},
+				EXCLUDEFILES => $opts->{excludeFiles},
+				OPTIONS => $opts->{options}
+			}
+		});
+		$result = $cmdres->{success};
 
 	} elsif( $ep->runner()->dummy()){
 		TTP::Message::msgDummy( __PACKAGE__."::copyDir( $source, $target )" );
@@ -212,20 +210,18 @@ sub copyFile {
 		my ( $target_vol, $target_dir, $target_file ) = File::Spec->splitpath( $target );
 		my $target_path = File::Spec->catpath( $target_vol, $target_dir, "" );
 		#TTP::Message::msgVerbose( __PACKAGE__."::copyFile() sourcedir='$src_path' sourcefile='$src_file' targetdir='$target_path' targetfile='$target_file'" );
-		foreach my $cmd ( @{$commands} ){
-			my $cmdres = TTP::commandExec( $cmd, {
-				macros => {
-					SOURCE => $source,
-					SOURCEDIR => $src_path,
-					SOURCEFILE => $src_file,
-					TARGET => $target,
-					TARGETDIR => $target_path,
-					TARGETFILE => $target_file,
-					OPTIONS => $opts->{options}
-				}
-			});
-			$result = $cmdres->{success};
-		}
+		my $cmdres = TTP::commandExec( $commands, {
+			macros => {
+				SOURCE => $source,
+				SOURCEDIR => $src_path,
+				SOURCEFILE => $src_file,
+				TARGET => $target,
+				TARGETDIR => $target_path,
+				TARGETFILE => $target_file,
+				OPTIONS => $opts->{options}
+			}
+		});
+		$result = $cmdres->{success};
 
 	} elsif( $ep->runner()->dummy()){
 		TTP::Message::msgDummy( __PACKAGE__."::copyFile( $source, $target )" );
@@ -421,8 +417,8 @@ sub fromCommand {
 	}
 	my $path = undef;
 	if( !TTP::errs()){
-		my $res = TTP::commandExec( $cmd );
-		$path = $res->{stdout}[0] if scalar( @{$res->{stdout}} );
+		my $res = TTP::filter( $cmd );
+		$path = $res->[0] if scalar( @{$res} );
 		TTP::Message::msgErr( __PACKAGE__."::fromCommand() command doesn't output anything" ) if !$path;
 	}
 	if( !TTP::errs()){

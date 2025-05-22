@@ -58,7 +58,7 @@ sub doListTasks {
 	}
 	my $count = 0;
 	my $res = TTP::commandExec( "schtasks /Query /fo list" );
-	my @tasks = grep( /TaskName:/, @{$res->{stdout}} );
+	my @tasks = grep( /TaskName:/, @{$res->{stdouts}} );
 	if( $opt_task ){
 		@tasks = grep( /$opt_task/i, @tasks );
 	}
@@ -86,7 +86,7 @@ sub doTaskStatus {
 	my $res = TTP::commandExec( "schtasks /Query /fo table /TN $opt_task" );
 	my @words = split( /\\/, $opt_task );
 	my $name = $words[scalar( @words )-1];
-	my @props = grep( /$name/, @{$res->{stdout}} );
+	my @props = grep( /$name/, @{$res->{stdouts}} );
 	if( $props[0] ){
 		@words = split( /\s+/, $props[0] );
 		print "  $name: $words[scalar(@words)-1]".EOL;
@@ -107,7 +107,7 @@ sub doTaskEnabled {
 	if( $res->{success} ){
 		my @words = split( /\\/, $opt_task );
 		my $name = $words[scalar( @words )-1];
-		my @props = grep( /$name/, @{$res->{stdout}} );
+		my @props = grep( /$name/, @{$res->{stdouts}} );
 		if( $props[0] ){
 			@words = split( /\s+/, $props[0] );
 			my @ready = grep( /Ready/, @words );

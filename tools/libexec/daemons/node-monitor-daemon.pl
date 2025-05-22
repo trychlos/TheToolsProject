@@ -214,15 +214,12 @@ sub worker {
 	msgVerbose( "searching for monitoring commands at the node level" );
 	my $commands = TTP::commandByOS( $keys, { jsonable => $ep->node() });
 	if( hasCommands( $commands )){
-		foreach my $cmd ( @{$commands} ){
-			msgVerbose( "found command='$cmd'" );
-			TTP::commandExec( $cmd, {
-				macros => {
-					NODE => $node->name(),
-					ENVIRONMENT => $node->environment() || ''
-				}
-			});
-		}
+		TTP::commandExec( $commands, {
+			macros => {
+				NODE => $node->name(),
+				ENVIRONMENT => $node->environment() || ''
+			}
+		});
 	} else {
 		msgVerbose( "no commands found for node" );
 	}
@@ -236,16 +233,13 @@ sub worker {
 			my $service = TTP::Service->new( $ep, { service => $serviceName });
 			my $commands = $service->commands( $keys );
 			if( hasCommands( $commands )){
-				foreach my $cmd ( @{$commands} ){
-					msgVerbose( "found command='$cmd'" );
-					TTP::commandExec( $cmd, {
-						macros => {
-							NODE => $node->name(),
-							ENVIRONMENT => $node->environment() || '',
-							SERVICE => $service->name()
-						}
-					});
-				}
+				TTP::commandExec( $commands, {
+					macros => {
+						NODE => $node->name(),
+						ENVIRONMENT => $node->environment() || '',
+						SERVICE => $service->name()
+					}
+				});
 			} else {
 				msgVerbose( "no commands found for '$serviceName'" );
 			}

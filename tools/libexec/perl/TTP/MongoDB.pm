@@ -185,7 +185,7 @@ sub backupDatabase {
 		my $res = TTP::commandExec( $cmd );
 		# mongodump provides its output on stderr, while stdout is empty
 		$result->{ok} = $res->{success};
-		$result->{stdout} = $res->{stderr};
+		$result->{stdout} = $res->{stderrs};
 		#msgLog( __PACKAGE__."::backupDatabase() stdout='".TTP::chompDumper( $result->{stdout} )."'" );
 		$result->{output} = $output;
 	}
@@ -430,19 +430,17 @@ sub restoreDatabase {
 		my $tmpdir = tempdir( CLEANUP => 1 );
 		# do we have a compressed archive file ?
 		my $cmd = "file $parms->{full}";
-		my $res = TTP::commandExec( $cmd );
+		my $res = TTP::filter( $cmd );
 		my $gziped = false;
-		if( grep( /gzip/, @{$res->{stdout}} )){
-			$gziped = true;
-		}
+		$gziped = true if grep( /gzip/, @{$res} );
 		my $opt = "";
 		$opt = "-z" if $gziped;
 		msgVerbose( __PACKAGE__."::restoreDatabase() found that provided dump file is ".( $gziped ? '' : 'NOT ' )."gzip'ed" );
 		# find the source database name in the dump file
 		# this should be the first element of the paths
 		$cmd = "tar -t $opt -f $parms->{full}";
-		$res = TTP::commandExec( $cmd );
-		my $sourcedb = $res->{stdout}[0];
+		$res = TTP::filter( $cmd );
+		my $sourcedb = $res->[0];
 		$sourcedb =~ s/\/$//;
 		msgVerbose( __PACKAGE__."::restoreDatabase() find source database='$sourcedb'" );
 		# and restore
