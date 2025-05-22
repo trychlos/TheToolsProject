@@ -202,8 +202,8 @@ sub doPush_gitTag {
 		if( $ep->runner()->dummy()){
 			msgDummy( $command );
 		} else {
-			my $res = TTP::commandExec( $command );
-			print join( EOL, @{$res->{stdout}} ).EOL;
+			my $res = TTP::filter( $command );
+			print join( EOL, @{$res} ).EOL;
 		}
 	} else {
 		msgVerbose( "do not git-tag '$tree->{source}' source tree as not allowed by the configuration" );

@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - Fix ttp.pl push git tagging
 
 ### 4.17.0
 
