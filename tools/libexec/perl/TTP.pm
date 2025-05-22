@@ -252,7 +252,6 @@ sub commandByOS_resolveItem {
 #   > macros: a hash of the macros to be replaced where:
 #     - key is the macro name, must be labeled in the toops.json as '<macro>' (i.e. between angle brackets)
 #     - value is the replacement value
-#   > stdinFromNull: whether stdin must be redirected from NULL, defaulting to true
 # (O):
 # returns a hash with following keys:
 # - evaluated: the evaluated command after macros replacements
@@ -275,15 +274,6 @@ sub commandExec {
 		stackTrace();
 	} else {
 		msgVerbose( __PACKAGE__."::commandExec() got command='".( $command )."'" );
-		# https://metacpan.org/pod/Capture::Tiny#LIMITATIONS prevents against acting on standard filehandles
-		# v4.13: just force to false
-		my $stdinFromNull = true;
-		$stdinFromNull = $opts->{stdinFromNull} if defined $opts->{stdinFromNull};
-		$stdinFromNull = false;
-		if( $stdinFromNull ){
-			$command .= " < ".TTP::nullByOS();
-			msgVerbose( __PACKAGE__."::commandExec() rewritten to='".( $command )."'" );
-		}
 		$result->{evaluated} = $command;
 		$result->{evaluated} = TTP::substituteMacros( $result->{evaluated}, $opts->{macros} ) if $opts->{macros};
 		# and go
