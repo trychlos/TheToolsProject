@@ -203,7 +203,7 @@
             }
         },
         "wantsLocal": {
-            "description": "Whether this DBMS instance is bound only to local connections.",
+            "description": "Whether this service is bound only to local connections.",
             "type": "boolean",
             "default": true
         },
@@ -232,11 +232,6 @@
                 }
             },
             "properties": {
-                "hidden": {
-                    "description": "Whether this workload is hidden from 'services.pl list --workloads' command result.",
-                    "type": "boolean",
-                    "default": false
-                },
                 "label": {
                     "description": "A descriptive label for this list of tasks",
                     "type": "string"
