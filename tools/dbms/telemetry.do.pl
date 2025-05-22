@@ -104,7 +104,8 @@ sub doDbSize {
 		msgOut( "database '$db'" );
 		$dbcount += 1;
 		my $set = $objDbms->databaseSize( $db );
-		my @sorted = sort keys %{$set};
+		my @sorted = ();
+		@sorted = sort keys %{$set} if $set;
 		if( scalar( @sorted ) > 0 ){
 			# we got several metrics per database
 			# that we publish separately as mqtt-based names are slightly different from Prometheus ones
@@ -286,7 +287,7 @@ if( $opt_service ){
 # database(s) can be specified in the command-line, or can come from the service
 if( $opt_database ){
 	push( @{$databases}, $opt_database );
-} elsif( $opt_service ){
+} elsif( $objDbms ){
 	$databases = $objDbms->getDatabases();
 	msgVerbose( "setting databases='".join( ', ', @{$databases} )."'" );
 }

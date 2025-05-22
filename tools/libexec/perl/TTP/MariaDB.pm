@@ -223,19 +223,27 @@ sub backupDatabase {
 # (I):
 # - database name
 # (O):
-# - returns a hash with four items { key, value } describing the six different sizes to be considered
+# - returns a hash with two items { key, value } describing the six different sizes to be considered
+#   may return undef if the table is fake
 
 sub databaseSize {
 	my ( $self, $database ) = @_;
-	my $result = {};
+	my $result = undef;
 	my $dbh = $self->_connect( $database );
 	if( $dbh ){
-		my $sql = "select sum(data_length) as data_length,sum(index_length) as index_length from information_schema.tables where table_schema='$database'";
+		my $sql = "select * from information_schema.tables where table_schema='$database'";
 		my $res = $self->_sqlExec( $sql, {
 			dbh => $dbh
 		});
-		$result->{dataSize} = $res->{result}[0]{data_length};
-		$result->{indexSize} = $res->{result}[0]{index_length};
+		if( $res->{ok} && scalar( @{$res->{result}} )){
+			$sql = "select sum(data_length) as data_length,sum(index_length) as index_length from information_schema.tables where table_schema='$database'";
+			$res = $self->_sqlExec( $sql, {
+				dbh => $dbh
+			});
+			$result = {};
+			$result->{dataSize} = $res->{result}[0]{data_length};
+			$result->{indexSize} = $res->{result}[0]{index_length};
+		}
 	} else {
 		msgErr( __PACKAGE__."::databaseSize() unable to get a handle on '$database' database" );
 	}

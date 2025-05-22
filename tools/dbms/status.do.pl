@@ -213,7 +213,7 @@ if( $opt_service ){
 # database(s) can be specified in the command-line, or can come from the service
 if( $opt_database ){
 	push( @{$databases}, $opt_database );
-} elsif( $opt_service ){
+} elsif( $objDbms ){
 	$databases = $objDbms->getDatabases();
 	msgVerbose( "setting databases='".join( ', ', @{$databases} )."'" );
 }
