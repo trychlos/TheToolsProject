@@ -241,12 +241,14 @@ sub commandExec {
 		$result->{evaluated} = $command;
 		if( $opts->{macros} ){
 			foreach my $key ( sort keys %{$opts->{macros}} ){
-				my $value = $opts->{macros}{$key} || '';
+				my $value = $opts->{macros}{$key};
+				$value = '' if !defined $value;
 				$result->{evaluated} =~ s/<$key>/$value/g;
 			}
 			# do that twice to make sure a macro doesn't leave another macro inside
 			foreach my $key ( sort keys %{$opts->{macros}} ){
-				my $value = $opts->{macros}{$key} || '';
+				my $value = $opts->{macros}{$key};
+				$value = '' if !defined $value;
 				$result->{evaluated} =~ s/<$key>/$value/g;
 			}
 		}

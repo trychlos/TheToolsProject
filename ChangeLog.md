@@ -12,6 +12,7 @@
     - Define site.workloadSummary properties, updating services.pl workload-summary accordingly
     - ttp.pl alert now accepts a '--tts' option to manage test-to-speech
     - TTP::MariaDB can return databaseSize() as undef when database is not fully defined
+    - Fix TTP::commandExec() when a macro value is falsy but not undef
 
 ### 4.15.2
 
