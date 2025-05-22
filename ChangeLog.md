@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.15.3-rc.0
+### 4.16.0
 
-    Release date: 
+    Release date: 2025- 5-22
 
     - Add tools/libexec/cmd/workload.cmd as a new TheToolsProject resource
     - Add tools/libexec/sh/workload.sh as a new TheToolsProject resource
