@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.15.2-rc.0
+### 4.15.2
 
-    Release date: 
+    Release date: 2025- 5-22
 
     - Fix dbms.pl backup excludes again 'service' key, ignore obsoleted 'instance'
     - Fix TTP::_executionReport() to file and to mqtt, improving site.schema
@@ -490,4 +490,4 @@
 
 ---
 P. Wieser
-- Last updated on 2025, May 21th
+- Last updated on 2025, May 22th
