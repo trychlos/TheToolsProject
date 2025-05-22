@@ -13,6 +13,7 @@
     - ttp.pl alert now accepts a '--tts' option to manage test-to-speech
     - TTP::MariaDB can return databaseSize() as undef when database is not fully defined
     - Fix TTP::commandExec() when a macro value is falsy but not undef
+    - Improve TTP::substituteMacros() to iter while some substitutions are still possible
 
 ### 4.15.2
 

@@ -41,7 +41,8 @@
 |      | 2025- 5-14 | DaemonConfig -> Daemon would imply $runner = TTP::RunnerDaemon->bootstrap() and $daemon->config() -> $runner->daemon() |
 |  151 | 2025- 5-16 | have ldap backup/restore |
 |      | 2025- 5-21 | have ldap backup |
-|  159 |  |  |
+|  159 | 2025- 5-22 | all 'command' in schemas should be 'commands' and accept either a single command string or an array of commands + precise how to specify array of commands by OS |
+|  160 |  |  |
 
 ---
 ## Done

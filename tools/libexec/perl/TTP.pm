@@ -239,22 +239,7 @@ sub commandExec {
 			msgVerbose( __PACKAGE__."::commandExec() rewritten to='".( $command )."'" );
 		}
 		$result->{evaluated} = $command;
-		if( $opts->{macros} ){
-			foreach my $key ( sort keys %{$opts->{macros}} ){
-				my $value = $opts->{macros}{$key};
-				$value = '' if !defined $value;
-				$result->{evaluated} =~ s/<$key>/$value/g;
-			}
-			# do that twice to make sure a macro doesn't leave another macro inside
-			foreach my $key ( sort keys %{$opts->{macros}} ){
-				my $value = $opts->{macros}{$key};
-				$value = '' if !defined $value;
-				$result->{evaluated} =~ s/<$key>/$value/g;
-			}
-		}
-		# make sure <NODE> macro is always evaluated
-		my $nodeName = nodeName();
-		$result->{evaluated} =~ s/<NODE>/$nodeName/g;
+		$result->{evaluated} = TTP::substituteMacros( $result->{evaluated}, $opts->{macros} ) if $opts->{macros};
 		# and go
 		msgVerbose( __PACKAGE__."::commandExec() evaluated to '$result->{evaluated}'" );
 		if( $ep->runner()->dummy()){
@@ -1069,11 +1054,12 @@ sub stackTrace {
 }
 
 # ------------------------------------------------------------------------------------------------
-# Substitute the macros in a hash
+# Substitute the macros in a string, array or hash (values)
 # Always honors <NODE> macro which defaults to current execution node
 # Macros must be specified as {
-#	<MACRO> => value
+#	MACRO => value
 # }
+# To deal with the case where a macro embeds another macro, we iter while the result changes.
 # (I):
 # - the value to be substituted, which can be a scalar, or an array, or a hash
 # - a hash ref where keys are the macro the be substituted and values are the substituted value
@@ -1098,13 +1084,18 @@ sub substituteMacros {
 			TTP::stackTrace();
 		}
 	} else {
-		foreach my $it ( keys %{$macros} ){
-			$data =~ s/<$it>/$macros->{$it}/g;
-		}
-		if( !defined $macros->{NODE} && $ep->node()){
-			my $executionNode = $ep->node()->name();
-			$data =~ s/<NODE>/$executionNode/g;
-		}
+		my $prev;
+		do {
+			$prev = $data;
+			foreach my $it ( keys %{$macros} ){
+				$data =~ s/<$it>/$macros->{$it}/g;
+			}
+			if( !defined $macros->{NODE} && $ep->node()){
+				my $executionNode = $ep->node()->name();
+				$data =~ s/<NODE>/$executionNode/g;
+			}
+		# when output data is same than prev data, then all has been changed and nothing we are capable of is left
+		} while( $data ne $prev );
 	}
 
 	return $data;
