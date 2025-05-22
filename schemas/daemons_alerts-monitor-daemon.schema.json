@@ -99,8 +99,7 @@
             "items": "object",
             "properties": {
                 "command": {
-                    "description": "The command to be executed when a new alert has been identified. Deprecated in favor of 'commands' in v4.16.",
-                    "deprecated": true
+                    "description": "The command to be executed when a new alert has been identified. Freely intercheangeable with 'commands'."
                 },
                 "commands": {
                     "description_array": [

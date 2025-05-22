@@ -6,7 +6,9 @@
 
     Release date: 
 
-    - 
+    - Back on 'command' deprecation.
+      Rather say that 'command' and 'commands' are both freely intercheangeable.
+      May consider that 'command' would be used when a single command is expected, and 'commands' when several commands are possible.
 
 ### 4.16.1
 

@@ -176,8 +176,7 @@
                                 "default": false
                             },
                             "command": {
-                                "description": "The command to be executed when a topic is matched, Deprecated in favor of 'commands' in v4.16.",
-                                "deprecated": true
+                                "description": "The command to be executed when a topic is matched, Freely intercheangeable with 'commands'."
                             },
                             "commands": {
                                 "description_array": [

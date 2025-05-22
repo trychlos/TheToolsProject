@@ -107,8 +107,7 @@
                                     "default": true
                                 },
                                 "command": {
-                                    "description": "The command to be used to create the JSON alert file. Deprecated in favor of 'commands' in v4.16.",
-                                    "deprecated": true
+                                    "description": "The command to be used to create the JSON alert file. Freely intercheangeable with 'commands'."
                                 },
                                 "commands": {
                                     "description_array": [
@@ -165,8 +164,7 @@
                                     "default": true
                                 },
                                 "command": {
-                                    "description": "The command to be used to publish to the MQTT bus. Deprecated in favor of 'commands' in v4.16.",
-                                    "deprecated": true
+                                    "description": "The command to be used to publish to the MQTT bus. Freely intercheangeable with 'commands'."
                                 },
                                 "commands": {
                                     "description": "The command(s) to be used to publish to the MQTT bus.",
@@ -215,8 +213,7 @@
                                     "default": true
                                 },
                                 "command": {
-                                    "description": "The command to be used to send the alert by SMS. Deprecated in favor of 'commands' in v4.16.",
-                                    "deprecated": true
+                                    "description": "The command to be used to send the alert by SMS. Freely intercheangeable with 'commands'."
                                 },
                                 "commands": {
                                     "description_array": [
@@ -277,8 +274,7 @@
                                     "default": true
                                 },
                                 "command": {
-                                    "description": "The command to be used to send the alert by email. Deprecated in favor of 'commands' in v4.16.",
-                                    "deprecated": true
+                                    "description": "The command to be used to send the alert by email. Freely intercheangeable with 'commands'."
                                 },
                                 "commands": {
                                     "description_array": [
@@ -345,8 +341,7 @@
                                     "default": true
                                 },
                                 "command": {
-                                    "description": "The command to be used to send the alert with text-to-speech. Deprecated in favor of 'commands' in v4.16.",
-                                    "deprecated": true
+                                    "description": "The command to be used to send the alert with text-to-speech. Freely intercheangeable with 'commands'."
                                 },
                                 "commands": {
                                     "description_array": [
@@ -396,8 +391,7 @@
                     "type": "object",
                     "properties": {
                         "command": {
-                            "description": "The command to be used to copy a directory, either as a string or a 'byOS' object. Deprecated in favor of 'commands' in v4.16.",
-                            "deprecated": true
+                            "description": "The command to be used to copy a directory, either as a string or a 'byOS' object. Freely intercheangeable with 'commands'."
                         },
                         "commands": {
                             "description": "The command(s) to be used to copy a directory, either as a string or a 'byOS' object.",
@@ -452,8 +446,7 @@
                     "type": "object",
                     "properties": {
                         "command": {
-                            "description": "The command to be used. Deprecated in favor of 'commands' in v4.16.",
-                            "deprecated": true
+                            "description": "The command to be used. Freely intercheangeable with 'commands'."
                         },
                         "commands": {
                             "description": "The command to be used.",
@@ -580,8 +573,7 @@
                                                     "default": false
                                                 },
                                                 "command": {
-                                                    "description": "The command to be used to create the JSON execution report file. Deprecated in favor of 'commands' in v4.16.",
-                                                    "deprecated": true
+                                                    "description": "The command to be used to create the JSON execution report file. Freely intercheangeable with 'commands'."
                                                 },
                                                 "commands": {
                                                     "description_array": [
@@ -633,8 +625,7 @@
                                                     "default": false
                                                 },
                                                 "command": {
-                                                    "description": "The command to be used to create the MQTT-based execution report topics. Deprecated in favor of 'commands' in v4.16.",
-                                                    "deprecated": true
+                                                    "description": "The command to be used to create the MQTT-based execution report topics. Freely intercheangeable with 'commands'."
                                                 },
                                                 "commands": {
                                                     "description_array": [
@@ -720,8 +711,7 @@
                                                     "default": false
                                                 },
                                                 "command": {
-                                                    "description": "The command to be used to create the JSON execution report file. Deprecated in favor of 'commands' in v4.16.",
-                                                    "deprecated": true
+                                                    "description": "The command to be used to create the JSON execution report file. Freely intercheangeable with 'commands'."
                                                 },
                                                 "commands": {
                                                     "description_array": [
@@ -773,8 +763,7 @@
                                                     "default": false
                                                 },
                                                 "command": {
-                                                    "description": "The command to be used to create the MQTT-based execution report topics. Deprecated in favor of 'commands' in v4.16.",
-                                                    "deprecated": true
+                                                    "description": "The command to be used to create the MQTT-based execution report topics. Freely intercheangeable with 'commands'."
                                                 },
                                                 "commands": {
                                                     "description_array": [
@@ -875,8 +864,7 @@
 					"type": "object",
 					"properties": {
 						"command": {
-							"description": "The command to be run to remotely execute a command. Deprecated in favor of 'commands' in v4.16.",
-                            "deprecated": true
+							"description": "The command to be run to remotely execute a command. Freely intercheangeable with 'commands'."
                         },
 						"commands": {
 							"description": "The command(s) to be run to remotely execute a command.",
@@ -941,8 +929,7 @@
                                     "default": true
                                 },
                                 "command": {
-                                    "description": "The command to be used to create the JSON execution report file. Deprecated in favor of 'commands' in v4.16.",
-                                    "deprecated": true
+                                    "description": "The command to be used to create the JSON execution report file. Freely intercheangeable with 'commands'."
                                 },
                                 "commands": {
                                     "description_array": [
@@ -1007,8 +994,7 @@
                                     "default": true
                                 },
                                 "command": {
-                                    "description": "The command to be used to create the MQTT-based execution report topics. Deprecated in favor of 'commands' in v4.16.",
-                                    "deprecated": true
+                                    "description": "The command to be used to create the MQTT-based execution report topics. Freely intercheangeable with 'commands'."
                                 },
                                 "commands": {
                                     "description": "The command(s) to be used to create the MQTT-based execution report topics.",
@@ -1491,8 +1477,7 @@
                                     "default": true
                                 },
                                 "command": {
-                                    "description": "The command to be run to publish a telemetry to the HTTP gateway. Deprecated in favor of 'commands' in v4.16.",
-                                    "deprecated": true
+                                    "description": "The command to be run to publish a telemetry to the HTTP gateway. Freely intercheangeable with 'commands'."
                                 },
                                 "commands": {
                                     "description": "The command(s) to be run to publish a telemetry to the HTTP gateway.",
@@ -1535,8 +1520,7 @@
                                     "default": true
                                 },
                                 "command": {
-                                    "description": "The command to be run to publish a telemetry on the MQTT bus. Deprecated in favor of 'commands' in v4.16.",
-                                    "deprecated": true
+                                    "description": "The command to be run to publish a telemetry on the MQTT bus. Freely intercheangeable with 'commands'."
                                 },
                                 "commands": {
                                     "description": "The command(s) to be run to publish a telemetry on the MQTT bus.",
@@ -1605,8 +1589,7 @@
                     "type": "object",
                     "properties": {
                         "command": {
-                            "description": "The command to be run to publish a workload summary. Deprecated in favor of 'commands' in v4.16.",
-                            "deprecated": true
+                            "description": "The command to be run to publish a workload summary. Freely intercheangeable with 'commands'."
                         },
                         "commands": {
                             "description": "The command(s) to be run to publish a workload summary.",

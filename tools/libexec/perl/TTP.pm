@@ -135,7 +135,8 @@ sub commandByOS {
 	my ( $res, $obj ) = commandByOS_getObject( \@locals, $opts );
 	if( $res ){
 		if( $obj ){
-			msgWarn( "'command' property is deprecated in favor of 'commands'. You should update your configurations." );
+			# as of v4.16.2, we come back on the 'command' deprecation
+			#msgWarn( "'command' property is deprecated in favor of 'commands'. You should update your configurations." );
 		# search for a 'commands' property
 		} else {
 			@locals = ( @{$keys}, 'commands' );
