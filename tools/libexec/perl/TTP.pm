@@ -512,9 +512,9 @@ sub _executionReportBuildMacros {
 	my $macros = {
 		COMMAND => $ep->runner()->command(),
 		JSON => $str,
-		NODE => $args->{data}{node} || $ep->node()->name(),
+		NODE => $data->{node} || $ep->node()->name(),
 		OPTIONS => '',
-		SERVICE => $args->{data}{service} || '',
+		SERVICE => $data->{service} || '',
 		STAMP => Time::Moment->now->strftime( '%Y%m%d%H%M%S%6N' ),
 		VERB => $ep->runner()->verb()
 	};
