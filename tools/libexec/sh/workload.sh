@@ -1,4 +1,4 @@
-#!/bin/ksh
+#!/bin/sh -x
 # @(#) TTP workload execution
 #
 # TheToolsProject - Tools System and Working Paradigm for IT Production
@@ -26,7 +26,7 @@
 # pwi 2025- 5-21 creation
 
 # counters
-typeset -i i=0
+let -i i=0
 
 # this function executes one task of the workload
 # (I):
@@ -34,16 +34,16 @@ typeset -i i=0
 function f_command
 {
 	f_logLine "executing $*"
-	let i+=1
+	(( i += 1 ))
 	typeset _start="$(date '+%Y-%m-%d %H:%M:%S')"
 	$*
 	typeset -i _rc=$?
 	f_logLine "got RC=${_rc}"
 	typeset _end="$(date '+%Y-%m-%d %H:%M:%S')"
-	res_command[$i]="$*"
-	res_start[$i]="${_start}"
-	res_end[$i]="${_end}"
-	res_rc[$i]="${_rc}"
+	export res_command_$i="$*"
+	export res_start_$i="${_start}"
+	export res_end_$i="${_end}"
+	export res_rc_$i="${_rc}"
 }
 
 # this function executes all the task of the specified workload
@@ -57,8 +57,9 @@ function f_execute
 	shift
 	# first argument is now expected to be the workload name
 	services.pl list -workload $1 -commands -hidden $2 $3 $4 $5 $6 $7 $8 $9 -nocolored | grep -vE 'services.pl' | while read _line; do f_command ${_line} $2 $3 $4 $5 $6 $7 $8 $9; done
-	# TODO: address workload_summary.pl
-	workload_summary.pl -workload $1 -commands res_command -start res_start -end res_end -rc res_rc -count $i $2 $3 $4 $5 $6 $7 $8 $9
+	# and run workload summary
+	env | grep res_
+	services.pl workload-summary -workload $1 -commands res_command -start res_start -end res_end -rc res_rc -count $i $2 $3 $4 $5 $6 $7 $8 $9
 }
 
 # this function computes the log pathname as '/myDir/dailyLogs/250521/TTP/WS12DEV1-daily.morning-20250521-050002.log'
@@ -86,7 +87,7 @@ function f_logLine
 ###
 
 # setup the TTP environment so that we are able to use TTP
-. /etc/profile
+#. /etc/profile.d/ttp.sh
 
 # compute the logfile
 log_file="$(f_logFile "${1}")"

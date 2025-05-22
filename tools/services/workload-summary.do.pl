@@ -1,4 +1,4 @@
-# @(#) Print a workload summary in order to get rid of CMD.EXE special characters interpretation
+# @(#) print a workload summary
 #
 # @(-) --[no]help              print this message, and exit [${help}]
 # @(-) --[no]colored           color the output depending of the message level [${colored}]
@@ -39,6 +39,10 @@ use Data::Dumper;
 use Path::Tiny;
 
 my $defaults = {
+	help => 'no',
+	colored => 'no',
+	dummy => 'no',
+	verbose => 'no',
 	workload => '',
 	commands => 'command',
 	start => 'start',
@@ -73,7 +77,8 @@ my $opt_count = $defaults->{count};
 # print a funny workload summary
 
 sub printSummary {
-	# get the CMD.EXE results from the environment
+	# get the results from the environment
+	print Dumper( %ENV );
 	my @results = ();
 	my $maxLength = 0;
 	for( my $i=1 ; $i<=$opt_count ; ++$i ){
@@ -123,8 +128,8 @@ sub printSummary {
 		$fh->spew( $stdout );
 		my $subject = sprintf( "[%s\@%s] workload summary", $opt_workload, $host );
 		msgOut( "subject='$subject'" );
-		my $dummy = $extern->dummy() ? "-dummy" : "";
-		my $verbose = $extern->verbose() ? "-verbose" : "";
+		my $dummy = $ep->runner()->dummy() ? "-dummy" : "";
+		my $verbose = $ep->runner()->verbose() ? "-verbose" : "";
 		# this script is not interactive but written to be executed as part of a batch - there is so no reason to log stdout of the command because all msgXxxx() of the command are already logged
 		TTP::commandExec( "$command -nocolored $dummy $verbose", {
 			macros => {
