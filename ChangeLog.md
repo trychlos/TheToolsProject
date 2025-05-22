@@ -2,6 +2,12 @@
 
 ## ChangeLog
 
+### 4.16.1-rc.0
+
+    Release date: 
+
+    - Fix TTP::commandByOS_getObject() function calls
+
 ### 4.16.0
 
     Release date: 2025- 5-22

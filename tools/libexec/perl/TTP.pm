@@ -132,14 +132,14 @@ sub commandByOS {
 
 	# search for a 'command' property
 	my @locals = ( @{$keys}, 'command' );
-	my ( $res, $obj ) = command_getObject( \@locals, $opts );
+	my ( $res, $obj ) = commandByOS_getObject( \@locals, $opts );
 	if( $res ){
 		if( $obj ){
-			msgWarn( "'command' property has been obsoleted in favor of 'commands'. You should update your configurations." );
+			msgWarn( "'command' property is deprecated in favor of 'commands'. You should update your configurations." );
 		# search for a 'commands' property
 		} else {
 			@locals = ( @{$keys}, 'commands' );
-			( $res, $obj ) = command_getObject( \@locals, $opts );
+			( $res, $obj ) = commandByOS_getObject( \@locals, $opts );
 		}
 	}
 
