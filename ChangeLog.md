@@ -4,7 +4,7 @@
 
 ### 4.17.0
 
-    Release date: 
+    Release date: 2025- 5-22
 
     - Back on 'command' deprecation.
       Rather say that 'command' and 'commands' are both freely intercheangeable.
