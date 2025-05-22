@@ -488,27 +488,37 @@ sub executionReport {
 	my ( $args ) = @_;
 	$args //= {};
 	$args->{data} //= {};
-	# gather common macros
+	# write JSON file if configuration enables that and relevant arguments are provided
+	my $enabled = $ep->var([ 'executionReports', 'withFile', 'enabled' ]);
+	$enabled = true if !defined $enabled;
+	if( $enabled && $args->{file} ){
+		_executionReportToFile( $args->{file} );
+	}
+	# publish MQTT message if configuration enables that and relevant arguments are provided
+	$enabled = $ep->var([ 'executionReports', 'withMqtt', 'enabled' ]);
+	$enabled = true if !defined $enabled;
+	if( $enabled && $args->{mqtt} ){
+		_executionReportToMqtt( $args->{mqtt} );
+	}
+}
+
+# build the macros hash from (completed) data
+
+sub _executionReportBuildMacros {
+	my ( $data ) = @_;
+	# protect double-quotes against shell interpretation
+	my $str = encode_json( $data );
+	$str =~ s/"/\\"/g;
 	my $macros = {
 		COMMAND => $ep->runner()->command(),
+		JSON => $str,
 		NODE => $args->{data}{node} || $ep->node()->name(),
 		OPTIONS => '',
 		SERVICE => $args->{data}{service} || '',
 		STAMP => Time::Moment->now->strftime( '%Y%m%d%H%M%S%6N' ),
 		VERB => $ep->runner()->verb()
 	};
-	# write JSON file if configuration enables that and relevant arguments are provided
-	my $enabled = $ep->var([ 'executionReports', 'withFile', 'enabled' ]);
-	$enabled = true if !defined $enabled;
-	if( $enabled && $args->{file} ){
-		_executionReportToFile( $args->{file}, $macros );
-	}
-	# publish MQTT message if configuration enables that and relevant arguments are provided
-	$enabled = $ep->var([ 'executionReports', 'withMqtt', 'enabled' ]);
-	$enabled = true if !defined $enabled;
-	if( $enabled && $args->{mqtt} ){
-		_executionReportToMqtt( $args->{mqtt}, $macros );
-	}
+	return $macros;
 }
 
 # Complete the provided data with the data collected by TTP
@@ -537,21 +547,20 @@ sub _executionReportCompleteData {
 # - returns true|false
 
 sub _executionReportToFile {
-	my ( $args, $macros ) = @_;
+	my ( $args ) = @_;
 	my $res = false;
 	my $data = undef;
 	$data = $args->{data} if defined $args->{data};
 	if( defined $data ){
 		$data = _executionReportCompleteData( $data );
+		my $macros = _executionReportBuildMacros( $data );
 		my $command = TTP::commandByOS([ 'executionReports', 'withFile' ], { withCommand => true });
 		if( !$command ){
 			my $dropdir = TTP::Path::execReportsDir();
 			my $template = 'report-'.Time::Moment->now->strftime( '%y%m%d%H%M%S' ).'-XXXXXX';
-			$command = "ttp.pl writejson -dir $dropdir -template $template -suffix .json -data '<JSON>'";
+			$command = "ttp.pl writejson -dir $dropdir -template $template -suffix .json -data \"<JSON>\"";
 		}
-		my %macros = %{$macros};
-		$macros{JSON} = encode_json( $data );
-		my $result = TTP::commandExec( $command, { macros => \%macros });
+		my $result = TTP::commandExec( $command, { macros => $macros });
 		$res = $result->{success};
 	} else {
 		msgErr( __PACKAGE__."::_executionReportToFile() expected a 'data' argument, not found" );
@@ -573,34 +582,33 @@ sub _executionReportToFile {
 #   > excludes, the list of data keys to be excluded
 
 sub _executionReportToMqtt {
-	my ( $args, $macros ) = @_;
+	my ( $args ) = @_;
 	my $res = false;
 	my $data = undef;
 	$data = $args->{data} if defined $args->{data};
 	if( defined $data ){
 		$data = _executionReportCompleteData( $data );
-		my $topic = undef;
-		$topic = $args->{topic} if defined $args->{topic};
-		if( !$topic ){
-			$topic = $ep->node()->name()."/executionReport/".$ep->runner()->command()."/".$ep->runner()->verb();
-		}
+		my $macros = _executionReportBuildMacros( $data );
+		# have a topic
+		my $topic = $args->{topic};
+		$topic = $ep->node()->name()."/executionReport/".$ep->runner()->command()."/".$ep->runner()->verb() if !$topic;
+		# have a command
+		my $command = TTP::commandByOS([ 'executionReports', 'withMqtt' ], { withCommand => true });
+		$command = "mqtt.pl publish -topic <TOPIC>/<KEYNAME> -payload \"<KEYVALUE>\" -retain <OPTIONS>" if !$command;
+		# publish each key
 		my $excludes = [];
 		$excludes = $args->{excludes} if defined $args->{excludes} && ref $args->{excludes} eq 'ARRAY' && scalar $args->{excludes} > 0;
-		my $command = TTP::commandByOS([ 'executionReports', 'withMqtt' ], { withCommand => true });
-		$command = "mqtt.pl publish -topic <TOPIC> -payload '<JSON>'" if !$command;
-		my $json = {};
 		foreach my $key ( keys %{$data} ){
-			if( !grep( /$key/, @{$excludes} )){
-				$json->{$key} = $data->{$key};
-			} else {
+			if( grep( /$key/, @{$excludes} )){
 				msgVerbose( "do not publish excluded '$key' key" );
+			} else {
+				$macros->{TOPIC} = $topic;
+				$macros->{KEYNAME} = $key;
+				$macros->{KEYVALUE} = $data->{$key};
+				my $result = TTP::commandExec( $command, { macros => $macros });
+				$res = $result->{success};
 			}
 		}
-		my %macros = %{$macros};
-		$macros{TOPIC} = $topic;
-		$macros{JSON} = encode_json( $json );
-		my $result = TTP::commandExec( $command, { macros => \%macros });
-		$res = $result->{success};
 	} else {
 		msgErr( __PACKAGE__."::_executionReportToMqtt() expected a 'data' argument, not found" );
 		TTP::stackTrace();

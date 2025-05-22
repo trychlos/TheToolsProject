@@ -734,8 +734,8 @@
                         "- command: either a single string, or an object 'command.byOS.<osname>; defaulting dependant of the exact used medium.",
                         "  Provided commands have access to following macros:",
                         "  <COMMAND> the current command,",
-                        "  <JSON> a stringified version of the execution report JSON data,",
-                        "  <NODE> the nofe name,",
+                        "  <JSON> a stringified JSON version of the execution report datas,",
+                        "  <NODE> the node name,",
                         "  <OPTIONS> options maybe provided to the verb,",
                         "  <SERVICE> the service name,",
                         "  <STAMP> the current timestamp as 'yyyymmddhhmisscccccc',",
@@ -781,7 +781,7 @@
                                             }
                                         }
                                     },
-                                    "default": "ttp.pl writejson into below dropDir"
+                                    "default": "ttp.pl writejson -dir [eval:TTP::Path::execReportsDir()] -template [eval:'report-'.Time::Moment->now->strftime( '%y%m%d%H%M%S' ).'-XXXXXX'] -suffix .json -data \"<JSON>\""
                                 },
                                 "prettyJson": {
                                     "description": "Whether the JSON string should be prettified.",
@@ -791,12 +791,20 @@
                                 "dropDir": {
                                     "description": "The directory where execution report files must be created.",
                                     "type": "string",
-                                    "default": "[eval:File::Spec->catdir( TTP::tempDir(), 'TTP', 'executionReports' )]"
+                                    "default": "[eval:File::Spec->catdir( TTP::logsPeriodic(), 'executionReports' )]"
                                 }
                             }
                         },
                         "withMqtt": {
-                            "description": "The configuration of the MQTT-based execution reports.",
+                            "description_array": [
+                                "The configuration of the MQTT-based execution reports.",
+                                "We default to create a retained message for each non-excluded key/value tuple.",
+                                "Command has access to following additional keys:",
+                                " <TOPIC> the topic value",
+                                " <KEYNAME> the key name",
+                                " <KEYVALUE> the key value",
+                                "Command excludes keys which are used in the default topic."
+                            ],
                             "type": "object",
                             "properties": {
                                 "default": {
@@ -810,10 +818,7 @@
                                     "default": true
                                 },
                                 "command": {
-                                    "description_array": [
-                                        "The command to be used to create the MQTT-based execution report topics.",
-                                        "The command has access to <TOPIC> macro."
-                                    ],
+                                    "description": "The command to be used to create the MQTT-based execution report topics.",
                                     "type": [
                                         "string",
                                         "object"
@@ -830,7 +835,7 @@
                                             }
                                         }
                                     },
-                                    "default": "mqtt.pl publish -topic <TOPIC> -payload \"<JSON>\""
+                                    "default": "mqtt.pl publish -topic <TOPIC>/<KEYNAME> -payload \"<KEYVALUE>\" -retain"
                                 },
                                 "topic": {
                                     "description": "The topic to be used.",

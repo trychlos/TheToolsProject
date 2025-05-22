@@ -393,8 +393,8 @@ sub execReportsDir {
 		makeDirExist( $dir ) if $makeDirExist;
 	} else {
 		TTP::Message::msgWarn( "'executionReports/withFile/dropDir' is not defined in toops.json nor in host configuration" );
-		my $tempdir = TTP::tempDir();
-		$dir = $tempdir ? File::Spec->catdir( $tempdir, 'TTP', 'execReports' ) : undef;
+		my $tempdir = TTP::logsPeriodic();
+		$dir = $tempdir ? File::Spec->catdir( $tempdir, 'executionReports' ) : undef;
 	}
 	return $dir;
 }

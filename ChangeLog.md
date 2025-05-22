@@ -7,6 +7,7 @@
     Release date: 
 
     - Fix dbms.pl backup excludes again 'service' key, ignore obsoleted 'instance'
+    - Fix TTP::_executionReport() to file and to mqtt, improving site.schema
 
 ### 4.15.1
 
