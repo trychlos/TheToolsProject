@@ -35,7 +35,7 @@
 # pwi 2017- 6-21 publish the release at last
 # pwi 2021-11-29 renamed as msgOut (todo #67)
 
-function msgOut
+msgOut()
 {
 	#set -x
 	typeset _msg="${1}"

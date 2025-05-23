@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - Use fname() shell function naming scheme for better POSIX compatibility
 
 ### 4.17.3
 

@@ -53,7 +53,7 @@
 # pwi 2025- 4- 3 starting with v4, shell part takes advantage of Perl environment
 # pwi 2025- 4- 3 starting with v4, VERBOSE environment variable is replaced with TTP_DEBUG
 
-function ttpf_main
+ttpf_main()
 {
 	[ "${TTP_DEBUG}" = "1" ] && echo "ttpf_main() 0=$0 #=$# *=$*" >&2
 

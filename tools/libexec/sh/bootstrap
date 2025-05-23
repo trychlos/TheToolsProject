@@ -58,7 +58,7 @@
 # pwi 2025- 2- 7 get the drop-in directories as argument(s), providing nonetheless a default value
 # pwi 2025- 4- 3 starting with v4, VERBOSE environment variable is replaced with TTP_DEBUG
 
-function f_append_by_name
+f_append_by_name()
 {
 	typeset _name="${1}"
 	typeset _dir="${2}"
@@ -71,7 +71,7 @@ function f_append_by_name
 	fi
 }
 
-function f_append_by_value
+f_append_by_value()
 {
 	typeset _init_value="${1}"
 	typeset _added_val="${2}"
@@ -91,7 +91,7 @@ function f_append_by_value
 # Main function
 # enumerate droppped-in paths to setup our environment variables
 # Eventually, PATH and FPATH (resp. PERL5LIB) are set in current process
-function f_bootstrap
+f_bootstrap()
 {
 	typeset _dropins="$@"
 	[ "${TTP_DEBUG}" = "1" ] && echo "f_bootstrap() _dropins='${_dropins}'" 1>&2
@@ -114,7 +114,7 @@ function f_bootstrap
 }
 
 # Enumerates on stdout path read from conf files for initial TTP addressing
-function f_enumerate_path
+f_enumerate_path()
 {
 	for _dir in $*; do
 		[ "${TTP_DEBUG}" = "1" ] && echo "f_enumerate_path() got drop-in '${_dir}'" 1>&2
@@ -125,7 +125,7 @@ function f_enumerate_path
 	done
 }
 
-function f_prepend_by_name
+f_prepend_by_name()
 {
 	typeset _name="${1}"
 	typeset _dir="${2}"
@@ -138,7 +138,7 @@ function f_prepend_by_name
 	fi
 }
 
-function f_prepend_by_value
+f_prepend_by_value()
 {
 	typeset _init_value="${1}"
 	typeset _added_val="${2}"
@@ -156,7 +156,7 @@ function f_prepend_by_value
 }
 
 # Set global environment variables
-function f_setup
+f_setup()
 {
 	typeset _prefix="${1}"
 	typeset _path="${2}"
