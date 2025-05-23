@@ -392,7 +392,7 @@ sub dbmsBackupsRoot {
 # - an optional options hash with following keys:
 #   > config: host configuration (useful when searching for a remote host)
 #   > makeDirExist: whether to create the directory if it doesn't yet exist, defaulting to true
-#   > allowWarn: whether to allow a warning when property is not set, defaulting to true
+#   > warn: whether to allow a warning when property is not set, defaulting to true
 # (O):
 # - the (maybe daily) execution reports directory
 
@@ -405,9 +405,9 @@ sub execReportsDir {
 		$makeDirExist = $opts->{makeDirExist} if defined $opts->{makeDirExist};
 		makeDirExist( $dir ) if $makeDirExist;
 	} else {
-		my $allowWarn = true;
-		$allowWarn = $opts->{allowWarn} if defined $opts->{allowWarn};
-		TTP::Message::msgWarn( "'executionReports/withFile/dropDir' is not defined in toops.json nor in host configuration" ) if $allowWarn;
+		my $warn = true;
+		$warn = $opts->{warn} if defined $opts->{warn};
+		TTP::Message::msgWarn( "'executionReports.withFile.dropDir' is not defined in toops.json nor in host configuration" ) if $warn;
 		my $tempdir = TTP::logsPeriodic();
 		$dir = $tempdir ? File::Spec->catdir( $tempdir, 'executionReports' ) : undef;
 	}
@@ -586,7 +586,7 @@ sub logsRoot {
 # (I):
 # - the directory to be created if not exists
 # - an optional options hash with following keys:
-#   > allowVerbose whether you can call msgVerbose() function (false to not create infinite loop
+#   > verbose whether you can call msgVerbose() function (false to not create infinite loop
 #     when called from msgXxx()), defaulting to true
 # (O):
 # returns true|false
@@ -594,20 +594,20 @@ sub logsRoot {
 sub makeDirExist {
 	my ( $dir, $opts ) = @_;
 	$opts //= {};
-	my $allowVerbose = true;
-	$allowVerbose = $opts->{allowVerbose} if defined $opts->{allowVerbose};
-	$allowVerbose = false if !$ep || !$ep->runner() || !$ep->runner()->verbose();
+	my $verbose = true;
+	$verbose = $opts->{verbose} if defined $opts->{verbose};
+	$verbose = false if !$ep || !$ep->runner() || !$ep->runner()->verbose();
 	my $result = false;
 	if( -d $dir ){
 		#TTP::Message::msgVerbose( "TTP::Path::makeDirExist() dir='$dir' exists" );
 		$result = true;
 	} else {
 		# why is that needed in TTP::Path !?
-		TTP::Message::msgVerbose( __PACKAGE__."::makeDirExist() make_path() dir='$dir'" ) if $allowVerbose;
+		TTP::Message::msgVerbose( __PACKAGE__."::makeDirExist() make_path() dir='$dir'" ) if $verbose;
 		my $error;
 		$result = true;
 		make_path( $dir, {
-			verbose => $allowVerbose,
+			verbose => $verbose,
 			error => \$error
 		});
 		# https://perldoc.perl.org/File::Path#make_path%28-%24dir1%2C-%24dir2%2C-....-%29
@@ -623,7 +623,7 @@ sub makeDirExist {
 			$result = false;
 		}
 		# why is that needed in TTP::Path !?
-		TTP::Message::msgVerbose( __PACKAGE__."::makeDirExist() dir='$dir' result=$result" ) if $allowVerbose;
+		TTP::Message::msgVerbose( __PACKAGE__."::makeDirExist() dir='$dir' result=$result" ) if $verbose;
 	}
 	return $result;
 }

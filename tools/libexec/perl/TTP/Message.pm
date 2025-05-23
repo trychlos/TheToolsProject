@@ -321,7 +321,7 @@ sub _msgLogAppend {
 			# make sure the directory exists
 			my ( $vol, $dir, $f ) = File::Spec->splitpath( $logFile );
 			my $logdir = File::Spec->catpath( $vol, $dir );
-			TTP::Path::makeDirExist( $logdir, { allowVerbose => false });
+			TTP::Path::makeDirExist( $logdir, { verbose => false });
 			path( $logFile )->append_utf8( $line.EOL );
 		}
 	}
