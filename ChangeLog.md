@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.17.2-rc.0
+### 4.17.2
 
-    Release date: 
+    Release date: 2025- 5-23
 
     - Fix mqtt.pl retained when there is no retained message
     - mqtt.pl clear simplifies its run when there is no message to be cleared
