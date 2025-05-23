@@ -1,16 +1,15 @@
-# @(#) backup a LDAP directory server
+# @(#) restore a LDAP directory server
 #
 # @(-) --[no]help              print this message, and exit [${help}]
 # @(-) --[no]colored           color the output depending of the message level [${colored}]
 # @(-) --[no]dummy             dummy run [${dummy}]
 # @(-) --[no]verbose           run verbosely [${verbose}]
-# @(-) --service=<name>        service name [${service}]
+# @(-) --service=<name>        acts of this service [${service}]
 # @(-) --target=<name>         target node [${target}]
-# @(-) --output=<filename>     target filename [${output}]
-# @(-) --[no]file              whether an execution report should be provided by file [${file}]
+# @(-) --config=<filename>     restore config from this file [${config}]
+# @(-) --data=<filename>       restore data from this file [${data}]
 # @(-) --[no]mqtt              whether an execution report should be published to MQTT [${mqtt}]
-#
-# @(@) Note 1: the default output filename is computed as: '<backupsPeriodicDir>/<node>-<service>-<database>-<yymmdd>-<hhmiss>.ldif'.
+# @(-) --[no]file              whether an execution report should be provided by file [${file}]
 #
 # TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
@@ -34,8 +33,6 @@ use strict;
 use utf8;
 use warnings;
 
-use File::Spec;
-
 use TTP::Node;
 use TTP::Service;
 
@@ -46,28 +43,22 @@ my $defaults = {
 	verbose => 'no',
 	service => '',
 	target => '',
-	output => 'DEFAUT'
+	config => '',
+	data => ''
 };
 
 my $opt_service = $defaults->{service};
 my $opt_target = $defaults->{target};
-my $opt_output = '';
-
-my $opt_file = TTP::var([ 'executionReports', 'withFile', 'default' ]);
-$opt_file = false if !defined $opt_file;
-my $file_enabled = TTP::var([ 'executionReports', 'withFile', 'enabled' ]);
-$file_enabled = true if !defined $file_enabled;
-msgErr( "executionReports.withFile.default=true while executionReports.withFile.enabled=false which is not consistent" ) if $opt_file && !$file_enabled;
-$defaults->{file} = $opt_file && $file_enabled ? 'yes' : 'no';
-my $opt_file_set = false;
+my $opt_config = $defaults->{config};
+my $opt_data = $defaults->{data};
 
 my $opt_mqtt = TTP::var([ 'executionReports', 'withMqtt', 'default' ]);
 $opt_mqtt = false if !defined $opt_mqtt;
-my $mqtt_enabled = TTP::var([ 'executionReports', 'withMqtt', 'enabled' ]);
-$mqtt_enabled = true if !defined $mqtt_enabled;
-msgErr( "executionReports.withMqtt.default=true while executionReports.withMqtt.enabled=false which is not consistent" ) if $opt_mqtt && !$mqtt_enabled;
-$defaults->{mqtt} = $opt_mqtt && $mqtt_enabled ? 'yes' : 'no';
-my $opt_mqtt_set = false;
+$defaults->{mqtt} = $opt_mqtt ? 'yes' : 'no';
+
+my $opt_file = TTP::var([ 'executionReports', 'withFile', 'default' ]);
+$opt_file = false if !defined $opt_file;
+$defaults->{file} = $opt_file ? 'yes' : 'no';
 
 # the node which hosts the requested service
 my $objNode = undef;
@@ -76,41 +67,18 @@ my $objService = undef;
 # the LDAP object
 my $objLdap = undef;
 
-# ------------------------------------------------------------------------------------------------
-# compute the default backup output filename for the current machine/service/database
-# making sure the output directory exists
-# (I):
-# - none
-# (O):
-# - the default output full filename
-
-sub _computeDefaultBackupFilename {
-	my $output = undef;
-	# compute the dir and make sure it exists
-	my $node = $objNode->name();
-	my $backupDir = TTP::dbmsBackupsPeriodic();
-	TTP::Path::makeDirExist( $backupDir );
-	# compute the filename
-	my $fname = $node."-".$objService->name()."-".( Time::Moment->now->strftime( '%y%m%d-%H%M%S' ));
-	$output = File::Spec->catdir( $backupDir, $fname );
-	msgVerbose( "_computeDefaultBackupFilename() computing output default as '$output'" );
-	return $output;
-}
-
 # -------------------------------------------------------------------------------------------------
-# backup the LDAP directory server to the target backup file
+# restore the provided backup file
 
-sub doBackup {
-	msgOut( "backuping LDAP directory server '$opt_service'..." );
-	my $commands = TTP::commandByOS([ 'LDAP', 'backups' ], { jsonable => $objService });
+sub doRestore {
+	msgOut( "restoring LDAP directory server '$opt_service'..." );
+	my $commands = TTP::commandByOS([ 'LDAP', 'restores' ], { jsonable => $objService });
 	my $count = 0;
 	my $ok = 0;
 	if( $commands && scalar( @{$commands} )){
-		my $output = $opt_output || _computeDefaultBackupFilename();
-		# print the output file if not provided as a command-line argument
-		msgOut( "output is '$output'" ) if !$opt_output;
 		my $macros = $objLdap->macros();
-		$macros->{OUTPUT} = $output;
+		$macros->{CONFIG} = $$opt_config if $opt_config;
+		$macros->{DATA} = $$opt_data if $opt_data;
 		foreach my $cmd ( @{$commands} ){
 			$count += 1;
 			my $res = TTP::commandExec( $cmd, {
@@ -132,7 +100,8 @@ sub doBackup {
 		# retain last full and last diff
 		my $data = {
 			service => $opt_service,
-			output => $output
+			config => $opt_config,
+			data => $opt_data
 		};
 		# honors --mqtt option
 		if( $opt_mqtt ){
@@ -160,7 +129,7 @@ sub doBackup {
 			});
 		}
 	} else {
-		msgWarn( "no commands have been found for LDAP.backups" );
+		msgWarn( "no commands have been found for LDAP.restores" );
 	}
 	my $str = "$ok/$count successfully executed commands(s)";
 	if( $ok == $count ){
@@ -181,17 +150,10 @@ if( !GetOptions(
 	"verbose!"			=> sub { $ep->runner()->verbose( @_ ); },
 	"service=s"			=> \$opt_service,
 	"target=s"			=> \$opt_target,
-	"output=s"			=> \$opt_output,
-	"file!"				=> sub {
-		my( $name, $value ) = @_;
-		$opt_file = $value;
-		$opt_file_set = true;
-	},
-	"mqtt!"				=> sub {
-		my( $name, $value ) = @_;
-		$opt_mqtt = $value;
-		$opt_mqtt_set = true;
-	} )){
+	"config=s"			=> \$opt_config,
+	"data=s"			=> \$opt_data,
+	"mqtt!"				=> \$opt_mqtt,
+	"file!"				=> \$opt_file )){
 
 		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
@@ -207,14 +169,18 @@ msgVerbose( "got dummy='".( $ep->runner()->dummy() ? 'true':'false' )."'" );
 msgVerbose( "got verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got service='$opt_service'" );
 msgVerbose( "got target='$opt_target'" );
-msgVerbose( "got output='$opt_output'" );
-msgVerbose( "got file='".( $opt_file ? 'true':'false' )."'" );
+msgVerbose( "got config='$opt_config'" );
+msgVerbose( "got data='$opt_data'" );
 msgVerbose( "got mqtt='".( $opt_mqtt ? 'true':'false' )."'" );
+msgVerbose( "got file='".( $opt_file ? 'true':'false' )."'" );
 
 # must have --service option
-# find the node which hosts this service in this same environment
+# find the node which hosts this service in this same environment (should be at most one)
+# and check that the service is DBMS-aware
 if( $opt_service ){
-	$objNode = TTP::Node->findByService( $ep->node()->environment(), $opt_service, { target => $opt_target });
+	$objNode = TTP::Node->findByService( $ep->node()->environment(), $opt_service, {
+		target => $opt_target
+	});
 	if( $objNode ){
 		msgVerbose( "got hosting node='".$objNode->name()."'" );
 		$objService = TTP::Service->new( $ep, { service => $opt_service });
@@ -228,34 +194,15 @@ if( $opt_service ){
 	msgErr( "'--service' option is mandatory, but is not specified" );
 }
 
-if( !$opt_output ){
-	msgVerbose( "'--output' option not specified, will use the computed default" );
-}
+# at least --config or --data should be provided
+msgWarn( "at least '--config' or '--data' should have been provided, none found" ) if !$opt_config && !$opt_data;
 
-# disabled media are just ignored (or refused if option was explicit)
-if( $opt_file ){
-	if( !$file_enabled ){
-		if( $opt_file_set ){
-			msgErr( "File medium is disabled, --file option is not valid" );
-		} else {
-			msgWarn( "File medium is disabled and thus ignored" );
-			$opt_file = false;
-		}
-	}
-}
-if( $opt_mqtt ){
-	if( !$mqtt_enabled ){
-		if( $opt_mqtt_set ){
-			msgErr( "MQTT medium is disabled, --mqtt option is not valid" );
-		} else {
-			msgWarn( "MQTT medium is disabled and thus ignored" );
-			$opt_mqtt = false;
-		}
-	}
-}
+# provided files must exist
+msgErr( "config='$opt_config' doesn't exist or is not readable" ) if $opt_config && ! -r $opt_config;
+msgErr( "data='$opt_data' doesn't exist or is not readable" ) if $opt_data && ! -r $opt_data;
 
 if( !TTP::errs()){
-	doBackup();
+	doRestore();
 }
 
 TTP::exit();

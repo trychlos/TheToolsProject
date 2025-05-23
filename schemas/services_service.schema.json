@@ -144,6 +144,13 @@
                             "description_array": [
                                 "The list of commands to be executed.",
                                 "It honors the following macros:",
+                                "- <CONFIGDIR>: the path of the configuration directory,",
+                                "- <DATADIR>: the path of the data directory",
+                                "- <OWNER_ACCOUNT>: the user LDAP owner,",
+                                "- <OWNER_GROUP>: the group LDAP owner,",
+                                "- <SLAPADD>: the 'slapadd' full pathname,",
+                                "- <SLAPCAT>: the 'slapcat' full pathname,",
+                                "- <SYSUNIT>: the systemctl service name,",
                                 "- <OUTPUT>: the full output filename, defaulting to '<backupsPeriodicDir>/<NODE>-<SERVICE>-<date-ymd-hms>'."
                             ],
                             "type": [
@@ -169,15 +176,57 @@
                                     }
                                 }
                             }
+                        },
+                        "default": [
+                            "<SLAPCAT> -F <CONFIGDIR> -l <OUTPUT>-data.ldif",
+                            "gzip <OUTPUT>-data.ldif",
+                            "<SLAPCAT> -F <CONFIGDIR> -n 0 -l <OUTPUT>-config.ldif",
+                            "gzip <OUTPUT>-config.ldif"
+                        ],
+                        "username": {
+                            "description": "The OS username which must be used to run the backup commands.",
+                            "type": "string"
                         }
                     }
+                },
+                "configdir": {
+                    "description": "The path to the LDAP configuration directory.",
+                    "type": "string",
+                    "default": "/etc/openldap/slapd.d"
+                },
+                "datadir": {
+                    "description": "The path to the LDAP data directory",
+                    "type": "string",
+                    "default": "/var/lib/ldap"
+                },
+                "owner_account": {
+                    "description": "The account LDAP owner.",
+                    "type": "string",
+                    "default": "ldap"
+                },
+                "owner_group": {
+                    "description": "The group LDAP owner.",
+                    "type": "string",
+                    "default": "ldap"
                 },
                 "restores": {
                     "description": "The configuration of the restores.",
                     "type": "object",
                     "properties": {
                         "commands": {
-                            "description": "The list of commands to be executed.",
+                            "description_array": [
+                                "The list of commands to be executed.",
+                                "It honors the following macros:",
+                                "- <CONFIG>: the full pathname of the configuration backup file to be restored,",
+                                "- <DATA>: the full pathname of the data backup to be restored,",
+                                "- <CONFIGDIR>: the path of the configuration directory,",
+                                "- <DATADIR>: the path of the data directory",
+                                "- <OWNER_ACCOUNT>: the user LDAP owner,",
+                                "- <OWNER_GROUP>: the group LDAP owner,",
+                                "- <SLAPADD>: the 'slapadd' full pathname,",
+                                "- <SLAPCAT>: the 'slapcat' full pathname,",
+                                "- <SYSUNIT>: the systemctl service name."
+                            ],
                             "type": [
                                 "string",
                                 "array",
@@ -202,11 +251,34 @@
                                 }
                             }
                         },
+                        "default": [
+                            "systemctl stop <SYSUNIT> || :",
+                            "<SLAPADD> -F <CONFIGDIR> -b cn=config -l <CONFIG>",
+                            "<SLAPADD> -F <CONFIGDIR> -b dc=example,dc=com -l <DATA>",
+                            "chown -R <USER>:<GROUP> /etc/openldap/slapd.d/",
+                            "chown -R <USER>:<GROUP> <DATADIR>",
+                            "systemctl start <SYSUNIT>"
+                        ],
                         "username": {
-                            "description": "The OS username which must be used to run the above commands.",
+                            "description": "The OS username which must be used to run the restore commands.",
                             "type": "string"
                         }
                     }
+                },
+                "slapadd": {
+                    "description": "The path to the slapadd executable.",
+                    "type": "string",
+                    "default": "slapadd"
+                },
+                "slapcat": {
+                    "description": "The path to the slapcat executable.",
+                    "type": "string",
+                    "default": "slapcat"
+                },
+                "sysunit": {
+                    "description": "The name of the systemctl service.",
+                    "type": "string",
+                    "default": "slapd"
                 }
             }
         },

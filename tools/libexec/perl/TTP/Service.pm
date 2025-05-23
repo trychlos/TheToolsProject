@@ -47,6 +47,7 @@ use TTP;
 use vars::global qw( $ep );
 
 use TTP::Constants qw( :all );
+use TTP::LDAP;
 use TTP::Message qw( :all );
 use TTP::Node;
 
@@ -193,6 +194,26 @@ sub newDbms {
 	}
 
 	return $dbms;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Instanciates the LDAP object
+# (I):
+# - an optional arguments object with following keys:
+#   > node: the hosting node, defaulting to the current execution node
+# (O):
+# - returns the LDAP-derived instance or undef
+
+sub newLdap {
+	my ( $self, $args ) = @_;
+	$args //= {};
+
+	my $ldap = TTP::LDAP->new( $ep, {
+		node => $args->{node} || $ep->node(),
+		service => $self
+	});
+
+	return $ldap;
 }
 
 # ------------------------------------------------------------------------------------------------

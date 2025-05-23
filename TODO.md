@@ -39,8 +39,6 @@
 |  147 | 2025- 5-13 | DaemonConfig should be Daemon to be consistent with Site, Node, Service where the class actually addresses or is based on a configuration file |
 |      |            | or: have a Daemon class which both gathers DaemonConfig and RunnerDaemon features |
 |      | 2025- 5-14 | DaemonConfig -> Daemon would imply $runner = TTP::RunnerDaemon->bootstrap() and $daemon->config() -> $runner->daemon() |
-|  151 | 2025- 5-16 | have ldap backup/restore |
-|      | 2025- 5-21 | ldap backup is ok |
 |  163 | 2025- 5-23 | honor MQTTGateway and SMTPGateway wantsAccounts and wantsPassword |
 |  164 |  |  |
 
@@ -402,6 +400,9 @@
 |  150 | 2025- 5-15 | improve ttp/daemon/dbms/services vars sh/cmd tests with some test data |
 |      | 2025- 5-16 | done for sh/ tests |
 |      | 2025- 5-16 | done for cmd/ tests |
+|  151 | 2025- 5-16 | have ldap backup/restore |
+|      | 2025- 5-21 | ldap backup is ok |
+|      | 2025- 5-25 | ldap backup is written - has to be validated |
 |  152 | 2025- 5-16 | DBMS.limitDatabases and DBMS.excludeDatabases should accept a perl regular expression |
 |      | 2025- 5-17 | done |
 |  153 | 2025- 5-16 | DBMS should have an option to match the databases in a sensitive/insensitive way |

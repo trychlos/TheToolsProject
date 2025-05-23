@@ -527,10 +527,10 @@ sub DESTROY {
 # When requesting a DBMS configuration by key, we may address either global values or a service
 #  dedicated one, depending of whether a service is requested. Hence this global function
 # Order of precedence is:
-#  1. node.services.<service>.DBMS.key	if a service is requested
-#  2. node.DBMS.key
-#  3. service.DBMS.key					if a service is requested
-#  4. site.DBMS.key
+#  1. node:services.<service>.DBMS.key	if a service is requested
+#  2. node:DBMS.key
+#  3. service:DBMS.key					if a service is requested
+#  4. site:DBMS.key
 # (I):
 # - either a single string or a reference to an array of keys to be read from (e.g. [ 'moveDir', 'byOS', 'MSWin32' ])
 #   each key can be itself an array ref of potential candidates for this level
