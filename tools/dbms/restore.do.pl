@@ -139,7 +139,7 @@ sub doRestore {
 			});
 		}
 	}
-	if( $res ){
+	if( $res->{ok} ){
 		msgOut( "success" );
 	} else {
 		msgErr( "NOT OK" );

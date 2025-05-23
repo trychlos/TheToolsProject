@@ -12,6 +12,7 @@
     - Define new TTP::execReportsDir() to act as the standard relay to TTP::Path
     - TTP::execReportsDir() accepts an 'allowWarn' option, defaulting to true
     - TTP::SqlServer displays error messages
+    - dbms.pl restore tests for $res->{ok} status
 
 ### 4.17.1
 
