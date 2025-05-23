@@ -1515,7 +1515,7 @@
                                     "default": false
                                 },
                                 "enabled": {
-                                    "description": "Whether publishing a telemtry to the MQTT bus is an enabled capability of the site.",
+                                    "description": "Whether publishing a telemetry to the MQTT bus is an enabled capability of the site.",
                                     "type": "boolean",
                                     "default": true
                                 },

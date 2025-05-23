@@ -11,8 +11,8 @@
 # @(-) --[no]diff              operate a differential backup [${diff}]
 # @(-) --[no]compress          compress the outputed backup [${compress}]
 # @(-) --output=<filename>     target filename [${output}]
-# @(-) --[no]mqtt              whether an execution report should be published to MQTT [${mqtt}]
 # @(-) --[no]file              whether an execution report should be provided by file [${file}]
+# @(-) --[no]mqtt              whether an execution report should be published to MQTT [${mqtt}]
 #
 # @(@) Note 1: remind that differential backup is the difference of the current state and the last full backup.
 # @(@) Note 2: the default output filename is computed as:
@@ -67,13 +67,21 @@ my $opt_diff = false;
 my $opt_compress = false;
 my $opt_output = '';
 
-my $opt_mqtt = TTP::var([ 'executionReports', 'withMqtt', 'default' ]);
-$opt_mqtt = false if !defined $opt_mqtt;
-$defaults->{mqtt} = $opt_mqtt ? 'yes' : 'no';
-
 my $opt_file = TTP::var([ 'executionReports', 'withFile', 'default' ]);
 $opt_file = false if !defined $opt_file;
-$defaults->{file} = $opt_file ? 'yes' : 'no';
+my $file_enabled = TTP::var([ 'executionReports', 'withFile', 'enabled' ]);
+$file_enabled = true if !defined $file_enabled;
+msgErr( "executionReports.withFile.default=true while executionReports.withFile.enabled=false which is not consistent" ) if $opt_file && !$file_enabled;
+$defaults->{file} = $opt_file && $file_enabled ? 'yes' : 'no';
+my $opt_file_set = false;
+
+my $opt_mqtt = TTP::var([ 'executionReports', 'withMqtt', 'default' ]);
+$opt_mqtt = false if !defined $opt_mqtt;
+my $mqtt_enabled = TTP::var([ 'executionReports', 'withMqtt', 'enabled' ]);
+$mqtt_enabled = true if !defined $mqtt_enabled;
+msgErr( "executionReports.withMqtt.default=true while executionReports.withMqtt.enabled=false which is not consistent" ) if $opt_mqtt && !$mqtt_enabled;
+$defaults->{mqtt} = $opt_mqtt && $mqtt_enabled ? 'yes' : 'no';
+my $opt_mqtt_set = false;
 
 # the node which hosts the requested service
 my $objNode = undef;
@@ -163,8 +171,16 @@ if( !GetOptions(
 	"diff!"				=> \$opt_diff,
 	"compress!"			=> \$opt_compress,
 	"output=s"			=> \$opt_output,
-	"mqtt!"				=> \$opt_mqtt,
-	"file!"				=> \$opt_file )){
+	"file!"				=> sub {
+		my( $name, $value ) = @_;
+		$opt_file = $value;
+		$opt_file_set = true;
+	},
+	"mqtt!"				=> sub {
+		my( $name, $value ) = @_;
+		$opt_mqtt = $value;
+		$opt_mqtt_set = true;
+	} )){
 
 		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
@@ -185,8 +201,8 @@ msgVerbose( "got full='".( $opt_full ? 'true':'false' )."'" );
 msgVerbose( "got diff='".( $opt_diff ? 'true':'false' )."'" );
 msgVerbose( "got compress='".( $opt_compress ? 'true':'false' )."'" );
 msgVerbose( "got output='$opt_output'" );
-msgVerbose( "got mqtt='".( $opt_mqtt ? 'true':'false' )."'" );
 msgVerbose( "got file='".( $opt_file ? 'true':'false' )."'" );
+msgVerbose( "got mqtt='".( $opt_mqtt ? 'true':'false' )."'" );
 
 # must have --service option
 # find the node which hosts this service in this same environment (should be at most one)
@@ -240,6 +256,28 @@ if( !$opt_output ){
 	msgVerbose( "'--output' option not specified, will use the computed default" );
 } elsif( scalar @{$databases} > 1 ){
 	msgErr( "cowardly refuse to backup several databases in a single output file" );
+}
+
+# disabled media are just ignored (or refused if option was explicit)
+if( $opt_file ){
+	if( !$file_enabled ){
+		if( $opt_file_set ){
+			msgErr( "File medium is disabled, --file option is not valid" );
+		} else {
+			msgWarn( "File medium is disabled and thus ignored" );
+			$opt_file = false;
+		}
+	}
+}
+if( $opt_mqtt ){
+	if( !$mqtt_enabled ){
+		if( $opt_mqtt_set ){
+			msgErr( "MQTT medium is disabled, --mqtt option is not valid" );
+		} else {
+			msgWarn( "MQTT medium is disabled and thus ignored" );
+			$opt_mqtt = false;
+		}
+	}
 }
 
 if( !TTP::errs()){

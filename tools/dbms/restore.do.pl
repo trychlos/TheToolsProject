@@ -10,8 +10,8 @@
 # @(-) --full=<filename>       restore from this full backup [${full}]
 # @(-) --diff=<filename>       restore with this differential backup [${diff}]
 # @(-) --[no]verifyonly        only check the backup restorability [${verifyonly}]
-# @(-) --[no]mqtt              whether an execution report should be published to MQTT [${mqtt}]
 # @(-) --[no]file              whether an execution report should be provided by file [${file}]
+# @(-) --[no]mqtt              whether an execution report should be published to MQTT [${mqtt}]
 # @(-) --inhibit=<node>        make sure to not restore on that node [${inhibit}]
 #
 # @(@) Note 1: you must at least provide a full backup to restore, and may also provide an additional differential backup file.
@@ -64,13 +64,21 @@ my $opt_diff = $defaults->{diff};
 my $opt_verifyonly = false;
 my $opt_inhibit = $defaults->{inhibit};
 
-my $opt_mqtt = TTP::var([ 'executionReports', 'withMqtt', 'default' ]);
-$opt_mqtt = false if !defined $opt_mqtt;
-$defaults->{mqtt} = $opt_mqtt ? 'yes' : 'no';
-
 my $opt_file = TTP::var([ 'executionReports', 'withFile', 'default' ]);
 $opt_file = false if !defined $opt_file;
-$defaults->{file} = $opt_file ? 'yes' : 'no';
+my $file_enabled = TTP::var([ 'executionReports', 'withFile', 'enabled' ]);
+$file_enabled = true if !defined $file_enabled;
+msgErr( "executionReports.withFile.default=true while executionReports.withFile.enabled=false which is not consistent" ) if $opt_file && !$file_enabled;
+$defaults->{file} = $opt_file && $file_enabled ? 'yes' : 'no';
+my $opt_file_set = false;
+
+my $opt_mqtt = TTP::var([ 'executionReports', 'withMqtt', 'default' ]);
+$opt_mqtt = false if !defined $opt_mqtt;
+my $mqtt_enabled = TTP::var([ 'executionReports', 'withMqtt', 'enabled' ]);
+$mqtt_enabled = true if !defined $mqtt_enabled;
+msgErr( "executionReports.withMqtt.default=true while executionReports.withMqtt.enabled=false which is not consistent" ) if $opt_mqtt && !$mqtt_enabled;
+$defaults->{mqtt} = $opt_mqtt && $mqtt_enabled ? 'yes' : 'no';
+my $opt_mqtt_set = false;
 
 # the node which hosts the requested service
 my $objNode = undef;
@@ -161,8 +169,16 @@ if( !GetOptions(
 	"full=s"			=> \$opt_full,
 	"diff=s"			=> \$opt_diff,
 	"verifyonly!"		=> \$opt_verifyonly,
-	"mqtt!"				=> \$opt_mqtt,
-	"file!"				=> \$opt_file,
+	"file!"				=> sub {
+		my( $name, $value ) = @_;
+		$opt_file = $value;
+		$opt_file_set = true;
+	},
+	"mqtt!"				=> sub {
+		my( $name, $value ) = @_;
+		$opt_mqtt = $value;
+		$opt_mqtt_set = true;
+	},
 	"inhibit=s"			=> \$opt_inhibit )){
 
 		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
@@ -183,8 +199,8 @@ msgVerbose( "got database='$opt_database'" );
 msgVerbose( "got full='$opt_full'" );
 msgVerbose( "got diff='$opt_diff'" );
 msgVerbose( "got verifyonly='".( $opt_verifyonly ? 'true':'false' )."'" );
-msgVerbose( "got mqtt='".( $opt_mqtt ? 'true':'false' )."'" );
 msgVerbose( "got file='".( $opt_file ? 'true':'false' )."'" );
+msgVerbose( "got mqtt='".( $opt_mqtt ? 'true':'false' )."'" );
 msgVerbose( "got inhibit='$opt_inhibit'" );
 
 # must have --service option
@@ -211,6 +227,28 @@ if( $opt_service ){
 msgErr( "'--database' option is mandatory, but is not specified" ) if !$opt_database && !$opt_verifyonly;
 msgErr( "'--full' option is mandatory, but is not specified" ) if !$opt_full;
 msgErr( "$opt_diff: file not found or not readable" ) if $opt_diff && ! -f $opt_diff;
+
+# disabled media are just ignored (or refused if option was explicit)
+if( $opt_file ){
+	if( !$file_enabled ){
+		if( $opt_file_set ){
+			msgErr( "File medium is disabled, --file option is not valid" );
+		} else {
+			msgWarn( "File medium is disabled and thus ignored" );
+			$opt_file = false;
+		}
+	}
+}
+if( $opt_mqtt ){
+	if( !$mqtt_enabled ){
+		if( $opt_mqtt_set ){
+			msgErr( "MQTT medium is disabled, --mqtt option is not valid" );
+		} else {
+			msgWarn( "MQTT medium is disabled and thus ignored" );
+			$opt_mqtt = false;
+		}
+	}
+}
 
 if( !TTP::errs()){
 	doRestore();

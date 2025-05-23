@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - Doesn't allow a property to have a default=true if enabled=false (todo #160)
 
 ### 4.17.2
 

@@ -10,8 +10,8 @@
 # @(-) --message=<name>        the alert message [${message}]
 # @(-) --[no]file              create a JSON file alert, monitorable e.g. by the alert daemon [${file}]
 # @(-) --[no]mqtt              send the alert on the MQTT bus [${mqtt}]
-# @(-) --[no]smtp              send the alert by SMTP [${smtp}]
 # @(-) --[no]sms               send the alert by SMS [${sms}]
+# @(-) --[no]smtp              send the alert by SMTP [${smtp}]
 # @(-) --[no]tts               send the alert with text-to-speech [${tts}]
 # @(-) --list-levels           display the known alert levels [${listLevels}]
 # @(-) --options=<options>     additional options to be passed to the command [${options}]
@@ -68,27 +68,42 @@ my $opt_options = $defaults->{options};
 
 my $opt_file = TTP::var([ 'alerts', 'withFile', 'default' ]);
 $opt_file = false if !defined $opt_file;
-$defaults->{file} = $opt_file ? 'yes' : 'no';
+my $file_enabled = $ep->var([ 'alerts', 'withFile', 'enabled' ]);
+$file_enabled = true if !defined $file_enabled;
+msgErr( "alerts.withFile.default=true while alerts.withFile.enabled=false which is not consistent" ) if $opt_file && !$file_enabled;
+$defaults->{file} = $opt_file && $file_enabled ? 'yes' : 'no';
 my $opt_file_set = false;
 
 my $opt_mqtt = TTP::var([ 'alerts', 'withMqtt', 'default' ]);
 $opt_mqtt = false if !defined $opt_mqtt;
-$defaults->{mqtt} = $opt_mqtt ? 'yes' : 'no';
+my $mqtt_enabled = $ep->var([ 'alerts', 'withMqtt', 'enabled' ]);
+$mqtt_enabled = true if !defined $mqtt_enabled;
+msgErr( "alerts.withMqtt.default=true while alerts.withMqtt.enabled=false which is not consistent" ) if $opt_mqtt && !$mqtt_enabled;
+$defaults->{mqtt} = $opt_mqtt && $mqtt_enabled ? 'yes' : 'no';
 my $opt_mqtt_set = false;
-
-my $opt_smtp = TTP::var([ 'alerts', 'withSmtp', 'default' ]);
-$opt_smtp = false if !defined $opt_smtp;
-$defaults->{smtp} = $opt_smtp ? 'yes' : 'no';
-my $opt_smtp_set = false;
 
 my $opt_sms = TTP::var([ 'alerts', 'withSms', 'default' ]);
 $opt_sms = false if !defined $opt_sms;
-$defaults->{sms} = $opt_sms ? 'yes' : 'no';
+my $sms_enabled = $ep->var([ 'alerts', 'withSms', 'enabled' ]);
+$sms_enabled = true if !defined $sms_enabled;
+msgErr( "alerts.withSms.default=true while alerts.withSms.enabled=false which is not consistent" ) if $opt_sms && !$sms_enabled;
+$defaults->{sms} = $opt_sms && $sms_enabled ? 'yes' : 'no';
 my $opt_sms_set = false;
+
+my $opt_smtp = TTP::var([ 'alerts', 'withSmtp', 'default' ]);
+$opt_smtp = false if !defined $opt_smtp;
+my $smtp_enabled = $ep->var([ 'alerts', 'withSmtp', 'enabled' ]);
+$smtp_enabled = true if !defined $smtp_enabled;
+msgErr( "alerts.withSmtp.default=true while alerts.withSmtp.enabled=false which is not consistent" ) if $opt_smtp && !$smtp_enabled;
+$defaults->{smtp} = $opt_smtp && $smtp_enabled ? 'yes' : 'no';
+my $opt_smtp_set = false;
 
 my $opt_tts = TTP::var([ 'alerts', 'withTextToSpeech', 'default' ]);
 $opt_tts = false if !defined $opt_tts;
-$defaults->{tts} = $opt_tts ? 'yes' : 'no';
+my $tts_enabled = $ep->var([ 'alerts', 'withTextToSpeech', 'enabled' ]);
+$tts_enabled = true if !defined $tts_enabled;
+msgErr( "alerts.withTextToSpeech.default=true while alerts.withTextToSpeech.enabled=false which is not consistent" ) if $opt_tts && !$tts_enabled;
+$defaults->{tts} = $opt_tts && $tts_enabled ? 'yes' : 'no';
 my $opt_tts_set = false;
 
 my $alertStamp = Time::Moment->now;
@@ -349,15 +364,15 @@ if( !GetOptions(
 		$opt_mqtt = $value;
 		$opt_mqtt_set = true;
 	},
-	"smtp!"				=> sub {
-		my( $name, $value ) = @_;
-		$opt_smtp = $value;
-		$opt_smtp_set = true;
-	},
 	"sms!"				=> sub {
 		my( $name, $value ) = @_;
 		$opt_sms = $value;
 		$opt_sms_set = true;
+	},
+	"smtp!"				=> sub {
+		my( $name, $value ) = @_;
+		$opt_smtp = $value;
+		$opt_smtp_set = true;
 	},
 	"tts!"				=> sub {
 		my( $name, $value ) = @_;
@@ -384,8 +399,8 @@ msgVerbose( "got title='$opt_title'" );
 msgVerbose( "got message='$opt_message'" );
 msgVerbose( "got file='".( $opt_file ? 'true':'false' )."'" );
 msgVerbose( "got mqtt='".( $opt_mqtt ? 'true':'false' )."'" );
-msgVerbose( "got smtp='".( $opt_smtp ? 'true':'false' )."'" );
 msgVerbose( "got sms='".( $opt_sms ? 'true':'false' )."'" );
+msgVerbose( "got smtp='".( $opt_smtp ? 'true':'false' )."'" );
 msgVerbose( "got tts='".( $opt_tts ? 'true':'false' )."'" );
 msgVerbose( "got list-levels='".( $opt_listLevels ? 'true':'false' )."'" );
 msgVerbose( "got options='$opt_options'" );
@@ -403,9 +418,7 @@ if( $opt_listLevels ){
 
 	# disabled media are just ignored (or refused if option was explicit)
 	if( $opt_file ){
-		my $enabled = $ep->var([ 'alerts', 'withFile', 'enabled' ]);
-		$enabled = true if !defined $enabled;
-		if( !$enabled ){
+		if( !$file_enabled ){
 			if( $opt_file_set ){
 				msgErr( "File medium is disabled, --file option is not valid" );
 			} else {
@@ -415,9 +428,7 @@ if( $opt_listLevels ){
 		}
 	}
 	if( $opt_mqtt ){
-		my $enabled = $ep->var([ 'alerts', 'withMqtt', 'enabled' ]);
-		$enabled = true if !defined $enabled;
-		if( !$enabled ){
+		if( !$mqtt_enabled ){
 			if( $opt_mqtt_set ){
 				msgErr( "MQTT medium is disabled, --mqtt option is not valid" );
 			} else {
@@ -426,22 +437,8 @@ if( $opt_listLevels ){
 			}
 		}
 	}
-	if( $opt_smtp ){
-		my $enabled = $ep->var([ 'alerts', 'withSmtp', 'enabled' ]);
-		$enabled = true if !defined $enabled;
-		if( !$enabled ){
-			if( $opt_smtp_set ){
-				msgErr( "SMTP medium is disabled, --smtp option is not valid" );
-			} else {
-				msgWarn( "SMTP medium is disabled and thus ignored" );
-				$opt_smtp = false;
-			}
-		}
-	}
 	if( $opt_sms ){
-		my $enabled = $ep->var([ 'alerts', 'withSms', 'enabled' ]);
-		$enabled = true if !defined $enabled;
-		if( !$enabled ){
+		if( !$sms_enabled ){
 			if( $opt_sms_set ){
 				msgErr( "SMS medium is disabled, --sms option is not valid" );
 			} else {
@@ -450,10 +447,18 @@ if( $opt_listLevels ){
 			}
 		}
 	}
+	if( $opt_smtp ){
+		if( !$smtp_enabled ){
+			if( $opt_smtp_set ){
+				msgErr( "SMTP medium is disabled, --smtp option is not valid" );
+			} else {
+				msgWarn( "SMTP medium is disabled and thus ignored" );
+				$opt_smtp = false;
+			}
+		}
+	}
 	if( $opt_tts ){
-		my $enabled = $ep->var([ 'alerts', 'withTextToSpeech', 'enabled' ]);
-		$enabled = true if !defined $enabled;
-		if( !$enabled ){
+		if( !$tts_enabled ){
 			if( $opt_tts_set ){
 				msgErr( "Text-To-Speech medium is disabled, --tts option is not valid" );
 			} else {

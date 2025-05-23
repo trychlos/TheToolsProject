@@ -40,8 +40,10 @@
 |      |            | or: have a Daemon class which both gathers DaemonConfig and RunnerDaemon features |
 |      | 2025- 5-14 | DaemonConfig -> Daemon would imply $runner = TTP::RunnerDaemon->bootstrap() and $daemon->config() -> $runner->daemon() |
 |  151 | 2025- 5-16 | have ldap backup/restore |
-|      | 2025- 5-21 | have ldap backup |
-|  160 |  |  |
+|      | 2025- 5-21 | ldap backup is ok |
+|  161 | 2025- 5-23 | replace 'allowWarn' and 'allowVerbose' just with 'warn' and 'verbose' |
+|  162 | 2025- 5-23 | be less verbose when publishing daemon status |
+|  163 |  |  |
 
 ---
 ## Done
@@ -418,6 +420,8 @@
 |      | 2025- 5-20 | done |
 |  159 | 2025- 5-22 | all 'command' in schemas should be 'commands' and accept either a single command string or an array of commands + precise how to specify array of commands by OS |
 |      | 2025- 5-22 | done |
+|  160 | 2025- 5-23 | when we have both default and enabled properties, must check that we do not have default=true and enabled=false |
+|      | 2025- 5-23 | done |
 
 ---
 P. Wieser

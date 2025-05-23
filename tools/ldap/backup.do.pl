@@ -7,8 +7,8 @@
 # @(-) --service=<name>        service name [${service}]
 # @(-) --target=<name>         target node [${target}]
 # @(-) --output=<filename>     target filename [${output}]
-# @(-) --[no]mqtt              whether an execution report should be published to MQTT [${mqtt}]
 # @(-) --[no]file              whether an execution report should be provided by file [${file}]
+# @(-) --[no]mqtt              whether an execution report should be published to MQTT [${mqtt}]
 #
 # @(@) Note 1: the default output filename is computed as: '<backupsPeriodicDir>/<node>-<service>-<database>-<yymmdd>-<hhmiss>.ldif'.
 #
@@ -53,13 +53,21 @@ my $opt_service = $defaults->{service};
 my $opt_target = $defaults->{target};
 my $opt_output = '';
 
-my $opt_mqtt = TTP::var([ 'executionReports', 'withMqtt', 'default' ]);
-$opt_mqtt = false if !defined $opt_mqtt;
-$defaults->{mqtt} = $opt_mqtt ? 'yes' : 'no';
-
 my $opt_file = TTP::var([ 'executionReports', 'withFile', 'default' ]);
 $opt_file = false if !defined $opt_file;
-$defaults->{file} = $opt_file ? 'yes' : 'no';
+my $file_enabled = TTP::var([ 'executionReports', 'withFile', 'enabled' ]);
+$file_enabled = true if !defined $file_enabled;
+msgErr( "executionReports.withFile.default=true while executionReports.withFile.enabled=false which is not consistent" ) if $opt_file && !$file_enabled;
+$defaults->{file} = $opt_file && $file_enabled ? 'yes' : 'no';
+my $opt_file_set = false;
+
+my $opt_mqtt = TTP::var([ 'executionReports', 'withMqtt', 'default' ]);
+$opt_mqtt = false if !defined $opt_mqtt;
+my $mqtt_enabled = TTP::var([ 'executionReports', 'withMqtt', 'enabled' ]);
+$mqtt_enabled = true if !defined $mqtt_enabled;
+msgErr( "executionReports.withMqtt.default=true while executionReports.withMqtt.enabled=false which is not consistent" ) if $opt_mqtt && !$mqtt_enabled;
+$defaults->{mqtt} = $opt_mqtt && $mqtt_enabled ? 'yes' : 'no';
+my $opt_mqtt_set = false;
 
 # the node which hosts the requested service
 my $objNode = undef;
@@ -170,8 +178,16 @@ if( !GetOptions(
 	"service=s"			=> \$opt_service,
 	"target=s"			=> \$opt_target,
 	"output=s"			=> \$opt_output,
-	"mqtt!"				=> \$opt_mqtt,
-	"file!"				=> \$opt_file )){
+	"file!"				=> sub {
+		my( $name, $value ) = @_;
+		$opt_file = $value;
+		$opt_file_set = true;
+	},
+	"mqtt!"				=> sub {
+		my( $name, $value ) = @_;
+		$opt_mqtt = $value;
+		$opt_mqtt_set = true;
+	} )){
 
 		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
@@ -188,8 +204,8 @@ msgVerbose( "got verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got service='$opt_service'" );
 msgVerbose( "got target='$opt_target'" );
 msgVerbose( "got output='$opt_output'" );
-msgVerbose( "got mqtt='".( $opt_mqtt ? 'true':'false' )."'" );
 msgVerbose( "got file='".( $opt_file ? 'true':'false' )."'" );
+msgVerbose( "got mqtt='".( $opt_mqtt ? 'true':'false' )."'" );
 
 # must have --service option
 # find the node which hosts this service in this same environment
@@ -209,6 +225,28 @@ if( $opt_service ){
 
 if( !$opt_output ){
 	msgVerbose( "'--output' option not specified, will use the computed default" );
+}
+
+# disabled media are just ignored (or refused if option was explicit)
+if( $opt_file ){
+	if( !$file_enabled ){
+		if( $opt_file_set ){
+			msgErr( "File medium is disabled, --file option is not valid" );
+		} else {
+			msgWarn( "File medium is disabled and thus ignored" );
+			$opt_file = false;
+		}
+	}
+}
+if( $opt_mqtt ){
+	if( !$mqtt_enabled ){
+		if( $opt_mqtt_set ){
+			msgErr( "MQTT medium is disabled, --mqtt option is not valid" );
+		} else {
+			msgWarn( "MQTT medium is disabled and thus ignored" );
+			$opt_mqtt = false;
+		}
+	}
 }
 
 if( !TTP::errs()){
