@@ -310,6 +310,9 @@ sub _sqlExec {
 				}
 			}
 			$res->{ok} = $sqlsrv->sql_has_errors() ? false : true;
+			if( !$res->{ok} ){
+				msgErr( $res->{stdout} );
+			}
 			delete $sqlsrv->{ErrInfo}{Messages};
 			# if we are ok, and the colinfo style has prepended a row, then remove from the result set
 			# pwi 2024-12-23 happens that we are unable to get the prepended row with columns infos :(

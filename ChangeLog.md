@@ -11,6 +11,7 @@
     - TTP::alertsFileDropdir() is just a relay to TTP::Path conforming to all other path functions
     - Define new TTP::execReportsDir() to act as the standard relay to TTP::Path
     - TTP::execReportsDir() accepts an 'allowWarn' option, defaulting to true
+    - TTP::SqlServer displays error messages
 
 ### 4.17.1
 
