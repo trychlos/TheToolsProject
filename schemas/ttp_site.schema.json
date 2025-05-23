@@ -957,7 +957,7 @@
                                             }
                                         }
                                     },
-                                    "default": "ttp.pl writejson -dir [eval:TTP::Path::execReportsDir()] -template [eval:'report-'.Time::Moment->now->strftime( '%y%m%d%H%M%S' ).'-XXXXXX'] -suffix .json -data \"<JSON>\""
+                                    "default": "ttp.pl writejson -dir [eval:TTP::execReportsDir()] -template [eval:'report-'.Time::Moment->now->strftime( '%y%m%d%H%M%S' ).'-XXXXXX'] -suffix .json -data \"<JSON>\""
                                 },
                                 "dropDir": {
                                     "description": "The directory where execution report files must be created.",

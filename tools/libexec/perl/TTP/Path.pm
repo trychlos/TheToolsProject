@@ -392,6 +392,7 @@ sub dbmsBackupsRoot {
 # - an optional options hash with following keys:
 #   > config: host configuration (useful when searching for a remote host)
 #   > makeDirExist: whether to create the directory if it doesn't yet exist, defaulting to true
+#   > allowWarn: whether to allow a warning when property is not set, defaulting to true
 # (O):
 # - the (maybe daily) execution reports directory
 
@@ -404,7 +405,9 @@ sub execReportsDir {
 		$makeDirExist = $opts->{makeDirExist} if defined $opts->{makeDirExist};
 		makeDirExist( $dir ) if $makeDirExist;
 	} else {
-		TTP::Message::msgWarn( "'executionReports/withFile/dropDir' is not defined in toops.json nor in host configuration" );
+		my $allowWarn = true;
+		$allowWarn = $opts->{allowWarn} if defined $opts->{allowWarn};
+		TTP::Message::msgWarn( "'executionReports/withFile/dropDir' is not defined in toops.json nor in host configuration" ) if $allowWarn;
 		my $tempdir = TTP::logsPeriodic();
 		$dir = $tempdir ? File::Spec->catdir( $tempdir, 'executionReports' ) : undef;
 	}

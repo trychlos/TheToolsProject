@@ -10,6 +10,7 @@
     - mqtt.pl clear simplifies its run when there is no message to be cleared
     - TTP::alertsFileDropdir() is just a relay to TTP::Path conforming to all other path functions
     - Define new TTP::execReportsDir() to act as the standard relay to TTP::Path
+    - TTP::execReportsDir() accepts an 'allowWarn' option, defaulting to true
 
 ### 4.17.1
 
