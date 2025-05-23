@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.17.3-rc.0
+### 4.17.3
 
-    Release date: 
+    Release date: 2025- 5-23
 
     - Doesn't allow a property to have a default=true if enabled=false (todo #160)
     - Replace 'allowWarn' and 'allowVerbose' just with 'warn' and 'verbose' (todo #161)
