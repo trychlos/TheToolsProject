@@ -194,8 +194,8 @@ sub backupDatabase {
 	if( !TTP::errs()){
 		msgVerbose( __PACKAGE__."::backupDatabase() entering with service='".$self->service()->name()."' database='$parms->{database}' mode='$parms->{mode}'..." );
 		my $output = $parms->{output} || $self->computeDefaultBackupFilename( $parms );
-		# mysqldump dumps the database to stdout
-		my $cmd = "mysqldump";
+		# mariadb-dump (ex. mysqldump) dumps the database to stdout
+		my $cmd = "mariadb-dump";
 		$cmd .= " --host=".$self->server();
 		$cmd .= " --user=$account";
 		$cmd .= " --password=$passwd";

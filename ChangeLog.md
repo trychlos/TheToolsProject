@@ -7,6 +7,7 @@
     Release date: 
 
     - Use fname() shell function naming scheme for better POSIX compatibility
+    - TTP::MariaDB uses more recent mariadb-dump instead of old mysqldump
 
 ### 4.17.3
 
