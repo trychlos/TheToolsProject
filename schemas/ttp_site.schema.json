@@ -959,15 +959,15 @@
                                     },
                                     "default": "ttp.pl writejson -dir [eval:TTP::Path::execReportsDir()] -template [eval:'report-'.Time::Moment->now->strftime( '%y%m%d%H%M%S' ).'-XXXXXX'] -suffix .json -data \"<JSON>\""
                                 },
-                                "prettyJson": {
-                                    "description": "Whether the JSON string should be prettified.",
-                                    "type": "boolean",
-                                    "default": true
-                                },
                                 "dropDir": {
                                     "description": "The directory where execution report files must be created.",
                                     "type": "string",
                                     "default": "[eval:File::Spec->catdir( TTP::logsPeriodic(), 'executionReports' )]"
+                                },
+                                "prettyJson": {
+                                    "description": "Whether the JSON string should be prettified.",
+                                    "type": "boolean",
+                                    "default": true
                                 }
                             }
                         },

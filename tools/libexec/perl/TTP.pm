@@ -77,7 +77,7 @@ my $Const = {
 
 sub alertsDir {
 	msgWarn( "TTP::alertsDir() is deprecated in favor of TTP:alertsFileDropdir(). You should update your code." );
-	return TTP::alertsFileDropdir();
+	return TTP::alertsFileDropdir( @_ );
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -88,7 +88,7 @@ sub alertsDir {
 # - returns the alertsdir
 
 sub alertsFileDropdir {
-	return TTP::Path::alertsFileDropdir();
+	return TTP::Path::alertsFileDropdir( @_ );
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -379,7 +379,7 @@ sub commandExec_item {
 #   and at least not definitive while the node has not been instanciated/loaded/evaluated
 
 sub dbmsArchivesPeriodic {
-	return TTP::Path::dbmsArchivesPeriodic();
+	return TTP::Path::dbmsArchivesPeriodic( @_ );
 }
 
 # ------------------------------------------------------------------------------------------------
@@ -390,7 +390,7 @@ sub dbmsArchivesPeriodic {
 #   and at least not definitive while the node has not been instanciated/loaded/evaluated
 
 sub dbmsArchivesRoot {
-	return TTP::Path::dbmsArchivesRoot();
+	return TTP::Path::dbmsArchivesRoot( @_ );
 }
 
 # ------------------------------------------------------------------------------------------------
@@ -401,7 +401,7 @@ sub dbmsArchivesRoot {
 #   and at least not definitive while the node has not been instanciated/loaded/evaluated
 
 sub dbmsBackupsPeriodic {
-	return TTP::Path::dbmsBackupsPeriodic();
+	return TTP::Path::dbmsBackupsPeriodic( @_ );
 }
 
 # ------------------------------------------------------------------------------------------------
@@ -412,7 +412,7 @@ sub dbmsBackupsPeriodic {
 #   and at least not definitive while the node has not been instanciated/loaded/evaluated
 
 sub dbmsBackupsRoot {
-	return TTP::Path::dbmsBackupsRoot();
+	return TTP::Path::dbmsBackupsRoot( @_ );
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -547,6 +547,18 @@ sub execRemote {
 	msgOut( __PACKAGE__."::execRemote() $remote" );
 	my $rc = system( $remote );
 	$ep->runner()->runnableErrs( $rc );
+}
+
+# ------------------------------------------------------------------------------------------------
+# (I):
+# - an optional options hash with following keys:
+#   > config: host configuration (useful when searching for a remote host)
+#   > makeDirExist: whether to create the directory if it doesn't yet exist, defaulting to true
+# (O):
+# - the (maybe daily) execution reports directory
+
+sub execReportsDir {
+	return TTP::Path::execReportsDir( @_ );
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -954,7 +966,7 @@ sub jsonWrite {
 #   and at least not definitive while the node has not been instanciated/loaded/evaluated
 
 sub logsCommands {
-	return TTP::Path::logsCommands();
+	return TTP::Path::logsCommands( @_ );
 }
 
 # ------------------------------------------------------------------------------------------------
@@ -966,7 +978,7 @@ sub logsCommands {
 
 sub logsDaily {
 	msgWarn( "TTP::logsDaily() is deprecated in favor of TTP:logsPeriodic(). You should update your code." );
-	return TTP::Path::logsPeriodic();
+	return TTP::Path::logsPeriodic( @_ );
 }
 
 # ------------------------------------------------------------------------------------------------
@@ -977,7 +989,7 @@ sub logsDaily {
 #   and at least not definitive while the node has not been instanciated/loaded/evaluated
 
 sub logsMain {
-	return TTP::Path::logsMain();
+	return TTP::Path::logsMain( @_ );
 }
 
 # ------------------------------------------------------------------------------------------------
@@ -988,7 +1000,7 @@ sub logsMain {
 #   and at least not definitive while the node has not been instanciated/loaded/evaluated
 
 sub logsPeriodic {
-	return TTP::Path::logsPeriodic();
+	return TTP::Path::logsPeriodic( @_ );
 }
 
 # ------------------------------------------------------------------------------------------------
@@ -999,7 +1011,7 @@ sub logsPeriodic {
 #   and at least not definitive while the node has not been instanciated/loaded/evaluated
 
 sub logsRoot {
-	return TTP::Path::logsRoot();
+	return TTP::Path::logsRoot( @_ );
 }
 
 # ------------------------------------------------------------------------------------------------
@@ -1021,7 +1033,7 @@ sub nodeName {
 
 sub nodeRoot {
 	msgErr( __PACKAGE__."::nodeRoot() is deprecated and not replaced. You should update your code." );
-	return undef;
+	TTP::stackTrace();
 }
 
 # ------------------------------------------------------------------------------------------------
