@@ -8,6 +8,7 @@
 
     - Fix mqtt.pl retained when there is no retained message
     - mqtt.pl clear simplifies its run when there is no message to be cleared
+    - TTP::alertsFileDropdir() is just a relay to TTP::Path conforming to DBMS functions
 
 ### 4.17.1
 

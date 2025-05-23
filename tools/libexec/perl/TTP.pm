@@ -88,8 +88,7 @@ sub alertsDir {
 # - returns the alertsdir
 
 sub alertsFileDropdir {
-	my $dir = $ep->var([ 'alerts', 'withFile', 'dropDir' ]) || File::Spec->catdir( TTP::tempDir(), 'TTP', 'alerts' );
-	return $dir;
+	return TTP::Path::alertsFileDropdir();
 }
 
 # -------------------------------------------------------------------------------------------------
