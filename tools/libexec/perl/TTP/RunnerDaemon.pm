@@ -519,15 +519,13 @@ sub _mqtt_disconnect {
 
 sub _mqtt_publish {
 	my ( $self, $item ) = @_;
-	msgVerbose( __PACKAGE__."::_mqtt_publish() ".$item->{topic} );
+	msgVerbose( __PACKAGE__."::_mqtt_publish() $item->{topic} [$item->{payload}] retain=".( $item->{retain} ? 'true' : 'false' ));
 
 	if( $self->{_mqtt} && $item && $item->{topic} ){
 		my $payload = $item->{payload} || '';
 		if( $item->{retain} ){
-			msgLog( "retain $item->{topic} [$payload]" );
 			$self->{_mqtt}->retain( $item->{topic}, $payload );
 		} else {
-			msgLog( "publish $item->{topic} [$payload]" );
 			$self->{_mqtt}->publish( $item->{topic}, $payload );
 		}
 	} else {

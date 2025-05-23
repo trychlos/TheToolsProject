@@ -41,8 +41,8 @@
 |      | 2025- 5-14 | DaemonConfig -> Daemon would imply $runner = TTP::RunnerDaemon->bootstrap() and $daemon->config() -> $runner->daemon() |
 |  151 | 2025- 5-16 | have ldap backup/restore |
 |      | 2025- 5-21 | ldap backup is ok |
-|  162 | 2025- 5-23 | be less verbose when publishing daemon status |
-|  163 |  |  |
+|  163 | 2025- 5-23 | honor MQTTGateway and SMTPGateway wantsAccounts and wantsPassword |
+|  164 |  |  |
 
 ---
 ## Done
@@ -422,6 +422,8 @@
 |  160 | 2025- 5-23 | when we have both default and enabled properties, must check that we do not have default=true and enabled=false |
 |      | 2025- 5-23 | done |
 |  161 | 2025- 5-23 | replace 'allowWarn' and 'allowVerbose' just with 'warn' and 'verbose' |
+|      | 2025- 5-23 | done |
+|  162 | 2025- 5-23 | be less verbose when publishing daemon status |
 |      | 2025- 5-23 | done |
 
 ---

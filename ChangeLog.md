@@ -8,6 +8,7 @@
 
     - Doesn't allow a property to have a default=true if enabled=false (todo #160)
     - Replace 'allowWarn' and 'allowVerbose' just with 'warn' and 'verbose' (todo #161)
+    - TTP::RunnerDaemon is less verbose when publishing its status (todo #162)
 
 ### 4.17.2
 
