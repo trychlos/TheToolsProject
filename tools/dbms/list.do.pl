@@ -161,10 +161,10 @@ if( $opt_service ){
 
 # --database and --listtables work together
 if( $opt_database && !$opt_listtables ){
-	msgErr( "'--database' option has been specified, but nothing has been asked to be done with. Did you miss '--listtables' option ?" );
+	msgErr( "'--database' option has been specified, but nothing has been asked to be done with. Did you miss '--list-tables' option ?" );
 }
 if( !$opt_database && $opt_listtables ){
-	msgErr( "'--listtables' option has been specified, but '--database' is missing" );
+	msgErr( "'--list-tables' option has been specified, but '--database' is missing" );
 }
 
 # if a database is specified must exists in the service
@@ -174,7 +174,7 @@ if( $opt_database && $objDbms && !$objDbms->databaseExists( $opt_database )){
 
 # should have something to do
 if( !$opt_properties && !$opt_listdb && ( !$opt_database || !$opt_listtables )){
-	msgWarn( "neither '--properties', or '--listdb' or '--listtables' options have been specified, nothing to do" );
+	msgWarn( "neither '--properties', or '--list-db' or '--list-tables' options have been specified, nothing to do" );
 }
 
 if( !TTP::errs()){

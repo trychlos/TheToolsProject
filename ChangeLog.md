@@ -9,6 +9,7 @@
     - Use fname() shell function naming scheme for better POSIX compatibility
     - TTP::MariaDB uses more recent mariadb-dump instead of old mysqldump
     - Define new ldap.pl restore (todo #151)
+    - Have TTP::PostgreSQL
 
 ### 4.17.3
 
