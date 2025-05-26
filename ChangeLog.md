@@ -2,7 +2,7 @@
 
 ## ChangeLog
 
-### 4.17.4-rc.0
+### 4.18.0
 
     Release date: 
 
@@ -556,4 +556,4 @@
 
 ---
 P. Wieser
-- Last updated on 2025, May 22th
+- Last updated on 2025, May 26th
