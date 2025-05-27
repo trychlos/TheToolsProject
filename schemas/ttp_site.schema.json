@@ -859,38 +859,122 @@
 				"execRemote": {
 					"description_array": [
 						"The configuration for remote executions.",
-						"The command has access to <TARGET> and <COMMAND> macros."
+                        "The remote execution is needed and operated when we want access a service running on another node IN THE SAME ENVIRONMENT that the source node.",
+                        "The executed command is actually built from three parts:",
+                        "- depending of the source node: whether to '/bin/ssh' or 'C:\\Windows\\Systemt32\\ssh.exe' and with which parameters,",
+                        "- depending of the target node: whether to '. ~/.ttp_remote' or 'C:\\TheToolsProject\\tools\\libexec\\cmd\\bootstrap.cmd',",
+                        "- and last with the original command, verb and arguments.",
+						"The commands have access to following macros:",
+                        "- <ORIGINAL_COMMAND> the original command as in 'command.pl verb -arguments',",
+                        "- <SOURCE_COMMAND> the part of the command which depends of the source node,",
+                        "- <TARGET_COMMAND> the part of the command which depends of the target node,",
+                        "- <TARGET_NAME> the target node name.",
+                        "Note that we expect a single command (not an array). If an array is found, then we only deal with the first command."
 					],
 					"type": "object",
 					"properties": {
-						"command": {
-							"description": "The command to be run to remotely execute a command. Freely intercheangeable with 'commands'."
+                        "full": {
+                            "description": "The way the full command is built.",
+                            "type": "object",
+                            "properties": {
+                                "command": {
+                                    "description": "The command to be run to remotely execute a command. Freely intercheangeable with 'commands'."
+                                },
+                                "commands": {
+                                    "description": "The command(s) to be run to remotely execute a command.",
+                                    "type": [
+                                        "string",
+                                        "array",
+                                        "object"
+                                    ],
+                                    "items": [
+                                        "string",
+                                        "object"
+                                    ],
+                                    "properties": {
+                                        "byOS": {
+                                            "description": "Let a command be specific to the running OS.",
+                                            "type": "object",
+                                            "patternProperties": {
+                                                "^.*$": {
+                                                    "description": "The OS name as reported by Perl-Config, the value being the command to be applied for this OS.",
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "default": "<SOURCE_COMMAND> \"<TARGET_COMMAND> <ORIGINAL_COMMAND>\""
+                                }
+                            }
                         },
-						"commands": {
-							"description": "The command(s) to be run to remotely execute a command.",
-                            "type": [
-                                "string",
-                                "array",
-                                "object"
-                            ],
-                            "items": [
-                                "string",
-                                "object"
-                            ],
-							"properties": {
-								"byOS": {
-									"description": "Let a command be specific to the running OS.",
-									"type": "object",
-									"patternProperties": {
-										"^.*$": {
-											"description": "The OS name as reported by Perl-Config, the value being the command to be applied for this OS.",
-											"type": "string"
-										}
-									}
-								}
-							},
-							"default": "ssh <TARGET> \". ~/.ttp_remote; <COMMAND>\""
-						}
+                        "source": {
+                            "description": "The part of the command which depends of the source node.",
+                            "type": "object",
+                            "properties": {
+                                "command": {
+                                    "description": "The command to be run to remotely execute a command. Freely intercheangeable with 'commands'."
+                                },
+                                "commands": {
+                                    "description": "The command(s) to be run to remotely execute a command.",
+                                    "type": [
+                                        "string",
+                                        "array",
+                                        "object"
+                                    ],
+                                    "items": [
+                                        "string",
+                                        "object"
+                                    ],
+                                    "properties": {
+                                        "byOS": {
+                                            "description": "Let a command be specific to the running OS.",
+                                            "type": "object",
+                                            "patternProperties": {
+                                                "^.*$": {
+                                                    "description": "The OS name as reported by Perl-Config, the value being the command to be applied for this OS.",
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "default": "ssh <TARGET_NAME>"
+                                }
+                            }
+                        },
+                        "target": {
+                            "description": "The part of the command which depends of the target node.",
+                            "type": "object",
+                            "properties": {
+                                "command": {
+                                    "description": "The command to be run to remotely execute a command. Freely intercheangeable with 'commands'."
+                                },
+                                "commands": {
+                                    "description": "The command(s) to be run to remotely execute a command.",
+                                    "type": [
+                                        "string",
+                                        "array",
+                                        "object"
+                                    ],
+                                    "items": [
+                                        "string",
+                                        "object"
+                                    ],
+                                    "properties": {
+                                        "byOS": {
+                                            "description": "Let a command be specific to the running OS.",
+                                            "type": "object",
+                                            "patternProperties": {
+                                                "^.*$": {
+                                                    "description": "The OS name as reported by Perl-Config, the value being the command to be applied for this OS.",
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "default": ". ~/.ttp_remote; <ORIGINAL_COMMAND>"
+                                }
+                            }
+                        }
 					}
 				},
                 "executionReports": {

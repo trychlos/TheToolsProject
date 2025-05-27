@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - Improve the schema of the remote execution to consider the cases where environments have several operating systems
 
 ### 4.18.3
 ### 4.18.2

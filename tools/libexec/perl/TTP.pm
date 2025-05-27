@@ -204,6 +204,7 @@ sub commandByOS_getObject {
 	my ( $locals, $opts ) = @_;
 	my $ok = true;
 	my $obj = $ep->var( $locals, $opts );
+	msgDebug( "locals=[".join( ',', @{$locals} )."] got ".chompDumper( $obj ));
 	if( $obj ){
 		my $ref = ref( $obj );
 		if( $ref eq 'ARRAY' ){
@@ -524,28 +525,38 @@ sub errs {
 sub execRemote {
 	my ( $target, $command ) = @_;
 
-	# target is mandatory
+	# a target is mandatory
 	if( !$target ){
 		msgErr( __PACKAGE__."::execRemote() expects a target, not specified" );
 		TTP::stackTrace();
 	}
+	my $targetNode = TTP::Node->new( $ep, { node => $target });
+
+	# get the source part of the command
+	my $commands = commandByOS([ 'execRemote', 'source' ]);
+	my $source_command = ( $commands && scalar( @{$commands} )) ? $commands->[0] : "ssh <TARGET_NAME>";
+
+	# get the target part of the command
+	$commands = commandByOS([ 'execRemote', 'target' ], { jsonable => $targetNode });
+	my $target_command = ( $commands && scalar( @{$commands} )) ? $commands->[0] : ". ~/.ttp_remote;";
+
+	# build the full command
+	$commands = commandByOS([ 'execRemote', 'full' ]);
+	my $full_remote = ( $commands && scalar( @{$commands} )) ? $commands->[0] : "<SOURCE_COMMAND> \"<TARGET_COMMAND> <ORIGINAL_COMMAND>\"";
 
 	# command defaults to the current command and verb and its arguments
 	$command = $ep->runner()->command()." ".join( " ", @{$ep->runner()->argv()} ) if !$command;
-	
-	# remote execution can be configured at site/node level
-	# expect a single command
-	my $commands = TTP::commandByOS([ 'execRemote' ]);
-	my $remote = $commands->[0] if $commands && scalar( @{$commands} );
-	$remote = "ssh <TARGET> \". ~/.ttp_remote; <COMMAND>\"" if !$remote;
-	$remote = TTP::substituteMacros( $remote, {
-		TARGET => $target,
-		COMMAND => $command
+
+	$full_remote = substituteMacros( $full_remote, {
+		ORIGINAL_COMMAND => $command,
+		SOURCE_COMMAND => $source_command,
+		TARGET_COMMAND => $target_command,
+		TARGET_NAME => $target
 	});
 
 	# and execute
-	msgOut( __PACKAGE__."::execRemote() $remote" );
-	my $rc = system( $remote );
+	msgOut( __PACKAGE__."::execRemote() $full_remote" );
+	my $rc = system( $full_remote );
 	$ep->runner()->runnableErrs( $rc );
 }
 

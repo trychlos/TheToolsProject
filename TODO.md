@@ -40,7 +40,9 @@
 |      |            | or: have a Daemon class which both gathers DaemonConfig and RunnerDaemon features |
 |      | 2025- 5-14 | DaemonConfig -> Daemon would imply $runner = TTP::RunnerDaemon->bootstrap() and $daemon->config() -> $runner->daemon() |
 |  163 | 2025- 5-23 | honor MQTTGateway and SMTPGateway wantsAccounts and wantsPassword |
-|  164 |  |  |
+|  164 | 2025- 5-27 | extend commandBYOS to accept both a node name and a ttp::node |
+|  165 | 2025- 5-27 | cache instanciated nodes to be able to reuse them |
+|  166 |  |  |
 
 ---
 ## Done
