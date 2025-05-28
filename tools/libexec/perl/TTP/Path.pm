@@ -27,6 +27,7 @@ use warnings;
 
 use Config;
 use Data::Dumper;
+use File::Basename;
 use File::Copy::Recursive qw( dircopy fcopy );
 use File::Find;
 use File::Path qw( make_path remove_tree );
@@ -702,6 +703,23 @@ sub removeTree {
 # ------------------------------------------------------------------------------------------------
 sub siteRoot {
 	return $ep->var([ 'siteRoot' ]);
+}
+
+# ------------------------------------------------------------------------------------------------
+# Compute and return the suffix of the filename
+# (I):
+# - the filename
+# (O):
+# - returns the found suffix, which may be undef
+
+sub suffix {
+	my ( $path ) = @_;
+
+	my ( $filename, $dirs ) = fileparse( $path );
+	my @words = split( /\./, $filename );
+	my $suffix = $words[$#words] if scalar( @words );
+
+	return $suffix;
 }
 
 # -------------------------------------------------------------------------------------------------
