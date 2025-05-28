@@ -9,6 +9,7 @@
     - Improve the schema of the remote execution to consider the cases where environments have several operating systems
     - Make sure all stdout and stderr messages are utf-8 encoded
     - Define new TTP::Path::suffix() function
+    - Make sure filenames read from the filesystem are utf-8 decoded
 
 ### 4.18.3
 ### 4.18.2

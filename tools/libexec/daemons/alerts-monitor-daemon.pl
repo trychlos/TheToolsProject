@@ -42,6 +42,7 @@ use strict;
 use warnings;
 
 use Data::Dumper;
+use Encode qw( decode );
 use File::Find;
 use Getopt::Long;
 use JSON;
@@ -288,9 +289,10 @@ sub worker {
                 return;
             }
 			# only consider matching files
+			my $fname = decode( 'UTF-8', $File::Find::name );
 			if( $_ =~ m/$re/ ){
-				msgVerbose( "$_ matches, pushing $File::Find::name" );
-				push( @runningScan, $File::Find::name );
+				msgVerbose( "$_ matches, pushing $fname" );
+				push( @runningScan, $fname );
 			} else {
 				#msgVerbose( "$_ doesn't match" );
 			}
