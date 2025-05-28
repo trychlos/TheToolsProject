@@ -350,8 +350,7 @@ sub listAlbums {
 	my $countCheckYears = 0;
 	my $albums = {};
 	msgOut( "displaying music albums in '$opt_sourcePath'..." );
-	# if we have something to check then take a glance at the file, else just ignore them
-	my $check_file = $opt_checkArtist || $opt_checkAlbum || $opt_checkYear || $opt_checkGenre || $opt_checkCover || $opt_checkAll;
+	my $check_file = $opt_checkAlbum || $opt_checkArtist || $opt_checkCount || $opt_checkCover || $opt_checkGenre || $opt_checkNumber || $opt_checkTitle || $opt_checkYear || $opt_checkAll;
 	find({
 		# receive here all found files and directories
 		wanted => sub {

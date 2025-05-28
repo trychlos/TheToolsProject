@@ -335,6 +335,8 @@ sub _msgLogAppend {
 # - the message to be outputed
 # - an optional options hash with following keys:
 #   > withLog: whether to (try to) log the message, defaulting to true
+#   > withPrefix: whether to display the standard prefix, defaulting to true
+#   > withEol: whether to append an end-of-line, defaulting to true
 
 sub msgOut {
 	msgDebug( __PACKAGE__."::msgOut() ".TTP::chompDumper( @_ ));
@@ -348,9 +350,15 @@ sub msgOut {
 	} elsif( !$ref ){
 		my $withLog = true;
 		$withLog = $opts->{withLog} if defined $opts->{withLog};
+		my $withPrefix = true;
+		$withPrefix = $opts->{withPrefix} if defined $opts->{withPrefix};
+		my $withEol = true;
+		$withEol = $opts->{withEol} if defined $opts->{withEol};
 		_printMsg({
 			msg => $msg,
-			withLog => $withLog
+			withLog => $withLog,
+			withPrefix => $withPrefix,
+			withEol => $withEol
 		});
 	} else {
 		msgErr( __PACKAGE__."::msgOut() unmanaged type '$ref' for '$msg'" );
@@ -442,6 +450,7 @@ sub msgWarn {
 # - withConsole: whether to output to the console, defaulting to true
 # - withPrefix: whether to output the "[command.pl verb]" prefix, defaulting to true
 # - withLog: whether to log the message, defaulting to true
+# - withEol: whether to append an end-of-line, defaulting to true
 
 sub _printMsg {
 	msgDebug( __PACKAGE__."::_printMsg() ".TTP::chompDumper( @_ ));
@@ -482,7 +491,11 @@ sub _printMsg {
 			# print on which handle ?
 			my $handle = \*STDOUT;
 			$handle = $args->{handle} if defined $args->{handle};
-			print $handle "$colorstart$line$colorend".EOL;
+			# have an end-of-line ?
+			my $withEol = true;
+			$withEol = $args->{withEol} if defined $args->{withEol};
+			print $handle "$colorstart$line$colorend";
+			print $handle EOL if $withEol;
 		}
 	}
 }
