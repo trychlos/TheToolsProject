@@ -10,6 +10,7 @@
     - Make sure all stdout and stderr messages are utf-8 encoded
     - Define new TTP::Path::suffix() function
     - Make sure filenames read from the filesystem are utf-8 decoded
+    - Define new audio.pl list verb
 
 ### 4.18.3
 ### 4.18.2
