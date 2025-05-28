@@ -37,6 +37,8 @@ die __PACKAGE__ . " must be loaded as TTP::Message\n" unless __PACKAGE__ eq 'TTP
 use strict;
 use utf8;
 use warnings;
+binmode( STDOUT, ':encoding(UTF-8)' );
+binmode( STDERR, ':encoding(UTF-8)' );
 
 use Config;
 use Data::Dumper;
