@@ -39,6 +39,7 @@ use warnings;
 use Encode qw( decode );
 use File::Find;
 use File::Spec;
+use File::Temp qw( :POSIX );
 
 use TTP::Media;
 use TTP::Path;
@@ -167,12 +168,18 @@ sub listSource {
 							$cmd .= " -af \"$loudness\"" if !$dynamics && $loudness;
 						}
 						my $output = output( $scan );
-						$cmd .= " -y \"$output\"";
 						# make sure the target directory exists
 						if( !$ep->runner()->dummy() && $output ne $fname ){
 							my( $vol, $directories, $file ) = File::Spec->splitpath( $output );
 							my $dir = File::Spec->catpath( $vol, $directories, "" );
 							TTP::Path::makeDirExist( $dir );
+						}
+						# if input file is not moved nor renamed - must use an intermediate temp file
+						if( $output eq $fname ){
+							my $tmpfile = tmpnam().".$scan->{suffix}";
+							$cmd .= " -y \"$tmpfile\" && mv \"$tmpfile\" \"$fname\"";
+						} else {
+							$cmd .= " -y \"$output\"";
 						}
 						# and execute the command
 						my $res = TTP::commandExec( $cmd );

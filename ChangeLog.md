@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - audio.pl change uses an intermediate temp file when the pathname doesn't change (todo #166)
 
 ### 4.19.0
 

@@ -42,7 +42,7 @@
 |  163 | 2025- 5-23 | honor MQTTGateway and SMTPGateway wantsAccounts and wantsPassword |
 |  164 | 2025- 5-27 | extend commandBYOS to accept both a node name and a ttp::node |
 |  165 | 2025- 5-27 | cache instanciated nodes to be able to reuse them |
-|  166 |  |  |
+|  167 |  |  |
 
 ---
 ## Done
@@ -428,6 +428,8 @@
 |      | 2025- 5-23 | done |
 |  162 | 2025- 5-23 | be less verbose when publishing daemon status |
 |      | 2025- 5-23 | done |
+|  166 | 2025- 5-29 | audio.pl change FFmpeg cannot edit existing files in-place. |
+|      | 2025- 5-29 | done |
 
 ---
 P. Wieser
