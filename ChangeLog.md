@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.18.4-rc.0
+### 4.19.0
 
-    Release date: 
+    Release date: 2025- 5-29
 
     - Improve the schema of the remote execution to consider the cases where environments have several operating systems
     - Make sure all stdout and stderr messages are utf-8 encoded
@@ -571,4 +571,4 @@
 
 ---
 P. Wieser
-- Last updated on 2025, May 26th
+- Last updated on 2025, May 29th
