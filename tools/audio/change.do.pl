@@ -10,6 +10,7 @@
 # @(-) --[no]loudness          apply loudness normalization [${loudness}]
 # @(-) --target-path=<target>  writes the result on this target [${targetPath}]
 # @(-) --limit=<limit>         limits the count of changed files, less than zero for no limit [${limit}]
+# @(-) --[no]video             reconduct found video streams [${video}]
 #
 # @(@) Note 1: when no target is specified, results are written in the source tree.
 # @(@) Note 2: the first specified '--format' option is the target of format changes.
@@ -54,7 +55,8 @@ my $defaults = {
 	format => '',
 	loudness => 'no',
 	dynamics => 'no',
-	limit => -1
+	limit => -1,
+	video => 'no'
 };
 
 my $opt_sourcePath = $defaults->{sourcePath};
@@ -63,6 +65,7 @@ my $opt_dynamics = false;
 my $opt_loudness = false;
 my @opt_formats = ();
 my $opt_limit = $defaults->{limit};
+my $opt_video = false;
 
 # -------------------------------------------------------------------------------------------------
 # returns the command-line for applying a dynamics normalization (source ChatGPT)
@@ -104,6 +107,7 @@ sub output {
 	my ( $scan ) = @_;
 
 	my $output = $scan->{path};
+	my $options = undef;
 
 	# maybe change the pathname
 	$output =~ s/$opt_sourcePath/$opt_targetPath/ if $opt_targetPath;
@@ -113,10 +117,11 @@ sub output {
 		my $is_accepted = grep( /$scan->{suffix}/i, @opt_formats );
 		if( !$is_accepted ){
 			$output =~ s/\.$scan->{suffix}$/.$opt_formats[0]/i;
+			$options = "-acodec aac" if $opt_formats[0] =~ /M4A/i;
 		}
 	}
 
-	return $output;
+	return ( $output, $options );
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -160,6 +165,7 @@ sub listSource {
 					msgOut( ".", { withPrefix => false, withEol => false });
 					if( mustChange( $scan )){
 						my $cmd = "ffmpeg -i \"$fname\"";
+						$cmd .= " -vn" if !$opt_video;
 						my $dynamics = dynamics() if $opt_dynamics;
 						my $loudness = loudness() if $opt_loudness;
 						if( $dynamics || $loudness ){
@@ -167,7 +173,8 @@ sub listSource {
 							$cmd .= " -af \"$dynamics\"" if $dynamics && !$loudness;
 							$cmd .= " -af \"$loudness\"" if !$dynamics && $loudness;
 						}
-						my $output = output( $scan );
+						my ( $output, $options ) = output( $scan );
+						$cmd .= " $options" if $options;
 						# make sure the target directory exists
 						if( !$ep->runner()->dummy() && $output ne $fname ){
 							my( $vol, $directories, $file ) = File::Spec->splitpath( $output );
@@ -187,7 +194,12 @@ sub listSource {
 							$changed_files_ok += 1;
 						} else {
 							$changed_files_notok += 1;
-							msgErr( $res->{stderr} );
+							# stderr can be empty, but stdout is far too numerous
+							if( scalar( @{$res->{stderr}} )){
+								msgErr( $res->{stderr} );
+							} else {
+								msgErr( "change failed" );
+							}
 						}
 
 					} else {
@@ -206,7 +218,7 @@ sub listSource {
 	msgOut( "", { withPrefix => false }) if $countAlbums > 0;
 	# have a summary
 	msgOut( "$countAlbums found album(s)" );
-	msgOut( "$total_files found files(s), among them $files_err were erroneous, $changed_files_ok where successfully changed and $changed_files_notok cannot be" );
+	msgOut( "$total_files found files(s), among them $files_err were erroneous, $changed_files_ok were successfully changed and $changed_files_notok cannot be" );
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -241,7 +253,8 @@ if( !GetOptions(
 	"dynamics!"			=> \$opt_dynamics,
 	"loudness!"			=> \$opt_loudness,
 	"format=s"			=> \@opt_formats,
-	"limit=i"			=> \$opt_limit )){
+	"limit=i"			=> \$opt_limit,
+	"video!"			=> \$opt_video )){
 
 		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
@@ -262,6 +275,7 @@ msgVerbose( "got loudness='".( $opt_loudness ? 'true':'false' )."'" );
 @opt_formats= split( /,/, join( ',', @opt_formats ));
 msgVerbose( "got formats='".join( ',', @opt_formats )."'" );
 msgVerbose( "got limit='$opt_limit'" );
+msgVerbose( "got video='".( $opt_video ? 'true':'false' )."'" );
 
 # must have --source-path option
 msgErr( "'--source-path' option is mandatory, but is not specified" ) if !$opt_sourcePath;
