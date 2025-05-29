@@ -8,6 +8,7 @@
 
     - audio.pl change uses an intermediate temp file when the pathname doesn't change (todo #166)
     - audio.pl change accepts a new '--[no]video' option
+    - audio.pl change becomes audio.pl normalize
 
 ### 4.19.0
 
