@@ -12,12 +12,12 @@
 # @(-) --[no]check-genre       check the genre [${checkGenre}]
 # @(-) --[no]check-cover       check the cover [${checkCover}]
 # @(-) --[no]check-title       check the track title [${checkTitle}]
-# @(-) --[no]check-number      check the track number [${checkTrack}]
+# @(-) --[no]check-number      check the track number [${checkNumber}]
 # @(-) --[no]check-count       check the tracks count [${checkCount}]
 # @(-) --[no]check-all         check all available properties [${checkAll}]
 # @(-) --format=<format>       output albums with this format [${format}]
 #
-# @(@) Note 1: format is a 'sprintf' format with following macros:
+# @(@) Note 1: 'format' is a sprintf() format string with following macros:
 # @(@)         - %AP: artist from the path
 # @(@)         - %BP: album from the path
 # @(@)         - %AS: artist from the scan
@@ -362,19 +362,26 @@ sub listAlbums {
 			# 	as soon as we have a file, we can try to guess the artist / album
 			} else {
 				if( TTP::Media::isAudio( $fname )){
+					# scan may be not ok but we need a key and some stats in all cases
 					my $scan = TTP::Media::scan( $fname );
-					if( $scan->{albumFromPath} || $scan->{artistFromPath} ){
-						my $key = "$scan->{artistFromPath} $scan->{albumFromPath}";
+					my $albumFromPath = TTP::Media::albumFromPath( $fname );
+					my $artistFromPath = TTP::Media::artistFromPath( $fname );
+					# unless the very rare case where we do not know how to compute the key
+					if( $albumFromPath || $artistFromPath ){
+						$scan->{albumFromPath} = $albumFromPath;
+						$scan->{artistFromPath} = $artistFromPath;
+						my $key = "$artistFromPath $albumFromPath";
 						$key =~ s/\s/-/g;
 						if( !$albums->{$key} ){
 							printAlbum( $scan );
 							$countAlbums += 1;
-							$albums->{$key}{albumFromPath} = $scan->{albumFromPath};
-							$albums->{$key}{artistFromPath} = $scan->{artistFromPath};
+							$albums->{$key}{albumFromPath} = $albumFromPath;
+							$albums->{$key}{artistFromPath} = $artistFromPath;
 						}
 						$albums->{$key}{valid} //= {};
 						$albums->{$key}{valid}{count} //= 0;
 						$albums->{$key}{valid}{count} += 1;
+						# and check only if a valid audio file
 						if( $scan->{ok} ){
 							$albums->{$key}{valid}{ok} //= 0;
 							$albums->{$key}{valid}{ok} += 1;
@@ -448,7 +455,7 @@ sub listAlbums {
 # (I):
 # - the result of the scan
 # - an optional options hash with following keys:
-#   > prefix: a prefix to be prepended to each output line, defaulting to '  '
+#   > prefix: a prefix to be prepended to each output line, defaulting to ' '
 
 sub printAlbum {
 	my ( $scan, $opts ) = @_;
@@ -466,9 +473,9 @@ sub printAlbum {
 	$str =~ s/%TC/$value/g;
 	$value = TTP::Media::yearFromScan( $scan );
 	$str =~ s/%Y/$value/g;
-	my $prefix = "  ";
+	my $prefix = " ";
 	$prefix = $opts->{prefix} if defined $opts->{prefix};
-	msgOut( "$prefix$str" );
+	print STDOUT "$prefix$str".EOL;
 }
 
 # =================================================================================================

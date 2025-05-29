@@ -12,6 +12,7 @@
     - Make sure filenames read from the filesystem are utf-8 decoded
     - Define new audio.pl list verb
     - Add and honor 'withPrefix' and 'withEol' options to msgOut()
+    - Define new audio.pl change verb
 
 ### 4.18.3
 ### 4.18.2

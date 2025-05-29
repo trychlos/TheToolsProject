@@ -260,6 +260,7 @@ sub coverFromScan {
 
 	my $value = undef;
 	$value = $value || $scan->{tags}{APIC}->[3];						# MP3
+	$value = $value || $scan->{tags}{APIC}->[0][3];						# MP3 when there are several images
 	$value = $value || $scan->{tags}{COVR};								# MP4
 	$value = $value || $scan->{tags}{ALLPICTURES}->[0]->{image_data};	# Ogg Vorbis / FLAC
 	$value = $value || $scan->{tags}{'WM/Picture'}->{image};			# ASF
@@ -336,14 +337,12 @@ sub isAudio {
 # (O):
 # - a hash ref with following keys:
 #   > ok: true|false
+#   > path: the original full file pathname
+#   > suffix: the found suffix (uppercase, should be considered case insensitive)
 #
 #   if ok is true:
 #   > info: from scan_info(), audio informations
 #   > tags: from scan_tags(), found tags
-#   > path: the original full file pathname
-#   > suffix: the found suffix (uppercase, should be considered case insensitive)
-#   > albumFromPath: the album from the path, may be undef
-#   > artistFromPath: the artist from the path, may be undef
 #
 #   if ok is false:
 #   > errors: an array of error messages (e.g. if the audio file is malformed)
@@ -363,12 +362,11 @@ sub scan {
 		$result->{errors} = \@errs;
 	} else {
 		$result->{ok} = true;
-		$result->{path} = $path;
-		my $suffix = TTP::Path::suffix( $path );
-		$result->{suffix} = uc( $suffix ) if $suffix;
-		$result->{albumFromPath} = albumFromPath( $path );
-		$result->{artistFromPath} = artistFromPath( $path );
 	}
+
+	$result->{path} = $path;
+	my $suffix = TTP::Path::suffix( $path );
+	$result->{suffix} = uc( $suffix ) if $suffix;
 
 	return $result;
 }
@@ -384,6 +382,11 @@ sub trackCountFromScan {
 	my ( $scan ) = @_;
 
 	my $value = undef;
+	$value = $value || $scan->{tags}{TRCK};			# MP3  number/count
+	$value = $value || $scan->{tags}{TRKN};			# M4A number/count
+	if( $value ){
+		$value =~ s/^[0-9]+\///;
+	}
 	$value = $value || $scan->{tags}{TRACKTOTAL};	# FLAC
 	print Dumper( $scan->{tags} ) if !$value;
 	#msgVerbose( "$scan->{path} year $value" ) if $value;
@@ -402,7 +405,11 @@ sub trackNumberFromScan {
 	my ( $scan ) = @_;
 
 	my $value = undef;
-	$value = $value || $scan->{tags}{TRCK};			# MP3
+	$value = $value || $scan->{tags}{TRCK};			# MP3 number/count
+	$value = $value || $scan->{tags}{TRKN};			# M4A number/count
+	if( $value ){
+		$value =~ s/\/[0-9]+$//;
+	}
 	$value = $value || $scan->{tags}{TRACKNUMBER};	# FLAC
 	print Dumper( $scan->{tags} ) if !$value;
 	#msgVerbose( "$scan->{path} year $value" ) if $value;
@@ -423,6 +430,7 @@ sub trackTitleFromScan {
 	my $value = undef;
 	$value = $value || $scan->{tags}{TIT1};			# MP3
 	$value = $value || $scan->{tags}{TIT2};
+	$value = $value || $scan->{tags}{NAM};			# M4A
 	$value = $value || $scan->{tags}{TITLE};		# FLAC
 	print Dumper( $scan->{tags} ) if !$value;
 	#msgVerbose( "$scan->{path} year $value" ) if $value;
@@ -443,6 +451,7 @@ sub yearFromScan {
 	my $value = undef;
 	$value = $value || $scan->{tags}{TDRC};			# MP3
 	$value = $value || $scan->{tags}{TDOR};
+	$value = $value || $scan->{tags}{DAY};			# M4A
 	$value = $value || $scan->{tags}{ORIGINALYEAR};
 	$value = $value || $scan->{tags}{DATE};			# FLAC
 	print Dumper( $scan->{tags} ) if !$value;
