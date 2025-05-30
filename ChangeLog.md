@@ -12,6 +12,7 @@
     - Define new '--remove' option for audio.pl normalize
     - Define new '--check-album-path' and '--check-track-path' options for audio.pl list
     - TTP::commandExec() is extended to accept commands as object { command, args } to be able to bypass shell interpretation
+    - audio.pl normalize is re-architectured to take advantage of new TTP::commandExec()
 
 ### 4.19.0
 

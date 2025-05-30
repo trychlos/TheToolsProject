@@ -113,33 +113,12 @@ sub doFind {
 					}
 					msgOut( ".", { withPrefix => false, withEol => false });
 					if( mustChange( $scan )){
-						my $cmd = "";
-						my ( $output, $options ) = output( $scan );
-						if( $opt_dynamics || $opt_loudness || scalar( @opt_formats )){
-							$cmd .= "ffmpeg -i \"$fname\"";
-							$cmd .= " -vn" if !$opt_video;
-							my $dynamics = dynamics() if $opt_dynamics;
-							my $loudness = loudness() if $opt_loudness;
-							if( $dynamics || $loudness ){
-								$cmd .= " -af \"$dynamics,$loudness\"" if $dynamics && $loudness;
-								$cmd .= " -af \"$dynamics\"" if $dynamics && !$loudness;
-								$cmd .= " -af \"$loudness\"" if !$dynamics && $loudness;
-							}
-							$cmd .= " $options" if $options;
-							# if input file is not moved nor renamed - must use an intermediate temp file
-							if( $output eq $fname ){
-								my $tmpfile = tmpnam().".$scan->{suffix}";
-								$cmd .= " -y \"$tmpfile\" && mv \"$tmpfile\" \"$fname\"";
-							} else {
-								$cmd .= " -y \"$output\"";
-								# remove the source file ?
-								if( $opt_remove ){
-									$cmd .= " && rm -f $fname"
-								}
-							}
+						if( $scan->{changes}{dynamics} || $scan->{changes}{loudness} || $scan->{changes}{format} ){
+							my $cmd = ffmpeg_command( $scan );
+
 							# make sure the target directory exists
-							if( !$ep->runner()->dummy() && $output ne $fname ){
-								my( $vol, $directories, $file ) = File::Spec->splitpath( $output );
+							if( !$ep->runner()->dummy() && $scan->{output}{path} ne $fname ){
+								my( $vol, $directories, $file ) = File::Spec->splitpath( $scan->{output}{path} );
 								my $dir = File::Spec->catpath( $vol, $directories, "" );
 								TTP::Path::makeDirExist( $dir );
 							}
@@ -147,6 +126,8 @@ sub doFind {
 							my $res = TTP::commandExec( $cmd );
 							if( $res->{success} ){
 								$changed_files_ok += 1;
+								execute_mv( $scan ) && execute_rm( $scan );
+
 							} else {
 								$changed_files_notok += 1;
 								# stderr can be empty, but stdout is far too numerous
@@ -156,8 +137,9 @@ sub doFind {
 									msgErr( "change failed" );
 								}
 							}
-						} elsif( $opt_filename && $fname ne $output ){
-							move( $fname, $output );
+						} elsif( $opt_filename && $fname ne $scan->{output}{path} ){
+							move( $fname, $scan->{output}{path} );
+							$changed_files_ok += 1;
 						}
 					} else {
 						msgVerbose( "nothing to change in '$scan->{path}'" );
@@ -179,10 +161,115 @@ sub doFind {
 }
 
 # -------------------------------------------------------------------------------------------------
-# returns the command-line for applying a dynamics normalization (source ChatGPT)
+# returns the 'ffmpeg' command-line arguments for applying a dynamics normalization (source ChatGPT)
+# note that these arguments should be applied with a '-af' switch, which can only be specified once
 
-sub dynamics {
+sub dynamics_args {
 	return "acompressor=threshold=-18dB:ratio=3";
+}
+
+# -------------------------------------------------------------------------------------------------
+# when a 'ffmpeg' transformation must be run in place, we use a tempfile because ffmpeg wants output be different of input
+# after a successful transformation, we have to move the tempfile to the target file (which obviously happens to be the original file)
+# this has been prepared when building the ffmpeg command
+# must return true if successul (or nothing to do)
+
+sub execute_mv {
+	my ( $scan ) = @_;
+	my $result = true;
+
+	if( $scan->{commands} && $scan->{commands}{mv} ){
+		my $res = TTP::commandExec({
+			command => 'mv',
+			args => [
+				$scan->{commands}{mv},
+				$scan->{path}
+			]
+		});
+		$result = $res->{success};
+	} else {
+		msgVerbose( "execute_mv() nothing to do" );
+	}
+
+	return $result;
+}
+
+# -------------------------------------------------------------------------------------------------
+# when a 'ffmpeg' transformation happens in the same directory with a different output format
+# we may want remove the initial file
+# this has been prepared when building the ffmpeg command
+# must return true if successul (or nothing to do)
+
+sub execute_rm {
+	my ( $scan ) = @_;
+	my $result = true;
+
+	if( $scan->{commands} && $scan->{commands}{rm} ){
+		my $res = TTP::commandExec({
+			command => 'rm',
+			args => [
+				"-f",
+				$scan->{path}
+			]
+		});
+		$result = $res->{success};
+	} else {
+		msgVerbose( "execute_rm() nothing to do" );
+	}
+
+	return $result;
+}
+
+# -------------------------------------------------------------------------------------------------
+# build the ffmpeg command
+# returns a ref to a hash with following keys:
+# - command: the 'ffmpeg' command itself, as a string
+# - args: a ref to an array of arguments
+
+sub ffmpeg_command {
+	my ( $scan ) = @_;
+
+	my @args = ();
+	push( @args, "-i" );
+	push( @args, "$scan->{path}" );
+	push( @args, "-vn" ) if !$opt_video;
+
+	my $dynamics = dynamics_args() if $opt_dynamics;
+	my $loudness = loudness_args() if $opt_loudness;
+	if( $dynamics || $loudness ){
+		push( @args, "-af" );
+		push( @args, "$dynamics,$loudness" ) if $dynamics && $loudness;
+		push( @args, "$dynamics" ) if $dynamics && !$loudness;
+		push( @args, "$loudness" ) if !$dynamics && $loudness;
+	}
+
+	# computed options depending of the output format
+	push( @args, $scan->{output}{options} ) if $scan->{output}{options};
+
+	# output
+	push( @args, "-y" );
+
+	# if input file is not moved nor renamed - must use an intermediate temp file
+	if( $scan->{output}{path} eq $scan->{path} ){
+		my $tmpfile = tmpnam().".$scan->{suffix}";
+		push( @args, "$tmpfile" );
+		$scan->{commands} //= {};
+		$scan->{commands}{mv} = $tmpfile;
+
+	} else {
+		push( @args, "$scan->{output}{path}" );
+		# remove the source file ?
+		if( $opt_remove ){
+			$scan->{commands} //= {};
+			$scan->{commands}{rm} = $scan->{path};
+		}
+	}
+
+	# and return the command object
+	return {
+		command => 'ffmpeg',
+		args => \@args
+	};
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -199,76 +286,81 @@ sub listSource {
 
 # -------------------------------------------------------------------------------------------------
 # returns the command-line for applying a loudness normalization (source ChatGPT)
+# note that these arguments should be applied with a '-af' switch, which can only be specified once
 
-sub loudness {
+sub loudness_args {
 	return "loudnorm=I=-16:TP=-1.5:LRA=11";
 }
 
 # -------------------------------------------------------------------------------------------------
 # given the scan result, must something be changed for this file
+# simultaneously computes the target output file pathname
 
 sub mustChange {
 	my ( $scan ) = @_;
 
-	my $must_change = false;
+	$scan->{changes} //= {};
 
+	# apply loudness and dynamics changes
+	$scan->{changes}{dynamics} = true if $opt_dynamics;
+	$scan->{changes}{loudness} = true if $opt_loudness;
+
+	# have to change the format ?
 	if( scalar( @opt_formats )){
 		my $is_accepted = grep( /$scan->{suffix}/i, @opt_formats );
-		$must_change = !$is_accepted;
+		$scan->{changes}{format} = !$is_accepted;
 	}
+
+	# have to normalize the filename ?
 	if( $opt_filename ){
 		# actual file name without the extension
 		my ( $vol, $directories, $filename ) = File::Spec->splitpath( $scan->{path} );
 		$filename =~ s/\.[^\.]+$//;
 		# theorical track name
 		my $number = TTP::Media::trackNumberFromScan( $scan ) || '';
-		my $str = sprintf( "%02u", ( 0+$number ));
 		my $title = TTP::Media::trackTitleFromScan( $scan ) || '';
-		my $theorical = "$str - $title";
+		if( defined( $number ) && $title ){
+			print "number='$number'".EOL;
+			my $str = sprintf( "%02u", ( 0+$number ));
+			my $theorical = "$str - $title";
 
-		if( $theorical ne $filename ){
-			$scan->{old_filename} = $filename;
-			$scan->{new_filename} = $theorical;
-			$must_change = true;
+			if( $theorical ne $filename ){
+				$scan->{changes}{filename} = {
+					old => $filename,
+					new => $theorical
+				};
+			}
 		}
 	}
 
-	$must_change |= $opt_dynamics;
-	$must_change |= $opt_loudness;
-
-	return $must_change;
-}
-
-# -------------------------------------------------------------------------------------------------
-# compute the output file pathname
-# output is used twice:
-# - first as ffmpeg's output
-# - second if the '--filename' option has been requested to normalize the filename
-
-sub output {
-	my ( $scan ) = @_;
-
+	# compute the output file pathname
 	my $output = $scan->{path};
 	my $options = undef;
 
-	# maybe change the pathname
+	# apply the target directory
 	$output =~ s/$opt_sourcePath/$opt_targetPath/ if $opt_targetPath;
 
 	# maybe change the suffix
-	if( scalar( @opt_formats )){
-		my $is_accepted = grep( /$scan->{suffix}/i, @opt_formats );
-		if( !$is_accepted ){
-			$output =~ s/\.$scan->{suffix}$/.$opt_formats[0]/i;
-			$options = "-acodec aac" if $opt_formats[0] =~ /M4A/i;
-		}
+	if( $scan->{changes}{format} ){
+		$output =~ s/\.$scan->{suffix}$/.$opt_formats[0]/i;
+		$options = "-acodec aac" if $opt_formats[0] =~ /M4A/i;
 	}
 
 	# maybe change the filename
-	if( $scan->{new_filename} ){
-		$output =~ s/\Q$scan->{old_filename}\E/$scan->{new_filename}/;
+	if( $scan->{changes}{filename} ){
+		$output =~ s/\Q$scan->{changes}{filename}{old}\E/$scan->{changes}{filename}{new}/;
 	}
 
-	return ( $output, $options );
+	$scan->{output} = {
+		path => $output,
+		options => $options
+	};
+	$scan->{changes}{path} = ( $output ne $scan->{path} );
+
+	my $must_change = $scan->{changes}{dynamics} || $scan->{changes}{loudness} || $scan->{changes}{format} || $scan->{changes}{filename} || $scan->{changes}{path};
+	msgVerbose( "path='$scan->{path}' mustChange='".( $must_change ? 'true' : 'false' )."'" );
+
+	return $must_change;
 }
 
 # -------------------------------------------------------------------------------------------------

@@ -42,7 +42,8 @@
 |  163 | 2025- 5-23 | honor MQTTGateway and SMTPGateway wantsAccounts and wantsPassword |
 |  164 | 2025- 5-27 | extend commandBYOS to accept both a node name and a ttp::node |
 |  165 | 2025- 5-27 | cache instanciated nodes to be able to reuse them |
-|  167 |  |  |
+|  167 | 2025- 5-30 | logsMain is not reevaluated (each time we use it) but should |
+|  168 |  |  |
 
 ---
 ## Done
