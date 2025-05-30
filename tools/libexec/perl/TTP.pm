@@ -243,11 +243,20 @@ sub commandByOS_resolveItem {
 }
 
 # -------------------------------------------------------------------------------------------------
-# Execute an external command.
+# Execute an external command through system() system call.
 # The provided command is not modified at all. If it should support say --verbose or --[no]colored,
 # then these options should be specified by the caller.
+# See also: https://perldoc.perl.org/functions/system
 # (I):
-# - the command to be evaluated and executed as a single string or as an array ref of strings
+# - the command to be evaluated and executed
+#   can be specified as:
+#   > a single string, will be executed through the shell and is so subject to shell interpretation
+#   > an object with following keys:
+#     - a single command string
+#     - a ref to an array of arguments
+#     in this case, system() function will not use shell interpretation
+#   > or an array of strings or objects
+#     the commands will be executed in sequence, regardless of their individual return code
 # - an optional options hash with following keys:
 #   > macros: a hash of the macros to be replaced where:
 #     - key is the macro name, must be labeled in the toops.json as '<macro>' (i.e. between angle brackets)
@@ -279,11 +288,7 @@ sub commandExec {
 		stackTrace();
 	}
 	my $ref = ref( $commands );
-	if( $ref && $ref ne 'ARRAY' ){
-		msgErr( __PACKAGE__."::commandExec() expects a single string or an array of strings, got $commands ($ref)" );
-		stackTrace();
-	}
-	if( $ref ){
+	if( $ref eq 'ARRAY'){
 		foreach my $cmd ( @{$commands} ){
 			$result = commandExec_item( $cmd, $opts, $result );
 		}
@@ -317,11 +322,13 @@ sub commandExec_consolidate {
 }
 
 # execute a command results
+# the command can be either a single string or a hash { command, args }
 
 sub commandExec_item {
 	my ( $command, $opts, $result ) = @_;
 	# if the command is undefined or empty, just ignore it
 	if( !$command ){
+		msgVerbose( __PACKAGE__."::commandExec_item() got an empty command" );
 		return $result;
 	}
 	# else execute it
@@ -330,20 +337,51 @@ sub commandExec_item {
 		stderr => [],
 		exit => -1,
 		success => true,
-		evaluated => undef
+		evaluated => undef,
+		args => undef
 	};
-	msgVerbose( __PACKAGE__."::commandExec_item() got command='".( $command )."'" );
-	$res->{evaluated} = $command;
-	$res->{success} = true;
-	$res->{evaluated} = TTP::substituteMacros( $res->{evaluated}, $opts->{macros} ) if $opts->{macros};
-	msgVerbose( __PACKAGE__."::commandExec() evaluated to '$res->{evaluated}'" );
+
+	my $ref = ref( $command );
+	# command is passed by object -> WITHOUT shell intepretation
+	if( $ref eq 'HASH' ){
+		msgVerbose( __PACKAGE__."::commandExec_item() got command='".( $command->{command} )."', args=[".join( ',', @{$command->{args}} )."]" );
+		$res->{evaluated} = $command->{command};
+		$res->{evaluated} = TTP::substituteMacros( $res->{evaluated}, $opts->{macros} ) if $opts->{macros};
+		my @args = ();
+		foreach my $arg ( @{$command->{args}} ){
+			if( $opts->{macros} ){
+				push( @args, TTP::substituteMacros( $arg, $opts->{macros} ));
+			} else {
+				push( @args, $arg );
+			}
+		}
+		$res->{args} = \@args;
+		msgVerbose( __PACKAGE__."::commandExec() evaluated to '$res->{evaluated}' args=[".join( ',', @args )."]" );
+
+	} elsif( $ref ){
+		msgErr( __PACKAGE__."::commandExec_item() unexpected command type, got '$ref'" );
+		TTP::stackTrace();
+
+	# command is passed as a single string -> WITH shell intepretation
+	} else {
+		msgVerbose( __PACKAGE__."::commandExec_item() got command='".( $command )."'" );
+		$res->{evaluated} = $command;
+		$res->{evaluated} = TTP::substituteMacros( $res->{evaluated}, $opts->{macros} ) if $opts->{macros};
+		msgVerbose( __PACKAGE__."::commandExec() evaluated to '$res->{evaluated}'" );
+	}
+
 	# and go
 	if( $ep->runner()->dummy()){
 		msgDummy( $res->{evaluated} );
 	} else {
 		# https://stackoverflow.com/questions/799968/whats-the-difference-between-perls-backticks-system-and-exec
 		# as of v4.12 choose to use system() instead of backtits, this later not returning stderr
-		my ( $res_out, $res_err, $res_code ) = capture { system( $res->{evaluated} ); };
+		my ( $res_out, $res_err, $res_code );
+		if( $res->{args} ){
+			( $res_out, $res_err, $res_code ) = capture { system( $res->{evaluated}, @{$res->{args}} ); };
+		} else {
+			( $res_out, $res_err, $res_code ) = capture { system( $res->{evaluated} ); };
+		}
 		# https://www.perlmonks.org/?node_id=81640
 		# Thus, the exit value of the subprocess is actually ($? >> 8), and $? & 127 gives which signal, if any, the
 		# process died from, and $? & 128 reports whether there was a core dump.
