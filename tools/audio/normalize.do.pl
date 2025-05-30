@@ -87,73 +87,67 @@ sub doFind {
 	my $albums = {};
 	my $current_key = undef;
 	msgOut( "acting on '$opt_sourcePath'..." );
-	find({
-		# receive here all found files and directories
-		wanted => sub {
-			my $fname = decode( 'UTF-8', $File::Find::name );
-			# ignore directories
-			if( ! -d $_ && TTP::Media::isAudio( $fname )){
-				$total_files += 1;
-				return if $opt_limit >= 0 && $total_files > $opt_limit;
-				my $scan = TTP::Media::scan( $fname );
-				my $albumFromPath = TTP::Media::albumFromPath( $fname );
-				my $artistFromPath = TTP::Media::artistFromPath( $fname );
-				if( $albumFromPath || $artistFromPath ){
-					$scan->{albumFromPath} = $albumFromPath;
-					$scan->{artistFromPath} = $artistFromPath;
-					my $key = "$artistFromPath $albumFromPath";
-					$key =~ s/\s/-/g;
-					msgOut( "", { withPrefix => false }) if $current_key && $key ne $current_key;
-					if( !$albums->{$key} ){
-						printAlbum( $scan );
-						$current_key = $key;
-						$countAlbums += 1;
-						$albums->{$key}{albumFromPath} = $scan->{albumFromPath};
-						$albums->{$key}{artistFromPath} = $scan->{artistFromPath};
-					}
-					msgOut( ".", { withPrefix => false, withEol => false });
-					if( mustChange( $scan )){
-						if( $scan->{changes}{dynamics} || $scan->{changes}{loudness} || $scan->{changes}{format} ){
-							my $cmd = ffmpeg_command( $scan );
+	my $result = TTP::Media::scan_tree( $opt_sourcePath, {
+		sub => sub {
+			# expect to have only supported files
+			my ( $fname, $scan ) = @_;
+			$total_files += 1;
+			return if $opt_limit >= 0 && $total_files > $opt_limit;
+			my $albumFromPath = TTP::Media::albumFromPath( $fname );
+			my $artistFromPath = TTP::Media::artistFromPath( $fname );
+			if( $albumFromPath || $artistFromPath ){
+				$scan->{albumFromPath} = $albumFromPath;
+				$scan->{artistFromPath} = $artistFromPath;
+				my $key = "$artistFromPath $albumFromPath";
+				$key =~ s/\s/-/g;
+				msgOut( "", { withPrefix => false }) if $current_key && $key ne $current_key;
+				if( !$albums->{$key} ){
+					printAlbum( $scan );
+					$current_key = $key;
+					$countAlbums += 1;
+					$albums->{$key}{albumFromPath} = $scan->{albumFromPath};
+					$albums->{$key}{artistFromPath} = $scan->{artistFromPath};
+				}
+				msgOut( ".", { withPrefix => false, withEol => false });
+				if( mustChange( $scan )){
+					if( $scan->{changes}{dynamics} || $scan->{changes}{loudness} || $scan->{changes}{format} ){
+						my $cmd = ffmpeg_command( $scan );
 
-							# make sure the target directory exists
-							if( !$ep->runner()->dummy() && $scan->{output}{path} ne $fname ){
-								my( $vol, $directories, $file ) = File::Spec->splitpath( $scan->{output}{path} );
-								my $dir = File::Spec->catpath( $vol, $directories, "" );
-								TTP::Path::makeDirExist( $dir );
-							}
-							# and execute the command
-							my $res = TTP::commandExec( $cmd );
-							if( $res->{success} ){
-								$changed_files_ok += 1;
-								execute_mv( $scan ) && execute_rm( $scan );
-
-							} else {
-								$changed_files_notok += 1;
-								# stderr can be empty, but stdout is far too numerous
-								if( $res->{stderr} && scalar( @{$res->{stderr}} )){
-									msgErr( $res->{stderr} );
-								} else {
-									msgErr( "change failed" );
-								}
-							}
-						} elsif( $opt_filename && $fname ne $scan->{output}{path} ){
-							move( $fname, $scan->{output}{path} );
-							$changed_files_ok += 1;
+						# make sure the target directory exists
+						if( !$ep->runner()->dummy() && $scan->{output}{path} ne $fname ){
+							my( $vol, $directories, $file ) = File::Spec->splitpath( $scan->{output}{path} );
+							my $dir = File::Spec->catpath( $vol, $directories, "" );
+							TTP::Path::makeDirExist( $dir );
 						}
-					} else {
-						msgVerbose( "nothing to change in '$scan->{path}'" );
-						$files_unchanged += 1;
+						# and execute the command
+						my $res = TTP::commandExec( $cmd );
+						if( $res->{success} ){
+							$changed_files_ok += 1;
+							execute_mv( $scan ) && execute_rm( $scan );
+
+						} else {
+							$changed_files_notok += 1;
+							# stderr can be empty, but stdout is far too numerous
+							if( $res->{stderr} && scalar( @{$res->{stderr}} )){
+								msgErr( $res->{stderr} );
+							} else {
+								msgErr( "change failed" );
+							}
+						}
+					} elsif( $opt_filename && $fname ne $scan->{output}{path} ){
+						move( $fname, $scan->{output}{path} );
+						$changed_files_ok += 1;
 					}
 				} else {
-					msgErr( "neither artist nor album can be computed from '$fname'" );
-					$files_err += 1;
+					msgVerbose( "nothing to change in '$scan->{path}'" );
+					$files_unchanged += 1;
 				}
 			} else {
-				msgVerbose( "ignoring directory or non-audio $fname" );
+				msgErr( "neither artist nor album can be computed from '$fname'" );
+				$files_err += 1;
 			}
-		},
-	}, $opt_sourcePath );
+		}
+	});
 	msgOut( "", { withPrefix => false }) if $countAlbums > 0;
 	# have a summary
 	msgOut( "$countAlbums found album(s)" );

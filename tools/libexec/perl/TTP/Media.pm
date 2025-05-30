@@ -26,6 +26,8 @@ use warnings;
 use Audio::Scan;
 use Capture::Tiny qw( capture );
 use Data::Dumper;
+use Encode qw( decode );
+use File::Find;
 use File::Spec;
 
 use TTP;
@@ -347,7 +349,7 @@ sub isAudio {
 #   if ok is false:
 #   > errors: an array of error messages (e.g. if the audio file is malformed)
 
-sub scan {
+sub scan_file {
 	my ( $path ) = @_;
 	my $result = undef;
 
@@ -367,6 +369,88 @@ sub scan {
 	$result->{path} = $path;
 	my $suffix = TTP::Path::suffix( $path );
 	$result->{suffix} = uc( $suffix ) if $suffix;
+
+	return $result;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Scan a source tree
+# (I):
+# - the source tree
+# - an optional options hash with following keys:
+#   > ignoreDirectories, defaulting to true
+#   > ignoreNotSupported, defaulting to true
+#   > sub: a ref to a code which will be called with two arguments:
+#     - the full candidate pathname
+#     - the result of the file scan if the candidate is a supported file, as a ref to a hash with following keys:
+#       > info: the result of scan_info()
+#       > tags: the result of scan_tags()
+#       > path: the full candidate pathname
+#       > suffix: the suffix of the candidate as an uppoercase string (e.g. 'MP3')
+# (O):
+# - a hash ref with following keys:
+#   > ok: true|false
+#   > ignoredDirectories: the count of ignored directories
+#   > ignoredNotSupported: the count of ignored not supported files
+#   > candidates: the count of candidates pathnames passed to above sub
+
+sub scan_tree {
+	my ( $tree, $opts ) = @_;
+	$opts //= {};
+
+	if( !$opts->{sub} || ref( $opts->{sub} ) ne 'CODE' ){
+		msgErr( __PACKAGE__."::scan() expects an 'sub' option, not found" );
+		TTP::stackTrace();
+	}
+
+	my $result = {
+		ok => true,
+		ignoredDirectories => 0,
+		ignoredNotSupported => 0,
+		candidates => 0
+	};
+
+	my $ignoreDirectories = true;
+	$ignoreDirectories = $opts->{ignoreDirectories} if defined $opts->{ignoreDirectories};
+
+	my $ignoreNotSupported = true;
+	$ignoreNotSupported = $opts->{ignoreNotSupported} if defined $opts->{ignoreNotSupported};
+
+	find({
+		# receive here all found files and directories
+		wanted => sub {
+			my $fname = decode( 'UTF-8', $File::Find::name );
+			my $isDirectory = false;
+			my $isSupported = false;
+			my $ignored = false;
+
+			# have an ignored directory ?
+			if( -d $_ ){
+				if( $ignoreDirectories ){
+					msgVerbose( "ignoring directory $fname" );
+					$result->{ignoredDirectories} += 1;
+					$ignored = true;
+				} else {
+					$isDirectory = true;
+				}
+
+			# have a not-supported file ?
+			} else {
+				$isSupported = Audio::Scan->is_supported( $fname );
+				if( !$isSupported && $ignoreNotSupported ){
+					msgVerbose( "ignoring not supported $fname" );
+					$result->{ignoredNotSupported} += 1;
+					$ignored = true;
+				}
+			}
+
+			if( !$ignored ){
+				my $scan = ( $isDirectory || !$isSupported ) ? undef : scan_file( $fname );
+				$opts->{sub}( $fname, $scan );
+				$result->{candidates} += 1;
+			}
+		},
+	}, $tree );
 
 	return $result;
 }

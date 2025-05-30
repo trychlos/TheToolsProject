@@ -53,8 +53,6 @@ use strict;
 use utf8;
 use warnings;
 
-use Encode qw( decode );
-use File::Find;
 use File::Spec;
 
 use TTP::Media;
@@ -450,68 +448,56 @@ sub listAlbums {
 	my $albums = {};
 	msgOut( "displaying music albums in '$opt_sourcePath'..." );
 	my $check_file = $opt_checkAlbum || $opt_checkArtist || $opt_checkCount || $opt_checkCover || $opt_checkGenre || $opt_checkNumber || $opt_checkTitle || $opt_checkYear || $opt_checkAllTrack;
-	find({
-		# receive here all found files and directories
-		wanted => sub {
-			my $fname = decode( 'UTF-8', $File::Find::name );
-			# the album should be one of the directory levels
-			# but unless we have a file pathname, we cannot guess if the directory is - or not - an album path
-			if( -d $_ ){
-				msgVerbose( "ignoring directory $fname" );
-			# 	as soon as we have a file, we can try to guess the artist / album
-			} else {
-				if( TTP::Media::isAudio( $fname )){
-					# scan may be not ok but we need a key and some stats in all cases
-					my $scan = TTP::Media::scan( $fname );
-					my $albumFromPath = TTP::Media::albumFromPath( $fname );
-					my $artistFromPath = TTP::Media::artistFromPath( $fname );
-					# unless the very rare case where we do not know how to compute the key
-					if( $albumFromPath || $artistFromPath ){
-						$scan->{albumFromPath} = $albumFromPath;
-						$scan->{artistFromPath} = $artistFromPath;
-						my $key = "$artistFromPath $albumFromPath";
-						$key =~ s/\s/-/g;
-						if( !$albums->{$key} ){
-							printAlbum( $scan );
-							$countAlbums += 1;
-							$albums->{$key}{albumFromPath} = $albumFromPath;
-							$albums->{$key}{artistFromPath} = $artistFromPath;
-							$countCheckAlbumPaths += ( checkAlbumPath( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkAlbumPath || $opt_checkAllAlbum;
-						}
-						$albums->{$key}{valid} //= {};
-						$albums->{$key}{valid}{count} //= 0;
-						$albums->{$key}{valid}{count} += 1;
-						# and check only if a valid audio file
-						if( $scan->{ok} ){
-							$albums->{$key}{valid}{ok} //= 0;
-							$albums->{$key}{valid}{ok} += 1;
-							if( $check_file ){
-								$countCheckAlbums += ( checkAlbum( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkAlbum || $opt_checkAllTrack;
-								$countCheckArtists += ( checkArtist( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkArtist || $opt_checkAllTrack;
-								$countCheckCounts += ( checkCount( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkCount || $opt_checkAllTrack;
-								$countCheckCovers += ( checkCover( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkCover || $opt_checkAllTrack;
-								$countCheckGenres += ( checkGenre( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkGenre || $opt_checkAllTrack;
-								$countCheckNumbers += ( checkNumber( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkNumber || $opt_checkAllTrack;
-								$countCheckTitles += ( checkTitle( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkTitle || $opt_checkAllTrack;
-								$countCheckTrackPaths += ( checkTrackPath( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkTrackPath || $opt_checkAllTrack;
-								$countCheckYears += ( checkYear( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkYear || $opt_checkAllTrack;
-							}
-						} else {
-							msgErr( $scan->{errors}, { incErr => false });
-							$albums->{$key}{valid}{notok} //= 0;
-							$albums->{$key}{valid}{notok} += 1;
-							$albums->{$key}{valid}{files} //= [];
-							push( @{$albums->{$key}{scan}{files}}, $fname );
-						}
-					} else {
-						msgErr( "neither artist nor album can be computed from '$fname'" );
+	my $result = TTP::Media::scan_tree( $opt_sourcePath, {
+		sub => sub {
+			# expect to have only supported files
+			my ( $fname, $scan ) = @_;
+			my $albumFromPath = TTP::Media::albumFromPath( $fname );
+			my $artistFromPath = TTP::Media::artistFromPath( $fname );
+			# unless the very rare case where we do not know how to compute the key
+			if( $albumFromPath || $artistFromPath ){
+				$scan->{albumFromPath} = $albumFromPath;
+				$scan->{artistFromPath} = $artistFromPath;
+				my $key = "$artistFromPath $albumFromPath";
+				$key =~ s/\s/-/g;
+				if( !$albums->{$key} ){
+					printAlbum( $scan );
+					$countAlbums += 1;
+					$albums->{$key}{albumFromPath} = $albumFromPath;
+					$albums->{$key}{artistFromPath} = $artistFromPath;
+					$countCheckAlbumPaths += ( checkAlbumPath( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkAlbumPath || $opt_checkAllAlbum;
+				}
+				$albums->{$key}{valid} //= {};
+				$albums->{$key}{valid}{count} //= 0;
+				$albums->{$key}{valid}{count} += 1;
+				# and check only if a valid audio file
+				if( $scan->{ok} ){
+					$albums->{$key}{valid}{ok} //= 0;
+					$albums->{$key}{valid}{ok} += 1;
+					if( $check_file ){
+						$countCheckAlbums += ( checkAlbum( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkAlbum || $opt_checkAllTrack;
+						$countCheckArtists += ( checkArtist( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkArtist || $opt_checkAllTrack;
+						$countCheckCounts += ( checkCount( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkCount || $opt_checkAllTrack;
+						$countCheckCovers += ( checkCover( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkCover || $opt_checkAllTrack;
+						$countCheckGenres += ( checkGenre( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkGenre || $opt_checkAllTrack;
+						$countCheckNumbers += ( checkNumber( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkNumber || $opt_checkAllTrack;
+						$countCheckTitles += ( checkTitle( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkTitle || $opt_checkAllTrack;
+						$countCheckTrackPaths += ( checkTrackPath( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkTrackPath || $opt_checkAllTrack;
+						$countCheckYears += ( checkYear( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkYear || $opt_checkAllTrack;
 					}
 				} else {
-					msgVerbose( "ignoring non-audio $fname" );
+					msgErr( $scan->{errors}, { incErr => false });
+					$albums->{$key}{valid}{notok} //= 0;
+					$albums->{$key}{valid}{notok} += 1;
+					$albums->{$key}{valid}{files} //= [];
+					push( @{$albums->{$key}{scan}{files}}, $fname );
 				}
+			} else {
+				msgErr( "neither artist nor album can be computed from '$fname'" );
 			}
-		},
-	}, $opt_sourcePath );
+		}
+	});
+
 	# have a summary
 	#print Dumper( $albums );
 	# display the albums which have at least one error
