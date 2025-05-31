@@ -14,6 +14,7 @@
     - TTP::commandExec() is extended to accept commands as object { command, args } to be able to bypass shell interpretation
     - audio.pl normalize is re-architectured to take advantage of new TTP::commandExec()
     - audio.pl list has '--check-all-track' and '--check-all-album' options
+    - audio.pl normalize --video option now reconduct the videos streams without trying to interpret it when asked for
 
 ### 4.19.0
 

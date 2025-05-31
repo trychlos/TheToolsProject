@@ -9,7 +9,7 @@
 # @(-) --format=<format>       accept the file format, may be specified several times or as a comma-separated list [${format}]
 # @(-) --[no]dynamics          apply dynamics normalization [${dynamics}]
 # @(-) --[no]loudness          apply loudness normalization [${loudness}]
-# @(-) --[no]video             reconduct found video streams [${video}]
+# @(-) --[no]video             reconduct found video streams, including attached images [${video}]
 # @(-) --[no]filename          change the track filename [${filename}]
 # @(-) --[no]remove            remove original file [${remove}]
 # @(-) --limit=<limit>         limits the count of changed files, less than zero for no limit [${limit}]
@@ -163,7 +163,6 @@ sub doFind {
 						$changed_files_ok += 1;
 					}
 				} else {
-					msgVerbose( "nothing to change in '$scan->{path}'" );
 					$files_unchanged += 1;
 				}
 			} else {
@@ -198,7 +197,18 @@ sub ffmpeg_command {
 	my @args = ();
 	push( @args, "-i" );
 	push( @args, "$scan->{path}" );
-	push( @args, "-vn" ) if !$opt_video;
+	
+	# happens that attached images are considered as video streams - so do not ignore them
+	if( $opt_video ){
+		push( @args, "-map" );
+		push( @args, "0:a" );
+		push( @args, "-map" );
+		push( @args, "0:v" );
+		push( @args, "-c:v" );
+		push( @args, "copy" );
+	} else {
+		push( @args, "-vn" );	# else remove video streams
+	}
 
 	my $dynamics = dynamics_args() if $opt_dynamics;
 	my $loudness = loudness_args() if $opt_loudness;
