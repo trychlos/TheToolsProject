@@ -60,7 +60,7 @@ my $defaults = {
 	filename => 'no',
 	loudness => 'no',
 	remove => 'no',
-	video => 'no',
+	video => 'yes',
 	limit => -1
 };
 
@@ -71,7 +71,7 @@ my $opt_dynamics = false;
 my $opt_loudness = false;
 my $opt_filename = false;
 my $opt_remove = false;
-my $opt_video = false;
+my $opt_video = true;
 my $opt_limit = $defaults->{limit};
 
 # -------------------------------------------------------------------------------------------------

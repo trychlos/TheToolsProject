@@ -15,6 +15,7 @@
     - audio.pl normalize is re-architectured to take advantage of new TTP::commandExec()
     - audio.pl list has '--check-all-track' and '--check-all-album' options
     - audio.pl normalize --video option now reconduct the videos streams without trying to interpret it when asked for
+    - audio.pl normalize --video option defaults to true
 
 ### 4.19.0
 
