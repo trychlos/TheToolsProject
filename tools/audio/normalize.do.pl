@@ -82,6 +82,7 @@ sub doFind {
 	my $total_files = 0;
 	my $files_err = 0;
 	my $files_unchanged = 0;
+	my $files_tochange = 0;
 	my $changed_files_ok = 0;
 	my $changed_files_notok = 0;
 	my $albums = {};
@@ -110,6 +111,7 @@ sub doFind {
 				}
 				msgOut( ".", { withPrefix => false, withEol => false });
 				if( mustChange( $scan )){
+					$files_tochange += 1;
 					if( $scan->{changes}{dynamics} || $scan->{changes}{loudness} || $scan->{changes}{format} ){
 						my $cmd = ffmpeg_command( $scan );
 
@@ -119,12 +121,33 @@ sub doFind {
 							my $dir = File::Spec->catpath( $vol, $directories, "" );
 							TTP::Path::makeDirExist( $dir );
 						}
-						# and execute the command
+						# and execute the commands
+						# plus, maybe, mv and rm commands
 						my $res = TTP::commandExec( $cmd );
 						if( $res->{success} ){
+							if( $scan->{commands} && $scan->{commands}{mv} ){
+								$res = TTP::commandExec({
+									command => 'mv',
+									args => [
+										$scan->{commands}{mv},
+										$scan->{path}
+									]
+								});
+							}
+						}
+						if( $res->{success} ){
+							if( $scan->{commands} && $scan->{commands}{rm} ){
+								$res = TTP::commandExec({
+									command => 'rm',
+									args => [
+										"-f",
+										$scan->{path}
+									]
+								});
+							}
+						}
+						if( $res->{success} ){
 							$changed_files_ok += 1;
-							execute_mv( $scan ) && execute_rm( $scan );
-
 						} else {
 							$changed_files_notok += 1;
 							# stderr can be empty, but stdout is far too numerous
@@ -134,6 +157,7 @@ sub doFind {
 								msgErr( "change failed" );
 							}
 						}
+
 					} elsif( $opt_filename && $fname ne $scan->{output}{path} ){
 						move( $fname, $scan->{output}{path} );
 						$changed_files_ok += 1;
@@ -151,7 +175,7 @@ sub doFind {
 	msgOut( "", { withPrefix => false }) if $countAlbums > 0;
 	# have a summary
 	msgOut( "$countAlbums found album(s)" );
-	msgOut( "$total_files found files(s), among them $files_err were erroneous, $changed_files_ok were successfully changed and $changed_files_notok cannot be" );
+	msgOut( "$total_files found files(s), among them $files_err were erroneous, $files_tochange were to be changed, $changed_files_ok were successfully changed and $changed_files_notok changes failed" );
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -160,58 +184,6 @@ sub doFind {
 
 sub dynamics_args {
 	return "acompressor=threshold=-18dB:ratio=3";
-}
-
-# -------------------------------------------------------------------------------------------------
-# when a 'ffmpeg' transformation must be run in place, we use a tempfile because ffmpeg wants output be different of input
-# after a successful transformation, we have to move the tempfile to the target file (which obviously happens to be the original file)
-# this has been prepared when building the ffmpeg command
-# must return true if successul (or nothing to do)
-
-sub execute_mv {
-	my ( $scan ) = @_;
-	my $result = true;
-
-	if( $scan->{commands} && $scan->{commands}{mv} ){
-		my $res = TTP::commandExec({
-			command => 'mv',
-			args => [
-				$scan->{commands}{mv},
-				$scan->{path}
-			]
-		});
-		$result = $res->{success};
-	} else {
-		msgVerbose( "execute_mv() nothing to do" );
-	}
-
-	return $result;
-}
-
-# -------------------------------------------------------------------------------------------------
-# when a 'ffmpeg' transformation happens in the same directory with a different output format
-# we may want remove the initial file
-# this has been prepared when building the ffmpeg command
-# must return true if successul (or nothing to do)
-
-sub execute_rm {
-	my ( $scan ) = @_;
-	my $result = true;
-
-	if( $scan->{commands} && $scan->{commands}{rm} ){
-		my $res = TTP::commandExec({
-			command => 'rm',
-			args => [
-				"-f",
-				$scan->{path}
-			]
-		});
-		$result = $res->{success};
-	} else {
-		msgVerbose( "execute_rm() nothing to do" );
-	}
-
-	return $result;
 }
 
 # -------------------------------------------------------------------------------------------------
