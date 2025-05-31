@@ -7,10 +7,10 @@
 # @(-) --source-path=<source>  acts on this source [${sourcePath}]
 # @(-) --[no]list-albums       list the albums [${listAlbums}]
 # @(-) --format=<format>       print albums with this format [${format}]
-# @(-) album directory level:
+# @(-) album directory level options:
 # @(-) --[no]check-path-album  check the album directory name [${checkAlbumPath}]
 # @(-) --[no]check-all-album   check all album-level available properties [${checkAllAlbum}]
-# @(-) track file level:
+# @(-) track file level options:
 # @(-) --[no]check-artist      check the artist [${checkArtist}]
 # @(-) --[no]check-album       check the album [${checkAlbum}]
 # @(-) --[no]check-year        check the year [${checkYear}]
@@ -21,6 +21,9 @@
 # @(-) --[no]check-count       check the tracks count [${checkCount}]
 # @(-) --[no]check-path-track  check the track file name [${checkTrackPath}]
 # @(-) --[no]check-all-track   check all track-level available properties [${checkAllTrack}]
+# @(-) summary options:
+# @(-) --[no]summary-list      display the list of erroneous albums/tracks [${summaryList}]
+# @(-) --[no]summary-counters  display the counters [${summaryCounters}]
 #
 # @(@) Note 1: 'format' is a sprintf() format string with following macros:
 # @(@)         - %AP: artist from the path
@@ -76,7 +79,9 @@ my $defaults = {
 	checkTrackPath => 'no',
 	checkYear => 'no',
 	checkAllTrack => 'no',
-	format => '%AP / %BP'
+	format => '%AP / %BP',
+	summaryList => 'yes',
+	summaryCounters => 'yes'
 };
 
 my $opt_sourcePath = $defaults->{sourcePath};
@@ -94,6 +99,8 @@ my $opt_checkTrackPath = false;
 my $opt_checkYear = false;
 my $opt_checkAllTrack = false;
 my $opt_format = $defaults->{format};
+my $opt_summaryList = true;
+my $opt_summaryCounters = true;
 
 # register here the counters at the album level
 my $check_albums = [
@@ -142,31 +149,41 @@ sub checkAlbum {
 sub checkAlbumPath {
 	my ( $hash, $scan ) = @_;
 
-	# actual directory name
+	# actual directory name, may be undef if we have only the 'artist' level
 	my $albumFromPath = $scan->{albumFromPath};
 
-	# theorical directory name
-	my $album = TTP::Media::albumFromScan( $scan ) || '';
-	my $year = TTP::Media::yearFromScan( $scan ) || '';
-	my $theorical = "$album [$year]";
-
-	# are we equal ?
-	my $ok = $albumFromPath eq $theorical;
-
-	# maybe increment counters per album
 	$hash->{albumdir} //= {};
 	$hash->{albumdir}{count} //= 0;
 	$hash->{albumdir}{count} += 1;
-	if( $ok ){
-		$hash->{albumdir}{ok} //= 0;
-		$hash->{albumdir}{ok} += 1;
-		msgVerbose( "album path '$albumFromPath' ok" );
+	my $ok = true;
+
+	if( $albumFromPath ){
+
+		# theorical directory name
+		my $album = TTP::Media::albumFromScan( $scan ) || '';
+		my $year = TTP::Media::yearFromScan( $scan ) || '';
+		my $theorical = "$album [$year]";
+
+		# are we equal ?
+		$ok = $albumFromPath eq $theorical;
+
+		# maybe increment counters per album
+		if( $ok ){
+			$hash->{albumdir}{ok} //= 0;
+			$hash->{albumdir}{ok} += 1;
+			msgVerbose( "album path '$albumFromPath' ok" );
+		} else {
+			$hash->{albumdir}{notok} //= 0;
+			$hash->{albumdir}{notok} += 1;
+			$hash->{albumdir}{theorical} = $theorical;
+			msgWarn( "album path not ok for '$albumFromPath' (theorical='$theorical')" );
+		}
 	} else {
-		$hash->{albumdir}{notok} //= 0;
-		$hash->{albumdir}{notok} += 1;
-		$hash->{albumdir}{theorical} = $theorical;
-		msgWarn( "album path not ok for '$albumFromPath' (theorical='$theorical')" );
+		$hash->{albumdir}{noalbum} //= 0;
+		$hash->{albumdir}{notoknoalbum} += 1;
+		msgVerbose( "no album from path for '$scan->{path}'" );
 	}
+
 
 	return $ok;
 }
@@ -434,19 +451,27 @@ sub checkYear {
 # audio tree are set as ROOT/type/letter/artist/albums[/disc]/file
 
 sub listAlbums {
-	my $countAlbums = 0;
-	my $countCheckAlbums = 0;
-	my $countCheckAlbumPaths = 0;
-	my $countCheckArtists = 0;
-	my $countCheckCounts = 0;
-	my $countCheckCovers = 0;
-	my $countCheckGenres = 0;
-	my $countCheckNumbers = 0;
-	my $countCheckTitles = 0;
-	my $countCheckTrackPaths = 0;
-	my $countCheckYears = 0;
+	my $counters = {
+		albums => {
+			total => 0,
+			path => 0,
+		},
+		audios => {
+			total => 0,
+			album => 0,
+			artist => 0,
+			count => 0,
+			cover => 0,
+			genre => 0,
+			number => 0,
+			title => 0,
+			filename => 0,
+			year => 0
+		}
+	};
 	my $albums = {};
 	msgOut( "displaying music albums in '$opt_sourcePath'..." );
+	my $check_album = $opt_checkAlbumPath || $opt_checkAllAlbum;
 	my $check_file = $opt_checkAlbum || $opt_checkArtist || $opt_checkCount || $opt_checkCover || $opt_checkGenre || $opt_checkNumber || $opt_checkTitle || $opt_checkYear || $opt_checkAllTrack;
 	my $result = TTP::Media::scan_tree( $opt_sourcePath, {
 		sub => sub {
@@ -454,6 +479,7 @@ sub listAlbums {
 			my ( $fname, $scan ) = @_;
 			my $albumFromPath = TTP::Media::albumFromPath( $fname );
 			my $artistFromPath = TTP::Media::artistFromPath( $fname );
+			$counters->{audios}{total} += 1;
 			# unless the very rare case where we do not know how to compute the key
 			if( $albumFromPath || $artistFromPath ){
 				$scan->{albumFromPath} = $albumFromPath;
@@ -462,32 +488,35 @@ sub listAlbums {
 				$key =~ s/\s/-/g;
 				if( !$albums->{$key} ){
 					printAlbum( $scan );
-					$countAlbums += 1;
+					$counters->{albums}{total} += 1;
+					$albums->{$key} //= {};
 					$albums->{$key}{albumFromPath} = $albumFromPath;
 					$albums->{$key}{artistFromPath} = $artistFromPath;
-					$countCheckAlbumPaths += ( checkAlbumPath( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkAlbumPath || $opt_checkAllAlbum;
+					$albums->{$key}{valid} //= {};
+					$albums->{$key}{valid}{count} //= 0;
+					$albums->{$key}{valid}{notok} //= 0;
+					if( $check_album ){
+						$counters->{albums}{path} += ( checkAlbumPath( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkAlbumPath || $opt_checkAllAlbum;
+					}
 				}
-				$albums->{$key}{valid} //= {};
-				$albums->{$key}{valid}{count} //= 0;
 				$albums->{$key}{valid}{count} += 1;
 				# and check only if a valid audio file
 				if( $scan->{ok} ){
 					$albums->{$key}{valid}{ok} //= 0;
 					$albums->{$key}{valid}{ok} += 1;
 					if( $check_file ){
-						$countCheckAlbums += ( checkAlbum( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkAlbum || $opt_checkAllTrack;
-						$countCheckArtists += ( checkArtist( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkArtist || $opt_checkAllTrack;
-						$countCheckCounts += ( checkCount( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkCount || $opt_checkAllTrack;
-						$countCheckCovers += ( checkCover( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkCover || $opt_checkAllTrack;
-						$countCheckGenres += ( checkGenre( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkGenre || $opt_checkAllTrack;
-						$countCheckNumbers += ( checkNumber( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkNumber || $opt_checkAllTrack;
-						$countCheckTitles += ( checkTitle( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkTitle || $opt_checkAllTrack;
-						$countCheckTrackPaths += ( checkTrackPath( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkTrackPath || $opt_checkAllTrack;
-						$countCheckYears += ( checkYear( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkYear || $opt_checkAllTrack;
+						$counters->{audios}{album} += ( checkAlbum( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkAlbum || $opt_checkAllTrack;
+						$counters->{audios}{artist} += ( checkArtist( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkArtist || $opt_checkAllTrack;
+						$counters->{audios}{count} += ( checkCount( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkCount || $opt_checkAllTrack;
+						$counters->{audios}{cover} += ( checkCover( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkCover || $opt_checkAllTrack;
+						$counters->{audios}{genre} += ( checkGenre( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkGenre || $opt_checkAllTrack;
+						$counters->{audios}{number} += ( checkNumber( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkNumber || $opt_checkAllTrack;
+						$counters->{audios}{title} += ( checkTitle( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkTitle || $opt_checkAllTrack;
+						$counters->{audios}{filename} += ( checkTrackPath( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkTrackPath || $opt_checkAllTrack;
+						$counters->{audios}{year} += ( checkYear( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkYear || $opt_checkAllTrack;
 					}
 				} else {
 					msgErr( $scan->{errors}, { incErr => false });
-					$albums->{$key}{valid}{notok} //= 0;
 					$albums->{$key}{valid}{notok} += 1;
 					$albums->{$key}{valid}{files} //= [];
 					push( @{$albums->{$key}{scan}{files}}, $fname );
@@ -499,50 +528,9 @@ sub listAlbums {
 	});
 
 	# have a summary
-	#print Dumper( $albums );
-	# display the albums which have at least one error
-	my $countOk = 0;
-	my $errAlbums = [];
-	foreach my $key ( sort keys %{$albums} ){
-		my $haveError = false;
-		$albums->{$key}{errfiles} //= {};
-		foreach my $counter ( sort keys %{$albums->{$key}} ){
-			if( ref( $albums->{$key}{$counter} ) eq 'HASH' ){
-				if( $albums->{$key}{$counter}{notok} ){
-					$haveError = true;
-					if( grep( /^$counter$/, @{$check_albums} )){
-						$albums->{$key}{erralbums} //= [];
-						push( @{$albums->{$key}{erralbums}}, $counter );
-					} else {
-						foreach my $f ( @{$albums->{$key}{$counter}{files}} ){
-							$albums->{$key}{errfiles}{$f} //= [];
-							push( @{$albums->{$key}{errfiles}{$f}}, $counter );
-						}
-					}
-				}
-			}
-		}
-		if( $haveError ){
-			push( @{$errAlbums}, $key );
-		} else {
-			$countOk += 1;
-		}
-	}
-	msgOut( "$countAlbums found album(s), among them $countOk were ok" );
-	if( scalar( @{$errAlbums} )){
-		msgOut(( scalar( @{$errAlbums} ))." album(s) were NOT ok:" );
-		foreach my $key ( @{$errAlbums} ){
-			my $album = $albums->{$key};
-			#print Dumper( $album );
-			msgOut( "  $album->{artistFromPath} / $album->{albumFromPath}" );
-			if( $albums->{$key}{erralbums} && scalar( @{$albums->{$key}{erralbums}} )){
-				msgOut( "    ".join( ',', @{$album->{erralbums}}));
-			}
-			foreach my $f ( sort keys %{$album->{errfiles}} ){
-				msgOut( "    $f: ".join( ',', @{$album->{errfiles}{$f}}));
-			}
-		}
-	}
+	summaryList( $counters, $albums ) if $opt_summaryList;
+	summaryCounters( $counters, $albums ) if $opt_summaryCounters;
+	msgOut( "done" );
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -573,6 +561,90 @@ sub printAlbum {
 	print STDOUT "$prefix$str".EOL;
 }
 
+# -------------------------------------------------------------------------------------------------
+# display the list of counters as a summary
+# (I):
+# - the counters
+# - the albums
+
+sub summaryCounters {
+	my ( $counters, $albums ) = @_;
+
+	msgOut( "Summary counters:" );
+	my @types = sort keys( %{$counters} );
+	foreach my $type ( @types ){
+		msgOut( "  $type:" );
+		foreach my $key ( sort keys %{$counters->{$type}} ){
+			msgOut( "    $key: $counters->{$type}{$key}", { withEol => false });
+			if( $key eq 'total' ){
+				print STDOUT EOL;
+			} else {
+				print STDOUT " ok";
+				if( $counters->{$type}{$key} != $counters->{$type}{total} ){
+					print STDOUT " (".( $counters->{$type}{total} - $counters->{$type}{$key} )." not ok)".EOL;
+				} else {
+					print STDOUT EOL;
+				}
+			}
+		}
+	}
+}
+
+# -------------------------------------------------------------------------------------------------
+# display the list of erroneous albums as a summary
+# (I):
+# - the counters
+# - the albums
+
+sub summaryList {
+	my ( $counters, $albums ) = @_;
+
+	# display the albums which have at least one error
+	my $countOk = 0;
+	my $errAlbums = [];
+	foreach my $key ( sort keys %{$albums} ){
+		my $haveError = false;
+		$albums->{$key}{errfiles} //= {};
+		foreach my $counter ( sort keys %{$albums->{$key}} ){
+			if( ref( $albums->{$key}{$counter} ) eq 'HASH' ){
+				if( $albums->{$key}{$counter}{notok} ){
+					$haveError = true;
+					if( grep( /^$counter$/, @{$check_albums} )){
+						$albums->{$key}{erralbums} //= [];
+						push( @{$albums->{$key}{erralbums}}, $counter );
+					} else {
+						foreach my $f ( @{$albums->{$key}{$counter}{files}} ){
+							$albums->{$key}{errfiles}{$f} //= [];
+							push( @{$albums->{$key}{errfiles}{$f}}, $counter );
+						}
+					}
+				}
+			}
+		}
+		if( $haveError ){
+			push( @{$errAlbums}, $key );
+		} else {
+			$countOk += 1;
+		}
+	}
+	msgOut( "Summary list:" );
+	msgOut( "  $counters->{albums}{total} found album(s), among them $countOk were ok" );
+	if( scalar( @{$errAlbums} )){
+		msgOut(( "  ".scalar( @{$errAlbums} ))." album(s) were NOT ok:" );
+		foreach my $key ( @{$errAlbums} ){
+			my $album = $albums->{$key};
+			#print Dumper( $album );
+			msgOut( "    $album->{artistFromPath} / $album->{albumFromPath}" );
+			if( $albums->{$key}{erralbums} && scalar( @{$albums->{$key}{erralbums}} )){
+				msgOut( "      ".join( ',', @{$album->{erralbums}}));
+			}
+			foreach my $f ( sort keys %{$album->{errfiles}} ){
+				msgOut( "      $f: ".join( ',', @{$album->{errfiles}{$f}}));
+			}
+		}
+	}
+}
+
 # =================================================================================================
 # MAIN
 # =================================================================================================
@@ -596,7 +668,9 @@ if( !GetOptions(
 	"check-track-path!"	=> \$opt_checkTrackPath,
 	"check-year!"		=> \$opt_checkYear,
 	"check-all-track!"	=> \$opt_checkAllTrack,
-	"format=s"			=> \$opt_format )){
+	"format=s"			=> \$opt_format,
+	"summary-list!"		=> \$opt_summaryList,
+	"summary-counters!"	=> \$opt_summaryCounters )){
 
 		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
@@ -625,6 +699,8 @@ msgVerbose( "got check-track-path='".( $opt_checkTrackPath ? 'true':'false' )."'
 msgVerbose( "got check-year='".( $opt_checkYear ? 'true':'false' )."'" );
 msgVerbose( "got check-all-track='".( $opt_checkAllTrack ? 'true':'false' )."'" );
 msgVerbose( "got format='$opt_format'" );
+msgVerbose( "got summary-list='".( $opt_summaryList ? 'true':'false' )."'" );
+msgVerbose( "got summary-counters='".( $opt_summaryCounters ? 'true':'false' )."'" );
 
 # must have --source-path option
 msgErr( "'--source-path' option is mandatory, but is not specified" ) if !$opt_sourcePath;

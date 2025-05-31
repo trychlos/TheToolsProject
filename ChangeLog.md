@@ -16,6 +16,7 @@
     - audio.pl list has '--check-all-track' and '--check-all-album' options
     - audio.pl normalize --video option now reconduct the videos streams without trying to interpret it when asked for
     - audio.pl normalize --video option defaults to true
+    - audio.pl list has '--summary-list' and '--summary-counters' options
 
 ### 4.19.0
 
