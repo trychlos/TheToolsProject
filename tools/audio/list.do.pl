@@ -9,7 +9,8 @@
 # @(-) --source-path=<source>       acts on this source [${sourcePath}]
 # @(-) --[no]list-albums            list the albums [${listAlbums}]
 # @(-) --[no]list-genres            list the recensed genres [${listGenres}]
-# @(-) --format=<format>            print albums with this format [${format}]
+# @(-) --format=<format>            print artists/albums with this format [${format}]
+# @(-) --step=<count>               the progress indicator step when listing by genres, set to zero or a negative value to disable [${step}]
 # @(-) album directory level options:
 # @(-) --[no]check-path-album       check that the album directory corresponds to the album tag (of the first track) [${checkAlbumPath}]
 # @(-) --[no]check-specials-album   check that the album title doesn't have special characters [${checkAlbumSpecials}]
@@ -97,6 +98,7 @@ my $defaults = {
 	checkYear => 'no',
 	checkAllTrack => 'no',
 	format => '%AP / %BP',
+	step => 100,
 	summaryList => 'yes',
 	summaryCounters => 'yes'
 };
@@ -122,6 +124,7 @@ my $opt_checkTrackSpecials = false;
 my $opt_checkYear = false;
 my $opt_checkAllTrack = false;
 my $opt_format = $defaults->{format};
+my $opt_step = $defaults->{step};
 my $opt_summaryList = true;
 my $opt_summaryCounters = true;
 
@@ -729,10 +732,12 @@ sub listGenres {
 			# expect to have only supported files
 			my ( $fname, $scan ) = @_;
 			$counters->{total} += 1;
-			my $cent = int( $counters->{total} / 100 );
-			if( $cent > $prev_cents ){
-				print STDOUT ".";
-				$prev_cents = $cent;
+			if( $opt_step > 0 ){
+				my $cent = int( $counters->{total} / $opt_step );
+				if( $cent > $prev_cents ){
+					print STDOUT ".";
+					$prev_cents = $cent;
+				}
 			}
 			if( $scan->{ok} ){
 				$counters->{valid} += 1;
@@ -958,6 +963,7 @@ if( !GetOptions(
 	"check-year!"			=> \$opt_checkYear,
 	"check-all-track!"		=> \$opt_checkAllTrack,
 	"format=s"				=> \$opt_format,
+	"step=s"				=> \$opt_step,
 	"summary-list!"			=> \$opt_summaryList,
 	"summary-counters!"		=> \$opt_summaryCounters )){
 
@@ -994,6 +1000,7 @@ msgVerbose( "got check-track-specials='".( $opt_checkTrackSpecials ? 'true':'fal
 msgVerbose( "got check-year='".( $opt_checkYear ? 'true':'false' )."'" );
 msgVerbose( "got check-all-track='".( $opt_checkAllTrack ? 'true':'false' )."'" );
 msgVerbose( "got format='$opt_format'" );
+msgVerbose( "got step='$opt_step'" );
 msgVerbose( "got summary-list='".( $opt_summaryList ? 'true':'false' )."'" );
 msgVerbose( "got summary-counters='".( $opt_summaryCounters ? 'true':'false' )."'" );
 
