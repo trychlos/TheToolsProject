@@ -125,6 +125,7 @@ my $opt_checkYear = false;
 my $opt_checkAllTrack = false;
 my $opt_format = $defaults->{format};
 my $opt_step = $defaults->{step};
+my $opt_step_set = false;
 my $opt_summaryList = true;
 my $opt_summaryCounters = true;
 
@@ -963,7 +964,11 @@ if( !GetOptions(
 	"check-year!"			=> \$opt_checkYear,
 	"check-all-track!"		=> \$opt_checkAllTrack,
 	"format=s"				=> \$opt_format,
-	"step=s"				=> \$opt_step,
+	"step=s"				=> sub {
+		my ( $name, $value ) = @_;
+		$opt_step = $value;
+		$opt_step_set = true;
+	},
 	"summary-list!"			=> \$opt_summaryList,
 	"summary-counters!"		=> \$opt_summaryCounters )){
 
@@ -1006,6 +1011,30 @@ msgVerbose( "got summary-counters='".( $opt_summaryCounters ? 'true':'false' )."
 
 # must have --source-path option
 msgErr( "'--source-path' option is mandatory, but is not specified" ) if !$opt_sourcePath;
+
+# some options are only relevant for some actions
+if( !$opt_listAlbums ){
+	msgWarn( "'--check-album' option is only relevant when listing albums, ignored" ) if $opt_checkAlbum;
+	msgWarn( "'--check-album-path' option is only relevant when listing albums, ignored" ) if $opt_checkAlbumPath;
+	msgWarn( "'--check-album-specials' option is only relevant when listing albums, ignored" ) if $opt_checkAlbumSpecials;
+	msgWarn( "'--check-all-album' option is only relevant when listing albums, ignored" ) if $opt_checkAllAlbum;
+	msgWarn( "'--check-all-album' option is only relevant when listing albums, ignored" ) if $opt_checkAllAlbum;
+	msgWarn( "'--check-artist' option is only relevant when listing albums, ignored" ) if $opt_checkArtist;
+	msgWarn( "'--check-count' option is only relevant when listing albums, ignored" ) if $opt_checkCount;
+	msgWarn( "'--check-cover' option is only relevant when listing albums, ignored" ) if $opt_checkCover;
+	msgWarn( "'--check-number' option is only relevant when listing albums, ignored" ) if $opt_checkNumber;
+	msgWarn( "'--check-same-album' option is only relevant when listing albums, ignored" ) if $opt_checkSameAlbum;
+	msgWarn( "'--check-same-artist' option is only relevant when listing albums, ignored" ) if $opt_checkSameArtist;
+	msgWarn( "'--check-same-count' option is only relevant when listing albums, ignored" ) if $opt_checkSameCount;
+	msgWarn( "'--check-title' option is only relevant when listing albums, ignored" ) if $opt_checkTitle;
+	msgWarn( "'--check-track-path' option is only relevant when listing albums, ignored" ) if $opt_checkTrackPath;
+	msgWarn( "'--check-track-specials' option is only relevant when listing albums, ignored" ) if $opt_checkTrackSpecials;
+	msgWarn( "'--check-year' option is only relevant when listing albums, ignored" ) if $opt_checkYear;
+	msgWarn( "'--check-all-track' option is only relevant when listing albums, ignored" ) if $opt_checkAllTrack;
+}
+if( !$opt_listGenres ){
+	msgWarn( "'--step' option is only relevant when listing genres, ignored" ) if $opt_step_set;
+}
 
 # should have something to do
 # at the moment the '--list-albums' is a default action
