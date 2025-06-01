@@ -146,20 +146,26 @@ my $Const = {
 # our standard audio trees are set as ROOT/type/letter/artist/albums[/disc]/file
 # (I):
 # - the full file pathname
+# - an optional options hash with following keys:
+#   > level: the directory level where to find the album, defaulting to 6
 # (O):
 # - the album directory, which may be undef
 
 sub albumFromPath {
-	my ( $path ) = @_;
+	my ( $path, $opts ) = @_;
+	$opts //= {};
 	my $album = undef;
+
+	my $level = 6;
+	$level = $opts->{level} if defined $opts->{level};
 
 	if( -d $path ){
 		my @dirs = File::Spec->splitdir( $path );
-		$album = $dirs[6];
+		$album = $dirs[$level];
 	} else {
 		my ( $volume,$directories,$file ) = File::Spec->splitpath( $path );
 		my @dirs = File::Spec->splitdir( $directories );
-		$album = $dirs[6];
+		$album = $dirs[$level];
 	}
 
 	return $album;
@@ -190,20 +196,26 @@ sub albumFromScan {
 # our standard audio trees are set as ROOT/type/letter/artist/albums[/disc]/file
 # (I):
 # - the full file pathname
+# - an optional options hash with following keys:
+#   > level: the directory level where to find the artist, defaulting to 5
 # (O):
 # - the artist directory
 
 sub artistFromPath {
-	my ( $path ) = @_;
+	my ( $path, $opts ) = @_;
+	$opts //= {};
 	my $artist = undef;
+
+	my $level = 5;
+	$level = $opts->{level} if defined $opts->{level};
 
 	if( -d $path ){
 		my @dirs = File::Spec->splitdir( $path );
-		$artist = $dirs[5];
+		$artist = $dirs[$level];
 	} else {
 		my ( $volume,$directories,$file ) = File::Spec->splitpath( $path );
 		my @dirs = File::Spec->splitdir( $directories );
-		$artist = $dirs[5];
+		$artist = $dirs[$level];
 	}
 
 	return $artist;
@@ -334,8 +346,7 @@ sub hasDiscLevel {
 
 	my ( $volume,$directories,$file ) = File::Spec->splitpath( $path );
 	my @dirs = File::Spec->splitdir( $directories );
-	my $disc = ( scalar( @dirs ) > 7 );
-	print "path='$path' ".Dumper( @dirs ) if !$disc;
+	my $disc = ( scalar( @dirs ) > 8 );
 
 	return $disc;
 }

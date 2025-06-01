@@ -11,6 +11,8 @@
 # @(-) --[no]list-genres            list the recensed genres [${listGenres}]
 # @(-) --format=<format>            print artists/albums with this format [${format}]
 # @(-) --step=<count>               the progress indicator step when listing by genres, set to zero or a negative value to disable [${step}]
+# @(-) --album-level=<level>        the directory level where the album is to be find [${albumLevel}]
+# @(-) --artist-level=<level>       the directory level where the artist is to be find [${artistLevel}]
 # @(-) album directory level options:
 # @(-) --[no]check-path-album       check that the album directory corresponds to the album tag (of the first track) [${checkAlbumPath}]
 # @(-) --[no]check-specials-album   check that the album title doesn't have special characters [${checkAlbumSpecials}]
@@ -98,6 +100,8 @@ my $defaults = {
 	checkTrackSpecials => 'no',
 	checkYear => 'no',
 	checkAllTrack => 'no',
+	albumLevel => 6,
+	artistLevel => 5,
 	format => '%AP / %BP',
 	step => 100,
 	summaryList => 'yes',
@@ -125,6 +129,8 @@ my $opt_checkTrackPath = false;
 my $opt_checkTrackSpecials = false;
 my $opt_checkYear = false;
 my $opt_checkAllTrack = false;
+my $opt_albumLevel = $defaults->{albumLevel};
+my $opt_artistLevel = $defaults->{artistLevel};
 my $opt_format = $defaults->{format};
 my $opt_step = $defaults->{step};
 my $opt_step_set = false;
@@ -652,8 +658,9 @@ sub listAlbums {
 		sub => sub {
 			# expect to have only supported files
 			my ( $fname, $scan ) = @_;
-			my $albumFromPath = TTP::Media::albumFromPath( $fname );
-			my $artistFromPath = TTP::Media::artistFromPath( $fname );
+			#msgErr( $fname ) if $fname !~ /\.flac$/;
+			my $albumFromPath = TTP::Media::albumFromPath( $fname, { level => $opt_albumLevel });
+			my $artistFromPath = TTP::Media::artistFromPath( $fname, { level => $opt_artistLevel });
 			$counters->{audios}{total} += 1;
 			# unless the very rare case where we do not know how to compute the key
 			if( $albumFromPath || $artistFromPath ){
@@ -707,6 +714,7 @@ sub listAlbums {
 			}
 		}
 	});
+	#print Dumper( $result );
 
 	# have a summary
 	summaryUpdateCounters( $counters, $albums );
@@ -745,8 +753,8 @@ sub listGenres {
 			}
 			if( $scan->{ok} ){
 				$counters->{valid} += 1;
-				my $albumFromPath = TTP::Media::albumFromPath( $fname );
-				my $artistFromPath = TTP::Media::artistFromPath( $fname );
+				my $albumFromPath = TTP::Media::albumFromPath( $fname, { level => $opt_albumLevel });
+				my $artistFromPath = TTP::Media::artistFromPath( $fname, { level => $opt_artistLevel });
 
 				my $genre = TTP::Media::genreFromScan( $scan, { dumpIfEmpty => false });
 				if( $genre ){
@@ -838,13 +846,13 @@ sub summaryAlbumsCounters {
 						if( $key eq 'same_count' ){
 							$str .= " ($counters->{$type}{same_count_disabled} disabled";
 							if( $counters->{$type}{$key} + $counters->{$type}{same_count_disabled} != $counters->{$type}{total} ){
-								$str .= $counters->{$type}{total} - $counters->{$type}{$key} - $counters->{$type}{same_count_disabled}." not ok";
+								$str .= ", ".( $counters->{$type}{total} - $counters->{$type}{$key} - $counters->{$type}{same_count_disabled} )." not ok";
 							}
 							$str .= ")";
 						} else {
 							$str .= " (".( $counters->{$type}{total} - $counters->{$type}{$key} )." not ok";
 							if( $key eq 'same_artist' ){
-								$str .= ", see help notes as this may be not relevant"
+								$str .= ", see help notes as this may be unrelevant"
 							}
 							$str .= ")";
 						}
@@ -926,12 +934,20 @@ sub summaryUpdateCounters {
 		foreach my $same ( 'same_album', 'same_artist', 'same_count' ){
 			if( $albums->{$key}{$same} && $albums->{$key}{$same}{count} ){
 				my @distincts = keys %{$albums->{$key}{$same}{list}};
-				if( scalar( @distincts ) == 1 ){
-					$counters->{albums}{$same} += 1;
-				} elsif( $same eq 'same_count' && TTP::Media::hasDiscLevel( $albums->{$key}{$same}{list}{$distincts[0]}->[0] )){
+
+				# first, if the first track of an album exhibits a disc level, just disable the counter
+				if( $same eq 'same_count' && TTP::Media::hasDiscLevel( $albums->{$key}{$same}{list}{$distincts[0]}->[0] )){
 					$counters->{albums}{same_count_disabled} += 1;
+					#print "disabled $albums->{$key}{$same}{list}{$distincts[0]}->[0]".EOL;
+
+				# only then, count: when checking for 'same' properties, having a single key is ok
+				} elsif( scalar( @distincts ) == 1 ){
+					$counters->{albums}{$same} += 1;
+					#print "ok $albums->{$key}{$same}{list}{$distincts[0]}->[0]".EOL if $same eq 'same_count';
+
+				# have several values for something which is checked for same, so warns
+				# unless when we have found several artists (which is rather frequent)
 				} else {
-					# count but do not warn when we find several artists (which is rather frequent)
 					msgWarn( "$albums->{$key}{artistFromPath} / $albums->{$key}{albumFromPath} not $same" ) if $same ne 'same_artist';
 				}
 			}
@@ -968,6 +984,8 @@ if( !GetOptions(
 	"check-track-specials!"	=> \$opt_checkTrackSpecials,
 	"check-year!"			=> \$opt_checkYear,
 	"check-all-track!"		=> \$opt_checkAllTrack,
+	"album-level=i"			=> \$opt_albumLevel,
+	"artist-level=i"		=> \$opt_artistLevel,
 	"format=s"				=> \$opt_format,
 	"step=s"				=> sub {
 		my ( $name, $value ) = @_;
@@ -1010,6 +1028,8 @@ msgVerbose( "got check-track-path='".( $opt_checkTrackPath ? 'true':'false' )."'
 msgVerbose( "got check-track-specials='".( $opt_checkTrackSpecials ? 'true':'false' )."'" );
 msgVerbose( "got check-year='".( $opt_checkYear ? 'true':'false' )."'" );
 msgVerbose( "got check-all-track='".( $opt_checkAllTrack ? 'true':'false' )."'" );
+msgVerbose( "got album-level='$opt_albumLevel'" );
+msgVerbose( "got artist-level='$opt_artistLevel'" );
 msgVerbose( "got format='$opt_format'" );
 msgVerbose( "got step='$opt_step'" );
 msgVerbose( "got summary-list='".( $opt_summaryList ? 'true':'false' )."'" );
@@ -1018,6 +1038,12 @@ msgVerbose( "got summary-unchecked='".( $opt_summaryUnchecked ? 'true':'false' )
 
 # must have --source-path option
 msgErr( "'--source-path' option is mandatory, but is not specified" ) if !$opt_sourcePath;
+
+# albumLevel and artistLevel must be greater than zero integers
+$opt_albumLevel = int( $opt_albumLevel );
+msgErr( "--album-level' option must provide a greater than zero integer, got $opt_albumLevel" ) if $opt_albumLevel <= 0;
+$opt_artistLevel = int( $opt_artistLevel );
+msgErr( "--artist-level' option must provide a greater than zero integer, got $opt_artistLevel" ) if $opt_artistLevel <= 0;
 
 # some options are only relevant for some actions
 if( !$opt_listAlbums ){

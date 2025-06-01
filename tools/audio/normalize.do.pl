@@ -7,6 +7,8 @@
 # @(-) --source-path=<source>  acts on this source [${sourcePath}]
 # @(-) --target-path=<target>  writes the result on this target [${targetPath}]
 # @(-) --format=<format>       accept the file format, may be specified several times or as a comma-separated list [${format}]
+# @(-) --album-level=<level>   the directory level where the album is to be find [${albumLevel}]
+# @(-) --artist-level=<level>  the directory level where the artist is to be find [${artistLevel}]
 # @(-) --[no]dynamics          apply dynamics normalization [${dynamics}]
 # @(-) --[no]loudness          apply loudness normalization [${loudness}]
 # @(-) --[no]video             reconduct found video streams, including attached images [${video}]
@@ -56,6 +58,8 @@ my $defaults = {
 	sourcePath => '',
 	targetPath => '',
 	format => '',
+	albumLevel => 6,
+	artistLevel => 5,
 	dynamics => 'no',
 	filename => 'no',
 	loudness => 'no',
@@ -67,6 +71,8 @@ my $defaults = {
 my $opt_sourcePath = $defaults->{sourcePath};
 my $opt_targetPath = $defaults->{targetPath};
 my @opt_formats = ();
+my $opt_albumLevel = $defaults->{albumLevel};
+my $opt_artistLevel = $defaults->{artistLevel};
 my $opt_dynamics = false;
 my $opt_loudness = false;
 my $opt_filename = false;
@@ -94,8 +100,8 @@ sub doFind {
 			my ( $fname, $scan ) = @_;
 			$total_files += 1;
 			return if $opt_limit >= 0 && $total_files > $opt_limit;
-			my $albumFromPath = TTP::Media::albumFromPath( $fname );
-			my $artistFromPath = TTP::Media::artistFromPath( $fname );
+			my $albumFromPath = TTP::Media::albumFromPath( $fname, { level => $opt_albumLevel });
+			my $artistFromPath = TTP::Media::artistFromPath( $fname, { level => $opt_artistLevel });
 			if( $albumFromPath || $artistFromPath ){
 				$scan->{albumFromPath} = $albumFromPath;
 				$scan->{artistFromPath} = $artistFromPath;
@@ -369,6 +375,8 @@ if( !GetOptions(
 	"source-path=s"		=> \$opt_sourcePath,
 	"target-path=s"		=> \$opt_targetPath,
 	"format=s"			=> \@opt_formats,
+	"album-level=i"		=> \$opt_albumLevel,
+	"artist-level=i"	=> \$opt_artistLevel,
 	"dynamics!"			=> \$opt_dynamics,
 	"filename!"			=> \$opt_filename,
 	"loudness!"			=> \$opt_loudness,
@@ -392,6 +400,8 @@ msgVerbose( "got source-path='$opt_sourcePath'" );
 msgVerbose( "got target-path='$opt_targetPath'" );
 @opt_formats= split( /,/, join( ',', @opt_formats ));
 msgVerbose( "got formats='".join( ',', @opt_formats )."'" );
+msgVerbose( "got album-level='$opt_albumLevel'" );
+msgVerbose( "got artist-level='$opt_artistLevel'" );
 msgVerbose( "got dynamics='".( $opt_dynamics ? 'true':'false' )."'" );
 msgVerbose( "got loudness='".( $opt_loudness ? 'true':'false' )."'" );
 msgVerbose( "got filename='".( $opt_filename ? 'true':'false' )."'" );
@@ -401,6 +411,12 @@ msgVerbose( "got limit='$opt_limit'" );
 
 # must have --source-path option
 msgErr( "'--source-path' option is mandatory, but is not specified" ) if !$opt_sourcePath;
+
+# albumLevel and artistLevel must be greater than zero integers
+my $opt_albumLevel = int( $opt_albumLevel );
+msgErr( "--album-level' option must provide a greater than zero integer, got $opt_albumLevel" ) if $opt_albumLevel <= 0;
+my $opt_artistLevel = int( $opt_artistLevel );
+msgErr( "--artist-level' option must provide a greater than zero integer, got $opt_artistLevel" ) if $opt_artistLevel <= 0;
 
 # maybe should remove when the target path is same than the source
 msgWarn( "neither '--target-path' nor '--remove' options are specified, there is a risk of duplicated track files in the same directory" ) if !$opt_targetPath && !$opt_remove;

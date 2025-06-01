@@ -20,6 +20,7 @@
     - audio.pl list has '--list-genres' action and '--check-same-album', '--check-same-artist' and '--check-same-count options
     - audio.pl list has '--step' option when listing by genre
     - audio.pl list has '--summary-unchecked' option to not prevent display of counters for unchecked properties
+    - audio.pl list and normalize verbs have '--album-level' and '--artist-level' options
 
 ### 4.19.0
 
