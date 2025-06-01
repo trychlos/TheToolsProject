@@ -33,6 +33,7 @@
 # @(-) summary options:
 # @(-) --[no]summary-list           display the list of erroneous albums/tracks [${summaryList}]
 # @(-) --[no]summary-counters       display the counters [${summaryCounters}]
+# @(-) --[no]summary-unchecked      display counters for unchecked options [${summaryUnchecked}]
 #
 # @(@) Note 1: 'format' is a sprintf() format string with following macros:
 # @(@)         - %AP: artist from the path
@@ -100,7 +101,8 @@ my $defaults = {
 	format => '%AP / %BP',
 	step => 100,
 	summaryList => 'yes',
-	summaryCounters => 'yes'
+	summaryCounters => 'yes',
+	summaryUnchecked => 'no'
 };
 
 my $opt_sourcePath = $defaults->{sourcePath};
@@ -128,6 +130,7 @@ my $opt_step = $defaults->{step};
 my $opt_step_set = false;
 my $opt_summaryList = true;
 my $opt_summaryCounters = true;
+my $opt_summaryUnchecked = false;
 
 # register here the counters at the album level
 my $check_albums = [
@@ -821,6 +824,8 @@ sub summaryAlbumsCounters {
 		foreach my $key ( sort keys %{$counters->{$type}} ){
 			if( $key eq 'same_count_disabled' ){
 				next;
+			} elsif( $counters->{$type}{$key} == -1 && !$opt_summaryUnchecked ){
+				next;
 			} else {
 				my $str = "    $key: ";
 				if( $key eq 'total' || $key eq 'valid' ){
@@ -970,7 +975,8 @@ if( !GetOptions(
 		$opt_step_set = true;
 	},
 	"summary-list!"			=> \$opt_summaryList,
-	"summary-counters!"		=> \$opt_summaryCounters )){
+	"summary-counters!"		=> \$opt_summaryCounters,
+	"summary-unchecked!"	=> \$opt_summaryUnchecked )){
 
 		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
@@ -1008,6 +1014,7 @@ msgVerbose( "got format='$opt_format'" );
 msgVerbose( "got step='$opt_step'" );
 msgVerbose( "got summary-list='".( $opt_summaryList ? 'true':'false' )."'" );
 msgVerbose( "got summary-counters='".( $opt_summaryCounters ? 'true':'false' )."'" );
+msgVerbose( "got summary-unchecked='".( $opt_summaryUnchecked ? 'true':'false' )."'" );
 
 # must have --source-path option
 msgErr( "'--source-path' option is mandatory, but is not specified" ) if !$opt_sourcePath;

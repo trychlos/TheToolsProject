@@ -19,6 +19,7 @@
     - audio.pl list has '--summary-list' and '--summary-counters' options
     - audio.pl list has '--list-genres' action and '--check-same-album', '--check-same-artist' and '--check-same-count options
     - audio.pl list has '--step' option when listing by genre
+    - audio.pl list has '--summary-unchecked' option to not prevent display of counters for unchecked properties
 
 ### 4.19.0
 
