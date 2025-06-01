@@ -29,6 +29,7 @@ use Data::Dumper;
 use Encode qw( decode );
 use File::Find;
 use File::Spec;
+use Scalar::Util qw( looks_like_number );
 
 use TTP;
 use vars::global qw( $ep );
@@ -299,20 +300,44 @@ sub coverFromScan {
 # Extracts the genre from a full scan
 # (I):
 # - the scan result
+# - an optional options hash with following keys:
+#   > dumpIfEmpty: whether to dump the tags if the searched value is not found, defaulting to true
 # (O):
 # - the genre, or undef
 
 sub genreFromScan {
-	my ( $scan ) = @_;
+	my ( $scan, $opts ) = @_;
+	$opts //= {};
+
+	my $dumpIfEmpty = true;
+	$dumpIfEmpty = $opts->{dumpIfEmpty} if defined $opts->{dumpIfEmpty};
 
 	my $value = undef;
 	$value = $value || $scan->{tags}{TCON};		# MP3
 	$value = $value || $scan->{tags}{GEN};		# MP4
 	$value = $value || $scan->{tags}{GENRE};	# FLAC
-	print Dumper( $scan->{tags} ) if !$value;
-	#msgVerbose( "$scan->{path} genre $value" ) if $value;
+
+	print Dumper( $scan->{tags} ) if !$value && $dumpIfEmpty;
 
 	return $value;
+}
+
+# ------------------------------------------------------------------------------------------------
+# given our standard audio trees are set as ROOT/type/letter/artist/albums[/disc]/file
+# (I):
+# - the full file pathname
+# (O):
+# - whether the path includes a disc level
+
+sub hasDiscLevel {
+	my ( $path ) = @_;
+
+	my ( $volume,$directories,$file ) = File::Spec->splitpath( $path );
+	my @dirs = File::Spec->splitdir( $directories );
+	my $disc = ( scalar( @dirs ) > 7 );
+	print "path='$path' ".Dumper( @dirs ) if !$disc;
+
+	return $disc;
 }
 
 # ------------------------------------------------------------------------------------------------
@@ -364,6 +389,7 @@ sub scan_file {
 		$result->{errors} = \@errs;
 	} else {
 		$result->{ok} = true;
+		#msgLog( "$path scan result: ".TTP::chompDumper( $result ));
 	}
 
 	$result->{path} = $path;
@@ -495,7 +521,13 @@ sub trackNumberFromScan {
 		$value =~ s/\/[0-9]+$//;
 	}
 	$value = $value || $scan->{tags}{TRACKNUMBER};	# FLAC
-	print Dumper( $scan->{tags} ) if !$value;
+
+	if( !defined( $value )){
+		print Dumper( $scan->{tags} );
+	} elsif( !looks_like_number( $value )){
+		print Dumper( $scan->{tags} );
+		$value = undef;
+	}
 	#msgVerbose( "$scan->{path} year $value" ) if $value;
 
 	return $value;

@@ -17,6 +17,7 @@
     - audio.pl normalize --video option now reconduct the videos streams without trying to interpret it when asked for
     - audio.pl normalize --video option defaults to true
     - audio.pl list has '--summary-list' and '--summary-counters' options
+    - audio.pl list has '--list-genres' action and '--check-same-album', '--check-same-artist' and '--check-same-count options
 
 ### 4.19.0
 

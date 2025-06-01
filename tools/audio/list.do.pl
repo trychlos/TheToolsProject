@@ -1,29 +1,37 @@
 # @(#) list objects
 #
-# @(-) --[no]help              print this message, and exit [${help}]
-# @(-) --[no]colored           color the output depending of the message level [${colored}]
-# @(-) --[no]dummy             dummy run [${dummy}]
-# @(-) --[no]verbose           run verbosely [${verbose}]
-# @(-) --source-path=<source>  acts on this source [${sourcePath}]
-# @(-) --[no]list-albums       list the albums [${listAlbums}]
-# @(-) --format=<format>       print albums with this format [${format}]
+# CAUTION - NOT STANDARD DISPLAY
+#
+# @(-) --[no]help                   print this message, and exit [${help}]
+# @(-) --[no]colored                color the output depending of the message level [${colored}]
+# @(-) --[no]dummy                  dummy run [${dummy}]
+# @(-) --[no]verbose                run verbosely [${verbose}]
+# @(-) --source-path=<source>       acts on this source [${sourcePath}]
+# @(-) --[no]list-albums            list the albums [${listAlbums}]
+# @(-) --[no]list-genres            list the recensed genres [${listGenres}]
+# @(-) --format=<format>            print albums with this format [${format}]
 # @(-) album directory level options:
-# @(-) --[no]check-path-album  check the album directory name [${checkAlbumPath}]
-# @(-) --[no]check-all-album   check all album-level available properties [${checkAllAlbum}]
+# @(-) --[no]check-path-album       check that the album directory corresponds to the album tag (of the first track) [${checkAlbumPath}]
+# @(-) --[no]check-specials-album   check that the album title doesn't have special characters [${checkAlbumSpecials}]
+# @(-) --[no]check-same-album       check that all the track of the album are tagged with the same album [${checkSameAlbum}]
+# @(-) --[no]check-same-artist      check that all the track of the album are tagged with the same artist [${checkSameArtist}]
+# @(-) --[no]check-same-count       check that all the track of the album are tagged with the same tracks count [${checkSameCount}]
+# @(-) --[no]check-all-album        check all album-level available properties [${checkAllAlbum}]
 # @(-) track file level options:
-# @(-) --[no]check-artist      check the artist [${checkArtist}]
-# @(-) --[no]check-album       check the album [${checkAlbum}]
-# @(-) --[no]check-year        check the year [${checkYear}]
-# @(-) --[no]check-genre       check the genre [${checkGenre}]
-# @(-) --[no]check-cover       check the cover [${checkCover}]
-# @(-) --[no]check-title       check the track title [${checkTitle}]
-# @(-) --[no]check-number      check the track number [${checkNumber}]
-# @(-) --[no]check-count       check the tracks count [${checkCount}]
-# @(-) --[no]check-path-track  check the track file name [${checkTrackPath}]
-# @(-) --[no]check-all-track   check all track-level available properties [${checkAllTrack}]
+# @(-) --[no]check-artist           check that the track has a tagged artist [${checkArtist}]
+# @(-) --[no]check-album            check that the track has a tagged album [${checkAlbum}]
+# @(-) --[no]check-count            check that the track has a tagged tracks count [${checkCount}]
+# @(-) --[no]check-cover            check that the track has a tagged cover [${checkCover}]
+# @(-) --[no]check-genre            check that the track has a tagged genre [${checkGenre}]
+# @(-) --[no]check-number           check that the track is numbered [${checkNumber}]
+# @(-) --[no]check-specials-track   check that the track title doesn't have special characters [${checkTrackSpecials}]
+# @(-) --[no]check-title            check that the track has a tagged title [${checkTitle}]
+# @(-) --[no]check-year             check that the track has a tagged year [${checkYear}]
+# @(-) --[no]check-path-track       check that the track filename corresponds to the title tag [${checkTrackPath}]
+# @(-) --[no]check-all-track        check all track-level available properties [${checkAllTrack}]
 # @(-) summary options:
-# @(-) --[no]summary-list      display the list of erroneous albums/tracks [${summaryList}]
-# @(-) --[no]summary-counters  display the counters [${summaryCounters}]
+# @(-) --[no]summary-list           display the list of erroneous albums/tracks [${summaryList}]
+# @(-) --[no]summary-counters       display the counters [${summaryCounters}]
 #
 # @(@) Note 1: 'format' is a sprintf() format string with following macros:
 # @(@)         - %AP: artist from the path
@@ -33,6 +41,9 @@
 # @(@)         - %G: genre
 # @(@)         - %Y: year
 # @(@)         - %TC: track count
+# @(@) Note 2: Checking that all tracks of an album are tagged with the same artist is prone to errors and not always really relevant,
+# @(@)         e.g. when a track is played or singed by the main artist with another one or feat. someone.
+# @(@) Note 3: Checking that all tracks of an album are tagged with the same tracks count is disabled when the album has several discs.
 
 # TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
@@ -67,16 +78,22 @@ my $defaults = {
 	verbose => 'no',
 	sourcePath => '',
 	listAlbums => 'no',
+	listGenres => 'no',
 	checkAlbum => 'no',
 	checkAlbumPath => 'no',
+	checkAlbumSpecials => 'no',
 	checkAllAlbum => 'no',
 	checkArtist => 'no',
 	checkCount => 'no',
 	checkCover => 'no',
 	checkGenre => 'no',
 	checkNumber => 'no',
+	checkSameAlbum => 'no',
+	checkSameArtist => 'no',
+	checkSameCount => 'no',
 	checkTitle => 'no',
 	checkTrackPath => 'no',
+	checkTrackSpecials => 'no',
 	checkYear => 'no',
 	checkAllTrack => 'no',
 	format => '%AP / %BP',
@@ -86,16 +103,22 @@ my $defaults = {
 
 my $opt_sourcePath = $defaults->{sourcePath};
 my $opt_listAlbums = false;
+my $opt_listGenres = false;
 my $opt_checkAlbum = false;
 my $opt_checkAlbumPath = false;
+my $opt_checkAlbumSpecials = false;
 my $opt_checkAllAlbum = false;
 my $opt_checkArtist = false;
 my $opt_checkCount = false;
 my $opt_checkCover = false;
 my $opt_checkGenre = false;
 my $opt_checkNumber = false;
+my $opt_checkSameAlbum = false;
+my $opt_checkSameArtist = false;
+my $opt_checkSameCount = false;
 my $opt_checkTitle = false;
 my $opt_checkTrackPath = false;
+my $opt_checkTrackSpecials = false;
 my $opt_checkYear = false;
 my $opt_checkAllTrack = false;
 my $opt_format = $defaults->{format};
@@ -104,7 +127,11 @@ my $opt_summaryCounters = true;
 
 # register here the counters at the album level
 my $check_albums = [
-	'albumdir'
+	'album_dir',
+	'album_specials',
+	'same_album',
+	'same_artist',
+	'same_count'
 ];
 
 # -------------------------------------------------------------------------------------------------
@@ -129,8 +156,6 @@ sub checkAlbum {
 	if( $ok ){
 		$hash->{album}{ok} //= 0;
 		$hash->{album}{ok} += 1;
-		$value =~ s/[^\/\\<>]//g;
-		msgWarn( "album title contains special characters '$scan->{path}'" ) if $value;
 	} else {
 		$hash->{album}{notok} //= 0;
 		$hash->{album}{notok} += 1;
@@ -152,9 +177,9 @@ sub checkAlbumPath {
 	# actual directory name, may be undef if we have only the 'artist' level
 	my $albumFromPath = $scan->{albumFromPath};
 
-	$hash->{albumdir} //= {};
-	$hash->{albumdir}{count} //= 0;
-	$hash->{albumdir}{count} += 1;
+	$hash->{album_dir} //= {};
+	$hash->{album_dir}{count} //= 0;
+	$hash->{album_dir}{count} += 1;
 	my $ok = true;
 
 	if( $albumFromPath ){
@@ -169,21 +194,54 @@ sub checkAlbumPath {
 
 		# maybe increment counters per album
 		if( $ok ){
-			$hash->{albumdir}{ok} //= 0;
-			$hash->{albumdir}{ok} += 1;
+			$hash->{album_dir}{ok} //= 0;
+			$hash->{album_dir}{ok} += 1;
 			msgVerbose( "album path '$albumFromPath' ok" );
 		} else {
-			$hash->{albumdir}{notok} //= 0;
-			$hash->{albumdir}{notok} += 1;
-			$hash->{albumdir}{theorical} = $theorical;
+			$hash->{album_dir}{notok} //= 0;
+			$hash->{album_dir}{notok} += 1;
+			$hash->{album_dir}{theorical} = $theorical;
 			msgWarn( "album path not ok for '$albumFromPath' (theorical='$theorical')" );
 		}
 	} else {
-		$hash->{albumdir}{noalbum} //= 0;
-		$hash->{albumdir}{notoknoalbum} += 1;
+		$hash->{album_dir}{noalbum} //= 0;
+		$hash->{album_dir}{notoknoalbum} += 1;
 		msgVerbose( "no album from path for '$scan->{path}'" );
 	}
 
+
+	return $ok;
+}
+
+# -------------------------------------------------------------------------------------------------
+# the album name (tagged in the track) should not have special characters if we want be part of the directory name
+# this is checked at the album level on the first track
+
+sub checkAlbumSpecials {
+	my ( $hash, $scan ) = @_;
+
+	my $value = TTP::Media::albumFromScan( $scan );
+	my $ok = true;
+
+	# maybe increment counters per album
+	$hash->{album_specials} //= {};
+	$hash->{album_specials}{count} //= 0;
+	$hash->{album_specials}{count} += 1;
+
+	if( $value ){
+		$value =~ s/[^\/\\<>]//g;
+		if( $value ){
+			msgWarn( "album title contains special characters '$scan->{path}'" );
+			$hash->{album_specials}{notok} //= 0;
+			$hash->{album_specials}{notok} += 1;
+			$hash->{album_specials}{files} //= [];
+			push( @{$hash->{album_specials}{files}}, $scan->{path} );
+			$ok = false;
+		} else {
+			$hash->{album_specials}{ok} //= 0;
+			$hash->{album_specials}{ok} += 1;
+		}
+	}
 
 	return $ok;
 }
@@ -345,6 +403,81 @@ sub checkNumber {
 }
 
 # -------------------------------------------------------------------------------------------------
+# check that all tracks of an album (identified by its folder) have the same tagged album
+# for each album, count ok/notok
+
+sub checkSameAlbum {
+	my ( $hash, $scan ) = @_;
+
+	my $value = TTP::Media::albumFromScan( $scan );
+	my $ok = true;
+
+	# increment counters per album
+	$hash->{same_album} //= {};
+	$hash->{same_album}{count} //= 0;
+	$hash->{same_album}{count} += 1;
+
+	# during the scan we just set the files per tagged album
+	# we will count the different keys at the end
+	my $key = $value || 'empty';
+	$hash->{same_album}{list} //= {};
+	$hash->{same_album}{list}{$key} //= [];
+	push( @{$hash->{same_album}{list}{$key}}, $scan->{path} );
+
+	return $ok;
+}
+
+# -------------------------------------------------------------------------------------------------
+# check that all tracks of an album (identified by its folder) have the same tagged artist
+# for each album, count ok/notok
+
+sub checkSameArtist {
+	my ( $hash, $scan ) = @_;
+
+	my $value = TTP::Media::artistFromScan( $scan );
+	my $ok = true;
+
+	# increment counters per album
+	$hash->{same_artist} //= {};
+	$hash->{same_artist}{count} //= 0;
+	$hash->{same_artist}{count} += 1;
+
+	# during the scan we just set the files per tagged album
+	# we will count the different keys at the end
+	my $key = $value || 'empty';
+	$hash->{same_artist}{list} //= {};
+	$hash->{same_artist}{list}{$key} //= [];
+	push( @{$hash->{same_artist}{list}{$key}}, $scan->{path} );
+
+	return $ok;
+}
+
+# -------------------------------------------------------------------------------------------------
+# check that all tracks of an album (identified by its folder) have the same tagged tracks count
+# for each album, count ok/notok
+
+sub checkSameCount {
+	my ( $hash, $scan ) = @_;
+
+	my $value = TTP::Media::trackCountFromScan( $scan );
+	my $ok = true;
+
+	# increment counters per album
+	$hash->{same_count} //= {};
+	$hash->{same_count}{count} //= 0;
+	$hash->{same_count}{count} += 1;
+
+	# during the scan we just set the files per tagged album
+	# we will count the different keys at the end
+	my $key = $value || 'empty';
+	$hash->{same_count}{list} //= {};
+	$hash->{same_count}{list}{$key} //= [];
+	push( @{$hash->{same_count}{list}{$key}}, $scan->{path} );
+
+	return $ok;
+}
+
+# -------------------------------------------------------------------------------------------------
 # given an audio file path, check that it contains a track title tag
 # for each album, count ok/notok
 # + warn if the title contains slashes or backslashes which are special characters in linux/windows
@@ -363,8 +496,6 @@ sub checkTitle {
 	if( $ok ){
 		$hash->{title}{ok} //= 0;
 		$hash->{title}{ok} += 1;
-		$value =~ s/[^\/\\<>]//g;
-		msgWarn( "track title contains special characters '$scan->{path}'" ) if $value;
 	} else {
 		$hash->{title}{notok} //= 0;
 		$hash->{title}{notok} += 1;
@@ -415,6 +546,38 @@ sub checkTrackPath {
 }
 
 # -------------------------------------------------------------------------------------------------
+# the track title (tagged in the track) should not have special characters if we want be part of the track filename
+
+sub checkTrackSpecials {
+	my ( $hash, $scan ) = @_;
+
+	my $value = TTP::Media::trackTitleFromScan( $scan );
+	my $ok = true;
+
+	# maybe increment counters per album
+	$hash->{track_specials} //= {};
+	$hash->{track_specials}{count} //= 0;
+	$hash->{track_specials}{count} += 1;
+
+	if( $value ){
+		$value =~ s/[^\/\\<>]//g;
+		if( $value ){
+			msgWarn( "track title contains special characters '$scan->{path}'" );
+			$hash->{track_specials}{notok} //= 0;
+			$hash->{track_specials}{notok} += 1;
+			$hash->{track_specials}{files} //= [];
+			push( @{$hash->{track_specials}{files}}, $scan->{path} );
+			$ok = false;
+		} else {
+			$hash->{track_specials}{ok} //= 0;
+			$hash->{track_specials}{ok} += 1;
+		}
+	}
+
+	return $ok;
+}
+
+# -------------------------------------------------------------------------------------------------
 # given an audio file path, check that it contains a year tag
 # https://id3.org/id3v2.3.0#Default_flags
 #   TORY    [#TORY Original release year]
@@ -454,25 +617,30 @@ sub listAlbums {
 	my $counters = {
 		albums => {
 			total => 0,
-			path => 0,
+			path => ( $opt_checkAlbumPath || $opt_checkAllAlbum ) ? 0 : -1,
+			same_album => ( $opt_checkSameAlbum || $opt_checkAllAlbum ) ? 0 : -1,
+			same_artist => ( $opt_checkSameArtist || $opt_checkAllAlbum ) ? 0 : -1,
+			same_count => ( $opt_checkSameCount || $opt_checkAllAlbum ) ? 0 : -1,
+			same_count_disabled => ( $opt_checkSameCount || $opt_checkAllAlbum ) ? 0 : -1,
+			specials => ( $opt_checkAlbumSpecials || $opt_checkAllAlbum ) ? 0 : -1
 		},
 		audios => {
 			total => 0,
-			album => 0,
-			artist => 0,
-			count => 0,
-			cover => 0,
-			genre => 0,
-			number => 0,
-			title => 0,
-			filename => 0,
-			year => 0
+			album => ( $opt_checkAlbum || $opt_checkAllTrack ) ? 0 : -1,
+			artist => ( $opt_checkArtist || $opt_checkAllTrack ) ? 0 : -1,
+			count => ( $opt_checkCount || $opt_checkAllTrack ) ? 0 : -1,
+			cover => ( $opt_checkCover || $opt_checkAllTrack ) ? 0 : -1,
+			filename => ( $opt_checkTrackPath || $opt_checkAllTrack ) ? 0 : -1,
+			genre => ( $opt_checkGenre || $opt_checkAllTrack ) ? 0 : -1,
+			number => ( $opt_checkNumber || $opt_checkAllTrack ) ? 0 : -1,
+			specials => ( $opt_checkTrackSpecials || $opt_checkAllTrack ) ? 0 : -1,
+			title => ( $opt_checkTitle || $opt_checkAllTrack ) ? 0 : -1,
+			valid => 0,
+			year => ( $opt_checkYear || $opt_checkAllTrack ) ? 0 : -1
 		}
 	};
 	my $albums = {};
 	msgOut( "displaying music albums in '$opt_sourcePath'..." );
-	my $check_album = $opt_checkAlbumPath || $opt_checkAllAlbum;
-	my $check_file = $opt_checkAlbum || $opt_checkArtist || $opt_checkCount || $opt_checkCover || $opt_checkGenre || $opt_checkNumber || $opt_checkTitle || $opt_checkYear || $opt_checkAllTrack;
 	my $result = TTP::Media::scan_tree( $opt_sourcePath, {
 		sub => sub {
 			# expect to have only supported files
@@ -495,27 +663,33 @@ sub listAlbums {
 					$albums->{$key}{valid} //= {};
 					$albums->{$key}{valid}{count} //= 0;
 					$albums->{$key}{valid}{notok} //= 0;
-					if( $check_album ){
-						$counters->{albums}{path} += ( checkAlbumPath( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkAlbumPath || $opt_checkAllAlbum;
-					}
+					# check at the album level what can be done on the first track
+					$counters->{albums}{path} += ( checkAlbumPath( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkAlbumPath || $opt_checkAllAlbum;
+					$counters->{albums}{specials} += ( checkAlbumSpecials( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkAlbumSpecials || $opt_checkAllAlbum;
 				}
 				$albums->{$key}{valid}{count} += 1;
 				# and check only if a valid audio file
 				if( $scan->{ok} ){
+					$counters->{audios}{valid} += 1;
 					$albums->{$key}{valid}{ok} //= 0;
 					$albums->{$key}{valid}{ok} += 1;
-					if( $check_file ){
-						$counters->{audios}{album} += ( checkAlbum( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkAlbum || $opt_checkAllTrack;
-						$counters->{audios}{artist} += ( checkArtist( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkArtist || $opt_checkAllTrack;
-						$counters->{audios}{count} += ( checkCount( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkCount || $opt_checkAllTrack;
-						$counters->{audios}{cover} += ( checkCover( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkCover || $opt_checkAllTrack;
-						$counters->{audios}{genre} += ( checkGenre( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkGenre || $opt_checkAllTrack;
-						$counters->{audios}{number} += ( checkNumber( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkNumber || $opt_checkAllTrack;
-						$counters->{audios}{title} += ( checkTitle( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkTitle || $opt_checkAllTrack;
-						$counters->{audios}{filename} += ( checkTrackPath( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkTrackPath || $opt_checkAllTrack;
-						$counters->{audios}{year} += ( checkYear( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkYear || $opt_checkAllTrack;
-					}
+					# check for the whole album
+					checkSameAlbum( $albums->{$key}, $scan ) if $opt_checkSameAlbum || $opt_checkAllAlbum;
+					checkSameArtist( $albums->{$key}, $scan ) if $opt_checkSameArtist || $opt_checkAllAlbum;
+					checkSameCount( $albums->{$key}, $scan ) if $opt_checkSameCount || $opt_checkAllAlbum;
+					# check at the track level
+					$counters->{audios}{album} += ( checkAlbum( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkAlbum || $opt_checkAllTrack;
+					$counters->{audios}{artist} += ( checkArtist( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkArtist || $opt_checkAllTrack;
+					$counters->{audios}{count} += ( checkCount( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkCount || $opt_checkAllTrack;
+					$counters->{audios}{cover} += ( checkCover( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkCover || $opt_checkAllTrack;
+					$counters->{audios}{genre} += ( checkGenre( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkGenre || $opt_checkAllTrack;
+					$counters->{audios}{number} += ( checkNumber( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkNumber || $opt_checkAllTrack;
+					$counters->{audios}{title} += ( checkTitle( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkTitle || $opt_checkAllTrack;
+					$counters->{audios}{filename} += ( checkTrackPath( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkTrackPath || $opt_checkAllTrack;
+					$counters->{audios}{specials} += ( checkTrackSpecials( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkTrackSpecials || $opt_checkAllTrack;
+					$counters->{audios}{year} += ( checkYear( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkYear || $opt_checkAllTrack;
 				} else {
+					msgErr( $fname );
 					msgErr( $scan->{errors}, { incErr => false });
 					$albums->{$key}{valid}{notok} += 1;
 					$albums->{$key}{valid}{files} //= [];
@@ -528,8 +702,72 @@ sub listAlbums {
 	});
 
 	# have a summary
-	summaryList( $counters, $albums ) if $opt_summaryList;
-	summaryCounters( $counters, $albums ) if $opt_summaryCounters;
+	summaryUpdateCounters( $counters, $albums );
+	summaryAlbumsList( $counters, $albums ) if $opt_summaryList;
+	summaryAlbumsCounters( $counters, $albums ) if $opt_summaryCounters;
+	msgOut( "done" );
+}
+
+# -------------------------------------------------------------------------------------------------
+# list the genres found in the specified tree
+# audio tree are set as ROOT/type/letter/artist/albums[/disc]/file
+# have an follow-up dot mark every 100 items
+
+sub listGenres {
+	my $counters = {
+		total => 0,
+		valid => 0,
+		genre => {
+			undef => 0
+		}
+	};
+	my $genres = {};
+	my $prev_cents = 0;
+	msgOut( "scanning .", { withEol => false });
+	my $result = TTP::Media::scan_tree( $opt_sourcePath, {
+		sub => sub {
+			# expect to have only supported files
+			my ( $fname, $scan ) = @_;
+			$counters->{total} += 1;
+			my $cent = int( $counters->{total} / 100 );
+			if( $cent > $prev_cents ){
+				print STDOUT ".";
+				$prev_cents = $cent;
+			}
+			if( $scan->{ok} ){
+				$counters->{valid} += 1;
+				my $albumFromPath = TTP::Media::albumFromPath( $fname );
+				my $artistFromPath = TTP::Media::artistFromPath( $fname );
+
+				my $genre = TTP::Media::genreFromScan( $scan, { dumpIfEmpty => false });
+				if( $genre ){
+					$genres->{$genre} //= {};
+					$genres->{$genre}{$artistFromPath} //= {};
+					$genres->{$genre}{$artistFromPath}{$albumFromPath} //= [];
+					push( @{$genres->{$genre}{$artistFromPath}{$albumFromPath}}, $fname );
+				} else {
+					$counters->{genre}{undef} += 1;
+				}
+			} else {
+				msgErr( "scan failed on $fname" );
+			}
+		}
+	});
+	print STDOUT EOL;
+	# display the genres
+	foreach my $genre ( sort keys %{$genres} ){
+		print STDOUT $genre.EOL;
+		foreach my $artist ( sort keys %{$genres->{$genre}} ){
+			foreach my $album ( sort keys %{$genres->{$genre}{$artist}} ){
+				print "  $artist / $album".EOL;
+			}
+		}
+	}
+	# display a summary
+	msgOut( "Summary list:" );
+	msgOut( "  $counters->{total} found track(s), among them:" );
+	msgOut( "  - ".( $counters->{total} - $counters->{valid} )." were not valid" );
+	msgOut( "  - $counters->{genre}{undef} didn't have a genre" );
 	msgOut( "done" );
 }
 
@@ -567,7 +805,7 @@ sub printAlbum {
 # - the counters
 # - the albums
 
-sub summaryCounters {
+sub summaryAlbumsCounters {
 	my ( $counters, $albums ) = @_;
 
 	msgOut( "Summary counters:" );
@@ -575,16 +813,33 @@ sub summaryCounters {
 	foreach my $type ( @types ){
 		msgOut( "  $type:" );
 		foreach my $key ( sort keys %{$counters->{$type}} ){
-			msgOut( "    $key: $counters->{$type}{$key}", { withEol => false });
-			if( $key eq 'total' ){
-				print STDOUT EOL;
+			if( $key eq 'same_count_disabled' ){
+				next;
 			} else {
-				print STDOUT " ok";
-				if( $counters->{$type}{$key} != $counters->{$type}{total} ){
-					print STDOUT " (".( $counters->{$type}{total} - $counters->{$type}{$key} )." not ok)".EOL;
+				my $str = "    $key: ";
+				if( $key eq 'total' || $key eq 'valid' ){
+					$str .= $counters->{$type}{$key};
+				} elsif( $counters->{$type}{$key} == -1 ){
+					$str .= "not checked";
 				} else {
-					print STDOUT EOL;
+					$str .= "$counters->{$type}{$key} ok";
+					if( $counters->{$type}{$key} != $counters->{$type}{total} ){
+						if( $key eq 'same_count' ){
+							$str .= " ($counters->{$type}{same_count_disabled} disabled";
+							if( $counters->{$type}{$key} + $counters->{$type}{same_count_disabled} != $counters->{$type}{total} ){
+								$str .= $counters->{$type}{total} - $counters->{$type}{$key} - $counters->{$type}{same_count_disabled}." not ok";
+							}
+							$str .= ")";
+						} else {
+							$str .= " (".( $counters->{$type}{total} - $counters->{$type}{$key} )." not ok";
+							if( $key eq 'same_artist' ){
+								$str .= ", see help notes as this may be not relevant"
+							}
+							$str .= ")";
+						}
+					}
 				}
+				msgOut( $str );
 			}
 		}
 	}
@@ -596,7 +851,7 @@ sub summaryCounters {
 # - the counters
 # - the albums
 
-sub summaryList {
+sub summaryAlbumsList {
 	my ( $counters, $albums ) = @_;
 
 	# display the albums which have at least one error
@@ -645,32 +900,66 @@ sub summaryList {
 	}
 }
 
+# -------------------------------------------------------------------------------------------------
+# update the counters before displaying the summaries
+# update the counters for the checks which are on all the tracks on an album
+# (I):
+# - the counters
+# - the albums
+
+sub summaryUpdateCounters {
+	my ( $counters, $albums ) = @_;
+
+	# same counters (if any)
+	foreach my $key ( sort keys %{$albums} ){
+		foreach my $same ( 'same_album', 'same_artist', 'same_count' ){
+			if( $albums->{$key}{$same} && $albums->{$key}{$same}{count} ){
+				my @distincts = keys %{$albums->{$key}{$same}{list}};
+				if( scalar( @distincts ) == 1 ){
+					$counters->{albums}{$same} += 1;
+				} elsif( $same eq 'same_count' && TTP::Media::hasDiscLevel( $albums->{$key}{$same}{list}{$distincts[0]}->[0] )){
+					$counters->{albums}{same_count_disabled} += 1;
+				} else {
+					# count but do not warn when we find several artists (which is rather frequent)
+					msgWarn( "$albums->{$key}{artistFromPath} / $albums->{$key}{albumFromPath} not $same" ) if $same ne 'same_artist';
+				}
+			}
+		}
+	}
+}
+
 # =================================================================================================
 # MAIN
 # =================================================================================================
 
 if( !GetOptions(
-	"help!"				=> sub { $ep->runner()->help( @_ ); },
-	"colored!"			=> sub { $ep->runner()->colored( @_ ); },
-	"dummy!"			=> sub { $ep->runner()->dummy( @_ ); },
-	"verbose!"			=> sub { $ep->runner()->verbose( @_ ); },
-	"source-path=s"		=> \$opt_sourcePath,
-	"list-albums!"		=> \$opt_listAlbums,
-	"check-album!"		=> \$opt_checkAlbum,
-	"check-album-path!"	=> \$opt_checkAlbumPath,
-	"check-all-album!"	=> \$opt_checkAllAlbum,
-	"check-artist!"		=> \$opt_checkArtist,
-	"check-count!"		=> \$opt_checkCount,
-	"check-cover!"		=> \$opt_checkCover,
-	"check-genre!"		=> \$opt_checkGenre,
-	"check-number!"		=> \$opt_checkNumber,
-	"check-title!"		=> \$opt_checkTitle,
-	"check-track-path!"	=> \$opt_checkTrackPath,
-	"check-year!"		=> \$opt_checkYear,
-	"check-all-track!"	=> \$opt_checkAllTrack,
-	"format=s"			=> \$opt_format,
-	"summary-list!"		=> \$opt_summaryList,
-	"summary-counters!"	=> \$opt_summaryCounters )){
+	"help!"					=> sub { $ep->runner()->help( @_ ); },
+	"colored!"				=> sub { $ep->runner()->colored( @_ ); },
+	"dummy!"				=> sub { $ep->runner()->dummy( @_ ); },
+	"verbose!"				=> sub { $ep->runner()->verbose( @_ ); },
+	"source-path=s"			=> \$opt_sourcePath,
+	"list-albums!"			=> \$opt_listAlbums,
+	"list-genres!"			=> \$opt_listGenres,
+	"check-album!"			=> \$opt_checkAlbum,
+	"check-album-path!"		=> \$opt_checkAlbumPath,
+	"check-album-specials!"	=> \$opt_checkAlbumSpecials,
+	"check-all-album!"		=> \$opt_checkAllAlbum,
+	"check-artist!"			=> \$opt_checkArtist,
+	"check-count!"			=> \$opt_checkCount,
+	"check-cover!"			=> \$opt_checkCover,
+	"check-genre!"			=> \$opt_checkGenre,
+	"check-number!"			=> \$opt_checkNumber,
+	"check-same-album!"		=> \$opt_checkSameAlbum,
+	"check-same-artist!"	=> \$opt_checkSameArtist,
+	"check-same-count!"		=> \$opt_checkSameCount,
+	"check-title!"			=> \$opt_checkTitle,
+	"check-track-path!"		=> \$opt_checkTrackPath,
+	"check-track-specials!"	=> \$opt_checkTrackSpecials,
+	"check-year!"			=> \$opt_checkYear,
+	"check-all-track!"		=> \$opt_checkAllTrack,
+	"format=s"				=> \$opt_format,
+	"summary-list!"			=> \$opt_summaryList,
+	"summary-counters!"		=> \$opt_summaryCounters )){
 
 		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
@@ -686,16 +975,22 @@ msgVerbose( "got dummy='".( $ep->runner()->dummy() ? 'true':'false' )."'" );
 msgVerbose( "got verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got source-path='$opt_sourcePath'" );
 msgVerbose( "got list-albums='".( $opt_listAlbums ? 'true':'false' )."'" );
+msgVerbose( "got list-genres='".( $opt_listGenres ? 'true':'false' )."'" );
 msgVerbose( "got check-album='".( $opt_checkAlbum ? 'true':'false' )."'" );
 msgVerbose( "got check-album-path='".( $opt_checkAlbumPath ? 'true':'false' )."'" );
+msgVerbose( "got check-album-specials='".( $opt_checkAlbumSpecials ? 'true':'false' )."'" );
 msgVerbose( "got check-all-album='".( $opt_checkAllAlbum ? 'true':'false' )."'" );
 msgVerbose( "got check-artist='".( $opt_checkArtist ? 'true':'false' )."'" );
 msgVerbose( "got check-count='".( $opt_checkCount ? 'true':'false' )."'" );
 msgVerbose( "got check-cover='".( $opt_checkCover ? 'true':'false' )."'" );
 msgVerbose( "got check-genre='".( $opt_checkGenre ? 'true':'false' )."'" );
 msgVerbose( "got check-number='".( $opt_checkNumber ? 'true':'false' )."'" );
+msgVerbose( "got check-same-album='".( $opt_checkSameAlbum ? 'true':'false' )."'" );
+msgVerbose( "got check-same-artist='".( $opt_checkSameArtist ? 'true':'false' )."'" );
+msgVerbose( "got check-same-count='".( $opt_checkSameCount ? 'true':'false' )."'" );
 msgVerbose( "got check-title='".( $opt_checkTitle ? 'true':'false' )."'" );
 msgVerbose( "got check-track-path='".( $opt_checkTrackPath ? 'true':'false' )."'" );
+msgVerbose( "got check-track-specials='".( $opt_checkTrackSpecials ? 'true':'false' )."'" );
 msgVerbose( "got check-year='".( $opt_checkYear ? 'true':'false' )."'" );
 msgVerbose( "got check-all-track='".( $opt_checkAllTrack ? 'true':'false' )."'" );
 msgVerbose( "got format='$opt_format'" );
@@ -707,14 +1002,13 @@ msgErr( "'--source-path' option is mandatory, but is not specified" ) if !$opt_s
 
 # should have something to do
 # at the moment the '--list-albums' is a default action
-if( !$opt_listAlbums ){
-	#msgWarn( "none of '--list-albums' options have been specified, nothing to do" );
-	msgWarn( "even if '--list-albums' ia default option at the moment, you should nonetheless specify it" );
-	$opt_listAlbums = true;
+if( !$opt_listAlbums && !$opt_listGenres ){
+	msgWarn( "none of '--list-albums' or '--list-genres' options have been specified, nothing to do" );
 }
 
 if( !TTP::errs()){
 	listAlbums() if $opt_listAlbums;
+	listGenres() if $opt_listGenres;
 }
 
 TTP::exit();
