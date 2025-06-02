@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.19.1-rc.0
+### 4.20.0
 
-    Release date: 
+    Release date: 2025- 6- 2
 
     - audio.pl change uses an intermediate temp file when the pathname doesn't change (todo #166)
     - audio.pl change accepts a new '--[no]video' option
