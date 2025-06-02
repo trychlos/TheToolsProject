@@ -19,6 +19,7 @@
 # @(-) --[no]check-same-album       check that all the track of the album are tagged with the same album [${checkSameAlbum}]
 # @(-) --[no]check-same-artist      check that all the track of the album are tagged with the same artist [${checkSameArtist}]
 # @(-) --[no]check-same-count       check that all the track of the album are tagged with the same tracks count [${checkSameCount}]
+# @(-) --[no]check-same-year        check that all the track of the album are tagged with the same year [${checkSameYear}]
 # @(-) --[no]check-all-album        check all album-level available properties [${checkAllAlbum}]
 # @(-) track file level options:
 # @(-) --[no]check-artist           check that the track has a tagged artist [${checkArtist}]
@@ -47,7 +48,7 @@
 # @(@)         - %TC: track count
 # @(@) Note 2: Checking that all tracks of an album are tagged with the same artist is prone to errors and not always really relevant,
 # @(@)         e.g. when a track is played or singed by the main artist with another one or feat. someone.
-# @(@) Note 3: Checking that all tracks of an album are tagged with the same tracks count is disabled when the album has several discs.
+# @(@) Note 3: Checking that all tracks of an album are tagged with the same tracks count or the same year is disabled when the album has several discs.
 
 # TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
@@ -95,6 +96,7 @@ my $defaults = {
 	checkSameAlbum => 'no',
 	checkSameArtist => 'no',
 	checkSameCount => 'no',
+	checkSameYear => 'no',
 	checkTitle => 'no',
 	checkTrackPath => 'no',
 	checkTrackSpecials => 'no',
@@ -124,6 +126,7 @@ my $opt_checkNumber = false;
 my $opt_checkSameAlbum = false;
 my $opt_checkSameArtist = false;
 my $opt_checkSameCount = false;
+my $opt_checkSameYear = false;
 my $opt_checkTitle = false;
 my $opt_checkTrackPath = false;
 my $opt_checkTrackSpecials = false;
@@ -144,7 +147,8 @@ my $check_albums = [
 	'album_specials',
 	'same_album',
 	'same_artist',
-	'same_count'
+	'same_count',
+	'same_year'
 ];
 
 # -------------------------------------------------------------------------------------------------
@@ -492,6 +496,32 @@ sub checkSameCount {
 }
 
 # -------------------------------------------------------------------------------------------------
+# check that all tracks of an album (identified by its folder) have the same tagged year
+# for each album, count ok/notok
+
+sub checkSameYear {
+	my ( $hash, $scan ) = @_;
+
+	my $value = TTP::Media::yearFromScan( $scan );
+	#print "tracksCount: $value".EOL;
+	my $ok = true;
+
+	# increment counters per album
+	$hash->{same_year} //= {};
+	$hash->{same_year}{count} //= 0;
+	$hash->{same_year}{count} += 1;
+
+	# during the scan we just set the files per tagged tracks count
+	# we will count the different keys at the end
+	my $key = $value || 'empty';
+	$hash->{same_year}{list} //= {};
+	$hash->{same_year}{list}{$key} //= [];
+	push( @{$hash->{same_year}{list}{$key}}, $scan->{path} );
+
+	return $ok;
+}
+
+# -------------------------------------------------------------------------------------------------
 # given an audio file path, check that it contains a track title tag
 # for each album, count ok/notok
 # + warn if the title contains slashes or backslashes which are special characters in linux/windows
@@ -636,6 +666,8 @@ sub listAlbums {
 			same_artist => $opt_checkSameArtist ? 0 : -1,
 			same_count => $opt_checkSameCount ? 0 : -1,
 			same_count_disabled => $opt_checkSameCount ? 0 : -1,
+			same_year => $opt_checkSameYear ? 0 : -1,
+			same_year_disabled => $opt_checkSameYear ? 0 : -1,
 			specials => $opt_checkAlbumSpecials ? 0 : -1
 		},
 		audios => {
@@ -692,6 +724,7 @@ sub listAlbums {
 					checkSameAlbum( $albums->{$key}, $scan ) if $opt_checkSameAlbum;
 					checkSameArtist( $albums->{$key}, $scan ) if $opt_checkSameArtist;
 					checkSameCount( $albums->{$key}, $scan ) if $opt_checkSameCount;
+					checkSameYear( $albums->{$key}, $scan ) if $opt_checkSameYear;
 					# check at the track level
 					$counters->{audios}{album} += ( checkAlbum( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkAlbum;
 					$counters->{audios}{artist} += ( checkArtist( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkArtist;
@@ -831,7 +864,7 @@ sub summaryAlbumsCounters {
 	foreach my $type ( @types ){
 		msgOut( "  $type:" );
 		foreach my $key ( sort keys %{$counters->{$type}} ){
-			if( $key eq 'same_count_disabled' ){
+			if( $key eq 'same_count_disabled' || $key eq 'same_year_disabled' ){
 				next;
 			} elsif( $counters->{$type}{$key} == -1 && !$opt_summaryUnchecked ){
 				next;
@@ -848,6 +881,12 @@ sub summaryAlbumsCounters {
 							$str .= " ($counters->{$type}{same_count_disabled} disabled";
 							if( $counters->{$type}{$key} + $counters->{$type}{same_count_disabled} != $counters->{$type}{total} ){
 								$str .= ", ".( $counters->{$type}{total} - $counters->{$type}{$key} - $counters->{$type}{same_count_disabled} )." not ok";
+							}
+							$str .= ")";
+						} elsif( $key eq 'same_year' ){
+							$str .= " ($counters->{$type}{same_year_disabled} disabled";
+							if( $counters->{$type}{$key} + $counters->{$type}{same_year_disabled} != $counters->{$type}{total} ){
+								$str .= ", ".( $counters->{$type}{total} - $counters->{$type}{$key} - $counters->{$type}{same_year_disabled} )." not ok";
 							}
 							$str .= ")";
 						} else {
@@ -932,13 +971,14 @@ sub summaryUpdateCounters {
 
 	# same counters (if any)
 	foreach my $key ( sort keys %{$albums} ){
-		foreach my $same ( 'same_album', 'same_artist', 'same_count' ){
+		foreach my $same ( 'same_album', 'same_artist', 'same_count', 'same_year' ){
 			if( $albums->{$key}{$same} && $albums->{$key}{$same}{count} ){
 				my @distincts = keys %{$albums->{$key}{$same}{list}};
 
 				# first, if the first track of an album exhibits a disc level, just disable the counter
-				if( $same eq 'same_count' && TTP::Media::hasDiscLevel( $albums->{$key}{$same}{list}{$distincts[0]}->[0] )){
-					$counters->{albums}{same_count_disabled} += 1;
+				if(( $same eq 'same_count' || $same eq 'same_year' ) && TTP::Media::hasDiscLevel( $albums->{$key}{$same}{list}{$distincts[0]}->[0] )){
+					$counters->{albums}{same_count_disabled} += 1 if $same eq 'same_count';
+					$counters->{albums}{same_year_disabled} += 1 if $same eq 'same_year';
 					#print "disabled $albums->{$key}{$same}{list}{$distincts[0]}->[0]".EOL;
 
 				# only then, count: when checking for 'same' properties, having a single key is ok
@@ -981,6 +1021,7 @@ if( !GetOptions(
 			$opt_checkSameAlbum = true;
 			$opt_checkSameArtist = true;
 			$opt_checkSameCount = true;
+			$opt_checkSameYear = true;
 		}
 	},
 	"check-artist!"			=> \$opt_checkArtist,
@@ -991,6 +1032,7 @@ if( !GetOptions(
 	"check-same-album!"		=> \$opt_checkSameAlbum,
 	"check-same-artist!"	=> \$opt_checkSameArtist,
 	"check-same-count!"		=> \$opt_checkSameCount,
+	"check-same-year!"		=> \$opt_checkSameYear,
 	"check-title!"			=> \$opt_checkTitle,
 	"check-track-path!"		=> \$opt_checkTrackPath,
 	"check-track-specials!"	=> \$opt_checkTrackSpecials,
@@ -1049,6 +1091,7 @@ msgVerbose( "got check-number='".( $opt_checkNumber ? 'true':'false' )."'" );
 msgVerbose( "got check-same-album='".( $opt_checkSameAlbum ? 'true':'false' )."'" );
 msgVerbose( "got check-same-artist='".( $opt_checkSameArtist ? 'true':'false' )."'" );
 msgVerbose( "got check-same-count='".( $opt_checkSameCount ? 'true':'false' )."'" );
+msgVerbose( "got check-same-year='".( $opt_checkSameYear ? 'true':'false' )."'" );
 msgVerbose( "got check-title='".( $opt_checkTitle ? 'true':'false' )."'" );
 msgVerbose( "got check-track-path='".( $opt_checkTrackPath ? 'true':'false' )."'" );
 msgVerbose( "got check-track-specials='".( $opt_checkTrackSpecials ? 'true':'false' )."'" );
@@ -1085,6 +1128,7 @@ if( !$opt_listAlbums ){
 	msgWarn( "'--check-same-album' option is only relevant when listing albums, ignored" ) if $opt_checkSameAlbum;
 	msgWarn( "'--check-same-artist' option is only relevant when listing albums, ignored" ) if $opt_checkSameArtist;
 	msgWarn( "'--check-same-count' option is only relevant when listing albums, ignored" ) if $opt_checkSameCount;
+	msgWarn( "'--check-same-year' option is only relevant when listing albums, ignored" ) if $opt_checkSameYear;
 	msgWarn( "'--check-title' option is only relevant when listing albums, ignored" ) if $opt_checkTitle;
 	msgWarn( "'--check-track-path' option is only relevant when listing albums, ignored" ) if $opt_checkTrackPath;
 	msgWarn( "'--check-track-specials' option is only relevant when listing albums, ignored" ) if $opt_checkTrackSpecials;

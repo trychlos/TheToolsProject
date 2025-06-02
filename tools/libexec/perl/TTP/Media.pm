@@ -506,7 +506,7 @@ sub trackCountFromScan {
 	$value = $value || $scan->{tags}{TRCK};			# MP3 number/count
 	$value = $value || $scan->{tags}{TRKN};			# M4A number/count
 	my $haveCount = $value;
-	$haveCount =~ s/[^\/]//g;
+	$haveCount =~ s/[^\/]//g if $value;
 	if( $haveCount ){
 		if( $value ){
 			$value =~ s/^[0-9]+\///;

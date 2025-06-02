@@ -302,7 +302,6 @@ sub mustChange {
 		my $number = TTP::Media::trackNumberFromScan( $scan ) || '';
 		my $title = TTP::Media::trackTitleFromScan( $scan ) || '';
 		if( defined( $number ) && $title ){
-			print "number='$number'".EOL;
 			my $str = sprintf( "%02u", ( 0+$number ));
 			my $theorical = "$str - $title";
 
