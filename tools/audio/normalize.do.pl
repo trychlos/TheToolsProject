@@ -413,9 +413,9 @@ msgVerbose( "got limit='$opt_limit'" );
 msgErr( "'--source-path' option is mandatory, but is not specified" ) if !$opt_sourcePath;
 
 # albumLevel and artistLevel must be greater than zero integers
-my $opt_albumLevel = int( $opt_albumLevel );
+$opt_albumLevel = int( $opt_albumLevel );
 msgErr( "--album-level' option must provide a greater than zero integer, got $opt_albumLevel" ) if $opt_albumLevel <= 0;
-my $opt_artistLevel = int( $opt_artistLevel );
+$opt_artistLevel = int( $opt_artistLevel );
 msgErr( "--artist-level' option must provide a greater than zero integer, got $opt_artistLevel" ) if $opt_artistLevel <= 0;
 
 # maybe should remove when the target path is same than the source

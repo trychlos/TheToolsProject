@@ -185,7 +185,7 @@ sub albumFromScan {
 	$value = $value || $scan->{tags}{TALB};		# MP3
 	$value = $value || $scan->{tags}{ALB};		# MP4
 	$value = $value || $scan->{tags}{ALBUM};	# FLAC
-	print Dumper( $scan->{tags} ) if !$value;
+	print "albumFromScan() $scan->{path} ".Dumper( $scan->{tags} ) if !$value;
 	#msgVerbose( "$scan->{path} album $value" ) if $value;
 
 	return $value;
@@ -236,7 +236,7 @@ sub artistFromScan {
 	$value = $value || $scan->{tags}{TPE2};
 	$value = $value || $scan->{tags}{AART};		# MP4
 	$value = $value || $scan->{tags}{ARTIST};	# FLAC
-	print Dumper( $scan->{tags} ) if !$value;
+	print "artistFromScan() $scan->{path} ".Dumper( $scan->{tags} ) if !$value;
 	#msgVerbose( "$scan->{path} artist $value" ) if $value;
 
 	return $value;
@@ -280,7 +280,7 @@ sub coverFromScan {
 	$value = $value || $scan->{tags}{ALLPICTURES}->[0]->{image_data};	# Ogg Vorbis / FLAC
 	$value = $value || $scan->{tags}{'WM/Picture'}->{image};			# ASF
 	$value = $value || $scan->{tags}{'COVER ART (FRONT)'};				# APE, Musepack, WavPack, MP3 with APEv2
-	print Dumper( $scan->{tags} ) if !$value;
+	print "coverFromScan() $scan->{path} ".Dumper( $scan->{tags} ) if !$value;
 	#msgVerbose( "$scan->{path} cover $value" ) if $value;
 
 	return $value;
@@ -329,7 +329,7 @@ sub genreFromScan {
 	$value = $value || $scan->{tags}{GEN};		# MP4
 	$value = $value || $scan->{tags}{GENRE};	# FLAC
 
-	print Dumper( $scan->{tags} ) if !$value && $dumpIfEmpty;
+	print "genreFromScan() $scan->{path} ".Dumper( $scan->{tags} ) if !$value && $dumpIfEmpty;
 
 	return $value;
 }
@@ -400,7 +400,7 @@ sub scan_file {
 		$result->{errors} = \@errs;
 	} else {
 		$result->{ok} = true;
-		#msgLog( "$path scan result: ".TTP::chompDumper( $result ));
+		#print "$path scan result: ".Dumper( $result );
 	}
 
 	$result->{path} = $path;
@@ -503,13 +503,19 @@ sub trackCountFromScan {
 	my ( $scan ) = @_;
 
 	my $value = undef;
-	$value = $value || $scan->{tags}{TRCK};			# MP3  number/count
+	$value = $value || $scan->{tags}{TRCK};			# MP3 number/count
 	$value = $value || $scan->{tags}{TRKN};			# M4A number/count
-	if( $value ){
-		$value =~ s/^[0-9]+\///;
+	my $haveCount = $value;
+	$haveCount =~ s/[^\/]//g;
+	if( $haveCount ){
+		if( $value ){
+			$value =~ s/^[0-9]+\///;
+		}
+	} else {
+		$value = undef;
 	}
 	$value = $value || $scan->{tags}{TRACKTOTAL};	# FLAC
-	print Dumper( $scan->{tags} ) if !$value;
+	print "trackCountFromScan() $scan->{path} ".Dumper( $scan->{tags} ) if !$value;
 	#msgVerbose( "$scan->{path} year $value" ) if $value;
 
 	return $value;
@@ -534,9 +540,9 @@ sub trackNumberFromScan {
 	$value = $value || $scan->{tags}{TRACKNUMBER};	# FLAC
 
 	if( !defined( $value )){
-		print Dumper( $scan->{tags} );
+		print "trackNumberFromScan() $scan->{path} ".Dumper( $scan->{tags} );
 	} elsif( !looks_like_number( $value )){
-		print Dumper( $scan->{tags} );
+		print "trackNumberFromScan() $scan->{path} ".Dumper( $scan->{tags} );
 		$value = undef;
 	}
 	#msgVerbose( "$scan->{path} year $value" ) if $value;
@@ -559,7 +565,7 @@ sub trackTitleFromScan {
 	$value = $value || $scan->{tags}{TIT2};
 	$value = $value || $scan->{tags}{NAM};			# M4A
 	$value = $value || $scan->{tags}{TITLE};		# FLAC
-	print Dumper( $scan->{tags} ) if !$value;
+	print "trackTitleFromScan() $scan->{path} ".Dumper( $scan->{tags} ) if !$value;
 	#msgVerbose( "$scan->{path} year $value" ) if $value;
 
 	return $value;
@@ -579,9 +585,10 @@ sub yearFromScan {
 	$value = $value || $scan->{tags}{TDRC};			# MP3
 	$value = $value || $scan->{tags}{TDOR};
 	$value = $value || $scan->{tags}{DAY};			# M4A
-	$value = $value || $scan->{tags}{ORIGINALYEAR};
-	$value = $value || $scan->{tags}{DATE};			# FLAC
-	print Dumper( $scan->{tags} ) if !$value;
+	$value = $value || $scan->{tags}{DATE};			# set by EasyTag in FLAC (first choice before MusicBrainz), converted by ffmpeg (flac -> mp3) to TDRC
+	$value = $value || $scan->{tags}{ORIGINALYEAR};	# set by MusicBrainz, reconducted by ffmpeg (flac -> mp3)
+	$value = $value || $scan->{tags}{ORIGINALDATE};	# set by MusicBrainz, reconducted by ffmpeg (flac -> mp3)
+	print "yearFromScan() $scan->{path} ".Dumper( $scan->{tags} ) if !$value;
 	#msgVerbose( "$scan->{path} year $value" ) if $value;
 
 	return $value;
