@@ -22,6 +22,7 @@
     - audio.pl list has '--summary-unchecked' option to not prevent display of counters for unchecked properties
     - audio.pl list and normalize verbs have '--album-level' and '--artist-level' options
     - audio.pl list has '--check-same-year' option
+    - audio.pl list has '--check-good-count' option
 
 ### 4.19.0
 

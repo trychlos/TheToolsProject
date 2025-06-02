@@ -19,6 +19,7 @@
 # @(-) --[no]check-same-album       check that all the track of the album are tagged with the same album [${checkSameAlbum}]
 # @(-) --[no]check-same-artist      check that all the track of the album are tagged with the same artist [${checkSameArtist}]
 # @(-) --[no]check-same-count       check that all the track of the album are tagged with the same tracks count [${checkSameCount}]
+# @(-) --[no]check-good-count       check the tracks count vs the count of tracks of the album [${checkGoodCount}]
 # @(-) --[no]check-same-year        check that all the track of the album are tagged with the same year [${checkSameYear}]
 # @(-) --[no]check-all-album        check all album-level available properties [${checkAllAlbum}]
 # @(-) track file level options:
@@ -49,7 +50,8 @@
 # @(@) Note 2: Checking that all tracks of an album are tagged with the same artist is prone to errors and not always really relevant,
 # @(@)         e.g. when a track is played or singed by the main artist with another one or feat. someone.
 # @(@) Note 3: Checking that all tracks of an album are tagged with the same tracks count or the same year is disabled when the album has several discs.
-
+# @(@) Note 4: Checking that we have a good count of tracks is only enabled if the 'same-count' check is true.
+#
 # TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
 # Copyright (©) 2023-2025 PWI Consulting
@@ -67,6 +69,10 @@
 # You should have received a copy of the GNU General Public License
 # along with TheToolsProject; see the file COPYING. If not,
 # see <http://www.gnu.org/licenses/>.
+#
+# example:
+# audio.pl list -source /net/audio/lossy_flac/ -list-albums -check-all-album -check-all-track -nocheck-same-artist
+
 
 use strict;
 use utf8;
@@ -96,6 +102,7 @@ my $defaults = {
 	checkSameAlbum => 'no',
 	checkSameArtist => 'no',
 	checkSameCount => 'no',
+	checkGoodCount => 'no',
 	checkSameYear => 'no',
 	checkTitle => 'no',
 	checkTrackPath => 'no',
@@ -126,6 +133,7 @@ my $opt_checkNumber = false;
 my $opt_checkSameAlbum = false;
 my $opt_checkSameArtist = false;
 my $opt_checkSameCount = false;
+my $opt_checkGoodCount = false;
 my $opt_checkSameYear = false;
 my $opt_checkTitle = false;
 my $opt_checkTrackPath = false;
@@ -148,6 +156,7 @@ my $check_albums = [
 	'same_album',
 	'same_artist',
 	'same_count',
+	'good_count',
 	'same_year'
 ];
 
@@ -386,6 +395,24 @@ sub checkGenre {
 		push( @{$hash->{genre}{files}}, $scan->{path} );
 		msgWarn( "genre not ok for '$scan->{path}'" );
 	}
+
+	return $ok;
+}
+
+# -------------------------------------------------------------------------------------------------
+# check that we have all the tracks as indicated in the tracks count
+# for each album, count ok/notok
+
+sub checkGoodCount {
+	my ( $hash, $scan ) = @_;
+
+	my $ok = true;
+
+	# increment counters per album
+	$hash->{good_count} //= {};
+	$hash->{good_count}{target} = TTP::Media::trackCountFromScan( $scan );
+	$hash->{good_count}{count} //= 0;
+	$hash->{good_count}{count} += 1;
 
 	return $ok;
 }
@@ -666,6 +693,8 @@ sub listAlbums {
 			same_artist => $opt_checkSameArtist ? 0 : -1,
 			same_count => $opt_checkSameCount ? 0 : -1,
 			same_count_disabled => $opt_checkSameCount ? 0 : -1,
+			good_count => $opt_checkGoodCount ? 0 : -1,
+			good_count_enabled => $opt_checkGoodCount ? 0 : -1,
 			same_year => $opt_checkSameYear ? 0 : -1,
 			same_year_disabled => $opt_checkSameYear ? 0 : -1,
 			specials => $opt_checkAlbumSpecials ? 0 : -1
@@ -724,6 +753,7 @@ sub listAlbums {
 					checkSameAlbum( $albums->{$key}, $scan ) if $opt_checkSameAlbum;
 					checkSameArtist( $albums->{$key}, $scan ) if $opt_checkSameArtist;
 					checkSameCount( $albums->{$key}, $scan ) if $opt_checkSameCount;
+					checkGoodCount( $albums->{$key}, $scan ) if $opt_checkGoodCount;
 					checkSameYear( $albums->{$key}, $scan ) if $opt_checkSameYear;
 					# check at the track level
 					$counters->{audios}{album} += ( checkAlbum( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkAlbum;
@@ -864,7 +894,7 @@ sub summaryAlbumsCounters {
 	foreach my $type ( @types ){
 		msgOut( "  $type:" );
 		foreach my $key ( sort keys %{$counters->{$type}} ){
-			if( $key eq 'same_count_disabled' || $key eq 'same_year_disabled' ){
+			if( $key eq 'good_count_enabled' || $key eq 'same_count_disabled' || $key eq 'same_year_disabled' ){
 				next;
 			} elsif( $counters->{$type}{$key} == -1 && !$opt_summaryUnchecked ){
 				next;
@@ -877,7 +907,13 @@ sub summaryAlbumsCounters {
 				} else {
 					$str .= "$counters->{$type}{$key} ok";
 					if( $counters->{$type}{$key} != $counters->{$type}{total} ){
-						if( $key eq 'same_count' ){
+						if( $key eq 'good_count' ){
+							$str .= " (on $counters->{$type}{good_count_enabled} enabled";
+							if( $counters->{$type}{$key} != $counters->{$type}{good_count_enabled} ){
+								$str .= ", ".( $counters->{$type}{good_count_enabled} - $counters->{$type}{$key} )." not ok";
+							}
+							$str .= ")";
+						} elsif( $key eq 'same_count' ){
 							$str .= " ($counters->{$type}{same_count_disabled} disabled";
 							if( $counters->{$type}{$key} + $counters->{$type}{same_count_disabled} != $counters->{$type}{total} ){
 								$str .= ", ".( $counters->{$type}{total} - $counters->{$type}{$key} - $counters->{$type}{same_count_disabled} )." not ok";
@@ -969,8 +1005,10 @@ sub summaryAlbumsList {
 sub summaryUpdateCounters {
 	my ( $counters, $albums ) = @_;
 
-	# same counters (if any)
 	foreach my $key ( sort keys %{$albums} ){
+		my $good_count_enabled = false;
+
+		# same counters (if any)
 		foreach my $same ( 'same_album', 'same_artist', 'same_count', 'same_year' ){
 			if( $albums->{$key}{$same} && $albums->{$key}{$same}{count} ){
 				my @distincts = keys %{$albums->{$key}{$same}{list}};
@@ -984,6 +1022,7 @@ sub summaryUpdateCounters {
 				# only then, count: when checking for 'same' properties, having a single key is ok
 				} elsif( scalar( @distincts ) == 1 ){
 					$counters->{albums}{$same} += 1;
+					$good_count_enabled = true if $same eq 'same_count';
 					#print "ok $albums->{$key}{$same}{list}{$distincts[0]}->[0]".EOL if $same eq 'same_count';
 
 				# have several values for something which is checked for same, so warns
@@ -992,6 +1031,16 @@ sub summaryUpdateCounters {
 					msgWarn( "$albums->{$key}{artistFromPath} / $albums->{$key}{albumFromPath} not $same" );
 					$albums->{$key}{$same}{ notok} = true;
 				}
+			}
+		}
+
+		# good count
+		if( $good_count_enabled ){
+			$counters->{albums}{good_count_enabled} += 1;
+			if( $albums->{$key}{good_count}{target} == $albums->{$key}{good_count}{count} ){
+				$counters->{albums}{good_count} += 1;
+			} else {
+				msgWarn( "$albums->{$key}{artistFromPath} / $albums->{$key}{albumFromPath} not good_count" );
 			}
 		}
 	}
@@ -1021,6 +1070,7 @@ if( !GetOptions(
 			$opt_checkSameAlbum = true;
 			$opt_checkSameArtist = true;
 			$opt_checkSameCount = true;
+			$opt_checkGoodCount = true;
 			$opt_checkSameYear = true;
 		}
 	},
@@ -1032,6 +1082,7 @@ if( !GetOptions(
 	"check-same-album!"		=> \$opt_checkSameAlbum,
 	"check-same-artist!"	=> \$opt_checkSameArtist,
 	"check-same-count!"		=> \$opt_checkSameCount,
+	"check-good-count!"		=> \$opt_checkGoodCount,
 	"check-same-year!"		=> \$opt_checkSameYear,
 	"check-title!"			=> \$opt_checkTitle,
 	"check-track-path!"		=> \$opt_checkTrackPath,
@@ -1091,6 +1142,7 @@ msgVerbose( "got check-number='".( $opt_checkNumber ? 'true':'false' )."'" );
 msgVerbose( "got check-same-album='".( $opt_checkSameAlbum ? 'true':'false' )."'" );
 msgVerbose( "got check-same-artist='".( $opt_checkSameArtist ? 'true':'false' )."'" );
 msgVerbose( "got check-same-count='".( $opt_checkSameCount ? 'true':'false' )."'" );
+msgVerbose( "got check-good-count='".( $opt_checkGoodCount ? 'true':'false' )."'" );
 msgVerbose( "got check-same-year='".( $opt_checkSameYear ? 'true':'false' )."'" );
 msgVerbose( "got check-title='".( $opt_checkTitle ? 'true':'false' )."'" );
 msgVerbose( "got check-track-path='".( $opt_checkTrackPath ? 'true':'false' )."'" );
@@ -1128,6 +1180,7 @@ if( !$opt_listAlbums ){
 	msgWarn( "'--check-same-album' option is only relevant when listing albums, ignored" ) if $opt_checkSameAlbum;
 	msgWarn( "'--check-same-artist' option is only relevant when listing albums, ignored" ) if $opt_checkSameArtist;
 	msgWarn( "'--check-same-count' option is only relevant when listing albums, ignored" ) if $opt_checkSameCount;
+	msgWarn( "'--check-good-count' option is only relevant when listing albums, ignored" ) if $opt_checkGoodCount;
 	msgWarn( "'--check-same-year' option is only relevant when listing albums, ignored" ) if $opt_checkSameYear;
 	msgWarn( "'--check-title' option is only relevant when listing albums, ignored" ) if $opt_checkTitle;
 	msgWarn( "'--check-track-path' option is only relevant when listing albums, ignored" ) if $opt_checkTrackPath;
