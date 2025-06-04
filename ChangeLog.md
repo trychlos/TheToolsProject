@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.20.2-rc.0
+### 4.20.2
 
-    Release date: 
+    Release date: 2025- 6- 4
 
     - Fix stackTrace() call from TTP::Metric->new()
 
