@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.20.1-rc.0
+### 4.20.1
 
-    Release date: 
+    Release date: 2025- 6- 4
 
     - Fix LDAP::ldapVar() calls
 
@@ -599,4 +599,4 @@
 
 ---
 P. Wieser
-- Last updated on 2025, May 29th
+- Last updated on 2025, June 4th
