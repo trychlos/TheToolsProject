@@ -346,13 +346,17 @@ sub new {
 		$self->labels( $args->{labels} || [] );
 
 		# check that the mandatory values are here
+		my $errs = 0;
+
 		if( !$self->name()){
 			msgErr( __PACKAGE__."::new() expects a metric name, not found" );
+			$errs += 1;
 		}
 		if( !defined( $args->{value} )){
 			msgErr( __PACKAGE__."::new() expects a metric value, not found" );
+			$errs += 1;
 		}
-		if( TTP::errs()){
+		if( $errs ){
 			TTP::stackTrace();
 		}
 

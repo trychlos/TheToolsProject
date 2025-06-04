@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - Fix stackTrace() call from TTP::Metric->new()
 
 ### 4.20.1
 
