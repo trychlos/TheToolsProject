@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - Fix LDAP::ldapVar() calls
 
 ### 4.20.0
 

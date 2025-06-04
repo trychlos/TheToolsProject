@@ -61,13 +61,13 @@ sub macros {
 	my ( $self ) = @_;
 
 	my $macros = {
-		CONFIGDIR => ldapVar( 'configdir' ) || $Const->{defaults}{configdir},
-		DATADIR => ldapVar( 'datadir' ) || $Const->{defaults}{datadir},
-		OWNER_ACCOUNT => ldapVar( 'owner_account' ) || $Const->{defaults}{ownerAccount},
-		OWNER_GROUP => ldapVar( 'owner_group' ) || $Const->{defaults}{ownerGroup},
-		SLAPADD => ldapVar( 'slapadd' ) || $Const->{defaults}{slapadd},
-		SLAPCAT => ldapVar( 'slapcat' ) || $Const->{defaults}{slapcat},
-		SYSUNIT => ldapVar( 'sysunit' ) || $Const->{defaults}{sysunit},
+		CONFIGDIR => ldapVar([ 'configdir' ]) || $Const->{defaults}{configdir},
+		DATADIR => ldapVar([ 'datadir' ]) || $Const->{defaults}{datadir},
+		OWNER_ACCOUNT => ldapVar([ 'owner_account' ]) || $Const->{defaults}{ownerAccount},
+		OWNER_GROUP => ldapVar([ 'owner_group' ]) || $Const->{defaults}{ownerGroup},
+		SLAPADD => ldapVar([ 'slapadd' ]) || $Const->{defaults}{slapadd},
+		SLAPCAT => ldapVar([ 'slapcat' ]) || $Const->{defaults}{slapcat},
+		SYSUNIT => ldapVar([ 'sysunit' ]) || $Const->{defaults}{sysunit},
 	};
 
 	return $macros;
@@ -162,7 +162,7 @@ sub DESTROY {
 #  3. service:LDAP.key					if a service is requested
 #  4. site:LDAP.key
 # (I):
-# - either a single string or a reference to an array of keys to be read from (e.g. [ 'moveDir', 'byOS', 'MSWin32' ])
+# - a reference to an array of keys to be read from (e.g. [ 'moveDir', 'byOS', 'MSWin32' ])
 #   each key can be itself an array ref of potential candidates for this level
 # - an optional options hash with following keys:
 #   > service: the TTP::Service object we are specifically requesting, defaulting to none
