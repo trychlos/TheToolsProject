@@ -41,11 +41,6 @@
 |      | 2025- 5-14 | DaemonConfig -> Daemon would imply $runner = TTP::RunnerDaemon->bootstrap() and $daemon->config() -> $runner->daemon() |
 |  163 | 2025- 5-23 | honor MQTTGateway and SMTPGateway wantsAccounts and wantsPassword |
 |  164 | 2025- 5-27 | extend commandBYOS to accept both a node name and a ttp::node |
-|  165 | 2025- 5-27 | cache instanciated nodes to be able to reuse them |
-|  167 | 2025- 5-30 | logsMain is not reevaluated (each time we use it) but should |
-|      | 2025- 6- 4 | evaluate() calls var() so var() cannot auto-evaluate() |
-|      |            | daemons get the correct behaviour by re-evaluate()-ing the config, the node and the site at each listening interval |
-|  168 | 2025- 6- 4 | audio.pl normalize: check that format are known |
 |  170 |  |  |
 
 ---
@@ -432,8 +427,17 @@
 |      | 2025- 5-23 | done |
 |  162 | 2025- 5-23 | be less verbose when publishing daemon status |
 |      | 2025- 5-23 | done |
+|  165 | 2025- 5-27 | cache instanciated nodes to be able to reuse them |
+|      | 2025- 6- 5 | maybe a not so good idea (see #167) - so cancelled |
 |  166 | 2025- 5-29 | audio.pl change FFmpeg cannot edit existing files in-place. |
 |      | 2025- 5-29 | done |
+|  167 | 2025- 5-30 | logsMain is not reevaluated (each time we use it) but should |
+|      | 2025- 6- 4 | logsMain is only evaluated at EP::botstrap |
+|      | 2025- 6- 4 | evaluate() calls var() so var() cannot auto-evaluate() |
+|      |            | daemons get the correct behaviour by re-evaluate()-ing the config, the node and the site at each listening interval |
+|      | 2025- 6- 5 | a work-around is to add a '--evaluate' option to the verb - see audio.pl normalize -> closed |
+|  168 | 2025- 6- 4 | audio.pl normalize: check that format are known |
+|      | 2025- 6- 5 | done |
 |  169 | 2025- 6- 4 | audio.pl normalize: have an option to reevaluate the site and node jsons |
 |      | 2025- 6- 5 | done |
 

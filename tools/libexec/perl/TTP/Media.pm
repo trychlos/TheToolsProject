@@ -40,105 +40,6 @@ use TTP::Message qw( :all );
 use TTP::Path;
 
 my $Const = {
-	audio => {
-		commonTags => {
-			album => {},
-			artist => {},
-			cover => {},
-			genre => {},
-			year => {}
-		},
-		# some common suffixes for audio files
-		formats => {
-			AAC => {
-				compress => true,
-				lossy => true,
-				label => 'Advanced Audio Coding',
-				getAlbum => sub {
-					my ( $scan ) = @_;
-					my $value = $scan->{tags}{TALB};
-					return $value;
-				}
-			},
-			AIFF => {
-				compress => false,
-				lossy => false,
-				label => 'Audio Interchange File Format'
-			},
-			alac => {
-				compress => true,
-				lossy => false,
-				label => 'Apple Lossless Audio Codec'
-			},
-			ASF => {
-
-			},
-			FLAC => {
-				compress => true,
-				lossy => false,
-				label => 'Free Lossless Audio Codec',
-				getAlbum => sub {
-					my ( $scan ) = @_;
-					my $value = $scan->{tags}{TALB};
-					return $value;
-				}
-			},
-			M4A => {
-			},
-			MP3 => {
-				compress => true,
-				lossy => true,
-				label => 'MPEG-1 Audio Layer 3'
-			},
-			MP4 => {
-				compress => true,
-				lossy => true,
-				label => 'MPEG-4 Part 14',
-				container => 'm4a',
-				getAlbum => sub {
-					my ( $scan ) = @_;
-					my $value = $scan->{tags}{TALB};
-					return $value;
-				}
-			},
-			Ogg => {
-				compress => true,
-				lossy => true,
-				label => 'Ogg Vorbis',
-				getAlbum => sub {
-					my ( $scan ) = @_;
-					my $value = $scan->{tags}{TALB};
-					return $value;
-				}
-			},
-			opus => {
-				compress => true,
-				lossy => true,
-				label => 'Opus',
-				getAlbum => sub {
-					my ( $scan ) = @_;
-					my $value = $scan->{tags}{TALB};
-					return $value;
-				}
-			},
-			pcm => {
-				compress => false,
-				lossy => false,
-				label => 'Pulse-Code Modulation'
-			},
-			WAV => {
-				compress => false,
-				lossy => false,
-				label => 'Waveform Audio File Format'
-			},
-			wma => {
-				compress => true,
-				lossy => true,
-				label => 'Windows Media Audio'
-			}
-		},
-		suffixes => undef
-	}
 };
 
 # ------------------------------------------------------------------------------------------------
@@ -243,23 +144,132 @@ sub artistFromScan {
 }
 
 # ------------------------------------------------------------------------------------------------
-# Returns a ref to the array of known audio containers
+# Check that we have a working ffmpeg installation, and that ffmpeg knows about the provided fomats
+# (I):
+# - a ref to an array of file formats (which may be empty)
+#   formats specifies the accepted formats
+#   the first one is the preferred output, and must be available both as Decoder and Encoder, while others only need to be Decodable
+# (O):
+# - true if all provided formats are ok
+# - may have incremented the global count of errors
+
+sub checkFormats {
+	my ( $formats ) = @_;
+	my $ok = true;
+
+	my $res = TTP::commandExec( "ffmpeg -formats" );
+
+	if( !$res->{success} ){
+		msgErr( $res->{results}[0]{stderr} );
+		$ok = false;
+
+	} elsif( !$formats || ref( $formats ) ne 'ARRAY' ){
+		msgErr( __PACKAGE__."::checkformats() expects formats as an array ref, got ".( $formats ? ref( $formats ) : '(undef)' ));
+		$ok = false;
+
+	} else {
+		my $stdout = $res->{results}[0]{stdout};
+		my $first = true;
+		foreach my $fmt ( @{$formats} ){
+			my $found = checkFFmpegFormat( $fmt, $stdout );
+			if( $found ){
+				if( $first ){
+					if( !$found->{encode} || !$found->{decode} ){
+						my $str = "the first provided format '$fmt', must be both 'Decodable' and 'Encodable', but ffmpeg cannot ";
+						$str .= "encode" if $found->{decode};
+						$str .= "decode" if $found->{encode};
+						$str .= "decode nor encode" if !$found->{encode} && !$found->{decode};
+						$str .= " this one";
+						msgErr( $str );
+						$ok = false;
+					}
+				} elsif( !$found->{decode} ){
+					msgErr( "ffmpeg cannot decode the '$fmt' format" );
+					$ok = false;
+				}
+			} else {
+				msgErr( "ffmpeg doesn't know about '$fmt' format" );
+				$ok = false;
+			}
+			$first = false;
+		}
+	}
+
+	return $ok;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Check that we have a working ffmpeg installation
 # (I):
 # - none
 # (O):
-# - an array ref
+# - true if ok
+# - may have incremented the global count of errors
 
-#sub containers {
-# 
-#	if( !defined( $Const->{audio}{suffixes} )){
-#		my $formats = formats();
-#		foreach my $it ( @{$formats} ){
-#			push( @{$Const->{audio}{suffixes}}, ".$it" );
-#		}
-#	}
-#
-#	return $Const->{audio}{suffixes};
-#}
+sub checkFFmpeg {
+	my $ok = true;
+
+	my $res = TTP::commandExec( "ffmpeg -h" );
+
+	if( !$res->{success} ){
+		msgErr( $res->{results}[0]{stderr} );
+		$ok = false;
+	}
+
+	return $ok;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Get among the available ffmpeg formats the line which correspond to the given format
+# (I):
+# - the searched for format
+# - a ref to the array of ffmpeg available formats
+# (O):
+# - the found line as a ref to a hash with following keys, or undef:
+#   > decode: true of false
+#   > encode: true of false
+#   > suffix: the file suffix
+#   > label: the file format label
+
+sub checkFFmpegFormat {
+	my ( $fmt, $formats ) = @_;
+	my $found = undef;
+
+	#  D.. = Demuxing supported
+	#  .E. = Muxing supported
+	#  ..d = Is a device
+	#  ---
+	# 012345
+	# 0: space
+	# 1: D.. = Demuxing supported
+	# 2: .E. = Muxing supported
+	# 3: ..d = Is a device
+	# 4: space
+	# 5- comma-separated list of formats
+	# ?: space
+	#    label
+	# may have ' D   mov,mp4,m4a,3gp,3g2,mj2 QuickTime / MOV'
+	my @res = grep( /[ ,]$fmt[ ,]/, @{$formats} );
+	if( @res && scalar( @res )){
+		if( scalar( @res ) > 1 ){
+			msgWarn( "format '$fmt' provides several possibilities, considering only the first one" );
+		}
+		my $line = $res[0];
+		$found = {};
+		$found->{decode} = ( substr( $line, 1,1 ) eq "D" );
+		$found->{encode} = ( substr( $line, 2,1 ) eq "E" );
+		my $rest = substr( $line, 5 );
+		my @words = split( /\s+/, $rest, 2 );
+		my @sfxes = split( /,/, $words[0] );
+		if( !grep( /$fmt/, @sfxes )){
+			msgWarn( "unable to find back our desired '$fmt' format in ffmpeg output [ ".join( ', ', @sfxes )." ]" );
+		}
+		$found->{suffix} = $fmt;
+		$found->{label} = $words[1];
+	}
+
+	return $found;
+}
 
 # ------------------------------------------------------------------------------------------------
 # Extracts the cover from a full scan
@@ -285,28 +295,6 @@ sub coverFromScan {
 
 	return $value;
 }
-
-# ------------------------------------------------------------------------------------------------
-# Returns a ref to the array of known audio formats
-# (I):
-# - none
-# (O):
-# - an array ref
-
-#sub formats {
-#	my $formats = [];
-#
-#	foreach my $format ( sort keys %{$Const->{audio}{formats}} ){
-#		my $it = $Const->{audio}{formats}{$format};
-#		if( $it->{container} ){
-#			push( @{$formats}, $it->{container} );
-#		} else {
-#			push( @{$formats}, $format );
-#		}
-#	}
-#
-#	return $formats;
-#}
 
 # ------------------------------------------------------------------------------------------------
 # Extracts the genre from a full scan

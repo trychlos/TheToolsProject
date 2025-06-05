@@ -421,12 +421,18 @@ msgVerbose( "got evaluate='".( $opt_evaluate ? 'true':'false' )."'" );
 
 # must have --source-path option
 msgErr( "'--source-path' option is mandatory, but is not specified" ) if !$opt_sourcePath;
+msgErr( "'--source-path=$opt_sourcePath': directory not known or not available" ) if $opt_sourcePath && ! -d $opt_sourcePath;
 
 # albumLevel and artistLevel must be greater than zero integers
 $opt_albumLevel = int( $opt_albumLevel );
 msgErr( "--album-level' option must provide a greater than zero integer, got $opt_albumLevel" ) if $opt_albumLevel <= 0;
 $opt_artistLevel = int( $opt_artistLevel );
 msgErr( "--artist-level' option must provide a greater than zero integer, got $opt_artistLevel" ) if $opt_artistLevel <= 0;
+
+# check the format against the installed ffmpeg
+if( TTP::Media::checkFFmpeg()){
+	TTP::Media::checkFormats( \@opt_formats );
+}
 
 # maybe should remove when the target path is same than the source
 msgWarn( "neither '--target-path' nor '--remove' options are specified, there is a risk of duplicated track files in the same directory" ) if !$opt_targetPath && !$opt_remove;
