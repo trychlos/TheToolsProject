@@ -15,6 +15,7 @@
 # @(-) --[no]filename          change the track filename [${filename}]
 # @(-) --[no]remove            remove original file [${remove}]
 # @(-) --limit=<limit>         limits the count of changed files, less than zero for no limit [${limit}]
+# @(-) --[no]evaluate          re-evaluate site and node configuration at each file [${evaluate}]
 #
 # @(@) Note 1: when no target is specified, results are written in the source tree.
 # @(@) Note 2: the first specified '--format' option is the target of format changes.
@@ -65,7 +66,8 @@ my $defaults = {
 	loudness => 'no',
 	remove => 'no',
 	video => 'yes',
-	limit => -1
+	limit => -1,
+	evaluate => 'no'
 };
 
 my $opt_sourcePath = $defaults->{sourcePath};
@@ -79,6 +81,7 @@ my $opt_filename = false;
 my $opt_remove = false;
 my $opt_video = true;
 my $opt_limit = $defaults->{limit};
+my $opt_evaluate = false;
 
 # -------------------------------------------------------------------------------------------------
 # works on the (existing) dir
@@ -100,6 +103,12 @@ sub doFind {
 			my ( $fname, $scan ) = @_;
 			$total_files += 1;
 			return if $opt_limit >= 0 && $total_files > $opt_limit;
+			# this verb may take a very long time to execute on a library - so re-evaluate the configurations to be up-to-date
+			if( $opt_evaluate ){
+				$ep->site()->evaluate();
+				$ep->node()->evaluate();
+			}
+			# and do the work
 			my $albumFromPath = TTP::Media::albumFromPath( $fname, { level => $opt_albumLevel });
 			my $artistFromPath = TTP::Media::artistFromPath( $fname, { level => $opt_artistLevel });
 			if( $albumFromPath || $artistFromPath ){
@@ -381,7 +390,8 @@ if( !GetOptions(
 	"loudness!"			=> \$opt_loudness,
 	"remove!"			=> \$opt_remove,
 	"video!"			=> \$opt_video,
-	"limit=i"			=> \$opt_limit )){
+	"limit=i"			=> \$opt_limit,
+	"evaluate!"			=> \$opt_evaluate )){
 
 		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
@@ -407,6 +417,7 @@ msgVerbose( "got filename='".( $opt_filename ? 'true':'false' )."'" );
 msgVerbose( "got remove='".( $opt_remove ? 'true':'false' )."'" );
 msgVerbose( "got video='".( $opt_video ? 'true':'false' )."'" );
 msgVerbose( "got limit='$opt_limit'" );
+msgVerbose( "got evaluate='".( $opt_evaluate ? 'true':'false' )."'" );
 
 # must have --source-path option
 msgErr( "'--source-path' option is mandatory, but is not specified" ) if !$opt_sourcePath;

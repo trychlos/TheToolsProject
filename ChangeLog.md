@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - audio.pl normalize has an option to re-evaluate site and node configurations (todo #169)
 
 ### 4.20.2
 
