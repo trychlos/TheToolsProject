@@ -721,8 +721,8 @@ sub listAlbums {
 			# expect to have only supported files
 			my ( $fname, $scan ) = @_;
 			#msgErr( $fname ) if $fname !~ /\.flac$/;
-			my $albumFromPath = TTP::Media::albumFromPath( $fname, { level => $opt_albumLevel });
-			my $artistFromPath = TTP::Media::artistFromPath( $fname, { level => $opt_artistLevel });
+			my $albumFromPath = TTP::Media::albumFromPath( $fname, { level => $opt_albumLevel }) || '';
+			my $artistFromPath = TTP::Media::artistFromPath( $fname, { level => $opt_artistLevel }) || '';
 			$counters->{audios}{total} += 1;
 			# unless the very rare case where we do not know how to compute the key
 			if( $albumFromPath || $artistFromPath ){
@@ -1159,6 +1159,7 @@ msgVerbose( "got summary-unchecked='".( $opt_summaryUnchecked ? 'true':'false' )
 
 # must have --source-path option
 msgErr( "'--source-path' option is mandatory, but is not specified" ) if !$opt_sourcePath;
+msgErr( "'--source-path=$opt_sourcePath': directory not known or not available" ) if $opt_sourcePath && ! -d $opt_sourcePath;
 
 # albumLevel and artistLevel must be greater than zero integers
 $opt_albumLevel = int( $opt_albumLevel );

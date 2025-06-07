@@ -8,6 +8,7 @@
 
     - audio.pl normalize has an option to re-evaluate site and node configurations (todo #169)
     - audio.pl normalize checks the provided format (todo #168)
+    - audio.pl list and normalize: fix the file scanner when artist or album are not set
 
 ### 4.20.2
 

@@ -109,8 +109,8 @@ sub doFind {
 				$ep->node()->evaluate();
 			}
 			# and do the work
-			my $albumFromPath = TTP::Media::albumFromPath( $fname, { level => $opt_albumLevel });
-			my $artistFromPath = TTP::Media::artistFromPath( $fname, { level => $opt_artistLevel });
+			my $albumFromPath = TTP::Media::albumFromPath( $fname, { level => $opt_albumLevel }) || '';
+			my $artistFromPath = TTP::Media::artistFromPath( $fname, { level => $opt_artistLevel }) || '';
 			if( $albumFromPath || $artistFromPath ){
 				$scan->{albumFromPath} = $albumFromPath;
 				$scan->{artistFromPath} = $artistFromPath;
@@ -213,16 +213,18 @@ sub ffmpeg_command {
 	push( @args, "-i" );
 	push( @args, "$scan->{path}" );
 	
-	# happens that attached images are considered as video streams - so do not ignore them
+	# attached images are considered as video streams - so do not ignore them
 	if( $opt_video ){
 		push( @args, "-map" );
 		push( @args, "0:a" );
 		push( @args, "-map" );
-		push( @args, "0:v" );
+		push( @args, "0:v?" );
 		push( @args, "-c:v" );
 		push( @args, "copy" );
+
+	# else remove all video streams
 	} else {
-		push( @args, "-vn" );	# else remove video streams
+		push( @args, "-vn" );
 	}
 
 	my $dynamics = dynamics_args() if $opt_dynamics;
