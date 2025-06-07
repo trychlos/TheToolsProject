@@ -299,12 +299,46 @@
         "workloads": {
             "description_array": [
                 "The configuration of each workload this service subscribes to.",
-                "Each item is an ordered list of task to be executed for the service.",
+                "A workload can basically be seen as an ordered list of commands to be executed regularily.",
+                "Though this feature has been primarily defined for sites which lack of an advanced-enough task scheduler, it happens usefull on all sites when about to organize and defined services-oriented batches.",
+                "Workloads are thought to be externally scheduled, through a cron or a task scheduler as a 'tools/libexec/sh/workload.sh <workload_name>' or 'tools\\libexec\\cmd\\workload.cmd <workload_name>',",
+                "where 'workload_name' is the identifier of the workload.",
+                "When about to be executed, a workload is built by the concatenation of the named parts attached the every service running on the current execution node.",
+                "Note too that, as each workload part is attached to a service, it inherits its 'hidden' and 'enabled' properties.",
+                "Example:",
+                " Say you have two services defined on a node, each of them having a 'workload1' defined workload part:",
+                "  \"services\": {",
+                "    \"service1\": {",
+                "      \"workloads\": {",
+                "        \"workload1\": [",
+                "          {",
+                "            \"label\": \"a label for workload1 in service1\",",
+                "            \"commands\": [",
+                "              ...",
+                "            ]",
+                "          }",
+                "        ]",
+                "      }",
+                "    }",
+                "    \"service2\": {",
+                "      \"workloads\": {",
+                "        \"workload1\": [",
+                "          {",
+                "            \"label\": \"a label for workload1 in service2\",",
+                "            \"commands\": [",
+                "              ...",
+                "            ]",
+                "          }",
+                "        ]",
+                "      }",
+                "    }",
+                "  }",
+                " When building the 'workload1' workload, TTP will concatenate the two parts defined for 'service1' and 'service2'.",
+                "Each item is an ordered list of task to be executed for this workload for this service.",
                 "As several services can subscribe to the same workload, we build this way a full ordered list of tasks to be executed.",
-                "The built list of tasks is ordered by the 'order' key, defaulting to the service name."
+                "The built list of tasks can be ordered by the 'order' key, defaulting to be sorted in ASCII order (0-9A-Za-z) of the service name."
             ],
-            "type": "array",
-            "items": "object",
+            "type": "object",
             "patternProperties": {
                 "^.*$": {
                     "description": "The workload name.",
@@ -312,36 +346,41 @@
                 }
             },
             "properties": {
-                "label": {
-                    "description": "A descriptive label for this list of tasks",
-                    "type": "string"
-                },
-                "order": {
-                    "description": "The order of this list of tasks when building the full workload list of commands.",
-                    "type": "string",
-                    "default": "<SERVICE>"
-                },
-                "commands": {
-                    "description": "The commands of the workload, either as strings or as by OS commands.",
-                    "type": [
-                        "string",
-                        "array",
-                        "object"
-                    ],
-                    "items": [
-                        "string",
-                        "object"
-                    ],
-                    "properties": {
-                        "byOS": {
-                            "description": "Let a command be specific to the running OS.",
-                            "type": "object",
-                            "patternProperties": {
-                                "^.*$": {
-                                    "description_array": [
-                                        "The OS name as reported by Perl-Config, the value being the command to be applied for this OS."
-                                    ],
-                                    "type": "string"
+                "type": "array",
+                "items": "object",
+                "properties": {
+                    "label": {
+                        "description": "A descriptive label for this list of tasks",
+                        "type": "string",
+                        "default": "unnamed"
+                    },
+                    "order": {
+                        "description": "The order of this list of tasks when building the full workload list of commands.",
+                        "type": "string",
+                        "default": "<SERVICE>"
+                    },
+                    "commands": {
+                        "description": "The commands of the workload, either as strings or as by OS commands.",
+                        "type": [
+                            "string",
+                            "array",
+                            "object"
+                        ],
+                        "items": [
+                            "string",
+                            "object"
+                        ],
+                        "properties": {
+                            "byOS": {
+                                "description": "Let a command be specific to the running OS.",
+                                "type": "object",
+                                "patternProperties": {
+                                    "^.*$": {
+                                        "description_array": [
+                                            "The OS name as reported by Perl-Config, the value being the command to be applied for this OS."
+                                        ],
+                                        "type": "string"
+                                    }
                                 }
                             }
                         }

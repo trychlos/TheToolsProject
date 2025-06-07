@@ -179,6 +179,45 @@ sub listServices {
 }
 
 # -------------------------------------------------------------------------------------------------
+# list all the workloads used by a service on this host with names sorted in ascii order
+
+sub listWorkloads {
+	msgOut( "displaying workloads used on ".$ep->node()->name()."..." );
+	my $list = {};
+	my $count = 0;
+	TTP::Service->enum({
+		cb => \&_listWorkloads_cb,
+		hidden => $opt_hidden,
+		result => $list
+	});
+	foreach my $it ( sort keys %${list} ){
+		log_print( " $it" );
+		$count += 1;
+	}
+	msgOut( "$count found used workload(s)" );
+}
+
+sub _listWorkloads_cb {
+	my ( $service, $args ) = @_;
+	my $value = $service->var([ 'workloads' ]);
+	if( $value ){
+		my $ref = ref( $value );
+		if( $ref eq 'HASH' ){
+			foreach my $workload ( keys %{$value} ){
+				$ref = ref( $value->{$workload} );
+				if( $ref eq 'ARRAY' ){
+					$args->{result}{$workload} = 1;
+				} else {
+					msgErr( $service->name().".$workload: expects the workload be defined as an array, got $ref" );
+				}
+			}
+		} else {
+			msgErr( $service->name().": expects workloads be defined as a hash, got $ref" );
+		}
+	}
+}
+
+# -------------------------------------------------------------------------------------------------
 # list all (but only) the commands in this workload
 # the commands are listed in the order of their service name
 
@@ -266,35 +305,6 @@ sub printWorkloadTaskData {
 		}
 	} else {
 		log_print( "  $key: <object reference>" );
-	}
-}
-
-# -------------------------------------------------------------------------------------------------
-# list all the workloads used by a service on this host with names sorted in ascii order
-
-sub listWorkloads {
-	msgOut( "displaying workloads used on ".$ep->node()->name()."..." );
-	my $list = {};
-	my $count = 0;
-	TTP::Service->enum({
-		cb => \&_listWorkloads_cb,
-		hidden => $opt_hidden,
-		result => $list
-	});
-	foreach my $it ( sort keys %${list} ){
-		log_print( " $it" );
-		$count += 1;
-	}
-	msgOut( "$count found used workload(s)" );
-}
-
-sub _listWorkloads_cb {
-	my ( $service, $args ) = @_;
-	my $value = $service->var([ 'workloads' ]);
-	if( $value ){
-		foreach my $workload ( keys %{$value} ){
-			$args->{result}{$workload} = 1;
-		}
 	}
 }
 
