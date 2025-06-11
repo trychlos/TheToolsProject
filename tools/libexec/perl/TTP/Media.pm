@@ -40,6 +40,11 @@ use TTP::Message qw( :all );
 use TTP::Path;
 
 my $Const = {
+	# KDE Connect / Android filesystem do not like these characters
+	forbidden => {
+		'\s*\?' => '',
+		'\s*:' => ' -'
+	}
 };
 
 # ------------------------------------------------------------------------------------------------
@@ -269,6 +274,24 @@ sub checkFFmpegFormat {
 	}
 
 	return $found;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Convert the given string to replace forbidden chars
+# (I):
+# - the string to be converted
+# (O):
+# - the converted string
+
+sub convertStr {
+	my ( $str ) = @_;
+
+	foreach my $ch ( keys %{$Const->{forbidden}} ){
+		my $rep = $Const->{forbidden}{$ch};
+		$str =~ s/$ch/$rep/g;
+	}
+
+	return $str;
 }
 
 # ------------------------------------------------------------------------------------------------

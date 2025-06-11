@@ -11,6 +11,7 @@
     - audio.pl list and normalize: fix the file scanner when artist or album are not set
     - services.pl list checks the workload definition first level of structure
     - TTP::Node::evaluate() no more calls var()
+    - TTP::Media let some regex be replaced at runtime
 
 ### 4.20.2
 

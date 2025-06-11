@@ -314,7 +314,7 @@ sub mustChange {
 		my $title = TTP::Media::trackTitleFromScan( $scan ) || '';
 		if( defined( $number ) && $title ){
 			my $str = sprintf( "%02u", ( 0+$number ));
-			my $theorical = "$str - $title";
+			my $theorical = TTP::Media::convertStr( "$str - $title" );
 
 			if( $theorical ne $filename ){
 				$scan->{changes}{filename} = {

@@ -211,7 +211,7 @@ sub checkAlbumPath {
 	if( $albumFromPath ){
 
 		# theorical directory name
-		my $album = TTP::Media::albumFromScan( $scan ) || '';
+		my $album = TTP::Media::convertStr( TTP::Media::albumFromScan( $scan ) || '' );
 		my $year = TTP::Media::yearFromScan( $scan ) || '';
 		my $theorical = "$album [$year]";
 
@@ -240,7 +240,7 @@ sub checkAlbumPath {
 }
 
 # -------------------------------------------------------------------------------------------------
-# the album name (tagged in the track) should not have special characters if we want be part of the directory name
+# the album name (tagged in the track) should not have special characters as we want it be part of the directory name
 # this is checked at the album level on the first track
 
 sub checkAlbumSpecials {
@@ -593,7 +593,7 @@ sub checkTrackPath {
 	my $number = TTP::Media::trackNumberFromScan( $scan ) || '';
 	my $str = sprintf( "%02u", ( 0+$number ));
 	my $title = TTP::Media::trackTitleFromScan( $scan ) || '';
-	my $theorical = "$str - $title";
+	my $theorical = TTP::Media::convertStr( "$str - $title" );
 
 	# are we equal ?
 	my $ok = $filename eq $theorical;
@@ -1167,6 +1167,12 @@ msgErr( "--album-level' option must provide a greater than zero integer, got $op
 $opt_artistLevel = int( $opt_artistLevel );
 msgErr( "--artist-level' option must provide a greater than zero integer, got $opt_artistLevel" ) if $opt_artistLevel <= 0;
 
+# should have something to do
+# at the moment the '--list-albums' is a default action
+if( !$opt_listAlbums && !$opt_listGenres ){
+	msgWarn( "none of '--list-albums' or '--list-genres' options have been specified, nothing to do" );
+}
+
 # some options are only relevant for some actions
 if( !$opt_listAlbums ){
 	msgWarn( "'--check-album' option is only relevant when listing albums, ignored" ) if $opt_checkAlbum;
@@ -1191,12 +1197,6 @@ if( !$opt_listAlbums ){
 }
 if( !$opt_listGenres ){
 	msgWarn( "'--step' option is only relevant when listing genres, ignored" ) if $opt_step_set;
-}
-
-# should have something to do
-# at the moment the '--list-albums' is a default action
-if( !$opt_listAlbums && !$opt_listGenres ){
-	msgWarn( "none of '--list-albums' or '--list-genres' options have been specified, nothing to do" );
 }
 
 if( !TTP::errs()){
