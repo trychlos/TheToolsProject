@@ -10,6 +10,7 @@
     - audio.pl normalize checks the provided format (todo #168)
     - audio.pl list and normalize: fix the file scanner when artist or album are not set
     - services.pl list checks the workload definition first level of structure
+    - TTP::Node::evaluate() no more calls var()
 
 ### 4.20.2
 

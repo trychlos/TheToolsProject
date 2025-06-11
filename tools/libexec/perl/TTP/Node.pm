@@ -178,30 +178,33 @@ sub evaluate {
 	$self->TTP::IJSONable::evaluate( $opts );
 
 	print STDERR __PACKAGE__."::evaluate() substitute <NODE> macro".EOL if $ENV{TTP_EVAL};
-	TTP::substituteMacros( $self->jsonData(), {
+	my $data = $self->jsonData();
+	$data = TTP::substituteMacros( $data, {
 		NODE => $self->name()
 	});
 
 	print STDERR __PACKAGE__."::evaluate() substitute <SERVICE> macro for 'services' keys".EOL if $ENV{TTP_EVAL};
 	# 'services' is introduced in v4.10 to replace 'Services'
-	my $services = $self->var([ 'services' ]);
-	foreach my $it ( keys %{$services} ){
-		TTP::substituteMacros( $self->var([ 'services', $it ]), {
-			SERVICE => $it
-		});
+	my $services = $data->{services};
+	if( $services && scalar( keys %{$services} ) > 0 ){
+		foreach my $it ( keys %{$services} ){
+			TTP::substituteMacros( $services->{$it}, {
+				SERVICE => $it
+			});
+		}
 	}
 
 	# 'Services' is deprecated in v4.10 in favor of 'services'
 	# warn only once
 	print STDERR __PACKAGE__."::evaluate() substitute <SERVICE> macro for 'Services' keys".EOL if $ENV{TTP_EVAL};
-	$services = $self->var([ 'Services' ]);
+	$services = $data->{Services};
 	if( $services && scalar( keys %{$services} ) > 0 ){
 		if( !$ep->{_warnings}{services} ){
 			msgWarn( "'Services' property is deprecated in favor of 'services'. You should update your configurations." );
 			$ep->{_warnings}{services} = true;
 		}
 		foreach my $it ( keys %{$services} ){
-			TTP::substituteMacros( $self->var([ 'Services', $it ]), {
+			TTP::substituteMacros( $services->{$it}, {
 				SERVICE => $it
 			});
 		}
