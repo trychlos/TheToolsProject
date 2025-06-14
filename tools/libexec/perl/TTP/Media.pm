@@ -40,10 +40,13 @@ use TTP::Message qw( :all );
 use TTP::Path;
 
 my $Const = {
-	# KDE Connect / Android filesystem do not like these characters
+	# KDE Connect / Android /FAT32 filesystems do not like these characters
 	forbidden => {
 		'\s*\?' => '',
-		'\s*:' => ' -'
+		'\s*:' => ' -',
+		'[<>\/\\\|]' => '',
+		'"' => '\'',
+		'\*' => '_'
 	}
 };
 

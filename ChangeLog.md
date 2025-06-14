@@ -12,6 +12,7 @@
     - services.pl list checks the workload definition first level of structure
     - TTP::Node::evaluate() no more calls var()
     - TTP::Media let some regex be replaced at runtime
+    - TTP::Media regexes consider all FAT32 forbidden characters
 
 ### 4.20.2
 
