@@ -366,6 +366,22 @@ sub hasDiscLevel {
 }
 
 # ------------------------------------------------------------------------------------------------
+# whether the string embeds some forbidden chars
+# (I):
+# - a string
+# (O):
+# - true if the string has any forbidden char
+
+sub hasForbiddenChars {
+	my ( $str ) = @_;
+
+	my $new = convertStr( $str );
+	my $hasForbidden = ( $new ne $str );
+
+	return $hasForbidden;
+}
+
+# ------------------------------------------------------------------------------------------------
 # Whether the filename exhibits a path which may let us think this is an audio file
 # (I):
 # - the full file pathname

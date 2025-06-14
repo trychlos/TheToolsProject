@@ -13,6 +13,7 @@
     - TTP::Node::evaluate() no more calls var()
     - TTP::Media let some regex be replaced at runtime
     - TTP::Media regexes consider all FAT32 forbidden characters
+    - Define new TTP::Media::hasForbiddenChars() function, audio.pl list taking advantage of it
 
 ### 4.20.2
 

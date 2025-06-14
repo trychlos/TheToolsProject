@@ -255,8 +255,8 @@ sub checkAlbumSpecials {
 	$hash->{album_specials}{count} += 1;
 
 	if( $value ){
-		$value =~ s/[^\/\\<>]//g;
-		if( $value ){
+		my $hasForbidden = TTP::Media::hasForbiddenChars( $value );
+		if( $hasForbidden ){
 			msgWarn( "album title contains special characters '$scan->{path}'" );
 			$hash->{album_specials}{notok} //= 0;
 			$hash->{album_specials}{notok} += 1;
@@ -631,8 +631,8 @@ sub checkTrackSpecials {
 	$hash->{track_specials}{count} += 1;
 
 	if( $value ){
-		$value =~ s/[^\/\\<>]//g;
-		if( $value ){
+		my $hasForbidden = TTP::Media::hasForbiddenChars( $value );
+		if( $hasForbidden ){
 			msgWarn( "track title contains special characters '$scan->{path}'" );
 			$hash->{track_specials}{notok} //= 0;
 			$hash->{track_specials}{notok} += 1;
