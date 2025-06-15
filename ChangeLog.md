@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - Remove '-x' property from workload.sh
 
 ### 4.20.3
 
