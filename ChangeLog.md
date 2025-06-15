@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.20.3-rc.0
+### 4.20.3
 
-    Release date: 
+    Release date: 2025- 6-15
 
     - audio.pl normalize has an option to re-evaluate site and node configurations (todo #169)
     - audio.pl normalize checks the provided format (todo #168)
@@ -618,4 +618,4 @@
 
 ---
 P. Wieser
-- Last updated on 2025, June 4th
+- Last updated on 2025, June 15th
