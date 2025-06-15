@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.20.4-rc.0
+### 4.20.4
 
-    Release date: 
+    Release date: 2025- 6-15
 
     - Remove '-x' property from workload.sh
 
