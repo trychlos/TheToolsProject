@@ -24,6 +24,7 @@
 # Note 1: this workload.sh adds itself the -nocolored option to every run command. You should take care that the run commands accept (if not honor) this command-line option.
 #
 # pwi 2025- 5-21 creation
+# pwi 2025- 6-16 initialize the TTP environment
 
 # counters
 let -i i=0
@@ -98,7 +99,7 @@ f_logLine()
 ###
 
 # setup the TTP environment so that we are able to use TTP
-#. /etc/profile.d/ttp.sh
+ttp_in=workload . $(dirname "${0}")/bootstrap ""
 
 # compute the logfile
 log_file="$(f_logFile "${1}")"

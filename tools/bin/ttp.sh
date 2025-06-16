@@ -23,6 +23,7 @@
 # pwi 2017- 6-21 publish the release at last
 # pwi 2021- 5-25 get rid of TTP_SHDIR variable
 # pwi 2021-12-16 consider running from a crontab where shell is fully addressed
+# pwi 2025- 6-16 honor ttp_in variable
 
 # In order to be able to honor the 'logical machine' paradigm (which
 # let the administrator have several execution nodes in the same machine),
@@ -62,8 +63,8 @@
 # (ksh being the only known shell to be able to autoload its functions,
 #  typical sh-like shells, e.g. bash, would else fail)
 
-if [ "${0:0:1}" == "-" -o "${0}" == "${SHELL}" -o "${0##*/}" == "${SHELL##*/}" -o "${ttp_test}" == "t-sh-bootstrap" ]; then
-	unset ttp_test
+if [ "${0:0:1}" == "-" -o "${0}" == "${SHELL}" -o "${0##*/}" == "${SHELL##*/}" -o "${ttp_test}" == "t-sh-bootstrap" -o ! -z "${ttp_in}" ]; then
+	unset ttp_in ttp_test
 	[ "${1}" == "switch" ] && {
 		. $(echo "${FPATH}" | tr ':' '\n' | while read _dir; do [[ -f "${_dir}/switch" ]] && echo "${_dir}" && break; done)/switch "$(which ttp.sh 2>/dev/null)" "${@}";
 		return $?;

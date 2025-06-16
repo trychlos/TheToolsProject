@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - Let workload.sh initialize TTP environment
 
 ### 4.20.4
 
