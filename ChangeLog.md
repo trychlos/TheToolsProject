@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.20.5-rc.0
+### 4.20.5
 
-    Release date: 
+    Release date: 2025- 6-16
 
     - Let workload.sh initialize TTP environment
 
@@ -630,4 +630,4 @@
 
 ---
 P. Wieser
-- Last updated on 2025, June 15th
+- Last updated on 2025, June 16th
