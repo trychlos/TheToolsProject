@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - Fix credentials obtention when account is not defined
 
 ### 4.20.5
 

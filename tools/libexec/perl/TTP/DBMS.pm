@@ -60,7 +60,7 @@ sub _getCredentials {
 	if( $credentials ){
 		$account = $self->account() if !$account;
 		$account = ( sort keys %{$credentials} )[0] if !$account;
-		$passwd = $credentials->{$account} || undef;
+		$passwd = $credentials->{$account} if $account;
 		msgVerbose( __PACKAGE__."::_getCredentials() got account='".( $account || '(undef)' )."'" );
 
 	} else {
