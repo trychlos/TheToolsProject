@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # @(#) TTP workload execution
 #
 # TheToolsProject - Tools System and Working Paradigm for IT Production

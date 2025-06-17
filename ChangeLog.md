@@ -7,6 +7,7 @@
     Release date: 
 
     - Fix credentials obtention when account is not defined
+    - workload.sh now explicitely uses bash as /bin/sh is linked to dash on Raspbian
 
 ### 4.20.5
 
