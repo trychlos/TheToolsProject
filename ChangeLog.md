@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.20.6-rc.0
+### 4.20.6
 
-    Release date: 
+    Release date: 2025- 6-18
 
     - Fix credentials obtention when account is not defined
     - workload.sh now explicitely uses bash as /bin/sh is linked to dash on Raspbian
@@ -637,4 +637,4 @@
 
 ---
 P. Wieser
-- Last updated on 2025, June 16th
+- Last updated on 2025, June 18th
