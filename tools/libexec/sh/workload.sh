@@ -34,9 +34,9 @@ let -i i=0
 # - the task command-line and its arguments
 f_command()
 {
-	f_logLine "executing $*"
+	f_logLine "executing $* ($#)"
 	typeset _start="$(date '+%Y-%m-%d %H:%M:%S')"
-	$*
+	/bin/bash -c "$*"
 	typeset -i _rc=$?
 	f_logLine "got RC=${_rc}"
 	typeset _end="$(date '+%Y-%m-%d %H:%M:%S')"

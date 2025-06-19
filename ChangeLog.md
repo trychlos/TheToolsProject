@@ -8,6 +8,7 @@
 
     - sh/bootstrap set the umask
     - Remove TTP::EP->bootstrap() redundancy from verbose message
+    - Make sure sh/workload.sh rightly interprets quoted arguments
 
 ### 4.20.6
 
