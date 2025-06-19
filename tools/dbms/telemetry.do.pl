@@ -171,6 +171,9 @@ sub doTablesCount {
 			$tabcount += 1;
 			msgOut( " table '$tab'" );
 			my $rowscount = $objDbms->getTableRowsCount( $db, $tab );
+			# when the table contains some forbidden chars, convert it
+			my $metricTable = $tab;
+			$metricTable =~ s/[\.-]/_/g;
 			# mqtt and http/text have different names
 			# mqtt topic: <node>/telemetry/<environment>/<service>/<command>/<verb>/<instance>/<database>/rowscount/<table>
 			# mqtt value: <table_rows_count>
@@ -178,7 +181,7 @@ sub doTablesCount {
 				my @labels = ( @opt_prepends,
 					"environment=".( $ep->node()->environment() || '' ), "service=".$opt_service, "command=".$ep->runner()->command(), "verb=".$ep->runner()->verb(), "database=$db", @opt_appends );
 				TTP::Metric->new( $ep, {
-					name => $tab,
+					name => $metricTable,
 					value => $rowscount,
 					labels => \@labels
 				})->publish({
@@ -191,7 +194,7 @@ sub doTablesCount {
 			# http value: <table_rows_count>
 			if( $opt_http || $opt_text ){
 				my @labels = ( @opt_prepends,
-					"environment=".( $ep->node()->environment() || '' ), "service=".$opt_service, "command=".$ep->runner()->command(), "verb=".$ep->runner()->verb(), "database=$db", "table=$tab", @opt_appends );
+					"environment=".( $ep->node()->environment() || '' ), "service=".$opt_service, "command=".$ep->runner()->command(), "verb=".$ep->runner()->verb(), "database=$db", "table=$metricTable", @opt_appends );
 				TTP::Metric->new( $ep, {
 					name => 'rowscount',
 					value => $rowscount,
