@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.20.7-rc.0
+### 4.20.7
 
-    Release date: 
+    Release date: 2025- 6-19
 
     - sh/bootstrap set the umask
     - Remove TTP::EP->bootstrap() redundancy from verbose message
@@ -646,4 +646,4 @@
 
 ---
 P. Wieser
-- Last updated on 2025, June 18th
+- Last updated on 2025, June 19th
