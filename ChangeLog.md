@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - sh/bootstrap set the umask
 
 ### 4.20.6
 
