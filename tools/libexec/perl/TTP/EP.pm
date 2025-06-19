@@ -96,7 +96,7 @@ sub bootstrap {
 
 	# EntryPoint is bootstrapped
 	$self->{_bootstrapped} = true;
-	msgVerbose( __PACKAGE__."::bootstrap() ".ref( $self )." v".TTP::version()." successfully bootstrapped" );
+	msgVerbose( __PACKAGE__."::bootstrap() v".TTP::version()." successfully bootstrapped" );
 
 	return  $self;
 }

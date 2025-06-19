@@ -7,6 +7,7 @@
     Release date: 
 
     - sh/bootstrap set the umask
+    - Remove TTP::EP->bootstrap() redundancy from verbose message
 
 ### 4.20.6
 
