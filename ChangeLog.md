@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.20.8-rc.0
+### 4.20.8
 
-    Release date: 
+    Release date: 2025- 6-20
 
     - sh/bootstrap set the umask before doing anything else
 
@@ -652,4 +652,4 @@
 
 ---
 P. Wieser
-- Last updated on 2025, June 19th
+- Last updated on 2025, June 20th
