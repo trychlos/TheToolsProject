@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - sh/bootstrap set the umask before doing anything else
 
 ### 4.20.7
 

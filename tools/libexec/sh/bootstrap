@@ -179,6 +179,10 @@ f_setup()
 ### MAIN
 ###
 
+# Set the umask
+# in TTP world, account and group permissions must be the same
+umask 0002
+
 # Have the usual 'HOME/.ttp.d /etc/ttp.d' default values, letting the caller override that
 typeset d_bootstrap_list="$@"
 [ -z "${1}" ] && d_bootstrap_list=""${HOME}/.ttp.d" "/etc/ttp.d""
@@ -192,9 +196,5 @@ typeset -i _ret=$?
 [ "${TTP_DEBUG}" = "1" ] && echo "[sh/bootstrap] TTP_ROOTS='${TTP_ROOTS}'" 1>&2
 
 unset $(set | grep -E '^f_bootstrap|^d_bootstrap') 1>/dev/null 2>&1
-
-# set the umask
-# in TTP world, account and group permissions must be the same
-umask 0002
 
 return ${_ret}
