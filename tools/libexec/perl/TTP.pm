@@ -102,6 +102,7 @@ sub chompDumper {
 	my ( $data ) = @_;
 	my $str = Dumper( $data );
 	$str =~ s/^\$VAR[0-9]+\s+=\s*//;
+	$str =~ s/;$//;
 	chomp $str;
 	return $str;
 }

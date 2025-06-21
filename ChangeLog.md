@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - Define new ttp.pl credential verb
 
 ### 4.20.8
 
