@@ -14,8 +14,8 @@
 # @(-) --[no]file              whether an execution report should be provided by file [${file}]
 # @(-) --[no]mqtt              whether an execution report should be published to MQTT [${mqtt}]
 #
-# @(@) Note 1: remind that differential backup is the difference of the current state and the last full backup.
-# @(@) Note 2: the default output filename is computed as:
+# @(@) Note 1: Remind that differential backup is the difference of the current state and the last full backup.
+# @(@) Note 2: The default output filename is computed as:
 # @(@)         <instance_backup_path>\<yymmdd>\<host>-<instance>-<database>-<yymmdd>-<hhmiss>-<mode>.backup.
 #
 # TheToolsProject - Tools System and Working Paradigm for IT Production

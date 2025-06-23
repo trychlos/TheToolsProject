@@ -11,7 +11,7 @@
 # @(-) --keep=s                count of to-be-kept directories in the source [${keep}]
 # @(-) --[no]makeDirExist      whether to first create the destination top directory [${makeDirExist}]
 #
-# @(@) Note 1: the default behavior of this verb is to first create the target directory in order to be able to move the files into.
+# @(@) Note 1: The default behavior of this verb is to first create the target directory in order to be able to move the files into.
 # @(@)         When the move operation is handled by an external command (say robocopy for example), this later may or not be able to create itself its destination tree.
 # @(@)         In this situation, it can be convenient to just skip the first step of the creation of the target directory in order to prevent some weird error messages
 # @(@)         like, for example, the well-known "Insufficient system resources exist to complete the requested service" Win32 message...

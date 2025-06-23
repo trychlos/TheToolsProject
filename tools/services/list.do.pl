@@ -23,7 +23,7 @@
 # @(@)   services.pl list -workload <name> -commands [-hidden]            list the commands attached to the named workload, plus maybe the hidden ones
 # @(@)   services.pl list -workload <name> -details [-hidden]             list the tasks details of the named workload, plus maybe the hidden ones
 #
-# @(@) Note 1: displayed lists are sorted in ASCII (i.e. in [0-9A-Za-z]) order.
+# @(@) Note 1: Displayed lists are sorted in ASCII (i.e. in [0-9A-Za-z]) order.
 #
 # TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)

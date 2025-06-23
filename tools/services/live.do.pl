@@ -10,7 +10,7 @@
 # @(-) --[no]mqtt              publish MQTT telemetry [${mqtt}]
 # @(-) --[no]http              publish HTTP telemetry [${http}]
 #
-# @(@) Note 1: this script relies on the 'status/live' entry in the JSON configuration file.
+# @(@) Note 1: This script relies on the 'status/live' entry in the JSON configuration file.
 # @(@)         *All* machines of the environment are scanned until a 'status/live' command has been found for the service.
 #
 # TheToolsProject - Tools System and Working Paradigm for IT Production

@@ -7,7 +7,7 @@
 # @(-) --[no]json              display available JSON configuration files [${json}]
 # @(-) --[no]check             whether to check the loaded configurations [${check}]
 #
-# @(@) Note 1: dummy mode is honored here by using msgWarn() instead of msgErr() when checking the JSON daemon configurations
+# @(@) Note 1: Dummy mode is honored here by using msgWarn() instead of msgErr() when checking the JSON daemon configurations
 # @(@)         (if '--check' option has been set). Please be conscious that any of these two options may so return a different
 # @(@)         result set of the one returned by the standard (default) run.
 # @(@) Note 2: "daemon.pl" command and all its verbs only act on the local node.

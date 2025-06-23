@@ -13,7 +13,7 @@
 # @(-) --options=<options>     additional options to be passed to the command [${options}]
 # @(-) --[no]empty             whether to empty the target tree before the copy [${empty}]
 #
-# @(@) Note 1: both --exclude-dir and --exclude-file can be specified several times, and/or as a comma-separated list of values, and/or as globs.
+# @(@) Note 1: Both '--exclude-dir' and '--exclude-file' can be specified several times, and/or as a comma-separated list of values, and/or as globs.
 #
 # TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)

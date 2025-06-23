@@ -6,7 +6,7 @@
 # @(-) --[no]verbose           run verbosely [${verbose}]
 # @(-) --name=<name>           the requested DNS name [${name}]
 #
-# @(@) Note 1: this verb let us request either a DNS domain content as the list of records, or the definition of a particular record.
+# @(@) Note 1: This verb let us request either a DNS domain content as the list of records, or the definition of a particular record.
 #
 # TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)

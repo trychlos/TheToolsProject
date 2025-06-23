@@ -10,7 +10,7 @@
 # @(-) --command=<command>     the command to be sent to the daemon [${command}]
 # @(-) --timeout=<timeout>     command timeout in sec. [${timeout}]
 #
-# @(@) Note 1: a command is a simple string. The daemon is expected to (at least) acknowledge it.
+# @(@) Note 1: A command is a simple string. The daemon is expected to (at least) acknowledge it.
 # @(@) Note 2: "daemon.pl" command and all its verbs only act on the local node.
 #
 # TheToolsProject - Tools System and Working Paradigm for IT Production

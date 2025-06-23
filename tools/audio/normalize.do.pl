@@ -17,8 +17,8 @@
 # @(-) --limit=<limit>         limits the count of changed files, less than zero for no limit [${limit}]
 # @(-) --[no]evaluate          re-evaluate site and node configuration at each file [${evaluate}]
 #
-# @(@) Note 1: when no target is specified, results are written in the source tree.
-# @(@) Note 2: the first specified '--format' option is the target of format changes.
+# @(@) Note 1: When no target is specified, results are written in the source tree.
+# @(@) Note 2: The first specified '--format' option is the target of format changes.
 #
 # TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)

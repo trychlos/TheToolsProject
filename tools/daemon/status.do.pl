@@ -11,7 +11,7 @@
 # @(-) --metric=<metric>       the metric to be published [${metric}]
 # @(-) --label=<name=value>    label(s) to be added to the published metric, may be specified several times or as comma-separated strings [${label}]
 #
-# @(@) Note 1: published telemetries exhibit the very same metrics than those periodically advertised by the daemon itself.
+# @(@) Note 1: Published telemetries exhibit the very same metrics than those periodically advertised by the daemon itself.
 # @(@) Note 2: "daemon.pl" command and all its verbs only act on the local node.
 #
 # TheToolsProject - Tools System and Working Paradigm for IT Production

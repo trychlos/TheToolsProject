@@ -10,7 +10,7 @@
 # @(-) --[no]file              whether an execution report should be provided by file [${file}]
 # @(-) --[no]mqtt              whether an execution report should be published to MQTT [${mqtt}]
 #
-# @(@) Note 1: the default output filename is computed as: '<backupsPeriodicDir>/<node>-<service>-<database>-<yymmdd>-<hhmiss>.ldif'.
+# @(@) Note 1: The default output filename is computed as: '<backupsPeriodicDir>/<node>-<service>-<database>-<yymmdd>-<hhmiss>.ldif'.
 #
 # TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)

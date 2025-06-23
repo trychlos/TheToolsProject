@@ -8,7 +8,7 @@
 # @(-) --payload=<name>        the message to be published [${payload}]
 # @(-) --[no]retain            with the 'retain' flag (ignored here) [${retain}]
 #
-# @(@) Note 1: the topic should be formatted as HOST/subject/subject/content
+# @(@) Note 1: The topic should be formatted as HOST/subject/subject/content
 #
 # TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)

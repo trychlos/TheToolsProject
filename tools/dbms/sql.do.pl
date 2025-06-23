@@ -14,7 +14,7 @@
 # @(-) --json=<json>           the json output file [${json}]
 # @(-) --columns=<columns>     an output file which will get the columns named [${columns}]
 #
-# @(@) Note 1: the provided SQL script may or may not have a displayable result. Nonetheless, this verb will always display all the script output.
+# @(@) Note 1: The provided SQL script may or may not have a displayable result. Nonetheless, this verb will always display all the script output.
 # @(@) Note 2: In a Windows command prompt, use Ctrl+Z to terminate the stdin stream (or use a HERE document).
 # @(@)         Use Ctrl+D in a Unix terminal.
 # @(@) Note 3: '--dummy' option is ignored when SQL command is a SELECT sentence.

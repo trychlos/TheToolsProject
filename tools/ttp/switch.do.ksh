@@ -7,7 +7,7 @@
 # @(-) --[no]default           whether to setup the first available node [${default}]
 # @(-) --node=<name>           the node to be set as current [${node}]
 #
-# @(@) Note 1: this command is needed because TheToolsProject supports the 'logical machine' paradigm.
+# @(@) Note 1: This command is needed because TheToolsProject supports the 'logical machine' paradigm.
 # @(@)         It has the unique particularity of having to be executed 'in-process', i.e. with the dot notation: ". ttp.sh switch --node <name>".
 # @(@)         It is most often run from profile initialization as ". ttp.sh switch --default".
 #
