@@ -35,9 +35,10 @@ use strict;
 use utf8;
 use warnings;
 
-use JSON;
-use Path::Tiny;
 use File::Spec;
+use Path::Tiny;
+
+use TTP::Meteor;
 
 my $defaults = {
 	help => 'no',
@@ -291,7 +292,7 @@ sub doListApplications {
 	my @applications = ();
 	# try to get and identify all Meteor applications
 	foreach my $it ( @items ){
-		my $obj = getMeteorPackageJson( $it );
+		my $obj = TTP::Meteor::getApplication( $it );
 		if( $obj ){
 			$obj->{infos} = getChangeLogInfos( $it );
 			push( @applications, $obj );
@@ -300,7 +301,7 @@ sub doListApplications {
 	}
 	#print "packages: ".Dumper( @packages );
 	$displayed = displayApplications( \@applications );
-	msgOut( "$count found applications(s)" );
+	msgOut( "found $count applications(s)" );
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -344,7 +345,7 @@ sub doListPackages {
 	} else {
 		$displayed = displayPackages( \@packages, $callers );
 	}
-	msgOut( "$count found package(s)" );
+	msgOut( "found $count package(s)" );
 	msgOut( "$displayed packages have something to release" ) if $opt_onlyPublishables;
 }
 
@@ -528,41 +529,6 @@ sub _getMeteorPackageDependency {
 }
 
 # -------------------------------------------------------------------------------------------------
-# given a directory path, try to read the package.json (which may identify a Meteor application) inside
-# (I):
-# - the directory path
-# (O):
-# - a package object, or undef
-
-sub getMeteorPackageJson {
-	my ( $dir ) = @_;
-	my $res = undef;
-	if( -d $dir ){
-		my $json = File::Spec->catfile( $dir, 'package.json' );
-		if( -r $json ){
-			$res = {
-				json => $json
-			};
-			my $content = decode_json( path( $json )->slurp_utf8 );
-			# expect at least a 'meteor' non-empty key
-			if( !$content->{meteor} ){
-				msgVerbose( "$json: no 'meteor' key" );
-				return undef;
-			}
-			# say the name is the basename of the directory path
-			$res->{name} = path( $dir )->basename;
-		} else {
-			msgVerbose( "$json: file not found or not readable" );
-			return undef;
-		}
-	} else {
-		msgVerbose( "$dir: not a directory" );
-		return undef;
-	}
-	return $res;
-}
-
-# -------------------------------------------------------------------------------------------------
 # build a string with publication informations
 # (I):
 # - the package object with an 'infos' key
@@ -623,7 +589,7 @@ msgVerbose( "got only-publishables='".( $opt_onlyPublishables ? 'true':'false' )
 
 # get root absolute path which must exist
 $opt_root = path( $opt_root )->realpath;
-msgErr( "'--root='$opt_root': directory not found or not available" ) if !-d $opt_root;
+msgErr( "--root='$opt_root': directory not found or not available" ) if !-d $opt_root;
 
 # should list (packages or applications)
 msgWarn( "will not list anything as neither '--applications' nor '--packages' options are set" ) if !$opt_applications && !$opt_packages;
