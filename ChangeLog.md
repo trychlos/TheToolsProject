@@ -7,6 +7,7 @@
     Release date: 
 
     - Define new ttp.pl credential verb
+    - Define new meteor.pl list verb
 
 ### 4.20.8
 
