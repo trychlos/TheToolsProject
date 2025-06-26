@@ -262,6 +262,8 @@ sub commandByOS_resolveItem {
 #   > macros: a hash of the macros to be replaced where:
 #     - key is the macro name, must be labeled in the toops.json as '<macro>' (i.e. between angle brackets)
 #     - value is the replacement value
+#   > withDummy: whether to honor RunnerVerb.dummy property, defaulting to true
+#     to be used when we want execute a (read-only) command in all cases
 # (O):
 # returns a hash with following keys:
 # - success: true|false the consolidated result of each command (true only if all were ok)
@@ -372,7 +374,9 @@ sub commandExec_item {
 	}
 
 	# and go
-	if( $ep->runner()->dummy()){
+	my $withDummy = true;
+	$withDummy = $opts->{withDummy} if defined $opts->{withDummy};
+	if( $withDummy && $ep->runner()->dummy()){
 		msgDummy( $res->{evaluated} );
 	} else {
 		# https://stackoverflow.com/questions/799968/whats-the-difference-between-perls-backticks-system-and-exec

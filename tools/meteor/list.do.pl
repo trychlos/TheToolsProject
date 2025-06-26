@@ -185,7 +185,8 @@ sub displayDependenciesTree {
 	foreach my $ordered ( @{$tree} ){
 		my $pck = $packs->{$ordered->{name}};
 		#print Dumper( $pck ) if $pck->{name} eq 'aldeed:tabular';
-		my $publishable = $opt_onlyPublishables ? !$pck->{infos} || !$pck->{infos}{prev} || $pck->{infos}{changes} > 0 : true;
+		my $publishable = $opt_onlyPublishables ? !$pck->{infos} || ( !$pck->{infos}{prev} && $pck->{infos}{changes} > 0 ) : true;
+		#print Dumper( $pck->{infos} ) if $publishable;
 		if( $publishable ){
 			my $str = '-';
 			for( my $i=0 ; $i<$ordered->{level} ; ++$i ){
@@ -253,7 +254,8 @@ sub displayPackages {
 	foreach my $short ( sort keys %{$list} ){
 		my $pck = $list->{$short};
 		#print Dumper( $pck ) if $pck->{name} eq 'aldeed:tabular';
-		my $publishable = $opt_onlyPublishables ? !$pck->{infos} || !$pck->{infos}{prev} || $pck->{infos}{changes} > 0 : true;
+		my $publishable = $opt_onlyPublishables ? !$pck->{infos} || ( !$pck->{infos}{prev} && $pck->{infos}{changes} > 0 ) : true;
+		#print Dumper( $pck->{infos} ) if $publishable;
 		if( $publishable ){
 			print " ".$pck->{name};
 			print "\t".packagePublishInfos( $pck ) if $opt_publishInfos;
@@ -319,7 +321,7 @@ sub doListPackages {
 	my $callers = {};
 	# try to get and identify all Meteor packages
 	foreach my $it ( @items ){
-		my $obj = getMeteorPackageJs( $it );
+		my $obj = TTP::Meteor::getPackage( $it );
 		if( $obj ){
 			$obj->{infos} = getChangeLogInfos( $it );
 			push( @packages, $obj );
@@ -401,131 +403,6 @@ sub getChangeLogInfos {
 		return undef;
 	}
 	return $res;
-}
-
-# -------------------------------------------------------------------------------------------------
-# given a directory path, try to read the package.js (which may identify a Meteor package) inside
-# (I):
-# - the directory path
-# (O):
-# - a package object, or undef
-
-sub getMeteorPackageJs {
-	my ( $dir ) = @_;
-	my $res = undef;
-	if( -d $dir ){
-		my $jspck = File::Spec->catfile( $dir, 'package.js' );
-		if( -r $jspck ){
-			$res = {
-				jspck => $jspck
-			};
-			my $content = path( $jspck )->slurp_utf8;
-			my @lines = split( /[\r\n]/, $content );
-			my $c;
-			# expect at least Package.describe() and maybe Package.onUse()
-			my $describe = $content;
-			$describe =~ s/^.*Package\.describe\s*\(\s*{([^\)}]+).*$/$1/s;
-			if( $describe ){
-				$res->{describe} = $describe;
-			} else {
-				msgWarn( "$jspck: 'Package.describe() call not found, so ignore the package" );
-				return undef;
-			}
-			# get the name (and the owner), making sure there is one and only one
-			my @names = grep( /\sname\s*:/, @lines );
-			$c = scalar( @names );
-			if( $c != 1 ){
-				msgWarn( "$jspck: found unexpected $c 'name' tag(s), so ignore the package" );
-				return undef;
-			} else {
-				my @parts = split( ':', $names[0], 2 );
-				my $name = $parts[1];
-				$name =~ s/^\s*//;
-				$name =~ s/,\s*$//;
-				$name =~ s/['"]//g;
-				my @words = split( ':', $name );
-				$res->{owner} = $words[0];
-				$res->{shortName} = $words[1];
-				$res->{name} = $name;
-			}
-			# get the version
-			my @versions = grep( /\sversion\s*:/, @lines );
-			$c = scalar( @versions );
-			if( $c != 1 ){
-				msgWarn( "$jspck: found unexpected $c 'version' tag(s), so ignore the package" );
-				return undef;
-			} else {
-				my @parts = split( ':', $versions[0], 2 );
-				my $version = $parts[1];
-				$version =~ s/^\s*//;
-				$version =~ s/,\s*$//;
-				$version =~ s/['"]//g;
-				$res->{version} = $version;
-			}
-			# get the summary
-			my @summaries = grep( /\ssummary\s*:/, @lines );
-			$c = scalar( @summaries );
-			if( $c != 1 ){
-				msgWarn( "$jspck: found unexpected $c 'summary' tag(s), so ignore the package" );
-				return undef;
-			} else {
-				my @parts = split( ':', $summaries[0], 2 );
-				my $summary = $parts[1];
-				$summary =~ s/^\s*//;
-				$summary =~ s/,\s*$//;
-				$summary =~ s/['"]//g;
-				$res->{summary} = $summary;
-			}
-			# get all api.use() dependents
-			# which can be specified as something.use( package ) or .use([ pack1, pck2 ]) with one package per line or all on the same line
-			# plus a small hack to consider the _use() cases
-			my @uses = ( $content =~ /[\._]use\s*\(([^\);]+)\)\s*;/g );
-			my $useres = {};
-			my $debug = false;
-			#$debug = true if $res->{name} eq 'accounts-iziam';
-			foreach my $it ( @uses ){
-				my $args = $it;
-				print "\$args ".Dumper( $args ) if $debug;
-				if( $args =~ m/^\s*\[/ ){
-					print "have [".EOL if $debug;
-					$args =~ s/^\s*\[([^\]]+)\].*$/$1/s;
-					print "\$args='$args'".EOL if $debug;
-					my @args = split( /[\r\n,]/, $args );
-					print "\@args ".Dumper( @args ) if $debug;
-					foreach my $arg ( @args ){
-						_getMeteorPackageDependency( $res, $useres, $arg );
-					}
-				} else {
-					print "do not have [".EOL if $debug;
-					my @args = split( /\s*,\s*/, $args, 2 );
-					$args = $args[0];
-					$args =~ s/^\s*([^,]+).*$/$1/;
-					_getMeteorPackageDependency( $res, $useres, $args );
-				}
-			}
-			my @useres = sort keys %{$useres};
-			$res->{uses} = \@useres;
-		} else {
-			msgVerbose( "$jspck: file not found or not readable" );
-			return undef;
-		}
-	} else {
-		msgVerbose( "$dir: not a directory" );
-		return undef;
-	}
-	return $res;
-}
-
-sub _getMeteorPackageDependency {
-	my ( $self, $deps, $arg ) = @_;
-
-	$arg =~ s/^\s*['",]\s*//g;
-	$arg =~ s/\s*['",]\s*$//g;
-	$arg =~ s/^\s*$//;
-	$arg =~ s/\@.*$//;
-
-	# do not consider as a dependency this same package
-	$deps->{$arg} = true if $arg && $arg ne "$self->{name}" && $arg !~ m/\.\.\.arguments/;
 }
 
 # -------------------------------------------------------------------------------------------------
