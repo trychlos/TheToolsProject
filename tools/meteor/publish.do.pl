@@ -180,6 +180,8 @@ sub doPublish {
 	if( $opt_github ){
 		return if !publishGithub( $releasedVersion );
 	}
+	# back to vnext branch
+	return if !gitBackToVNext();
 	# bump version in package.js
 	my $nextVersion = filePackageBump( $releasedVersion );
 	return if !$nextVersion;
@@ -203,7 +205,10 @@ sub execLocal {
 	# execute the command in a subshell within the package working directory
 	my $local_cmd = "(cd $opt_package && $cmd )";
 	my $res = TTP::commandExec( $local_cmd, $opts );
-	if( scalar( @{$res->{stderrs}} )){
+	# some commands send some output to stderr even when they are successful
+	my $ignoreStderr = false;
+	$ignoreStderr = $opts->{ignoreStderr} if defined $opts->{ignoreStderr};
+	if( scalar( @{$res->{stderrs}} ) && !$ignoreStderr ){
 		msgErr( $res->{stderrs} );
 		delete $res->{stdouts};
 	}
@@ -216,7 +221,7 @@ sub execLocal {
 
 sub fileChangeLogBump {
 	my ( $nextVersion ) = @_;
-	my @content = split( /[\r\n]/, path( $package->{'ChangeLog.md'} )->slurp_utf8 );
+	my @content = path( $package->{'ChangeLog.md'} )->lines_utf8;
 	my $found = false;
 	my @adds = (
 		"",
@@ -257,7 +262,7 @@ sub fileChangeLogRemoveRC {
 	my $versionFound = false;
 	my $dateFound = false;
 	my $ok = true;
-	my @content = split( /[\r\n]/, path( $package->{'ChangeLog.md'} )->slurp_utf8 );
+	my @content = path( $package->{'ChangeLog.md'} )->lines_utf8;
 	for( my $i=0 ; $i<=$#content ; ++$i ){
 		my $line = $content[$i];
 		# should find first the version -rc
@@ -302,7 +307,7 @@ sub fileMDAbbrevDate {
 	my $ok = true;
 	my $mdlist = TTP::Meteor::getPackageMD();
 	foreach my $md ( @{$mdlist} ){
-		my @content = split( /[\r\n]/, path( $package->{$md} )->slurp_utf8 );
+		my @content = path( $package->{$md} )->lines_utf8;
 		my $found = false;
 		for( my $i=$#content ; $i>=0 ; --$i ){
 			my $line = $content[$i];
@@ -337,7 +342,7 @@ sub fileMDAbbrevDate {
 sub filePackageBump {
     my ( $releasedVersion ) = @_;
 	my $nextVersion = undef;
-	my @content = split( /[\r\n]/, path( $package->{jspck} )->slurp_utf8 );
+	my @content = path( $package->{jspck} )->lines_utf8;
 	for( my $i=0 ; $i<=$#content ; ++$i ){
 		my $line = $content[$i];
 		if( $line =~ m/^\s*version\s*:\s*'(\d+\.\d+\.\d+)/ ){
@@ -368,12 +373,12 @@ sub filePackageBump {
 
 sub filePackageRemoveRC {
     my $version;
-	my @content = split( /[\r\n]/, path( $package->{jspck} )->slurp_utf8 );
+	my @content = path( $package->{jspck} )->lines_utf8;
 	for( my $i=0 ; $i<=$#content ; ++$i ){
 		my $line = $content[$i];
 		if( $line =~ m/^\s*version\s*:\s*'(\d+\.\d+\.\d+)/ ){
 			$version = $1;
-			$line =~ s/-rc.*$//;
+			$line =~ s/-rc.*$/',/;
 			$content[$i] = $line;
 			last;
 		}
@@ -403,7 +408,7 @@ sub fileReadmeUpdateNpms {
 	my $src = File::Spec->catfile( File::Spec->catdir( $opt_package, 'src', 'server', 'js' ), 'check_npms.js' );
 	if( -r $src ){
 		my @npms = ();
-		my @content = split( /[\r\n]/, path( $src )->slurp_utf8 );
+		my @content = path( $src )->lines_utf8;
 		my $started  = false;
 		my $ended = false;
 		foreach my $line ( @content ){
@@ -425,7 +430,7 @@ sub fileReadmeUpdateNpms {
 		# successively find chapter title '## NPM peer dependencies' and then the paragraph title 'Dependencies as of v 1.3.0:'
         #  update the version and replace all that is between following ```
 		$releasedVersion =~ s/\.\d+$/.0/;
-		@content = split( /[\r\n]/, path( $package->{'README.md'} )->slurp_utf8 );
+		@content = path( $package->{'README.md'} )->lines_utf8;
 		my $chapter = false;
 		my $para = false;
 		my $start = -1;
@@ -475,6 +480,16 @@ sub fileReadmeUpdateNpms {
 }
 
 # -------------------------------------------------------------------------------------------------
+# back to vnext branch and rebase
+# NB: git checkout prints to stderr 'Switched to branch 'vnext'', so ignore it here
+# returns true|false
+
+sub gitBackToVNext {
+	my $stdout = execLocal( "git checkout vnext && git rebase master", { ignoreStderr => true });
+	return defined $stdout;
+}
+
+# -------------------------------------------------------------------------------------------------
 # commit the post-release minimal version bump
 # returns true|false
 
@@ -495,22 +510,24 @@ sub gitCommitReleasing {
 
 # -------------------------------------------------------------------------------------------------
 # checkout to master branch, and merge vnext
+# NB: git checkout prints to stderr 'Switched to branch 'master'', so ignore it here
 # returns true|false
 
 sub gitMerge {
-	my $stdout = execLocal( "git checkout master && git merge vnext" );
+	my $stdout = execLocal( "git checkout master && git merge vnext", { ignoreStderr => true });
 	return defined $stdout;
 }
 
 # -------------------------------------------------------------------------------------------------
 # publish to Github
+# NB: git checkout prints to stderr 'Switched to branch 'master'', so ignore it here
 
 sub publishGithub {
 	my ( $releasedVersion ) = @_;
 	msgOut( "publishing to Github..." );
 	my $stdout = execLocal( "git tag -am 'Releasing v $releasedVersion' $releasedVersion" );
 	return false if !$stdout;
-	$stdout = execLocal( "git pull --rebase && git push && git push --tags" );
+	$stdout = execLocal( "git pull --rebase && git push && git push --tags", { ignoreStderr => true });
 	return false if !$stdout;
 	return true;
 }
@@ -521,14 +538,29 @@ sub publishGithub {
 
 sub publishMeteor {
 	msgOut( "publishing to Meteor..." );
-	# show existing packages
+	# show existing versions of the package
 	# given that we are executing the command from a local directory, the package has already been published if we get at least two lines
-	my $stdout = execLocal( "git show $package->{name}" );
+	my $stdout = execLocal( "meteor show $package->{name}" );
 	return false if !$stdout;
-	my $create = "";
-	$create = "--create" if scalar( @{$stdout} > 1 );
+	my $count = 0;
+	my $started = false;
+	my $ended = false;
+	foreach my $line ( @{$stdout} ){
+		if( !$started ){
+			$started = true if $line eq 'Recent versions:';
+		} elsif( !$ended ){
+			if( $line =~ m/^  / ){
+				#print "$line".EOL;
+				$count += 1;
+			} else {
+				$ended = true;
+				last;
+			}
+		}
+	}
+	my $create = $count == 1 ? '--create' : '';
 	# publish, maybe creating a new package
-	$stdout = execLocal( "git publish $create" );
+	$stdout = execLocal( "meteor publish $create" );
 	return false if !$stdout;
 	return true;
 }

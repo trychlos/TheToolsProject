@@ -41,7 +41,8 @@
 |      | 2025- 5-14 | DaemonConfig -> Daemon would imply $runner = TTP::RunnerDaemon->bootstrap() and $daemon->config() -> $runner->daemon() |
 |  163 | 2025- 5-23 | honor MQTTGateway and SMTPGateway wantsAccounts and wantsPassword |
 |  164 | 2025- 5-27 | extend commandBYOS to accept both a node name and a ttp::node |
-|  170 |  |  |
+|  170 | 2025- 6-27 | meteor.pl create --application should be fully configurable as a TTP schema and/or with command-line options |
+|  171 |  |  |
 
 ---
 ## Done

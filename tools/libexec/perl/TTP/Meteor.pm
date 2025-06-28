@@ -35,6 +35,21 @@ use TTP::Constants qw( :all );
 use TTP::Message qw( :all );
 
 my $Const = {
+	# how to find the initial scaffolding
+	appFinder => {
+		dirs => [
+			'libexec/meteor/app'
+		]
+	},
+	pckFinder => {
+		dirs => [
+			'libexec/meteor/package'
+		]
+	},
+	# 
+	app => {
+
+	},
 	package => {
 		md => [
 			'ChangeLog.md',
@@ -43,6 +58,19 @@ my $Const = {
 		]
 	}
 };
+
+# ------------------------------------------------------------------------------------------------
+# Returns the full specifications to find the application scaffolding
+# (I):
+# - none
+# (O):
+# - returns a ref to the finder
+
+sub appFinder {
+	my %finder = %{$Const->{appFinder}};
+
+	return \%finder;
+}
 
 # ------------------------------------------------------------------------------------------------
 # does the given directory host a Meteor application ?
