@@ -6,7 +6,8 @@
 
     Release date: 
 
-    - 
+    - meteor.pl publish: fix ChangeLog new version installation
+    - meteor.pl publish: be a bit more verbose
 
 ### 4.21.0
 

@@ -150,6 +150,21 @@ sub checkGitClean {
 }
 
 # -------------------------------------------------------------------------------------------------
+# compute the next candidate version
+# returning the next rc version
+
+sub computeNextVersion {
+    my ( $releasedVersion ) = @_;
+	my $nextVersion = undef;
+
+	my @words = split( /\./, $releasedVersion );
+	$words[$#words] = $words[$#words]+1;
+	$nextVersion = join( '.', @words ).'-rc';
+
+    return $nextVersion;
+}
+
+# -------------------------------------------------------------------------------------------------
 # publish
 
 sub doPublish {
@@ -180,11 +195,12 @@ sub doPublish {
 	if( $opt_github ){
 		return if !publishGithub( $releasedVersion );
 	}
+	my $nextVersion = computeNextVersion( $releasedVersion );
+	msgOut( "preparing next $nextVersion release" );
 	# back to vnext branch
 	return if !gitBackToVNext();
 	# bump version in package.js
-	my $nextVersion = filePackageBump( $releasedVersion );
-	return if !$nextVersion;
+	return if !filePackageBump( $nextVersion );
 	# set new paragraph in ChangeLog.md
 	return if !fileChangeLogBump( $nextVersion );
     # commit post-release
@@ -344,29 +360,21 @@ sub fileMDAbbrevDate {
 # returning the next rc version
 
 sub filePackageBump {
-    my ( $releasedVersion ) = @_;
-	my $nextVersion = undef;
+    my ( $nextVersion ) = @_;
 	my @content = path( $package->{jspck} )->lines_utf8;
 	for( my $i=0 ; $i<=$#content ; ++$i ){
 		my $line = $content[$i];
 		if( $line =~ m/^\s*version\s*:\s*'(\d+\.\d+\.\d+)/ ){
-			my @words = split( /\./, $releasedVersion );
-			$words[$#words] = $words[$#words]+1;
-			$nextVersion = join( '.', @words ).'-rc';
 			$line =~ s/^(\s*version)\s*:.*$/$1: '$nextVersion',/;
 			$content[$i] = $line;
 			last;
 		}
 	}
-	if( $nextVersion ){
-	    msgVerbose( "$package->{jspck}: updating next version to '$nextVersion'" );
-		if( $ep->runner()->dummy()){
-			msgDummy( "writing into $package->{jspck}" );
-		} else {
-			path( $package->{jspck} )->spew_utf8( @content );
-		}
+	msgVerbose( "$package->{jspck}: updating next version to '$nextVersion'" );
+	if( $ep->runner()->dummy()){
+		msgDummy( "writing into $package->{jspck}" );
 	} else {
-		msgErr( "$package->{jspck}: unable to compute the next version" );
+		path( $package->{jspck} )->spew_utf8( @content );
 	}
     return $nextVersion;
 }
