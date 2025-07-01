@@ -231,6 +231,10 @@ sub fileChangeLogBump {
 		"",
 		"    - "
 	);
+	# lines_utf8() returns non-chomped lines - so need an EOL char suffix
+	for( my $i=0 ; $i<=$#adds ; ++$i ){
+		$adds[$i] .= EOL;
+	}
 	for( my $i=0 ; $i<=$#content ; ++$i ){
 		my $line = $content[$i];
 		# search the start of the file
@@ -242,11 +246,11 @@ sub fileChangeLogBump {
 	}
 	if( $found ){
 	    msgVerbose( "$package->{'ChangeLog.md'}: installing next candidate release as '$nextVersion'" );
-		if( $ep->runner()->dummy()){
-			msgDummy( "writing into $package->{'ChangeLog.md'}" );
-		} else {
+		#if( $ep->runner()->dummy()){
+		#	msgDummy( "writing into $package->{'ChangeLog.md'}" );
+		#} else {
 			path( $package->{'ChangeLog.md'} )->spew_utf8( @content );
-		}
+		#}
 	} else {
 		msgErr( "$package->{'ChangeLog.md'}: unable to install next candidate release" );
 	}
