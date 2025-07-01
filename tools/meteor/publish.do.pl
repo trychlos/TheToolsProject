@@ -349,7 +349,7 @@ sub filePackageBump {
 			my @words = split( /\./, $releasedVersion );
 			$words[$#words] = $words[$#words]+1;
 			$nextVersion = join( '.', @words ).'-rc';
-			$line =~ s/^(\s*version)\s*:.*$/$1: '$nextVersion'/;
+			$line =~ s/^(\s*version)\s*:.*$/$1: '$nextVersion',/;
 			$content[$i] = $line;
 			last;
 		}
