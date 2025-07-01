@@ -1,0 +1,90 @@
+/*
+ * /imports/client/stylesheets/default-color.less
+ */
+
+@bgcolor: #fffff0;
+@darkerbg: #f6efe8; // Linen
+@hoverbg: darken( @bgcolor, 5% );
+
+.app-color(){
+    filter: invert(19%) sepia(64%) saturate(1268%) hue-rotate(146deg) brightness(95%) contrast(99%);    // darkteal
+}
+
+.t-default-color {
+    background-color: @bgcolor;
+    input,
+    select,
+    textarea,
+    textarea:focus {
+        background-color: @bgcolor;
+    }
+    .dropdown-menu {
+        background-color: @darkerbg;
+    }
+}
+
+.t-default-color.modal-content {
+    background-color: @bgcolor;
+    .dropdown-menu {
+        background-color: @darkerbg;
+    }
+}
+
+// have a gray color for placeholders
+// doesn't work :(
+::placeholder {
+    color: blue;
+    opacity: 1; // firefox
+}
+
+// app-footer is displayed as a droppable ribbon on bottom of the page, with links
+//  we like to have a small padding and a border under the content
+.t-default-color {
+    .c-app-footer {
+        border-top-color: lightgray;
+    }
+}
+
+// app-header is displayed as a thick ribbon on top of the page, with item menus and buttons
+//  we like to have a small padding and a border above the content
+.t-default-color {
+    .c-app-header {
+        .c-site-logo,
+        .c-app-title {
+            .app-color();
+        }
+        border-bottom-color: lightgray;
+    }
+}
+
+.t-default-color {
+    .dropdown .btn {
+        --bs-btn-border-radius: 0.25em;
+        border: 1px solid lightgray;
+    }
+    .dropdown .btn:hover {
+        --bs-btn-border-radius: 0.25em;
+        border: 1px solid gray;
+    }
+    a.dropdown-item:hover {
+        text-decoration: none;
+        background-color: @hoverbg;
+    }
+    .nav-tabs .nav-link.active {
+        background-color: @darkerbg;    
+    }
+}
+
+p.NOTICE {
+    color: @darkteal;
+}
+
+// the circular backgrounds for modals (see /imports/common/init/modal.js)
+.md-modal {
+    .modal-content.modal-white {
+        background-color: white;
+    }
+    .modal-content.modal-yellow {
+        background-color: @bgcolor;
+    }
+}

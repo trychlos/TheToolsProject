@@ -1,0 +1,9 @@
+{
+	"comments": [
+		"General env-settings package configuration",
+		"see https://atmospherejs.com/pwix/env-settings"
+	],
+	"persistent_session": {
+		"default_method": "persistent"
+	}
+}	

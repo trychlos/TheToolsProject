@@ -1,0 +1,25 @@
+{
+    "MyApplication": {
+        "environments": {
+            "comments": [
+				"CAUTION: the environment content (below) may be returned to the client depending of the configuration.",
+				" You MUST take care of not putting any sensible information here unless under a 'private' key.",
+                ""
+            ],
+            "dev:0": {
+                "type": "development",
+                "comments": [
+                    "The first development environment."
+                ],
+                "sender": "AppSender <noreply@localhost",
+                "contact": "AppContact <contact@localhost",
+                "label": "MyApplication AppLabel",
+                "logo": "/favicon.svg",
+                "title": "MyApplication AppTitle",
+                "title_old_should_not_be_there_or_not_this_way": "<span class=\"title\">MyApplication</span> <i>[dev:0]</i>",
+                "wantEditionSwitch": true,
+                "wantLanguageSwitch": true
+            }
+        }
+    }
+}

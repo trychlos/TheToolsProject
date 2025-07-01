@@ -1,0 +1,11 @@
+{
+	"MyApplication": {
+		"general": {
+			"comments": [
+				"These are MyApplication application configuration variables common to all environments.",
+				"",
+				"Note that the configuration from this folder is available both to the clients and the server."
+			]
+		}
+	}
+}

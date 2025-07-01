@@ -9,6 +9,7 @@
     - Define new ttp.pl credential verb
     - Define new meteor.pl list verb
     - Define new meteor.pl publish verb
+    - Define new meteor.pl create --application verb
 
 ### 4.20.8
 
