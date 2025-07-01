@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.21.0-rc.0
+### 4.21.0
 
-    Release date: 
+    Release date: 2025- 7- 1
 
     - Define new ttp.pl credential verb
     - Define new meteor.pl list verb
@@ -661,4 +661,4 @@
 
 ---
 P. Wieser
-- Last updated on 2025, June 20th
+- Last updated on 2025, Jul. 1st
