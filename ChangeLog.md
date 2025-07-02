@@ -9,7 +9,8 @@
     - meteor.pl publish: fix ChangeLog new version installation
     - meteor.pl publish: be a bit more verbose
     - meteor.pl list: minor message change
-    - meteor.pl create: copmplete the list of local packages
+    - meteor.pl create: complete the list of local packages
+    - meteor.pl create: move the user menu to pwix:core-app
 
 ### 4.21.0
 

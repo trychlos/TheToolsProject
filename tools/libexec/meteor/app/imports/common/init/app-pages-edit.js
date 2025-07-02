@@ -11,7 +11,6 @@ import { strict as assert } from 'node:assert';
 
 import { AppPagesEdit } from 'meteor/pwix:app-pages-edit';
 import { Permissions } from 'meteor/pwix:permissions';
-import { Roles } from 'meteor/pwix:roles';
 
 AppPagesEdit.configure({
     allowFn: Permissions.isAllowed,
@@ -21,16 +20,4 @@ AppPagesEdit.configure({
     //toggleHiddenWhenNotConnected: true,
     //toggleHiddenWhenUnallowed: true,
     //verbosity: AppPagesEdit.C.Verbose.CONFIGURE
-});
-
-Permissions.set({
-    pwix: {
-        app_pages_edit: {
-            // whether the current user is allowed to edit the document
-            // page: DisplayUnit
-            async editable( userId, page ){
-                return await Roles.userIsInRoles( userId, 'APP_EDITOR' );
-            }
-        }
-    }
 });

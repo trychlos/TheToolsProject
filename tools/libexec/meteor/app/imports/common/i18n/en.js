@@ -11,9 +11,6 @@ Meteor.APP.i18n = {
         en: {
             app: {
                 label: 'MyApplication AppLabel'
-            },
-            header: {
-                my_roles: 'My roles'
             }
         }
     }
