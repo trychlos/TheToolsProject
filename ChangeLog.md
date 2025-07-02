@@ -8,6 +8,7 @@
 
     - meteor.pl publish: fix ChangeLog new version installation
     - meteor.pl publish: be a bit more verbose
+    - meteor.pl list: minor message change
 
 ### 4.21.0
 

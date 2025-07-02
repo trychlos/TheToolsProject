@@ -206,7 +206,7 @@ sub displayDependenciesTree {
 						print "$line > used by: $p".EOL;
 					}
 				} else {
-					print "$line (unused by any package)".EOL;
+					print "$line (not used by any package)".EOL;
 				}
 			}
 			$count += 1;
@@ -268,7 +268,7 @@ sub displayPackages {
 						print "$line > used by: $p".EOL;
 					}
 				} else {
-					print "$line (unused by any package)".EOL;
+					print "$line (not used by any package)".EOL;
 				}
 			}
 			$count += 1;
