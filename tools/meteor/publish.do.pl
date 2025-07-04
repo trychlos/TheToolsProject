@@ -425,7 +425,6 @@ sub fileReadmeUpdateNpms {
 		my $ended = false;
 		foreach my $line ( @content ){
 			$line =~ s/\/\/.*$//;	# before all, ignore javascript comments
-			$line =~ s/\s*$//;		# and remove trailing spaces
 			if( !$started ){
 				if( $line =~ m/^\s*checkNpmVersions\s*\(\s*{/ ){
 					$started = true;

@@ -1,0 +1,30 @@
+<template name="account_edit_pane">
+    <div class="x-tab c-account-edit-pane">
+        <div class="panel-content">
+
+            <div class="panel-header">
+                <div class="panel-preamble">
+                </div>
+            </div>
+
+            <div class="panel-body">
+                <table class="form-table">
+                    <tr>
+                        <td class="label"><label class="form-label" for="edit-pane-allowed">{{ i18n key="accounts.edit.api_allowed_label" }}</label></td>
+                        <td class="ui-w100">
+                            <table>
+                                <tr>
+                                    <td class="ui-w33"><input class="form-check-input js-api-allowed" type="checkbox" id="edit-pane-allowed" /></td>
+        
+                                    <td class="label ui-w33"><label class="form-label" for="edit-pane-last">{{ i18n key="accounts.edit.api_last_label" }}</label></td>
+                                    <td class="ui-w33"><input class="form-control forms-readonly js-last" type="text" id="edit-pane-last" readonly /></td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+        </div>
+    </div>
+</template>

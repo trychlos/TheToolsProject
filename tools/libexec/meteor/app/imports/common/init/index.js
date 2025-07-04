@@ -17,6 +17,7 @@ if( false ){
     //require( '@vestergaard-company/js-mixin/package.json' );
 }
 
+import './collection2.js';
 import './constants.js';
 import './i18n.js';
 import './permissions.js';
@@ -24,14 +25,13 @@ import './permissions.js';
 import './accounts-base.js';
 import './accounts-hub.js';
 import './accounts-manager.js';
-//_import './accounts-manager-accounts.js';
+import './accounts-manager-accounts.js';
 //_import './accounts-manager-permissions.js';
 import './accounts-ui.js';
 import './app-pages.js';
 import './app-pages-edit.js';
 import './app-pages-i18n.js';
 //_import './assistant.js';
-import './collection2.js';
 //_import './collections-get.js';
 import './cookie-manager.js';
 import './core-app.js';

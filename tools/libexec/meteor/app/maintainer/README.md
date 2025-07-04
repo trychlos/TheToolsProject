@@ -49,6 +49,12 @@ From [NodeJS](https://nodejs.org/docs/latest-v22.x/api/assert.html#assert):
     import assert from 'node:assert/strict';
 ```
 
+#### The way chosen here
+
+```js
+    import { strict as assert } from 'node:assert';
+```
+
 ---
 P. Wieser
 - Last updated on 0000, Jan. 1st

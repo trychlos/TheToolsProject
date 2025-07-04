@@ -8,7 +8,7 @@
 # @(-) --[no]application           create a new application [${application}]
 # @(-) --name=<name>               the name of the application [${name}]
 # @(-) --label=<label>             the label of the application [${label}]
-# @(-) --title=<label>             the title of the application [${titlelabel}]
+# @(-) --title=<title>             the title of the application [${title}]
 # @(-) --[no]tenants               have a multi-tenants application [${tenants}]
 # @(-) --[no]package               create a new package [${package}]
 #
@@ -138,7 +138,7 @@ my $app_meteor_local = [
 	'pwix:startup-app-admin',
 	'pwix:tabbed',
 	'pwix:tabular',
-	'pwix:tenants-manager'
+	'pwix:tenants-manager',
 	'pwix:toggle-switch',
 	'pwix:tolert',
 	'pwix:typed-message',
@@ -152,6 +152,7 @@ my $app_meteor_local = [
 # whether we have specified application-only options
 my $opt_name_set = false;
 my $opt_label_set = false;
+my $opt_tenants_set = false;
 my $opt_title_set = false;
 
 # -------------------------------------------------------------------------------------------------
