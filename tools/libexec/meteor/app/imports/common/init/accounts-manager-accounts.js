@@ -12,7 +12,7 @@ import { pwixI18n } from 'meteor/pwix:i18n';
 
 import { Accounts } from '../collections/accounts/index.js';
 
-// no need to keep the instance somewhere as it will be addressable by its name
+// no need to keep the instance somewhere as it will be addressable as AccountsHub.instances[name]
 new AccountsManager.amClass({
     name: 'users',
     additionalFieldset: {
@@ -48,6 +48,19 @@ new AccountsManager.amClass({
             form_check: false
         }]
     },
+    additionalTabs: [
+        {
+            before: 'account_roles_tab',
+            tabs: [
+                {
+                    tabid: 'app_account_tab',
+                    paneid: 'app_account_pane',
+                    navLabel: pwixI18n.label( I18N, 'accounts.edit.tab_title' ),
+                    paneTemplate: 'account_edit_pane'
+                }
+            ]
+        }
+    ],
     allowFn: Permissions.isAllowed,
     //closeAfterNew: true,
     hideDisabled: false,

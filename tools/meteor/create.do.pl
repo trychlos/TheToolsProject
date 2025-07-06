@@ -97,8 +97,14 @@ my $app_npms = [
 	'zxcvbn'
 ];
 
+# the Meteor packages to be removed from initial installation
+my $app_meteor_remove = [
+	'static-html'
+];
+
 # the Meteor packages to be installed in our standard application
 my $app_meteor_packages = [
+	'blaze-html-templates',
 	'jquery'
 ];
 
@@ -185,6 +191,9 @@ sub doCreateApplication {
 	msgOut( " install npm packages" );
 	$stdout = execLocal( "(cd $opt_path && meteor npm install ".join( ' ', @{$app_npms} ).")" );
 	return if !$stdout;
+	# remove initially installed Meteor packages
+	msgOut( " remove unused Meteor packages" );
+	execLocal( "(cd $opt_path && meteor remove ".join( ' ', @{$app_meteor_remove} ).")" );
 	# install standard Meteor packages
 	msgOut( " install standard Meteor packages" );
 	execLocal( "(cd $opt_path && meteor add ".join( ' ', @{$app_meteor_packages} ).")" );
