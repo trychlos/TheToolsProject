@@ -262,11 +262,11 @@ sub fileChangeLogBump {
 	}
 	if( $found ){
 	    msgVerbose( "$package->{'ChangeLog.md'}: installing next candidate release as '$nextVersion'" );
-		#if( $ep->runner()->dummy()){
-		#	msgDummy( "writing into $package->{'ChangeLog.md'}" );
-		#} else {
+		if( $ep->runner()->dummy()){
+			msgDummy( "writing into $package->{'ChangeLog.md'}" );
+		} else {
 			path( $package->{'ChangeLog.md'} )->spew_utf8( @content );
-		#}
+		}
 	} else {
 		msgErr( "$package->{'ChangeLog.md'}: unable to install next candidate release" );
 	}
@@ -456,12 +456,12 @@ sub fileReadmeUpdateNpms {
 				if( $line =~ m/^s*##[^#].*$/ ){
 					$chapter = false;	# end of chapter
 				} elsif( $line =~ m/^\s*Dependencies as of v/ ){
-					$content[$i] = "Dependencies as of v $releasedVersion:";
+					$content[$i] = "Dependencies as of v $releasedVersion:".EOL;
 					$para = true;
 				}
 			}
 			if( $chapter && $para && ( $start < 0 || $end < 0 )){
-				if( $line =~ m/^\s*```\s*$/ ){
+				if( $line =~ m/^\s*```/ ){
 					if( $start < 0 ){
 						$start = $i;
 					} else {
@@ -472,7 +472,7 @@ sub fileReadmeUpdateNpms {
 			}
 		}
 		# must have here found the chapter, the paragraph, and the start and the end of the lines to be replaced
-		if( $chapter && $para && $start && $end ){
+		if( $chapter && $para && $start >= 0 && $end >= 0 ){
 			splice( @content, $start+1, $end-$start-1, @npms );
 			msgVerbose( "$package->{'README.md'}: updating required NPMS with [".join( ',', @npms )."]" );
 			if( $ep->runner()->dummy()){
@@ -481,7 +481,7 @@ sub fileReadmeUpdateNpms {
 				path( $package->{'README.md'} )->spew_utf8( @content );
 			}
 		} else {
-			msgWarn( "$package->{'README.md'}: unable to identify the NPM chapter" );
+			msgWarn( "$package->{'README.md'}: unable to identify the NPM chapter, para, start or end" );
 			$ok = false;
 		}
 	} else {
