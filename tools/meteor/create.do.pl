@@ -9,7 +9,6 @@
 # @(-) --name=<name>               the name of the application [${name}]
 # @(-) --label=<label>             the label of the application [${label}]
 # @(-) --title=<title>             the title of the application [${title}]
-# @(-) --[no]tenants               have a multi-tenants application [${tenants}]
 # @(-) --[no]package               create a new package [${package}]
 #
 # @(@) Note 1: The created object will reflect our design decisions:
@@ -57,7 +56,6 @@ my $defaults = {
 	name => 'MyApplication',
 	label => 'MyApplication AppLabel',
 	title => 'MyApplication AppTitle',
-	tenants => 'no',
 	package => 'no'
 };
 
@@ -66,7 +64,6 @@ my $opt_application = false;
 my $opt_name = $defaults->{name};
 my $opt_label = $defaults->{label};
 my $opt_title = $defaults->{title};
-my $opt_tenants = false;
 my $opt_package = false;
 
 # the NPM packages to be installed in our standard application
@@ -207,10 +204,7 @@ sub doCreateApplication {
 		execLocal( "(cd $opt_path/packages && ln -s ../../$dir $name)" );
 	}
 	execLocal( "(cd $opt_path && meteor add ".join( ' ', @{$app_meteor_local} ).")" );
-	# if the applications wants manage several tenants
-	msgOut( " patching application configuration for multi-tenants (or not)" );
-	my $tenant_enabled = $opt_tenants ? 'true' : 'false';
-	execLocal( "for f in \$(find $opt_path -type f); do sed -i -e 's|TENANTS_ENABLED|$tenant_enabled|' \$f; done" );
+	# done
 	msgOut( "done" );
 }
 
@@ -290,11 +284,6 @@ if( !GetOptions(
 		$opt_title = $value;
 		$opt_title_set = true;
 	},
-	"tenants!"				=> sub {
-		my ( $name, $value ) = @_;
-		$opt_tenants = $value;
-		$opt_tenants_set = true;
-	},
 	"package!"				=> \$opt_package )){
 
 		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
@@ -314,7 +303,6 @@ msgVerbose( "got application='".( $opt_application ? 'true':'false' )."'" );
 msgVerbose( "got name='$opt_name'" );
 msgVerbose( "got label='$opt_label'" );
 msgVerbose( "got title='$opt_title'" );
-msgVerbose( "got tenants='".( $opt_tenants ? 'true':'false' )."'" );
 msgVerbose( "got package='".( $opt_package ? 'true':'false' )."'" );
 
 # get absolute path which must not exist
@@ -336,9 +324,6 @@ if( $opt_label_set && !$opt_application ){
 }
 if( $opt_title_set && !$opt_application ){
 	msgWarn( "'--title' option only applies when creating a new application, ignored here" );
-}
-if( $opt_tenants_set && !$opt_application ){
-	msgWarn( "'--[no]tenants' option only applies when creating a new application, ignored here" );
 }
 
 if( !TTP::errs()){

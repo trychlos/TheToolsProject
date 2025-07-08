@@ -15,6 +15,8 @@ CoreApp.configure({
     //colorTheme: 't-default-color',
     //layoutTheme: 't-default-layout',
     //mainMenu: 'coreAppMenu',
+    managedLanguages: Meteor.APP.C.managedLanguages,
+    //managedLanguages: null,
     //routePrefix: '/core.app',
     //verbosity: CoreApp.C.Verbose.CONFIGURE
 });

@@ -18,7 +18,15 @@
                 "title": "MyApplication AppTitle",
                 "title_old_should_not_be_there_or_not_this_way": "<span class=\"title\">MyApplication</span> <i>[dev:0]</i>",
                 "wantEditionSwitch": true,
-                "wantLanguageSwitch": true
+                "wantLanguageSwitch": true,
+                "packages": {
+                    "pwix:accounts-ui": {
+                        "global": "AccountsUI",
+                        "conf": {
+                            
+                        }
+                    }
+                }
             }
         }
     }

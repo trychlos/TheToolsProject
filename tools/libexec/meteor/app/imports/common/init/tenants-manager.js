@@ -15,7 +15,7 @@ TenantsManager.configure({
     //allowFn: null,
     hideDisabled: false,
     //hideDisabled: true,
-    enabled: TENANTS_ENABLED,
+    //enabled: true,
     //entityFields: null,
     //recordFields: null,
     //recordFields: null,
