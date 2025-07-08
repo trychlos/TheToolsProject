@@ -358,7 +358,9 @@ sub doListPackages {
 # (O):
 # - the informations object as an object:
 #   > changes: the count of changes in the to-be-next release
-#   > prev: the last release date (as a string expected to be 'yyyy-mm-dd')
+#   > prevDate: the last release date (as a string expected to be 'yyyy-mm-dd')
+#   > prevVersion: the last version number
+#   > nextVersion: the next to-be-released version number
 
 sub getChangeLogInfos {
 	my ( $dir ) = @_;
@@ -369,11 +371,16 @@ sub getChangeLogInfos {
 	    my $releaseStr = 'Release date:';
 		my $status = 'start';
 		my $changes = 0;
-		my $prev = undef;
+		my $prevDate = undef;
+		my $prevVersion = undef;
+		my $nextVersion = undef;
 		foreach my $line ( @content ){
 			if( $status eq 'start' ){
 				if( $line =~ m/^### / ){
 					if( $line =~ m/-rc/ ){
+						$nextVersion = $line;
+						$nextVersion =~ s/^\s*###\s*//;
+						$nextVersion =~ s/-rc.*$//;
 						$status = 'current';
 					}
 				}
@@ -381,23 +388,24 @@ sub getChangeLogInfos {
 				if( $line =~ m/^\s*-/ && $line !~ m/^\s*-\s*$/ ){
 					$changes += 1;
 				} elsif( $line =~ m/^### / ){
+					$prevVersion = $line;
+					$prevVersion =~ s/^\s*###\s*//;
 					$status = 'prev';
 				}
 			} elsif( $status eq 'prev' ){
 				if( $line =~ m/$releaseStr/ ){
-					$prev = $line;
-					$prev =~ s/^\s*$releaseStr\s*//;
-					$status = 'end';
+					$prevDate = $line;
+					$prevDate =~ s/^\s*$releaseStr\s*//;
+					last;
 				}
 			}
-			if( $status eq 'end' ){
-				$res = {
-					changes => $changes,
-					prev => $prev
-				};
-				last;
-			}
 		}
+		$res = {
+			changes => $changes,
+			prevDate => $prevDate,
+			prevVersion => $prevVersion,
+			nextVersion => $nextVersion
+		};
 	} else {
 		msgVerbose( "$file: file not found or not readable" );
 		return undef;
@@ -416,11 +424,35 @@ sub packagePublishInfos {
 	my ( $pck ) = @_;
 	my $str = '';
 	if( $pck->{infos} ){
-		$str .= '{ lastRelease: "'
-			.$pck->{infos}{prev}
-			.'", pendingChanges: '
-			.$pck->{infos}{changes}
-			.' }';
+		if( $pck->{infos}{prevDate} || $pck->{infos}{prevVersion} ){
+			if( $pck->{infos}{prevDate} ){
+				if( $str ){
+					$str .= ', ';
+				}
+				$str .= 'lastDate: '.$pck->{infos}{prevDate};
+			}
+			if( $pck->{infos}{prevVersion} ){
+				if( $str ){
+					$str .= ', ';
+				}
+				$str .= 'lastVersion: '.$pck->{infos}{prevVersion};
+			}
+		} else {
+			if( $str ){
+				$str .= ', ';
+			}
+			$str .= 'never released';
+		}
+		if( $pck->{infos}{nextVersion} ){
+			if( $str ){
+				$str .= ', ';
+			}
+			$str .= 'nextVersion: '.$pck->{infos}{nextVersion};
+		}
+		if( $str ){
+			$str .= ', ';
+		}
+		$str .= 'pendingChanges: '.$pck->{infos}{changes};
 	}
 	return $str;
 }
@@ -440,7 +472,7 @@ if( !GetOptions(
 	"bypath=s"				=> \$opt_bypath,
 	"tree!"					=> \$opt_tree,
 	"callers!"				=> \$opt_callers,
-	"publishInfos!"			=> \$opt_publishInfos,
+	"publish-infos!"		=> \$opt_publishInfos,
 	"only-publishables!"	=> \$opt_onlyPublishables )){
 
 		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
