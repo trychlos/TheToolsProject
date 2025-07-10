@@ -25,7 +25,7 @@ import './permissions.js';
 import './accounts-base.js';
 import './accounts-hub.js';
 import './accounts-manager.js';
-import './accounts-manager-accounts.js';
+import './accounts-manager-users.js';
 //_import './accounts-manager-permissions.js';
 import './accounts-ui.js';
 import './app-pages.js';

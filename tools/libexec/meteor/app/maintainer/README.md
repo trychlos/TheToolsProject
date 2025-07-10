@@ -2,7 +2,7 @@
 
 ## Run
 
-Should be run with:
+In development environment, should be run with:
 
 ```sh
     APP_ENV=dev:0 meteor run

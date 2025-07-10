@@ -10,10 +10,11 @@ import { CoreApp } from 'meteor/pwix:core-app';
 CoreApp.configure({
     appName: Meteor.APP.C.appName,
     //appName: null,
-    //appCopyrightTemplate: local_copyright,
-    //appHomeTemplate: local_home,
+    //async appCopyrightTemplate(){ return { template: 'local_copyright' }; },: ,
+    //async appHomeTemplate(){ return { template: 'local_home_label' }; },
     //colorTheme: 't-default-color',
     //layoutTheme: 't-default-layout',
+    //loginIfNotConnected: false,
     //mainMenu: 'coreAppMenu',
     managedLanguages: Meteor.APP.C.managedLanguages,
     //managedLanguages: null,

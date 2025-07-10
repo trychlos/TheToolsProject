@@ -9,5 +9,7 @@ import { AccountsHub } from 'meteor/pwix:accounts-hub';
 
 // configure the AccountsHub package for production
 AccountsHub.configure({
+    autoUsers: false,
+    //autoUsers: true,
     //verbosity: AccountsHub.C.Verbose.CONFIGURE
 });

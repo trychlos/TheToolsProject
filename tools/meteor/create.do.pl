@@ -102,7 +102,8 @@ my $app_meteor_remove = [
 # the Meteor packages to be installed in our standard application
 my $app_meteor_packages = [
 	'blaze-html-templates',
-	'jquery'
+	'jquery',
+	'less'
 ];
 
 # the Meteor packages to be locally installed in our standard application

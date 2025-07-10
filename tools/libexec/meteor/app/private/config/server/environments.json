@@ -16,15 +16,12 @@
                 "label": "MyApplication AppLabel",
                 "logo": "/favicon.svg",
                 "title": "MyApplication AppTitle",
-                "title_old_should_not_be_there_or_not_this_way": "<span class=\"title\">MyApplication</span> <i>[dev:0]</i>",
                 "wantEditionSwitch": true,
                 "wantLanguageSwitch": true,
-                "packages": {
-                    "pwix:accounts-ui": {
-                        "global": "AccountsUI",
-                        "conf": {
-                            
-                        }
+                "AccountsHub": {
+                    "users": {
+                        "passwordLength": 4,
+                        "passwordStrength": "AC_PWD_VERYWEAK"
                     }
                 }
             }
