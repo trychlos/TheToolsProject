@@ -205,6 +205,10 @@ sub doCreateApplication {
 		execLocal( "(cd $opt_path/packages && ln -s ../../$dir $name)" );
 	}
 	execLocal( "(cd $opt_path && meteor add ".join( ' ', @{$app_meteor_local} ).")" );
+	# setup git repository
+	msgOut( " initialize git repository" );
+	execLocal( "(cd $opt_path && mv _gitignore .gitignore && git init 2>/dev/null)" );
+	execLocal( "(cd $opt_path && git add .gitignore .meteor ChangeLog.md README.md TODO.md client imports maintainer package* private public server tests && git commit -am 'Initial commit')" );
 	# done
 	msgOut( "done" );
 }

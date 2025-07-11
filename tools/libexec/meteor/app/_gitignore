@@ -1,0 +1,5 @@
+# meteor.pl deploy takes its default json from maintainer/private/deployements.json
+maintainer/private
+# historic bin/deploy scripts used to take its default json from maintainer/targets.json
+maintainer/targets.json
+node_modules/
