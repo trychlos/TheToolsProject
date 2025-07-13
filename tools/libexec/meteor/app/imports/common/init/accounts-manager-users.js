@@ -118,7 +118,7 @@ Tracker.autorun(() => {
                             });
                         }
                     });
-                    // no need to keep the instance somewhere as it will be addressable as AccountsHub.instances.users
+                    // no need to keep the instance somewhere as it will be addressable as AccountsHub.getInstance( 'users' )
                     new AccountsManager.amClass( _args );
                 }
             });

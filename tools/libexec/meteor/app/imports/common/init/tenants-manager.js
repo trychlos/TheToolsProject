@@ -15,7 +15,6 @@ TenantsManager.configure({
     //allowFn: null,
     hideDisabled: false,
     //hideDisabled: true,
-    //enabled: true,
     //entityFields: null,
     //recordFields: null,
     //recordFields: null,
@@ -25,7 +24,4 @@ TenantsManager.configure({
     //tenantButtons: null,
     //tenantFields: null,
     //verbosity: TenantsManager.C.Verbose.CONFIGURE
-});
-
-Permissions.set({
 });

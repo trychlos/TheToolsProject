@@ -13,11 +13,14 @@ CoreApp.configure({
     //async appCopyrightTemplate(){ return { template: 'local_copyright' }; },: ,
     //async appHomeTemplate(){ return { template: 'local_home_label' }; },
     //colorTheme: 't-default-color',
+    //haveContentsManager: true,
+    //haveTenantsManager: true,
     //layoutTheme: 't-default-layout',
     //loginIfNotConnected: false,
     //mainMenu: 'coreAppMenu',
     managedLanguages: Meteor.APP.C.managedLanguages,
     //managedLanguages: null,
     //routePrefix: '/core.app',
+    //tenantsEditParms: null,
     //verbosity: CoreApp.C.Verbose.CONFIGURE
 });

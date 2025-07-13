@@ -15,3 +15,6 @@ AccountsManager.configure({
     verbosity: 65535
     // verbosity: AccountsManager.C.Verbose.CONFIGURE
 });
+
+Permissions.set({
+});
