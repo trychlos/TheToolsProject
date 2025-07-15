@@ -25,23 +25,23 @@ const roles = {
                     name: 'ACCOUNTS_MANAGER'
                 },
                 {
-                    // manage organizations
+                    // manage the tenants
                     name: 'TENANTS_MANAGER'
                 },
                 {
-                    // manage the authorizations for all organizations (e.g. a support service)
-                    name: 'AUTHORIZATIONS_MANAGER'
-                },
-                {
-                    // manage one or several organization (scoped role)
+                    // manage one or several tenants (scoped role)
                     name: 'SCOPED_TENANT_MANAGER',
                     scoped: true,
                     children: [
                         {
-                            name: 'SCOPED_AUTHORIZATIONS_MANAGER'
+                            name: 'SCOPED_ACCOUNTS_MANAGER'
                         },
                         {
                             name: 'SCOPED_EDITOR'
+                        },
+                        // a scoped user is at least able to connect/select/see the tenant - this is the minimal level
+                        {
+                            name: 'SCOPED_USER'
                         }
                     ]
                 }

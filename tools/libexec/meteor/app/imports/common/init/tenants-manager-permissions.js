@@ -14,6 +14,11 @@ Permissions.set({
     pwix: {
         tenants_manager: {
             feat: {
+                async access( userId, entity ){
+                    console.warn( 'pwix.tenants_manager.feat.access: this placeholder should be updated' );
+                    //return userId !== null;
+                    return true;
+                },
                 async create( userId ){
                     console.warn( 'pwix.tenants_manager.feat.new: this placeholder should be updated' );
                     //return await Roles.userIsInRoles( userId, 'TENANT_CREATE' );
@@ -29,7 +34,7 @@ Permissions.set({
                     //return await Roles.userIsInRoles( userId, 'TENANT_EDIT' );
                     return true;
                 },
-                async list( userId, selector ){
+                async list( userId ){
                     console.warn( 'pwix.tenants_manager.feat.list: this placeholder should be updated' );
                     //return userId !== null;
                     return true;

@@ -8,25 +8,20 @@ import { strict as assert } from 'node:assert';
 import { Permissions } from 'meteor/pwix:permissions';
 import { Roles } from 'meteor/pwix:roles';
 
-import { Accounts } from '../collections/accounts/index.js';
-
 Permissions.set({
     pwix: {
         accounts_manager: {
             // manage CRUD operations
             // args:
             //  - amInstance: the amClass instance, always present
+            //  - scope: optional
             feat: {
                 async create( userId, args ){
                     console.warn( 'pwix.accounts_manager.feat.create: this placeholder should be updated' );
-                    return true;
                     if( userId ){
                         const instanceName = args.amInstance.name();
                         if( instanceName === 'users' ){
-                            return await Roles.userIsInRoles( userId, 'ACCOUNT_CREATE' );
-                        } else {
-                            scope = Identities.scope( instanceName );
-                            return await Roles.userIsInRoles( userId, 'SCOPED_IDENTITY_CREATE', { scope: scope }) || await Roles.userIsInRoles( userId, 'IDENTITIES_MANAGER' );
+                            return await Roles.userIsInRoles( userId, 'ACCOUNTS_MANAGER' ) || ( args.scope && await Roles.userIsInRoles( userId, 'SCOPED_ACCOUNTS_MANAGER', { scope: args.scope }));
                         }
                     }
                     return false;
@@ -37,9 +32,15 @@ Permissions.set({
                 //  - id: the target account identifier
                 async delete( userId, args ){
                     console.warn( 'pwix.accounts_manager.feat.delete: this placeholder should be updated' );
-                    return true;
                     if( userId ){
-                        return await Roles.userIsInRoles( userId, 'ACCOUNT_DELETE' );
+                        const compare = await Roles.compareLevels( userId, args.id );
+                        if( compare < 0 ){
+                            return false;
+                        }
+                        const instanceName = args.amInstance.name();
+                        if( instanceName === 'users' ){
+                            return await Roles.userIsInRoles( userId, 'ACCOUNTS_MANAGER' ) || ( args.scope && await Roles.userIsInRoles( userId, 'SCOPED_ACCOUNTS_MANAGER', { scope: args.scope }));
+                        }
                     }
                     return false;
                 },
@@ -49,29 +50,26 @@ Permissions.set({
                 //  - id: the target account identifier
                 async edit( userId, args ){
                     console.warn( 'pwix.accounts_manager.feat.edit: this placeholder should be updated' );
-                    return true;
                     if( userId ){
                         const compare = await Roles.compareLevels( userId, args.id );
-                        const haveRole = await Roles.userIsInRoles( userId, 'ACCOUNT_EDIT' );
-                        return compare >= 0 && haveRole;
+                        if( compare < 0 ){
+                            return false;
+                        }
+                        const instanceName = args.amInstance.name();
+                        if( instanceName === 'users' ){
+                            return await Roles.userIsInRoles( userId, 'ACCOUNTS_MANAGER' ) || ( args.scope && await Roles.userIsInRoles( userId, 'SCOPED_ACCOUNTS_MANAGER', { scope: args.scope }));
+                        }
                     }
                     return false;
                 },
-                // getBy can be used from server without any userId available
-                async getBy( userId, args ){
-                    console.warn( 'pwix.accounts_manager.fn.getBy: this placeholder should be updated' );
-                    return true;
-                },
+                // does the user is allowed to get a display of the accounts ?
+                // yes if he is a (scoped) accounts manager
                 async list( userId, args ){
                     console.warn( 'pwix.accounts_manager.feat.list: this placeholder should be updated' );
-                    return true;
                     if( userId ){
                         const instanceName = args.amInstance.name();
                         if( instanceName === 'users' ){
-                            return await Roles.userIsInRoles( userId, 'ACCOUNTS_LIST' );
-                        } else {
-                            const scope = Identities.scope( instanceName );
-                            return await Roles.userIsInRoles( userId, 'SCOPED_IDENTITIES_LIST', { scope: scope }) || await Roles.userIsInRoles( userId, 'IDENTITIES_MANAGER' );
+                            return await Roles.userIsInRoles( userId, 'ACCOUNTS_MANAGER' ) || ( args.scope && await Roles.userIsInRoles( userId, 'SCOPED_ACCOUNTS_MANAGER', { scope: args.scope }));
                         }
                     }
                     return false;
