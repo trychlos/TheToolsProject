@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.21.1-rc.0
+### 4.21.1
 
-    Release date: 
+    Release date: 2025- 8- 7
 
     - meteor.pl publish: fix ChangeLog new version installation
     - meteor.pl publish: be a bit more verbose
