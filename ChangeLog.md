@@ -2,6 +2,12 @@
 
 ## ChangeLog
 
+### 4.21.2-rc.0
+
+    Release date: 
+
+    - TTP::Services::newDbms() this is an error if the DBMS package cannot new()
+
 ### 4.21.1
 
     Release date: 2025- 8- 7

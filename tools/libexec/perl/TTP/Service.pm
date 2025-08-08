@@ -186,11 +186,10 @@ sub newDbms {
 				service => $self
 			});
 		} else {
-			msgWarn( __PACKAGE__."::newDbms() package '$package' says it cannot 'new()'" );
+			msgErr( __PACKAGE__."::newDbms() package '$package' says it cannot 'new()'" );
 		}
 	} else {
 		msgErr( __PACKAGE__."::newDbms() unable to find a suitable DBMS package for '".$self->name()."' service" );
-		$dbms = undef;
 	}
 
 	return $dbms;
