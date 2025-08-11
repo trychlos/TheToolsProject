@@ -7,6 +7,7 @@
     Release date: 
 
     - TTP::Services::newDbms() this is an error if the DBMS package cannot new()
+	- Fix MongoDB connection checks
 
 ### 4.21.1
 

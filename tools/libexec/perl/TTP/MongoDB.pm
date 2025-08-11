@@ -78,18 +78,33 @@ sub _connect {
 		my( $account, $passwd ) = $self->_getCredentials();
 		if( length $account && length $passwd ){
 			my $server = $self->connectionString() || 'localhost:27017';
+			#print STDERR "server $server\n";
 			$handle = MongoDB::MongoClient->new( host => $server, username => $account, password => $passwd );
-			$self->{_dbms}{connect} = $handle;
 			if( $handle ){
-				#print STDERR Dumper( $handle );
-				msgVerbose( __PACKAGE__."::_connect() successfully connected" );
+				$handle->connected();
+				#print STDERR "handle ".Dumper( $handle );
+				my $status = $handle->topology_status();
+				#print "status ".Dumper( $status );
+				foreach my $it ( @{$status->{servers}} ){
+					my $error = $it->{error};
+					if( $error ){
+						msgErr( $error );
+						$handle = undef;
+						last;
+					}
+				}
 			} else {
-				msgErr( __PACKAGE__."::_connect() unable to connect to '$server' host" );
+				msgErr( __PACKAGE__."::_connect() unable to instanciate a client for '$server' host" );
+			}
+			if( $handle ){
+				$self->{_dbms}{connect} = $handle;
+				msgVerbose( __PACKAGE__."::_connect() successfully connected" );
 			}
 		} else {
 			msgErr( __PACKAGE__."::_connect() unable to get account/password couple" );
 		}
 	}
+				$self->{_dbms}{connect} = $handle;
 
 	return $handle;
 }
