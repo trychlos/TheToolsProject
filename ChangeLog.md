@@ -2,12 +2,13 @@
 
 ## ChangeLog
 
-### 4.21.2-rc.0
+### 4.22.0-rc.0
 
     Release date: 
 
     - TTP::Services::newDbms() this is an error if the DBMS package cannot new()
 	- Fix MongoDB connection checks
+	- dbms.pl restore has '--monitor' option, thus bumping minor candidate version number
 
 ### 4.21.1
 

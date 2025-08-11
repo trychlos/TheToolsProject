@@ -12,6 +12,7 @@
 # @(-) --[no]verifyonly        only check the backup restorability [${verifyonly}]
 # @(-) --[no]file              whether an execution report should be provided by file [${file}]
 # @(-) --[no]mqtt              whether an execution report should be published to MQTT [${mqtt}]
+# @(-) --[no]monitor           whether the restored file should be written in monitor database [${monitor}]
 # @(-) --inhibit=<node>        make sure to not restore on that node [${inhibit}]
 #
 # @(@) Note 1: You must at least provide a full backup to restore, and may also provide an additional differential backup file.
@@ -80,6 +81,9 @@ msgErr( "executionReports.withMqtt.default=true while executionReports.withMqtt.
 $defaults->{mqtt} = $opt_mqtt && $mqtt_enabled ? 'yes' : 'no';
 my $opt_mqtt_set = false;
 
+$defaults->{monitor} = 'no';
+my $opt_monitor = false;
+
 # the node which hosts the requested service
 my $objNode = undef;
 # the service object
@@ -146,6 +150,13 @@ sub doRestore {
 				}
 			});
 		}
+		# honor --monitor option
+		if( $opt_monitor ){
+			my $topic = $objNode->name().'/executionReport/'.$ep->runner()->command().'/'.$ep->runner()->verb()."/$opt_service/$opt_database/$mode";
+			my $payload = $mode eq 'full' ? $opt_full : $opt_diff;
+			$res = TTP::commandExec( "dbms.pl sql -service MonitorDB -command \"db.restores.deleteMany({ topic: '$topic' })\"" );
+			$res = TTP::commandExec( "dbms.pl sql -service MonitorDB -command \"db.restores.insertOne({ topic: '$topic', payload: '$payload' })\"" );
+		}
 	}
 	if( $res->{ok} ){
 		msgOut( "success" );
@@ -179,6 +190,7 @@ if( !GetOptions(
 		$opt_mqtt = $value;
 		$opt_mqtt_set = true;
 	},
+	"monitor!"			=> \$opt_monitor,
 	"inhibit=s"			=> \$opt_inhibit )){
 
 		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
@@ -201,6 +213,7 @@ msgVerbose( "got diff='$opt_diff'" );
 msgVerbose( "got verifyonly='".( $opt_verifyonly ? 'true':'false' )."'" );
 msgVerbose( "got file='".( $opt_file ? 'true':'false' )."'" );
 msgVerbose( "got mqtt='".( $opt_mqtt ? 'true':'false' )."'" );
+msgVerbose( "got monitor='".( $opt_monitor ? 'true':'false' )."'" );
 msgVerbose( "got inhibit='$opt_inhibit'" );
 
 # must have --service option
