@@ -9,6 +9,7 @@
     - TTP::Services::newDbms() this is an error if the DBMS package cannot new()
 	- Fix MongoDB connection checks
 	- dbms.pl restore has '--monitor' option, thus bumping minor candidate version number
+	- MongoDB now accepts (some) NoSql commands
 
 ### 4.21.1
 

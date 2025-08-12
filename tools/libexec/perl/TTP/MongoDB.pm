@@ -32,6 +32,7 @@ use Capture::Tiny qw( :all );
 use Data::Dumper;
 use File::Spec;
 use File::Temp qw( tempdir );
+use JSON::PP;
 use MongoDB;
 use Path::Tiny;
 use Time::Moment;
@@ -109,6 +110,178 @@ sub _connect {
 	return $handle;
 }
 
+=pod
+	# https://chatgpt.com/c/689b1e14-7078-8332-8895-1f18b4788800
+sub parse_mongosh_call {
+    my ($s) = @_;
+    $s =~ s/^\s+|\s+$//g;
+
+    # Ex: db.restores.deleteMany({ topic: '$topic' })
+    my ($coll, $op, $args) = $s =~ /^db\.(\w+)\.(\w+)\s*\((.*)\)\s*$/s
+        or die "Commande invalide: $s";
+
+    # Retirer une éventuelle virgule finale et espaces
+    $args =~ s/\s+\)\s*$// if $args =~ /\)\s*$/;
+    $args =~ s/^\s+|\s+$//g;
+
+    # Autoriser: quotes simples, clés non-quotées, trailing commas
+    my $json = JSON::PP->new
+        ->allow_singlequote
+        ->relaxed
+        ->loose
+        ->allow_barekey
+        ->allow_bignum
+        ->convert_blessed;
+
+    my $parsed;
+    if ($args eq '' ) {
+        $parsed = undef;
+    } else {
+        # Si plusieurs params "({..}, {..})", on renvoie arrayref
+        if ($args =~ /^\s*\{.*\}\s*,/s) {
+            $parsed = $json->decode("[$args]");
+        } else {
+            $parsed = $json->decode($args);
+        }
+    }
+
+    return ($coll, $op, $parsed);
+}
+
+sub interpolate_vars {
+    my ($node, $vars) = @_;
+
+    if (!ref $node) {
+        # Remplace une chaîne exactement de la forme '$name'
+        if (defined $node && $node =~ /^\$(\w+)$/) {
+            my $k = $1;
+            die "Variable \$$k non fournie" unless exists $vars->{$k};
+            return $vars->{$k};
+        } else {
+            return $node;
+        }
+    }
+    my $t = reftype($node) || '';
+    if ($t eq 'HASH') {
+        my %h;
+        for my $k (keys %$node) {
+            $h{$k} = interpolate_vars($node->{$k}, $vars);
+        }
+        return \%h;
+    } elsif ($t eq 'ARRAY') {
+        return [ map { interpolate_vars($_, $vars) } @$node ];
+    } else {
+        return $node;
+    }
+}
+
+# -------- Traduction vers run_command --------
+
+sub to_run_command {
+    my ($collection, $op, $args) = @_;
+
+    if ($op eq 'deleteMany') {
+        my $filter = $args // {};
+        return [
+            delete  => $collection,
+            deletes => [ { q => $filter, limit => 0 } ],
+        ];
+    }
+    if ($op eq 'insertOne') {
+        my $doc = $args // {};
+        return [
+            insert    => $collection,
+            documents => [ $doc ],
+            ordered   => JSON::PP::true,   # optionnel
+        ];
+    }
+
+    die "Opération non supportée: $op";
+}
+
+# -------- Exemple d’utilisation --------
+# Variables applicatives (déjà renseignées de ton côté)
+my %vars = (
+    topic   => 'sensors/livingroom',
+    payload => { temperature => 21.5, unit => 'C' },  # peut être une chaîne, un hashref, etc.
+);
+
+# Exemples de commandes côté "dbms.pl -command"
+my $cmd1 = q{db.restores.deleteMany({ topic: '$topic' })};
+my $cmd2 = q{db.restores.insertOne({ topic: '$topic', payload: '$payload' })};
+
+# Parse
+my ($coll1, $op1, $args1) = parse_mongosh_call($cmd1);
+my ($coll2, $op2, $args2) = parse_mongosh_call($cmd2);
+
+# Interpolation des variables
+$args1 = interpolate_vars($args1, \%vars) if defined $args1;
+$args2 = interpolate_vars($args2, \%vars) if defined $args2;
+
+# Traduction vers run_command
+my $rc1 = to_run_command($coll1, $op1, $args1);
+my $rc2 = to_run_command($coll2, $op2, $args2);
+
+# Exécution
+my $client = MongoDB->connect('mongodb://localhost:27017');
+my $db     = $client->get_database('ta_base');
+
+my $res1 = $db->run_command($rc1);
+my $res2 = $db->run_command($rc2);
+=cut
+
+# ------------------------------------------------------------------------------------------------
+# parse a MongoSh command
+# (I):
+# - the DBMS instance
+# - the command
+# - an optional options hash
+# (O):
+# - the result as a list:
+#   > ok: true|false
+#   > collection
+#   > op
+#   > parsed parameters
+
+sub _parseMongosh {
+	my ( $self, $command, $opts ) = @_;
+
+	# remove leading and trailing spaces
+    $command =~ s/^\s+|\s+$//g;
+
+    # Ex: db.restores.deleteMany({ topic: '$topic' })
+    my ( $coll, $op, $args ) = $command =~ /^db\.(\w+)\.(\w+)\s*\((.*)\)\s*$/s or msgErr( __PACKAGE__."::_parseMongosh() invalid command: $command" );
+
+	my $parsed = undef;
+	my $ok = false;
+
+	if( !TTP::errs()){
+		$ok = true;
+		# remove trailing commas and spaces
+		$args =~ s/\s+\)\s*$// if $args =~ /\)\s*$/;
+		$args =~ s/^\s+|\s+$//g;
+		# allow simple quotes, non-quotes and trailing commas
+		my $json = JSON::PP->new
+			->allow_singlequote
+			->relaxed
+			->loose
+			->allow_barekey
+			->allow_bignum
+			->convert_blessed;
+
+		if( $args ){
+			# if several params "({..}, {..})", then returns an arrayref
+			if( $args =~ /^\s*\{.*\}\s*,/s ){
+				$parsed = $json->decode( "[$args]" );
+			} else {
+				$parsed = $json->decode( $args );
+			}
+		}
+	}
+
+    return ( $ok, $coll, $op, $parsed );
+}
+
 # ------------------------------------------------------------------------------------------------
 # execute a command on the server
 # (I):
@@ -119,10 +292,10 @@ sub _connect {
 # - the result as a hash ref with following keys:
 #   > ok: true|false
 
-sub _noSql {
+sub _parseNoSql {
 	my ( $self, $command, $opts ) = @_;
 	$opts //= {};
-	msgErr( __PACKAGE__."::_noSql() command is mandatory, but is not specified" ) if !$command;
+	msgErr( __PACKAGE__."::_parseNoSql() command is mandatory, but is not specified" ) if !$command;
 	my $res = {
 		ok => false,
 		result => [],
@@ -130,16 +303,60 @@ sub _noSql {
 		stderr => []
 	};
 	if( !TTP::errs()){
-		my $handle = $self->_connect();
-		#if( $handle ){
-		#	my $hdb = $handle->db( 'admin' );
-		#	if( $hdb ){
-		#		my $result = $hdb->run_command( $command );
-		#		print Dumper( $result );
-		#	}
-		#}
+		my ( $ok, $collection, $op, $args ) = $self->_parseMongosh( $command, $opts );
+		$res->{ok} = $ok;
+		if( $ok ){
+			my $parms = $self->_parseToRun( $collection, $op, $args );
+			#print STDERR "collection ".Dumper( $collection );
+			#print STDERR "op ".Dumper( $op );
+			#print STDERR "args ".Dumper( $args );
+			#print STDERR "parms ".Dumper( $parms );
+			if( $parms ){
+				my $handle = $self->_connect();
+				if( $handle ){
+					my $db = $handle->get_database( $handle->{db_name } );
+					$res->{result} = $db->run_command( $parms );
+					#print STDERR "rc ".Dumper( $rc );
+				}
+			}
+		}
 	}
 	return $res;
+}
+
+# ------------------------------------------------------------------------------------------------
+# execute a command on the server
+# (I):
+# - the DBMS instance
+# - the collection
+# - the op
+# - the args
+# (O):
+# - the result as a hash ref with following keys:
+#   > ok: true|false
+
+sub _parseToRun {
+	my ( $self, $collection, $op, $args ) = @_;
+
+	if( $op eq 'deleteMany' ){
+		my $filter = $args // {};
+		return [
+			delete  => $collection,
+			deletes => [{ q => $filter, limit => 0 }]
+		];
+	}
+
+	if( $op eq 'insertOne' ){
+		my $doc = $args // {};
+		return [
+			insert    => $collection,
+			documents => [ $doc ],
+			ordered   => JSON::PP::true,   # optionnel
+		];
+	}
+
+	msgWarn( __PACKAGE__."::_parseToRun() unmanaged operation: $op" );
+	return undef;
 }
 
 ### Public methods
@@ -312,8 +529,9 @@ sub dbStatuses {
 
 sub execSqlCommand {
 	my ( $self, $command, $opts ) = @_;
-	my $result = { ok => false };
-	msgErr( __PACKAGE__."::execSqlCommand() doesn't manage SQL commands as MongoDB is a NoSQL database" );
+	my $result = $self->_parseNoSql( $command, $opts );
+	#my $result = { ok => false };
+	#msgErr( __PACKAGE__."::execSqlCommand() doesn't manage SQL commands as MongoDB is a NoSQL database" );
 	return $result;
 }
 
