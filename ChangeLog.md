@@ -12,6 +12,7 @@
 	- MongoDB now accepts (some) NoSql commands
 	- MongoDB is able to translate (some) SQL commands
 	- dbms.pl restore uses SQL commands
+	- MonitorDB service is moved to SqlServer, dbms.pl restore honors that
 
 ### 4.21.1
 
