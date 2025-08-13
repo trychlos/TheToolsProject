@@ -154,8 +154,8 @@ sub doRestore {
 		if( $opt_monitor ){
 			my $topic = $objNode->name().'/executionReport/'.$ep->runner()->command().'/'.$ep->runner()->verb()."/$opt_service/$opt_database/$mode";
 			my $payload = $mode eq 'full' ? $opt_full : $opt_diff;
-			$res = TTP::commandExec( "dbms.pl sql -service MonitorDB -command \"db.restores.deleteMany({ topic: '$topic' })\"" );
-			$res = TTP::commandExec( "dbms.pl sql -service MonitorDB -command \"db.restores.insertOne({ topic: '$topic', payload: '$payload' })\"" );
+			$res = TTP::commandExec( "dbms.pl sql -service MonitorDB -command \"delete from restores where topic='$topic'\"" );
+			$res = TTP::commandExec( "dbms.pl sql -service MonitorDB -command \"insert into restores ( topic, payload ) values ( '$topic', '$payload' )\"" );
 		}
 	}
 	if( $res->{ok} ){

@@ -11,6 +11,7 @@
 	- dbms.pl restore has '--monitor' option, thus bumping minor candidate version number
 	- MongoDB now accepts (some) NoSql commands
 	- MongoDB is able to translate (some) SQL commands
+	- dbms.pl restore uses SQL commands
 
 ### 4.21.1
 
