@@ -284,6 +284,7 @@ sub _parseMongosh {
 
 # ------------------------------------------------------------------------------------------------
 # execute a command on the server
+# the command is expected to be a MongoSh command
 # (I):
 # - the DBMS instance
 # - the command
@@ -307,21 +308,117 @@ sub _parseNoSql {
 		$res->{ok} = $ok;
 		if( $ok ){
 			my $parms = $self->_parseToRun( $collection, $op, $args );
-			#print STDERR "collection ".Dumper( $collection );
-			#print STDERR "op ".Dumper( $op );
-			#print STDERR "args ".Dumper( $args );
 			#print STDERR "parms ".Dumper( $parms );
 			if( $parms ){
 				my $handle = $self->_connect();
 				if( $handle ){
 					my $db = $handle->get_database( $handle->{db_name } );
-					$res->{result} = $db->run_command( $parms );
-					#print STDERR "rc ".Dumper( $rc );
+					$res->{command_rc} = $db->run_command( $parms );
 				}
 			}
 		}
 	}
+	#print STDERR "res ".Dumper( $res );
 	return $res;
+}
+
+# ------------------------------------------------------------------------------------------------
+# execute a command on the server
+# the command is expected to be a SQL command
+# (I):
+# - the DBMS instance
+# - the command
+# - an optional options hash
+# (O):
+# - the result as a hash ref with following keys:
+#   > ok: true|false
+
+sub _parseSql {
+	my ( $self, $command, $opts ) = @_;
+	$opts //= {};
+	msgErr( __PACKAGE__."::_parseSql() command is mandatory, but is not specified" ) if !$command;
+	my $res = {
+		ok => false,
+		result => [],
+		stdout => [],
+		stderr => []
+	};
+	if( !TTP::errs()){
+		my $parms = $self->_parseSqlToRunCommand( $command, $opts );
+		#print STDERR "parms ".Dumper( $parms );
+		if( $parms ){
+			my $handle = $self->_connect();
+			if( $handle ){
+				$res->{ok} = true;
+				my $db = $handle->get_database( $handle->{db_name } );
+				$res->{command_rc} = $db->run_command( $parms );
+			}
+		}
+	}
+	#print STDERR "res ".Dumper( $res );
+	return $res;
+}
+
+# ------------------------------------------------------------------------------------------------
+# (I):
+# - the DBMS instance
+# - the command
+# - an optional options hash
+# (O):
+# - the result as a hash ref with following keys:
+#   > ok: true|false
+
+sub _parseSqlToRunCommand {
+    my ( $self, $sql, $opts ) = @_;
+
+	# remove leading and trailing spaces
+    $sql =~ s/^\s+|\s+$//g;
+
+    # DELETE
+    if( $sql =~ /^DELETE\s+FROM\s+(\w+)\s*(WHERE\s+(.+))?$/i ){
+        my $table = $1;
+        my $where = $3 // '';
+
+        my %filter;
+        if( $where ){
+            # Simple parsing: assume "col = 'value'" and ANDs
+            for my $cond ( split /\s+AND\s+/i, $where ){
+                if( $cond =~ /^\s*(\w+)\s*=\s*'([^']*)'\s*$/ ){
+                    $filter{$1} = $2;
+                }
+            }
+        }
+
+        return [
+            delete  => $table,
+            deletes => [ { q => \%filter, limit => 0 } ],
+        ];
+    }
+
+    # INSERT
+    if( $sql =~ /^INSERT\s+INTO\s+(\w+)\s*\(([^)]+)\)\s*VALUES\s*\(([^)]+)\)/i ){
+        my $table = $1;
+        my @cols = map { s/^\s+|\s+$//gr } split /,/, $2;
+        my @vals = map { s/^\s+|\s+$//gr } split /,/, $3;
+
+        my %doc;
+        for my $i ( 0..$#cols ){
+            my $val = $vals[$i];
+            if( $val =~ /^'(.*)'$/ ){
+                $val = $1;  # remove quotes
+            }
+            $doc{$cols[$i]} = $val;
+        }
+
+        return [
+            insert    => $table,
+            documents => [ \%doc ],
+            ordered   => JSON::PP::true,
+        ];
+    }
+
+	msgWarn( __PACKAGE__."::_parseSqlToRunCommand() unmanaged operation: $sql" );
+	return undef;
 }
 
 # ------------------------------------------------------------------------------------------------
@@ -529,9 +626,10 @@ sub dbStatuses {
 
 sub execSqlCommand {
 	my ( $self, $command, $opts ) = @_;
-	my $result = $self->_parseNoSql( $command, $opts );
 	#my $result = { ok => false };
 	#msgErr( __PACKAGE__."::execSqlCommand() doesn't manage SQL commands as MongoDB is a NoSQL database" );
+	#my $result = $self->_parseNoSql( $command, $opts );
+	my $result = $self->_parseSql( $command, $opts );
 	return $result;
 }
 
