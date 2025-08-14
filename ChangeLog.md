@@ -2,7 +2,7 @@
 
 ## ChangeLog
 
-### 4.22.0-rc.0
+### 4.22.0-rc.1
 
     Release date: 
 
@@ -13,6 +13,7 @@
 	- MongoDB is able to translate (some) SQL commands
 	- dbms.pl restore uses SQL commands
 	- MonitorDB service is moved to SqlServer, dbms.pl restore honors that
+    - dbms.pl restore -monitor option delete all service topics when backup mode is full
 
 ### 4.21.1
 
