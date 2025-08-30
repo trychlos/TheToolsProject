@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.22.0-rc.1
+### 4.22.0
 
-    Release date: 
+    Release date: 2025- 8-30
 
     - TTP::Services::newDbms() this is an error if the DBMS package cannot new()
 	- Fix MongoDB connection checks
