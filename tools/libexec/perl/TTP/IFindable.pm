@@ -56,7 +56,7 @@ requires qw( _newBase );
 # - an optional options hash which will be passed to Acceptable role if the object implements it
 # (O):
 # - if 'wantsAll' is true, returns a ref to an array of (accepted) found files, which may be empty
-# - if 'wantsAll' is false, returns a single scalar string which is the (accepted) found files, which may be undef
+# - if 'wantsAll' is false, returns a single scalar string which is the first (accepted) found file, which may be undef
 
 sub find {
 	my ( $self, $args, $opts ) = @_;
