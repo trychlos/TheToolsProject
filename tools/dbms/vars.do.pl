@@ -172,7 +172,7 @@ msgVerbose( "got archivesDir='".( $opt_archivesDir ? 'true':'false' )."'" );
 msgVerbose( "got archivesPeriodic='".( $opt_archivesPeriodic ? 'true':'false' )."'" );
 msgVerbose( "got service='$opt_service'" );
 @opt_keys= split( /,/, join( ',', @opt_keys ));
-msgVerbose( "got keys='".join( ',', @opt_keys )."'" );
+msgVerbose( "got keys=[".join( ',', @opt_keys )."]" );
 
 # deprecated options
 msgWarn( "'--backupsDir' option is deprecated in favor of '--backupsPeriodic'. You should update your configurations and/or your code." ) if $opt_backupsDir;

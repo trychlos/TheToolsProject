@@ -211,7 +211,7 @@ msgVerbose( "got logsCommands='".( $opt_logsCommands ? 'true':'false' )."'" );
 msgVerbose( "got logsMain='".( $opt_logsMain ? 'true':'false' )."'" );
 msgVerbose( "got alertsDir='".( $opt_alertsDir ? 'true':'false' )."'" );
 @opt_keys= split( /,/, join( ',', @opt_keys ));
-msgVerbose( "got keys='".join( ',', @opt_keys )."'" );
+msgVerbose( "got keys=[".join( ',', @opt_keys )."]" );
 
 # removed options
 msgErr( "'--nodesRoot' option is deprecated and not replaced. You should update your configurations and/or your code." ) if $opt_nodeRoot;

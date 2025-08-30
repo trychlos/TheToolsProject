@@ -137,9 +137,9 @@ msgVerbose( "got targetcmd='$opt_targetcmd'" );
 msgVerbose( "got dirs='".( $opt_dirs ? 'true':'false' )."'" );
 msgVerbose( "got dirs_set='".( $opt_dirs_set ? 'true':'false' )."'" );
 @opt_excludeDirs = split( /,/, join( ',', @opt_excludeDirs ));
-msgVerbose( "got exclude_dirs='".join( ',', @opt_excludeDirs )."'" );
+msgVerbose( "got exclude_dirs=[".join( ',', @opt_excludeDirs )."]" );
 @opt_excludeFiles = split( /,/, join( ',', @opt_excludeFiles ));
-msgVerbose( "got exclude_files='".join( ',', @opt_excludeFiles )."'" );
+msgVerbose( "got exclude_files=[".join( ',', @opt_excludeFiles )."]" );
 msgVerbose( "got options='$opt_options'" );
 msgVerbose( "got empty='".( $opt_empty ? 'true':'false' )."'" );
 

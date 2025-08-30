@@ -126,7 +126,7 @@ msgVerbose( "got verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got service='$opt_service'" );
 msgVerbose( "got target='$opt_target'" );
 @opt_keys = split( /,/, join( ',', @opt_keys ));
-msgVerbose( "got keys='".join( ',', @opt_keys )."'" );
+msgVerbose( "got keys=[".join( ',', @opt_keys )."]" );
 
 # must have --service option
 # find the node which hosts this service in this same environment (should be at most one)

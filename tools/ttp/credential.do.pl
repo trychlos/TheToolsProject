@@ -87,7 +87,7 @@ msgVerbose( "got dummy='".( $ep->runner()->dummy() ? 'true':'false' )."'" );
 msgVerbose( "got verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got node='$opt_node'" );
 @opt_keys= split( /,/, join( ',', @opt_keys ));
-msgVerbose( "got keys='".join( ',', @opt_keys )."'" );
+msgVerbose( "got keys=[".join( ',', @opt_keys )."]" );
 
 # node must be set
 msgErr( "'--node' option is mandatory" ) if !$opt_node;

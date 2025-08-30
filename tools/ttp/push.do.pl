@@ -248,9 +248,9 @@ msgVerbose( "got verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got check='".( $opt_check ? 'true':'false' )."'" );
 msgVerbose( "got tag='".( $opt_tag ? 'true':'false' )."'" );
 @opt_excludeDirs = split( /,/, join( ',', @opt_excludeDirs ));
-msgVerbose( "got exclude_dirs='".join( ',', @opt_excludeDirs )."'" );
+msgVerbose( "got exclude_dirs=[".join( ',', @opt_excludeDirs )."]" );
 @opt_excludeFiles = split( /,/, join( ',', @opt_excludeFiles ));
-msgVerbose( "got exclude_files='".join( ',', @opt_excludeFiles )."'" );
+msgVerbose( "got exclude_files=[".join( ',', @opt_excludeFiles )."]" );
 msgVerbose( "got options='$opt_options'" );
 
 # check that we are pushing only on the pull reference host

@@ -221,9 +221,9 @@ msgVerbose( "got httpPrefix='$opt_httpPrefix'" );
 msgVerbose( "got text='".( $opt_text ? 'true':'false' )."'" );
 msgVerbose( "got textPrefix='$opt_textPrefix'" );
 @opt_prepends = split( /,/, join( ',', @opt_prepends ));
-msgVerbose( "got prepends='".join( ',', @opt_prepends )."'" );
+msgVerbose( "got prepends=[".join( ',', @opt_prepends )."]" );
 @opt_appends = split( /,/, join( ',', @opt_appends ));
-msgVerbose( "got appends='".join( ',', @opt_appends )."'" );
+msgVerbose( "got appends=[".join( ',', @opt_appends )."]" );
 
 # a service name is mandatory when querying its status
 msgErr( "'--name' service name is mandatory when querying for a status" ) if $opt_state && !$opt_name;

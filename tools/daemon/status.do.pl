@@ -139,7 +139,7 @@ msgVerbose( "got port_set='".( $opt_port_set ? 'true':'false' )."'" );
 msgVerbose( "got http='".( $opt_http ? 'true':'false' )."'" );
 msgVerbose( "got metric='$opt_metric'" );
 @opt_labels = split( /,/, join( ',', @opt_labels ));
-msgVerbose( "got labels='".join( ',', @opt_labels )."'" );
+msgVerbose( "got labels=[".join( ',', @opt_labels )."]" );
 
 # either the json or the basename or the port must be specified (and not both)
 my $count = 0;

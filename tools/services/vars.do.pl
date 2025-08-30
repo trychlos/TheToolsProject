@@ -79,7 +79,7 @@ msgVerbose( "got dummy='".( $ep->runner()->dummy() ? 'true':'false' )."'" );
 msgVerbose( "got verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got service='$opt_service'" );
 @opt_keys = split( /,/, join( ',', @opt_keys ));
-msgVerbose( "got keys='".join( ',', @opt_keys )."'" );
+msgVerbose( "got keys=[".join( ',', @opt_keys )."]" );
 
 # warn if no option has been requested
 msgWarn( "no '--key' option has been provided, nothing to do" ) if !scalar( @opt_keys );

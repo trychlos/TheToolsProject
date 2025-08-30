@@ -188,9 +188,9 @@ msgVerbose( "got mqtt='".( $opt_mqtt ? 'true':'false' )."'" );
 msgVerbose( "got http='".( $opt_http ? 'true':'false' )."'" );
 msgVerbose( "got text='".( $opt_text ? 'true':'false' )."'" );
 @opt_prepends = split( /,/, join( ',', @opt_prepends ));
-msgVerbose( "got prepends='".join( ',', @opt_prepends )."'" );
+msgVerbose( "got prepends=[".join( ',', @opt_prepends )."]" );
 @opt_appends = split( /,/, join( ',', @opt_appends ));
-msgVerbose( "got appends='".join( ',', @opt_appends )."'" );
+msgVerbose( "got appends=[".join( ',', @opt_appends )."]" );
 
 # must have --service option
 # find the node which hosts this service in this same environment (should be at most one)

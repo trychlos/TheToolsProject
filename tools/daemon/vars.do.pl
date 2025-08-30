@@ -134,7 +134,7 @@ msgVerbose( "got execDirs='".( $opt_execDirs ? 'true':'false' )."'" );
 msgVerbose( "got json='$opt_json'" );
 msgVerbose( "got name='$opt_name'" );
 @opt_keys= split( /,/, join( ',', @opt_keys ));
-msgVerbose( "got keys='".join( ',', @opt_keys )."'" );
+msgVerbose( "got keys=[".join( ',', @opt_keys )."]" );
 
 # when requesting keys, they must be addressed inside of a daemon configuration, so have a json or a name
 if( scalar( @opt_keys )){

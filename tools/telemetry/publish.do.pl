@@ -170,9 +170,9 @@ msgVerbose( "got httpPrefix='$opt_httpPrefix'" );
 msgVerbose( "got text='".( $opt_text ? 'true':'false' )."'" );
 msgVerbose( "got textPrefix='$opt_textPrefix'" );
 @opt_prepends = split( /,/, join( ',', @opt_prepends ));
-msgVerbose( "got prepends='".join( ',', @opt_prepends )."'" );
+msgVerbose( "got prepends=[".join( ',', @opt_prepends )."]" );
 @opt_appends = split( /,/, join( ',', @opt_appends ));
-msgVerbose( "got appends='".join( ',', @opt_appends )."'" );
+msgVerbose( "got appends=[".join( ',', @opt_appends )."]" );
 
 # metric and values are mandatory
 msgErr( "'--metric' option is required, but is not specified" ) if !$opt_metric;
