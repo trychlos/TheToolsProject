@@ -14,6 +14,7 @@
 	- dbms.pl restore uses SQL commands
 	- MonitorDB service is moved to SqlServer, dbms.pl restore honors that
     - dbms.pl restore -monitor option delete all service topics when backup mode is full
+    - Define maintainer/SqlServer documentation to create RESTORES table
 
 ### 4.21.1
 
