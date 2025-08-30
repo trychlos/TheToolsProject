@@ -38,6 +38,7 @@ use TTP;
 use vars::global qw( $ep );
 
 use TTP::Constants qw( :all );
+use TTP::Finder;
 use TTP::Message qw( :all );
 
 # -------------------------------------------------------------------------------------------------
@@ -456,6 +457,29 @@ sub fromCommand {
 	}
 	$path = undef if TTP::errs();
 	return $path;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Some verbs use TTP resource files addressed as TTP://..
+# If this is the case, returns the full actual pathname, in the current running OS notation
+# (I):
+# - a resource file, which may be an actual file
+# (O):
+# - the actual pathname
+
+sub getResource {
+	my ( $fname ) = @_;
+	my $actual = $fname;
+	# replace the 'TTP://' scheme with the actual path if a file is found
+	if( $fname =~ m/^TTP:\/\// ){
+		$actual = substr( $fname, 6 );
+		my ( $volume, $directories, $file ) = File::Spec->splitpath( $actual );
+		my $finder = TTP::Finder->new( $ep );
+		my $candidate = $finder->find({ dirs => [ $directories ], glob => $file, wantsAll => false });
+		msgVerbose( __PACKAGE__."::getResource() found candidate='$candidate'" );
+		$actual = $candidate if $candidate;
+	}
+	return $actual;
 }
 
 # ------------------------------------------------------------------------------------------------

@@ -2,11 +2,11 @@
 
 ## ChangeLog
 
-### 4.22.1-rc.0
+### 4.23.0-rc.0
 
     Release date: 
 
-    - 
+    - TTP::Path::getResource() manages resources addressed by 'TTP://' scheme, thus bumping minor candidate version number
 
 ### 4.22.0
 
