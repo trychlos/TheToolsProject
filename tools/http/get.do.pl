@@ -52,10 +52,8 @@ use strict;
 use utf8;
 use warnings;
 
-use HTTP::Request;
 use LWP::UserAgent;
 use Time::Moment;
-use URI::Escape;
 
 use TTP::Metric;
 
@@ -122,8 +120,7 @@ sub doGet {
 	} else {
 		my $ua = LWP::UserAgent->new();
 		$ua->timeout( 5 );
-		my $req = HTTP::Request->new( GET => $opt_url );
-		$response = $ua->request( $req );
+		$response = $ua->get( $opt_url );
 		$res = $response->is_success;
 		$status = $response->code;
 		if( $res ){

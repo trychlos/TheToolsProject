@@ -8,6 +8,7 @@
 
     - TTP::Path::getResource() manages resources addressed by 'TTP://' scheme, thus bumping minor candidate version number
     - Review verbose presentation of array'ed command-line parameters, marking them with '[...]'
+    - Define new http.pl post verb
 
 ### 4.22.0
 
