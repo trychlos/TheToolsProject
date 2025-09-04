@@ -7,6 +7,7 @@
     Release date: 
 
     - ttp.pl alert now supports MMS, thus bumping minor candidate version number
+    - Define new http.pl compare verb
 
 ### 4.23.0
 

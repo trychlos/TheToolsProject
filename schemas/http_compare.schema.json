@@ -1,0 +1,221 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "org.trychlos.TheToolsProject/schemas/http_compare.schema.json",
+    "title": "Site",
+    "description_array": [
+    ],
+    "type": "object",
+    "properties": {
+        "bases": {
+            "description": "The base URLs to be compared.",
+            "type": "object",
+            "properties": {
+                "ref": {
+                    "description": "The reference base URL.",
+                    "type": "string"
+                },
+                "new": {
+                    "description": "The base URL to be compared against the above reference.",
+                    "type": "string"
+                }
+            }
+        },
+        "browser": {
+            "description": "The window-less internal browser properties.",
+            "type": "object",
+            "properties": {
+                "height": {
+                    "description": "The height in pixels of the internal browser window.",
+                    "type": "integer",
+                    "default": 768
+                },
+                "port": {
+                    "description": "The port the chromedriver is listening to.",
+                    "type": "integer"
+                },
+                "remote_server_addr": {
+                    "description": "The chromedriver server address.",
+                    "type": "string",
+                    "default": "127.0.0.1"
+                },
+                "width": {
+                    "description": "The width in pixels of the internal browser window.",
+                    "type": "integer",
+                    "default": 1366
+                }
+            }
+        },
+        "crawl": {
+            "description": "The configuration of the recursive search.",
+            "type": "object",
+            "properties": {
+                "exclude_selectors": {
+                    "description": "A list of CSS selectors to not follow nor activate.",
+                    "type": "array",
+                    "items": "string"
+                },
+                "find_links": {
+                    "description": "How to find the links in this website.",
+                    "type": "array",
+                    "items": "object",
+                    "properties": {
+                        "find": {
+                            "description": "The CSS selector to find a link.",
+                            "type": "string"
+                        },
+                        "member": {
+                            "description": "The member of the hash from where the link is readable.",
+                            "type": "string"
+                        }
+                    },
+                    "default": {
+                        "find": "a[href]",
+                        "member": "href"
+                    }
+                },
+                "follow_query": {
+                    "description": "Whether to follow the queries.",
+                    "type": "boolean",
+                    "default": false
+                },
+                "make_sitemap_csv": {
+                    "description": "Whether to build a sitemap at the end.",
+                    "type": "boolean",
+                    "default": false
+                },
+                "max_depth": {
+                    "description": "The maximum depth of recursion.",
+                    "type": "integer",
+                    "default": 1
+                },
+                "max_pages": {
+                    "description": "the maximum count of pages to visit.",
+                    "type": "integer",
+                    "default": 10
+                },
+                "prefix_path": {
+                    "description": "A prefix to be prepended to extracted paths, useful when the website itself prefixes its links.",
+                    "type": "array",
+                    "items": "string",
+                    "default": [
+                        ""
+                    ]
+                },
+                "same_host_only": {
+                    "description": "Whether to stay inside of the same domain.",
+                    "type": "boolean",
+                    "default": true
+                },
+                "url_allow_patterns": {
+                    "description": "The list of patterns of URLs to follow. Empty means all.",
+                    "type": "array",
+                    "items": "string"
+                },
+                "url_deny_paterns": {
+                    "description": "The list of patterns of URLs to exclude. Empty means none.",
+                    "type": "array",
+                    "items": "string"
+                }
+            }
+        },
+        "ignore": {
+            "description": "A list of patterns to be ignored when comparing.",
+            "type": "object",
+            "properties": {
+                "dom_attributes": {
+                    "description": "The list of regexes of DOM attributes to be ignored.",
+                    "type": "array",
+                    "items": "string"
+                },
+                "dom_selectors": {
+                    "description": "The list of regexes of DOM selectors to be ignored.",
+                    "type": "array",
+                    "items": "string"
+                },
+                "text_patterns": {
+                    "description": "The list of regexes of text patterns to be ignored.",
+                    "type": "array",
+                    "items": "string"
+                }
+            }
+        },
+        "login": {
+            "description": "The login configuration.",
+            "type": "object",
+            "properties": {
+                "pass_selector": {
+                    "description": "The CSS selector of the password field.",
+                    "type": "string"
+                },
+                "path": {
+                    "description": "The path to the login page.",
+                    "type": "string"
+                },
+                "session_cookie_regex": {
+                    "description": "A regex which identifies the name of the session cookie.",
+                    "type": "string"
+                },
+                "submit_selector": {
+                    "description": "The CSS selector of the submit button.",
+                    "type": "string"
+                },
+                "user_selector": {
+                    "description": "The CSS selector of the username field.",
+                    "type": "string"
+                }
+            }
+        },
+        "roles": {
+            "description": "The list of roles to be checked.",
+            "type": "object",
+            "patternProperties": {
+                "^.*$": {
+                    "description": "The name of the role.",
+                    "type": "string"
+                }
+            },
+            "properties": {
+                "creds": {
+                    "description": "The credentials to be used when checking this role.",
+                    "type": "object",
+                    "properties": {
+                        "pass": {
+                            "description": "The password.",
+                            "type": "string"
+                        },
+                        "user": {
+                            "description": "The username.",
+                            "type": "string"
+                        }
+                    }
+                },
+                "enabled": {
+                    "description": "Whether this role must be considered.",
+                    "type": "boolean",
+                    "default": true
+                },
+                "routes": {
+                    "description": "the list of paths to be tested.",
+                    "type": "array",
+                    "items": "string"
+                }
+            }
+        },
+        "visual": {
+            "description": "The properties of visual comparison.",
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "description": "Whether visual comparison is enabled.",
+                    "type": "boolean",
+                    "default": false
+                },
+                "rmse_fail_threshold": {
+                    "description": "Accepted pixel error rate (defaulting to 1%).",
+                    "type": "integer",
+                    "default": 0.01
+                }
+            }
+        }
+    }
+}
