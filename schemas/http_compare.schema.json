@@ -38,6 +38,11 @@
                     "type": "string",
                     "default": "127.0.0.1"
                 },
+                "timeout": {
+                    "description": "The timeout in seconds of interactions with internal browser.",
+                    "type": "integer",
+                    "default": 5
+                },
                 "width": {
                     "description": "The width in pixels of the internal browser window.",
                     "type": "integer",
@@ -93,6 +98,15 @@
                     "type": "integer",
                     "default": 10
                 },
+                "mode": {
+                    "description": "How to crawl in the site ?",
+                    "type": "string",
+                    "values": [
+                        "link",
+                        "click"
+                    ],
+                    "default": "link"
+                },
                 "prefix_path": {
                     "description": "A prefix to be prepended to extracted paths, useful when the website itself prefixes its links.",
                     "type": "array",
@@ -106,6 +120,11 @@
                     "type": "boolean",
                     "default": true
                 },
+                "text_deny_paterns": {
+                    "description": "The list of text patterns to exclude. Empty means none.",
+                    "type": "array",
+                    "items": "string"
+                },
                 "url_allow_patterns": {
                     "description": "The list of patterns of URLs to follow. Empty means all.",
                     "type": "array",
@@ -115,6 +134,16 @@
                     "description": "The list of patterns of URLs to exclude. Empty means none.",
                     "type": "array",
                     "items": "string"
+                },
+                "write_htmls": {
+                    "description": "Whether to dump HTML's to files.",
+                    "type": "boolean",
+                    "default": false
+                },
+                "write_screenshots": {
+                    "description": "Whether to dump screenshots to files.",
+                    "type": "boolean",
+                    "default": false
                 }
             }
         },
