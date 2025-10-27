@@ -6,7 +6,8 @@
 # @(-) --[no]verbose           run verbosely [${verbose}]
 # @(-) --json=<filename>       the JSON configuration file [${jsonfile}]
 # @(-) --[no]debug             whether the Selenium::Remote::Driver must be run in debug mode [${debug}]
-# @(-) --maxpages=<count>      maximum count of pages to be visited [${maxpages}]
+# @(-) --maxpages=<count>      maximum count of pages to be visited, overriding configured value [${maxpages}]
+# @(-) --mode=<mode>           crawl mode click|link, overriding configured value [${mode}]
 #
 # @(@) Note 1: This verb requires a nginx server which proxyies to a chromedriver server, both running locally.
 #
@@ -57,12 +58,14 @@ my $defaults = {
 	verbose => 'no',
 	debug => 'no',
 	jsonfile => '',
-	maxpages => 10
+	maxpages => 10,
+	mode => ''
 };
 
 my $opt_debug = false;
 my $opt_jsonfile = $defaults->{jsonfile};
 my $opt_maxpages = $defaults->{maxpages};
+my $opt_mode = $defaults->{mode};
 
 # the JSON compare configuration as a hash ref
 my $conf = undef;
@@ -679,7 +682,7 @@ sub config_load {
 		$nberrs += 1;
 	}
 	# check crawl mode
-	my $mode = $conf->{crawl}{mode} || 'link';
+	my $mode = $opt_mode || $conf->{crawl}{mode} || 'link';
 	if( !exists( $Const->{crawl_modes}{$mode} )){
 		msgErr( "crawl.mode='$mode' is not known" );
 		$nberrs += 1;
@@ -1124,7 +1127,7 @@ sub extract_links {
 		$dom->find( $it->{find} )->each( sub {
 			my $href = $_->attr( $it->{member} ) // return;
 			$href =~ s/^\s+|\s+$//g;
-			return if $href eq '' || $href =~ m/^javascript:|^mailto:|^tel:/i;
+			return if $href eq '' || $href =~ m/^javascript:|^mailto:|^tel:|\.xls$/i;
 
 			my $abs = URI->new_abs( $href, $base_url )->as_string;
 			$uniq{$abs} = true;
@@ -1350,7 +1353,7 @@ sub navigate_and_capture {
 
 sub normalize_url_path_query {
     my ( $abs_uri, $follow_query ) = @_;
-    my $u = URI->new($abs_uri);
+    my $u = URI->new( $abs_uri );
     $u->fragment( undef );
     return $follow_query ? $u->path_query : $u->path; # string
 }
@@ -1821,7 +1824,7 @@ sub wait_for_body {
     		my $alert = handle_alert_if_present( $driver->{session_id}, 'accept' );
 			push( @alerts, $alert ) if $alert;
 		}
-        select undef, undef, undef, 0.2;	# small wait before retry
+        select undef, undef, undef, 0.1;	# wait 0.1 sec before retry
     }
     return ( false, \@alerts );
 }
@@ -1837,27 +1840,27 @@ sub wait_for_dom_stable {
     my $last_change_t = Time::HiRes::time;
     my $t0 = Time::HiRes::time;
 
-    while (Time::HiRes::time - $t0 < $hashref->{run}{timeout_s} ){
+    while( Time::HiRes::time - $t0 < $hashref->{run}{timeout_s} ){
         my $sig = exec_js_w3c_sync( $sid, q{
             const root = document.body;
-            if (!root) return [0,0,0];
-            const textLen = (root.innerText||'').length;
-            const elCount = document.querySelectorAll('*').length;
+            if( !root ) return [0,0,0];
+            const textLen = ( root.innerText || '' ).length;
+            const elCount = document.querySelectorAll( '*' ).length;
             const hashish = textLen ^ elCount; // cheap fingerprint
             return [textLen, elCount, hashish];
-        }, []);
-        if (defined $last_sig && join(',',@$sig) ne join(',',@$last_sig)) {
+        }, [] );
+        if( defined $last_sig && join( ',', @$sig ) ne join( ',', @$last_sig )){
             $last_sig = $sig;
             $last_change_t = Time::HiRes::time;
         } else {
             $last_sig //= $sig;
         }
-        if ((Time::HiRes::time - $last_change_t)*1000 >= $quiet_ms) {
-            return 1;
+        if(( Time::HiRes::time - $last_change_t ) * 1000 >= $quiet_ms ){
+            return true;
         }
-        select undef, undef, undef, 0.12;
+        select undef, undef, undef, 0.1;	# wait 0.1 sec before retry
     }
-    return 0;
+    return false;
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -1894,7 +1897,7 @@ sub wait_for_network_idle {
         if ($had_doc_response && (Time::HiRes::time - $last_event_t) * 1000 >= $quiet_ms) {
             last;
         }
-        select undef, undef, undef, 0.10;
+        select undef, undef, undef, 0.1;
     }
     return (\@all, $had_doc_response);
 }
@@ -1933,12 +1936,12 @@ sub wait_for_url_change {
 sub wait_until {
     my ( %opt ) = @_;
     my $cond = $opt{cond} or die "wait_until: missing cond";
-    my $interval = $opt{interval} // 0.2;   # seconds
+    my $interval = $opt{interval} // 0.1;   # seconds
     my $start = time;
     while( time - $start < $hashref->{run}{timeout_s} ){
         my $val = eval { $cond->() };
         return $val if $val;
-        select undef, undef, undef, $interval;   # << precise sleep
+        select undef, undef, undef, $interval;   # << precise sleep in (maybe fractional) seconds
     }
     return;
 }
@@ -1967,7 +1970,8 @@ if( !GetOptions(
 		my ( $name, $value ) = @_;
 		$opt_maxpages = $value;
 		$opt_maxpages_set = true;
-	})){
+	},
+	"mode=s"			=> \$opt_mode )){
 
 		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
@@ -1996,6 +2000,11 @@ if( $opt_jsonfile ){
 # if a maxpages is provided, must be greater or equal to zero
 if( $opt_maxpages_set ){
 	msgErr( "'--maxpages' must be greater or equal to zero, got $opt_maxpages" ) if $opt_maxpages < 0;
+}
+
+# if a crawl mode is provided, must be 'click' or 'link'
+if( $opt_mode ){
+	msgErr( "'--mode' must be 'crawl' or 'link', got '$opt_mode'" ) if $opt_mode ne 'crawl' && $opt_mode ne 'link';
 }
 
 if( !TTP::errs()){
