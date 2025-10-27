@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.23.0-rc.0
+### 4.23.0
 
-    Release date: 
+    Release date: 2025-10-27
 
     - TTP::Path::getResource() manages resources addressed by 'TTP://' scheme, thus bumping minor candidate version number
     - Review verbose presentation of array'ed command-line parameters, marking them with '[...]'
@@ -694,4 +694,4 @@
 
 ---
 P. Wieser
-- Last updated on 2025, Jul. 1st
+- Last updated on 2025, Oct. 27th
