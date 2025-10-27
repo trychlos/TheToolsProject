@@ -130,7 +130,7 @@ sub printSummary {
 	TTP::commandExec( $commands, {
 		macros => {
 			RECIPIENTS => join( ',', @{$recipients} ),
-			SUBJECT => TTP::var([ 'workloadSummary', 'subject' ]) || "[<WORKLOAD>\@<NODE>] workload summary",
+			SUBJECT => TTP::var([ 'workloadSummary', 'subject' ]) || "[<WORKLOAD>\@<NODE>] Workload summary",
 			TEXTFNAME => $textfname,
 			WORKLOAD => $opt_workload
 		}

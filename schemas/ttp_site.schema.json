@@ -1711,7 +1711,7 @@
                         "subject": {
                             "description": "An arbitrary label which may use when building, for example, an email subject.",
                             "type": "string",
-                            "default": "[<WORKLOAD>@<NODE>] workload summary"
+                            "default": "[<WORKLOAD>@<NODE>] Workload summary"
                         }
                     }
                 }
