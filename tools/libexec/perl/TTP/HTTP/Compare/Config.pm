@@ -1,0 +1,853 @@
+# TheToolsProject - Tools System and Working Paradigm for IT Production
+# Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
+# Copyright (©) 2023-2025 PWI Consulting
+#
+# TheToolsProject is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation; either version 2 of the
+# License, or (at your option) any later version.
+#
+# TheToolsProject is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with TheToolsProject; see the file COPYING. If not,
+# see <http://www.gnu.org/licenses/>.
+#
+# http.pl compare configuration.
+
+package TTP::HTTP::Compare::Config;
+die __PACKAGE__ . " must be loaded as TTP::HTTP::Compare::Config\n" unless __PACKAGE__ eq 'TTP::HTTP::Compare::Config';
+
+use base qw( TTP::Base );
+our $VERSION = '1.00';
+
+use strict;
+use utf8;
+use warnings;
+
+use Data::Dumper;
+use Role::Tiny::With;
+
+with 'TTP::IEnableable', 'TTP::IJSONable';
+
+use TTP;
+use vars::global qw( $ep );
+
+use TTP::Constants qw( :all );
+use TTP::HTTP::Compare::Role;
+use TTP::Message qw( :all );
+
+use constant {
+	DEFAULT_BROWSER_COMMAND => "chromedriver --port=9515 --url-base=/wd/hub --verbose",
+	DEFAULT_BROWSER_HEIGHT => 768,
+	DEFAULT_BROWSER_DRIVER_PORT => 9515,
+	DEFAULT_BROWSER_DRIVER_SERVER => '127.0.0.1',
+	DEFAULT_BROWSER_TIMEOUT => 5,
+	DEFAULT_BROWSER_WIDTH => 1366,
+	DEFAULT_COMPARE_IGNORE_DOM_ATTRIBUTES => [
+		"^aria-"
+	],
+	DEFAULT_COMPARE_IGNORE_DOM_SELECTORS => [
+		"script",
+		"style"
+	],
+	DEFAULT_COMPARE_IGNORE_TEXT_PATTERNS => [],
+	DEFAULT_COMPARE_SCREENSHOTS_ENABLED => false,
+	DEFAULT_COMPARE_SCREENSHOTS_RMSE => 0.01,
+	DEFAULT_COMPARE_THRESHOLD_COUNT => 0,
+	DEFAULT_CRAWL_BY_CLICK => false,
+	DEFAULT_CRAWL_BY_LINK => false,
+	DEFAULT_CRAWL_EXCLUDE_PATTERNS => [],
+	DEFAULT_CRAWL_FIND_LINKS => [
+		{
+			find => "a[href]",
+			member => "href"
+		}
+	],
+	DEFAULT_CRAWL_FOLLOW_QUERY => false,
+	DEFAULT_CRAWL_KEEP_HTMLS => false,
+	DEFAULT_CRAWL_KEEP_SCREENSHOTS => false,
+	DEFAULT_CRAWL_MAX_VISITED => 10,
+	DEFAULT_CRAWL_MODE => 'link',
+	DEFAULT_CRAWL_PREFIX_PATH => [ '' ],
+	DEFAULT_CRAWL_SAME_HOST => true,
+	DEFAULT_CRAWL_URL_ALLOW_PATTERNS => [],
+	DEFAULT_CRAWL_URL_DENY_PATTERNS => [
+		"\\blogout\\b",
+		"\\bdelete\\b",
+		"\\.xls\\b"
+	],
+	MIN_BROWSER_HEIGHT => 3,
+	MIN_BROWSER_WIDTH => 4
+};
+
+my $Const = {
+};
+
+### Private methods
+
+# -------------------------------------------------------------------------------------------------
+# Compile at once all the configured regex patterns just after having successfully loaded the config.
+# Compiled regular expressions are stored in $self->{_run}, available through runXxx() methods
+# (I):
+# - nothing
+# (O):
+# - nothing
+
+sub _compile_regex_patterns {
+    my ( $self ) = @_;
+
+	# url allowed patterns
+    my $raw = $self->crawlUrlAllowPatterns();
+	my @regex = ();
+    for my $s (@{ $raw // [] }){
+        next unless defined $s && length $s;
+        my $rx = eval { qr/$s/ };
+        if ($@) {
+            msgWarn( "Invalid allow regex '$s': $@ (skipping)" );
+            next;
+        }
+        push( @regex, $rx );
+    }
+	$self->{_run}{allow_rx} = \@regex;
+    # add a flag so checks are cheap during crawl
+    $self->{_run}{allow_all} = ( @regex == 0 ) ? true : false;
+
+	# url denied patterns
+    $raw = $self->crawlUrlDenyPatterns();
+	@regex = ();
+    for my $s (@{ $raw // [] }) {
+        next unless defined $s && length $s;
+        my $rx = eval { qr/$s/ };
+        if ($@) {
+            msgWarn( "Invalid deny regex '$s': $@ (skipping)" );
+            next;
+        }
+        push( @regex, $rx );
+    }
+	$self->{_run}{deny_rx} = \@regex;
+
+	# clickables exclude patterns
+    $raw = $self->crawlExcludePatterns();
+	@regex = ();
+    for my $s (@{ $raw // [] }) {
+        next unless defined $s && length $s;
+        my $rx = eval { qr/$s/ };
+        if ($@) {
+            msgWarn( "Invalid exclude regex '$s': $@ (skipping)" );
+            next;
+        }
+        push( @regex, $rx );
+    }
+	$self->{_run}{exclude_rx} = \@regex;
+}
+
+# -------------------------------------------------------------------------------------------------
+# Load the configuration path
+# Honors the '--dummy' verb option by using msgWarn() instead of msgErr() when checking the configuration
+# (I):
+# - the absolute path to the JSON configuration file
+# - an optional options hash with following keys:
+#   > max_pages: the maximum count of pages to visit specified in the command-line, defaulting to the configured one
+#   > mode: the mode specified in the command-line, defaulting to the configured one
+# (O):
+# - true|false whether the configuration has been successfully loaded
+
+sub _loadConfig {
+	my ( $self, $path, $args ) = @_;
+	$args //= {};
+
+	# IJSONable role takes care of validating the acceptability and the enable-ity
+	my $loaded = $self->jsonLoad({ path => $path });
+	# evaluate the data if success
+	if( $loaded ){
+		$self->evaluate();
+		msgDebug( __PACKAGE__."::_loadConfig() evaluated to ".TTP::chompDumper( $self->jsonData()));
+
+		# honors the '--dummy' verb option by using msgWarn() instead of msgErr()
+		my $msgRef = $self->ep()->runner()->dummy() ? \&msgWarn : \&msgErr;
+
+		# must have ref and new URLs
+		my $bases_ref = $self->basesRef();
+		if( !$bases_ref ){
+			$msgRef->( "$path: bases.ref URL is not specified" );
+		}
+		my $bases_new = $self->basesNew();
+		if( !$bases_new ){
+			$msgRef->( "$path: bases.new URL is not specified" );
+		}
+		# check browser width and height as these data are needed to handle it
+		my $width = $self->browserWidth();
+		if( $width <= MIN_BROWSER_WIDTH ){
+			$msgRef->( "browser.width='$width' is less or equal to the minimum accepted (".MIN_BROWSER_WIDTH.")" );
+		}
+		my $height = $self->browserHeight();
+		if( $height <= MIN_BROWSER_HEIGHT ){
+			$msgRef->( "browser.height='$height' is less or equal to the minimum accepted (".MIN_BROWSER_HEIGHT.")" );
+		}
+		# check chromedriver address and port
+		my $server = $self->browserDriverServer();
+		if( !$server ){
+			$msgRef->( "browser.driver_server is not defined" );
+		}
+		my $port = $self->browserDriverPort();
+		if( !$port || $port < 1 ){
+			$msgRef->( "browser.driver_port=".( $port || '(undef)' )." is not defined or invalid" );
+		}
+		#
+		# the options which are overridable in verb command-line have a 'run' version
+		#
+		# check max visited count
+		my $max_visited = $args->{max_visited} || $self->crawlMaxVisited();
+		if( $max_visited < 0 ){
+			$msgRef->( "crawl.max_visited='$max_visited' is invalid (less than zero)" );
+		} else {
+			msgVerbose( "got max_visited='$max_visited'" );
+			$self->{_run}{max_visited} = $max_visited;
+		}
+		# whether crawl by click
+		my $click = $self->crawlByClick();
+		$click = $args->{by_click} if defined $args->{by_click};
+		$self->{_run}{crawl_by_click} = $click;
+		# whether crawl by link
+		$click = $self->crawlByLink();
+		$click = $args->{by_link} if defined $args->{by_link};
+		$self->{_run}{crawl_by_link} = $click;
+
+		# if the JSON configuration has been checked but misses some informations, then says we cannot load
+		if( TTP::errs()){
+			$self->jsonLoaded( false );
+		}
+	}
+
+	return $self->jsonLoaded();
+}
+
+### Public methods
+
+# ------------------------------------------------------------------------------------------------
+# Returns the base new URL.
+# (I):
+# - none
+# (O):
+# - returns the configured base new URL
+
+sub basesNew {
+	my ( $self ) = @_;
+
+	my $url = $self->var([ 'bases', 'new' ]);
+
+	return $url;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns the base reference URL.
+# (I):
+# - none
+# (O):
+# - returns the configured base reference URL
+
+sub basesRef {
+	my ( $self ) = @_;
+
+	my $url = $self->var([ 'bases', 'ref' ]);
+
+	return $url;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns the configured chromedriver start command.
+# (I):
+# - none
+# (O):
+# - returns the configured chromedriver start command
+
+sub browserCommand {
+	my ( $self ) = @_;
+
+	my $command = $self->var([ 'browser', 'command' ]);
+	$command = DEFAULT_BROWSER_COMMAND if !defined $command;
+
+	return $command;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns the configured chromedriver listening port, defaulting to 9515.
+# (I):
+# - none
+# (O):
+# - returns the configured chromedriver listening port
+
+sub browserDriverPort {
+	my ( $self ) = @_;
+
+	my $port = $self->var([ 'browser', 'driver_port' ]);
+	$port = DEFAULT_BROWSER_DRIVER_PORT if !defined $port;
+
+	return $port;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns the configured chromedriver server ip addr, defaulting to localhost.
+# (I):
+# - none
+# (O):
+# - returns the configured chromedriver server ip addr
+
+sub browserDriverServer {
+	my ( $self ) = @_;
+
+	my $server = $self->var([ 'browser', 'driver_server' ]);
+	$server = DEFAULT_BROWSER_DRIVER_SERVER if !defined $server;
+
+	return $server;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns the configured browser height, defaulting to 768.
+# (I):
+# - none
+# (O):
+# - returns the configured browser height
+
+sub browserHeight {
+	my ( $self ) = @_;
+
+	my $height = $self->var([ 'browser', 'height' ]);
+	$height = DEFAULT_BROWSER_HEIGHT if !defined $height;
+
+	return $height;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns the configured browser timeout, defaulting to 5 sec.
+# (I):
+# - none
+# (O):
+# - returns the configured browser timeout
+
+sub browserTimeout {
+	my ( $self ) = @_;
+
+	my $timeout = $self->var([ 'browser', 'timeout' ]);
+	$timeout = DEFAULT_BROWSER_TIMEOUT if !defined $timeout;
+
+	return $timeout;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns the configured browser width, defaulting to 768.
+# (I):
+# - none
+# (O):
+# - returns the configured browser width
+
+sub browserWidth {
+	my ( $self ) = @_;
+
+	my $width = $self->var([ 'browser', 'width' ]);
+	$width = DEFAULT_BROWSER_WIDTH if !defined $width;
+
+	return $width;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns the whether comparison of screenshots is enabled.
+# (I):
+# - none
+# (O):
+# - returns whether comparison of screenshots is enabled
+
+sub compareScreenshotsEnabled {
+	my ( $self ) = @_;
+
+	my $enabled = $self->var([ 'compare_results', 'screenshots', 'enabled' ]);
+	$enabled = DEFAULT_COMPARE_SCREENSHOTS_ENABLED if !defined $enabled;
+
+	return $enabled;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns the pixel error threshold when comparing screenshots.
+# This is a percent, which defaults to 0.01 (1%).
+# (I):
+# - none
+# (O):
+# - returns pixel error threshold when comparing screenshots
+
+sub compareScreenshotsRmse {
+	my ( $self ) = @_;
+
+	my $rmse = $self->var([ 'compare_results', 'screenshots', 'rmse_fail_threshold' ]);
+	$rmse = DEFAULT_COMPARE_SCREENSHOTS_RMSE if !defined $rmse;
+
+	return $rmse;
+}
+
+# ------------------------------------------------------------------------------------------------
+# When set, this is count of accepted differences between two screenshots.
+# Happens that even when two screenshots are visually identical, the Image::Compare package can count
+# until about 50 differences...
+# (I):
+# - none
+# (O):
+# - returns accepted count of differences, defaulting to zero
+
+sub compareThresholdCount {
+	my ( $self ) = @_;
+
+	my $count = $self->var([ 'compare_results', 'screenshots', 'threshold_count' ]);
+	$count = DEFAULT_COMPARE_THRESHOLD_COUNT if !defined $count;
+
+	return $count;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns whether we crawl by clicks.
+# (I):
+# - none
+# (O):
+# - returns whether we crawl by clicks
+
+sub crawlByClick {
+	my ( $self ) = @_;
+
+	my $crawl = $self->var([ 'crawl', 'crawl_by_click' ]);
+	$crawl = DEFAULT_CRAWL_BY_CLICK if !defined $crawl;
+
+	return $crawl;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns whether we crawl by links.
+# (I):
+# - none
+# (O):
+# - returns whether we crawl by links
+
+sub crawlByLink {
+	my ( $self ) = @_;
+
+	my $crawl = $self->var([ 'crawl', 'crawl_by_link' ]);
+	$crawl = DEFAULT_CRAWL_BY_LINK if !defined $crawl;
+
+	return $crawl;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns the list of patterns excluded from clicks/links extraction.
+# (I):
+# - none
+# (O):
+# - returns the list of selector excluded from clicks/links extraction
+
+sub crawlExcludePatterns {
+	my ( $self ) = @_;
+
+	my $list = $self->var([ 'crawl', 'exclude_patterns' ]);
+	$list = DEFAULT_CRAWL_EXCLUDE_PATTERNS if !defined $list;
+
+	return $list;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns the list of link selectors.
+# (I):
+# - none
+# (O):
+# - returns the list of link selectors
+
+sub crawlFindLinks {
+	my ( $self ) = @_;
+
+	my $list = $self->var([ 'crawl', 'find_links' ]);
+	$list = DEFAULT_CRAWL_FIND_LINKS if !defined $list;
+
+	return $list;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns whether to follow and honor the query fragments.
+# (I):
+# - none
+# (O):
+# - returns whether to follow and honor the query fragments
+
+sub crawlFollowQuery {
+	my ( $self ) = @_;
+
+	my $follow = $self->var([ 'crawl', 'follow_query' ]);
+	$follow = DEFAULT_CRAWL_FOLLOW_QUERY if !defined $follow;
+
+	return $follow;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns the configured htmls indicator.
+# (I):
+# - none
+# (O):
+# - returns whether we are configured to write htmls
+
+sub crawlKeepHtmls {
+	my ( $self ) = @_;
+
+	my $write = $self->var([ 'crawl', 'keep_htmls' ]);
+	$write = DEFAULT_CRAWL_KEEP_HTMLS if !defined $write;
+
+	return $write;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns the configured screeshots indicator.
+# (I):
+# - none
+# (O):
+# - returns whether we are configured to write screenshots
+
+sub crawlKeepScreenshots {
+	my ( $self ) = @_;
+
+	my $write = $self->var([ 'crawl', 'keep_screenshots' ]);
+	$write = DEFAULT_CRAWL_KEEP_SCREENSHOTS if !defined $write;
+
+	return $write;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns the configured max count of pages to visit.
+# 'visited' here means both when following a link (page count) or when clicking in an area.
+# (I):
+# - none
+# (O):
+# - returns the configured max count of pages to visit
+
+sub crawlMaxVisited {
+	my ( $self ) = @_;
+
+	my $max = $self->var([ 'crawl', 'max_visited' ]);
+	$max = DEFAULT_CRAWL_MAX_VISITED if !defined $max;
+
+	return $max;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns the configured crawling mode, defaulting to 'link'.
+# (I):
+# - none
+# (O):
+# - returns the configured base new URL
+
+sub crawlMode {
+	my ( $self ) = @_;
+
+	my $mode = $self->var([ 'crawl', 'mode' ]);
+	$mode = DEFAULT_CRAWL_MODE if !$mode;
+
+	return $mode;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns the configured list of path prefixes.
+# (I):
+# - none
+# (O):
+# - returns the configured list of path prefixes
+
+sub crawlPrefixPath {
+	my ( $self ) = @_;
+
+	my $list = $self->var([ 'crawl', 'prefix_path' ]);
+	$list = DEFAULT_CRAWL_SAME_HOST if !defined $list;
+
+	return $list;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns whether we must stay inside the same host, defaulting to true.
+# (I):
+# - none
+# (O):
+# - returns whether we must stay inside the same host
+
+sub crawlSameHost {
+	my ( $self ) = @_;
+
+	my $same = $self->var([ 'crawl', 'same_host' ]);
+	$same = DEFAULT_CRAWL_SAME_HOST if !defined $same;
+
+	return $same;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns the configured url allowed patterns, defaulting to all
+# (I):
+# - none
+# (O):
+# - returns the configured url allowed patterns
+
+sub crawlUrlAllowPatterns {
+	my ( $self ) = @_;
+
+	my $list = $self->var([ 'crawl', 'url_allow_patterns' ]);
+	$list = DEFAULT_CRAWL_URL_ALLOW_PATTERNS if !defined $list;
+
+	return $list;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns the configured url denied patterns, defaulting to the hardcoded list
+# (I):
+# - none
+# (O):
+# - returns the configured url denied patterns
+
+sub crawlUrlDenyPatterns {
+	my ( $self ) = @_;
+
+	my $list = $self->var([ 'crawl', 'url_deny_patterns' ]);
+	$list = DEFAULT_CRAWL_URL_DENY_PATTERNS if !defined $list;
+
+	return $list;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns the configured ignored DOM attributes.
+# (I):
+# - none
+# (O):
+# - returns the configured ignored DOM attributes
+
+sub ignoreDOMAttributes {
+	my ( $self ) = @_;
+
+	my $ignored = $self->var([ 'compare_ignore', 'dom_attributes' ]);
+	$ignored = DEFAULT_COMPARE_IGNORE_DOM_ATTRIBUTES if !defined $ignored || !scalar( @{$ignored // []} );
+
+	return $ignored;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns the configured ignored DOM selectors.
+# (I):
+# - none
+# (O):
+# - returns the configured ignored DOM selectors
+
+sub ignoreDOMSelectors {
+	my ( $self ) = @_;
+
+	my $ignored = $self->var([ 'compare_ignore', 'dom_selectors' ]);
+	$ignored = DEFAULT_COMPARE_IGNORE_DOM_SELECTORS if !defined $ignored || !scalar( @{$ignored // []} );
+
+	return $ignored;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns the configured ignored text patterns.
+# (I):
+# - none
+# (O):
+# - returns the configured ignored text patterns
+
+sub ignoreTextPatterns {
+	my ( $self ) = @_;
+
+	my $ignored = $self->var([ 'compare_ignore', 'text_patterns' ]);
+	$ignored = DEFAULT_COMPARE_IGNORE_TEXT_PATTERNS if !defined $ignored || !scalar( @{$ignored // []} );
+
+	return $ignored;
+}
+
+# -------------------------------------------------------------------------------------------------
+# Returns the list of configured roles name, as a sorted list
+# (I):
+# - nothing
+# (O):
+# - a ref to the sorted list of roles name
+
+sub roles {
+	my ( $self ) = @_;
+
+	my $ref = $self->var([ 'roles' ]);
+
+	return sort keys %{$ref};
+}
+
+# -------------------------------------------------------------------------------------------------
+# (I):
+# - nothing
+# (O):
+# - whether we want crawl by click
+
+sub runCrawlByClick {
+	my ( $self ) = @_;
+
+	my $crawl = $self->{_run}{crawl_by_click};
+
+	return $crawl;
+}
+
+# -------------------------------------------------------------------------------------------------
+# (I):
+# - nothing
+# (O):
+# - whether we want crawl by link
+
+sub runCrawlByLink {
+	my ( $self ) = @_;
+
+	my $crawl = $self->{_run}{crawl_by_link};
+
+	return $crawl;
+}
+
+# -------------------------------------------------------------------------------------------------
+# (I):
+# - nothing
+# (O):
+# - the list of Regexes to exclude when identifying cliks/links areas
+
+sub runExcludePatterns {
+	my ( $self ) = @_;
+
+	my $list = $self->{_run}{exclude_rx};
+
+	return $list;
+}
+
+# -------------------------------------------------------------------------------------------------
+# (I):
+# - nothing
+# (O):
+# - the running max count of visited places
+
+sub runMaxVisited {
+	my ( $self ) = @_;
+
+	my $max = $self->{_run}{max_visited};
+
+	return $max;
+}
+
+# -------------------------------------------------------------------------------------------------
+# (I):
+# - nothing
+# (O):
+# - whether all URLs are allowed
+
+sub runUrlAllowedAll {
+	my ( $self ) = @_;
+
+	my $bool = $self->{_run}{allow_all};
+
+	return $bool;
+}
+
+# -------------------------------------------------------------------------------------------------
+# (I):
+# - nothing
+# (O):
+# - the running allowed URL patterns, as a ref to an array of compiled regex
+
+sub runUrlAllowedRegex {
+	my ( $self ) = @_;
+
+	my $ref = $self->{_run}{allow_rx};
+
+	return $ref;
+}
+
+# -------------------------------------------------------------------------------------------------
+# (I):
+# - nothing
+# (O):
+# - the running denied URL patterns, as a ref to an array of compiled regex
+
+sub runUrlDeniedRegex {
+	my ( $self ) = @_;
+
+	my $ref = $self->{_run}{deny_rx};
+
+	return $ref;
+}
+
+# -------------------------------------------------------------------------------------------------
+# Contrarily to Site or Node or Service, HTTP::Compare::Config is not overridable at all.
+# All its configuration must be self-contained.
+# (I):
+# - either a single string or a reference to an array of keys to be read from (e.g. [ 'moveDir', 'byOS', 'MSWin32' ])
+#   each key can be itself an array ref of potential candidates for this level
+# (O):
+# - the evaluated value of this variable, which may be undef
+
+sub var {
+	my ( $self, $keys ) = @_;
+	msgDebug( __PACKAGE__."::var() keys=".( ref( $keys ) eq 'ARRAY' ? ( "[ ".join( ', ', @{$keys} )." ]" ) : "'$keys'" ));
+
+	my $value = $self->TTP::IJSONable::var( $keys );
+
+	return $value;
+}
+
+### Class methods
+
+# -------------------------------------------------------------------------------------------------
+# Constructor
+# (I):
+# - the TTP::EP entry point
+# - the path to the JSON configuration file
+# - an optional options hash with following keys:
+#   > max_visited: the maximum count of places to visit specified in the command-line, defaulting to the configured one
+#   > by_click: whether crawling by click, from the command-line, defaulting to the configured one
+#   > by_link: whether crawling by link, from the command-line, defaulting to the configured one
+# (O):
+# - this object
+
+sub new {
+	my ( $class, $ep, $path, $args ) = @_;
+	$class = ref( $class ) || $class;
+	$args //= {};
+	my $self = $class->SUPER::new( $ep, $args );
+	bless $self, $class;
+	msgDebug( __PACKAGE__."::new() jsonPath='$path'" );
+
+	$self->{_run} = {};
+
+	# the path must be specified
+	# IJSONable role takes care of validating the acceptability and the enable-ity
+	if( $path ){
+		$self->_loadConfig( $path, $args );
+		if( $self->jsonLoaded()){
+			$self->_compile_regex_patterns();
+		}
+	} else {
+		msgErr( __PACKAGE__."::new() expects a 'path' argument, not found" );
+		TTP::stackTrace();
+	}
+
+	return $self;
+}
+
+# -------------------------------------------------------------------------------------------------
+# Destructor
+# (I):
+# - instance
+# (O):
+
+sub DESTROY {
+	my $self = shift;
+	$self->SUPER::DESTROY();
+	return;
+}
+
+### Global functions
+### Note for the developer: while a global function doesn't take any argument, it can be called both
+### as a class method 'TTP::Package->method()' or as a global function 'TTP::Package::method()',
+### the former being preferred (hence the writing inside of the 'Class methods' block which brings
+### the class as first argument).
+
+1;

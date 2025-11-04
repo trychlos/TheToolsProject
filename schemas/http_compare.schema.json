@@ -3,6 +3,16 @@
     "$id": "org.trychlos.TheToolsProject/schemas/http_compare.schema.json",
     "title": "Site",
     "description_array": [
+        "The http.pl compare verb relies on:",
+        "- a JSON configuration file addressed by the '--json' command-line option,",
+        "- a chromedriver server to talk to the Selenium::Remote::Driver package; runs it with '~/data/chromedriver-linux64/chromedriver --port=9515',",
+        "- a local nginx server which redirects the configured port (defaulting to 9516) to the chromedriver listening port (here, 9515).",
+        "NB:",
+        "1. The chromedriver version MUST match the currently running Chromium version.",
+        "",
+        "",
+        "",
+        ""
     ],
     "type": "object",
     "properties": {
@@ -11,11 +21,11 @@
             "type": "object",
             "properties": {
                 "ref": {
-                    "description": "The reference base URL.",
+                    "description": "The (mandatory) reference base URL.",
                     "type": "string"
                 },
                 "new": {
-                    "description": "The base URL to be compared against the above reference.",
+                    "description": "The (mandatory) base URL to be compared against the above reference.",
                     "type": "string"
                 }
             }
@@ -24,19 +34,25 @@
             "description": "The window-less internal browser properties.",
             "type": "object",
             "properties": {
+                "command": {
+                    "description": "The command to run the chromedriver.",
+                    "type": "string",
+                    "default": "chromedriver --port=9515 --url-base=/wd/hub --verbose"
+                },
+                "driver_port": {
+                    "description": "The port the chromedriver is listening to.",
+                    "type": "integer",
+                    "default": 9515
+                },
+                "driver_server": {
+                    "description": "The chromedriver server address.",
+                    "type": "string",
+                    "default": "127.0.0.1"
+                },
                 "height": {
                     "description": "The height in pixels of the internal browser window.",
                     "type": "integer",
                     "default": 768
-                },
-                "port": {
-                    "description": "The port the chromedriver is listening to.",
-                    "type": "integer"
-                },
-                "remote_server_addr": {
-                    "description": "The chromedriver server address.",
-                    "type": "string",
-                    "default": "127.0.0.1"
                 },
                 "timeout": {
                     "description": "The timeout in seconds of interactions with internal browser.",
@@ -50,14 +66,83 @@
                 }
             }
         },
+        "compare_ignore": {
+            "description": "A list of patterns to be ignored when comparing.",
+            "type": "object",
+            "properties": {
+                "dom_attributes": {
+                    "description": "The list of regexes of DOM attributes to be ignored.",
+                    "type": "array",
+                    "items": "string",
+                    "default": [
+                        "^aria-"
+                    ]
+                },
+                "dom_selectors": {
+                    "description": "The list of regexes of DOM selectors to be ignored.",
+                    "type": "array",
+                    "items": "string",
+                    "default": [
+                        "script",
+                        "style"
+                    ]
+                },
+                "text_patterns": {
+                    "description": "The list of regexes of text patterns to be ignored.",
+                    "type": "array",
+                    "items": "string",
+                    "default": [
+                    ]
+                }
+            }
+        },
+        "compare_results": {
+            "description": "The description of the expected comparison results.",
+            "type": "object",
+            "properties": {
+                "screenshots": {
+                    "description": "The description of screenshots comparison.",
+                    "type": "object",
+                    "properties": {
+                        "enabled": {
+                            "description": "Whether the screenshots comparison is enabled.",
+                            "type": "boolean",
+                            "default": false
+                        },
+                        "rmse_fail_threshold": {
+                            "description": "Accepted pixel error rate (defaulting to 1 %).",
+                            "type": "number",
+                            "multipleOf" : 0.01,
+                            "default": 0.01
+                        },
+                        "threshold_count": {
+                            "description": "The count of accepted differences, computed with an avg square method.",
+                            "type": "number",
+                            "default": 0
+                        }
+                    }
+                }
+            }
+        },
         "crawl": {
             "description": "The configuration of the recursive search.",
             "type": "object",
             "properties": {
-                "exclude_selectors": {
-                    "description": "A list of CSS selectors to not follow nor activate.",
+                "crawl_by_click": {
+                    "description": "Whether we try a crawl by clicks.",
+                    "type": "boolean",
+                    "default": false
+                },
+                "crawl_by_link": {
+                    "description": "Whether we try a crawl by links.",
+                    "type": "boolean",
+                    "default": false
+                },
+                "exclude_patterns": {
+                    "description": "A list of patterns to be compared against XPATH when identifying clickable areas.",
                     "type": "array",
-                    "items": "string"
+                    "items": "string",
+                    "default": []
                 },
                 "find_links": {
                     "description": "How to find the links in this website.",
@@ -79,7 +164,7 @@
                     }
                 },
                 "follow_query": {
-                    "description": "Whether to follow the queries.",
+                    "description": "Whether to follow and honor the query fragment of the URI.",
                     "type": "boolean",
                     "default": false
                 },
@@ -88,34 +173,20 @@
                     "type": "boolean",
                     "default": false
                 },
-                "max_depth": {
-                    "description": "The maximum depth of recursion.",
-                    "type": "integer",
-                    "default": 1
-                },
-                "max_pages": {
-                    "description": "the maximum count of pages to visit.",
+                "max_visited": {
+                    "description": "The maximum total count of visited pages. Zero stands for unlimited.",
                     "type": "integer",
                     "default": 10
                 },
-                "mode": {
-                    "description": "How to crawl in the site ?",
-                    "type": "string",
-                    "values": [
-                        "link",
-                        "click"
-                    ],
-                    "default": "link"
-                },
                 "prefix_path": {
-                    "description": "A prefix to be prepended to extracted paths, useful when the website itself prefixes its links.",
+                    "description": "A list of prefixes to be prepended to extracted paths, useful when the website itself prefixes its links.",
                     "type": "array",
                     "items": "string",
                     "default": [
                         ""
                     ]
                 },
-                "same_host_only": {
+                "same_host": {
                     "description": "Whether to stay inside of the same domain.",
                     "type": "boolean",
                     "default": true
@@ -128,43 +199,77 @@
                 "url_allow_patterns": {
                     "description": "The list of patterns of URLs to follow. Empty means all.",
                     "type": "array",
-                    "items": "string"
+                    "items": "string",
+                    "default": []
                 },
                 "url_deny_paterns": {
                     "description": "The list of patterns of URLs to exclude. Empty means none.",
                     "type": "array",
-                    "items": "string"
-                },
-                "write_htmls": {
-                    "description": "Whether to dump HTML's to files.",
-                    "type": "boolean",
-                    "default": false
-                },
-                "write_screenshots": {
-                    "description": "Whether to dump screenshots to files.",
-                    "type": "boolean",
-                    "default": false
+                    "items": "string",
+                    "default": [
+                        "\\blogout\\b",
+                        "\\bdelete\\b",
+                        "\\.xls\\b"
+                    ]
                 }
             }
         },
-        "ignore": {
-            "description": "A list of patterns to be ignored when comparing.",
+        "dirs": {
+            "description_array": [
+                "The subdirectory parts of output directories.",
+                "We have six potential output directories which are 'ref', 'new' and 'diffs' crossed with 'htmls' and 'screenshots', but we only manage five as we do not try to keep html diffs.",
+                "This object says how they are organized.",
+                "An empty string means that the files must not be kept."
+            ],
             "type": "object",
             "properties": {
-                "dom_attributes": {
-                    "description": "The list of regexes of DOM attributes to be ignored.",
-                    "type": "array",
-                    "items": "string"
+                "diffs": {
+                    "description": "The differences output directories. We only manage screenshots here.",
+                    "type": "object",
+                    "properties": {
+                        "htmls": {
+                            "description": "The subdirectories of differences kept html files.",
+                            "type": "string",
+                            "default": "diffs/htmls"
+                        },
+                        "screenshots": {
+                            "description": "The subdirectories of differences screenshots.",
+                            "type": "string",
+                            "default": "diffs/screenshots"
+                        }
+                    }
                 },
-                "dom_selectors": {
-                    "description": "The list of regexes of DOM selectors to be ignored.",
-                    "type": "array",
-                    "items": "string"
+                "new": {
+                    "description": "The new output directories.",
+                    "type": "object",
+                    "properties": {
+                        "htmls": {
+                            "description": "The subdirectories of new kept html files.",
+                            "type": "string",
+                            "default": "new/htmls"
+                        },
+                        "screenshots": {
+                            "description": "The subdirectories of new kept screenshots.",
+                            "type": "string",
+                            "default": "new/screenshots"
+                        }
+                    }
                 },
-                "text_patterns": {
-                    "description": "The list of regexes of text patterns to be ignored.",
-                    "type": "array",
-                    "items": "string"
+                "ref": {
+                    "description": "The reference output directories.",
+                    "type": "object",
+                    "properties": {
+                        "htmls": {
+                            "description": "The subdirectories of reference kept html files.",
+                            "type": "string",
+                            "default": "ref/htmls"
+                        },
+                        "screenshots": {
+                            "description": "The subdirectories of reference kept screenshots.",
+                            "type": "string",
+                            "default": "ref/screenshots"
+                        }
+                    }
                 }
             }
         },
@@ -172,7 +277,15 @@
             "description": "The login configuration.",
             "type": "object",
             "properties": {
-                "pass_selector": {
+                "excluded_cookies": {
+                    "description": "The list of excluded cookies.",
+                    "type": "array",
+                    "items": "string",
+                    "default": [
+                        "AspNetCore.Antiforgery"
+                    ]
+                },
+                "password_selector": {
                     "description": "The CSS selector of the password field.",
                     "type": "string"
                 },
@@ -182,20 +295,26 @@
                 },
                 "session_cookie_regex": {
                     "description": "A regex which identifies the name of the session cookie.",
-                    "type": "string"
+                    "type": "string",
+                    "default": "the first non-excluded cookie received."
                 },
                 "submit_selector": {
                     "description": "The CSS selector of the submit button.",
                     "type": "string"
                 },
-                "user_selector": {
+                "username_selector": {
                     "description": "The CSS selector of the username field.",
                     "type": "string"
                 }
             }
         },
         "roles": {
-            "description": "The list of roles to be checked.",
+            "description_array": [
+                "An optional list of roles to be checked.",
+                "At least one role is mandatory as soon as the sites require some sort of authentication.",
+                "When no role is configured, then the verb assumes that the to-be-compared sites are public, and do not require authentication.",
+                "Fondamentaly, a role is just a credentials group with a name."
+            ],
             "type": "object",
             "patternProperties": {
                 "^.*$": {
@@ -204,15 +323,15 @@
                 }
             },
             "properties": {
-                "creds": {
+                "credentials": {
                     "description": "The credentials to be used when checking this role.",
                     "type": "object",
                     "properties": {
-                        "pass": {
+                        "password": {
                             "description": "The password.",
                             "type": "string"
                         },
-                        "user": {
+                        "username": {
                             "description": "The username.",
                             "type": "string"
                         }
@@ -226,23 +345,10 @@
                 "routes": {
                     "description": "the list of paths to be tested.",
                     "type": "array",
-                    "items": "string"
-                }
-            }
-        },
-        "visual": {
-            "description": "The properties of visual comparison.",
-            "type": "object",
-            "properties": {
-                "enabled": {
-                    "description": "Whether visual comparison is enabled.",
-                    "type": "boolean",
-                    "default": false
-                },
-                "rmse_fail_threshold": {
-                    "description": "Accepted pixel error rate (defaulting to 1%).",
-                    "type": "integer",
-                    "default": 0.01
+                    "items": "string",
+                    "default": [
+                        "/"
+                    ]
                 }
             }
         }
