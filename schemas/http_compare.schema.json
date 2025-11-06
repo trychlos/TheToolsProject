@@ -66,42 +66,57 @@
                 }
             }
         },
-        "compare_ignore": {
-            "description": "A list of patterns to be ignored when comparing.",
+        "compare": {
+            "description_array": [
+                "The full description of how to compare the two sites, and how provide the comparison results.",
+                "We can compare rendered HTMLs as well as screenshots of the rendered pages.",
+                "When comparison is enabled, we can just count (the minimum), and/or keep the objects too, and/or isolate them in a separate directory."
+            ],
             "type": "object",
             "properties": {
-                "dom_attributes": {
-                    "description": "The list of regexes of DOM attributes to be ignored.",
-                    "type": "array",
-                    "items": "string",
-                    "default": [
-                        "^aria-"
-                    ]
+                "htmls": {
+                    "description": "Whether and how to compare rendered HTMLs.",
+                    "type": "object",
+                    "properties": {
+                        "enabled": {
+                            "description": "Whether the HTMLs comparison is enabled.",
+                            "type": "boolean",
+                            "default": false
+                        },
+                        "ignore": {
+                            "description": "A list of patterns to be ignored when comparing.",
+                            "type": "object",
+                            "properties": {
+                                "dom_attributes": {
+                                    "description": "The list of regexes of DOM attributes to be ignored.",
+                                    "type": "array",
+                                    "items": "string",
+                                    "default": [
+                                        "^aria-"
+                                    ]
+                                },
+                                "dom_selectors": {
+                                    "description": "The list of regexes of DOM selectors to be ignored.",
+                                    "type": "array",
+                                    "items": "string",
+                                    "default": [
+                                        "script",
+                                        "style"
+                                    ]
+                                },
+                                "text_patterns": {
+                                    "description": "The list of regexes of text patterns to be ignored.",
+                                    "type": "array",
+                                    "items": "string",
+                                    "default": [
+                                    ]
+                                }
+                            }
+                        }
+                    }
                 },
-                "dom_selectors": {
-                    "description": "The list of regexes of DOM selectors to be ignored.",
-                    "type": "array",
-                    "items": "string",
-                    "default": [
-                        "script",
-                        "style"
-                    ]
-                },
-                "text_patterns": {
-                    "description": "The list of regexes of text patterns to be ignored.",
-                    "type": "array",
-                    "items": "string",
-                    "default": [
-                    ]
-                }
-            }
-        },
-        "compare_results": {
-            "description": "The description of the expected comparison results.",
-            "type": "object",
-            "properties": {
                 "screenshots": {
-                    "description": "The description of screenshots comparison.",
+                    "description": "Whether and how to compare screenshots of rendered pages.",
                     "type": "object",
                     "properties": {
                         "enabled": {
@@ -109,7 +124,7 @@
                             "type": "boolean",
                             "default": false
                         },
-                        "rmse_fail_threshold": {
+                        "rmse_threshold": {
                             "description": "Accepted pixel error rate (defaulting to 1 %).",
                             "type": "number",
                             "multipleOf" : 0.01,
@@ -117,8 +132,8 @@
                         },
                         "threshold_count": {
                             "description": "The count of accepted differences, computed with an avg square method.",
-                            "type": "number",
-                            "default": 0
+                            "type": "integer",
+                            "default": 10
                         }
                     }
                 }
@@ -217,6 +232,7 @@
         "dirs": {
             "description_array": [
                 "The subdirectory parts of output directories.",
+                "They are all subdirectories of the per-role log directory.",
                 "We have six potential output directories which are 'ref', 'new' and 'diffs' crossed with 'htmls' and 'screenshots', but we only manage five as we do not try to keep html diffs.",
                 "This object says how they are organized.",
                 "An empty string means that the files must not be kept."
@@ -230,12 +246,12 @@
                         "htmls": {
                             "description": "The subdirectories of differences kept html files.",
                             "type": "string",
-                            "default": "diffs/htmls"
+                            "default": ""
                         },
                         "screenshots": {
                             "description": "The subdirectories of differences screenshots.",
                             "type": "string",
-                            "default": "diffs/screenshots"
+                            "default": "diffs"
                         }
                     }
                 },

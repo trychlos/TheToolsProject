@@ -36,6 +36,7 @@ use JSON;
 use List::Util qw( any );
 use MIME::Base64 qw( decode_base64 );
 use Mojo::DOM;
+use Scalar::Util qw( blessed );
 use Selenium::Chrome;
 use Selenium::Remote::Driver;
 use Time::HiRes qw( time );
@@ -178,6 +179,63 @@ sub _driver_start {
 }
 
 # -------------------------------------------------------------------------------------------------
+# Try to extract the main Document response (status/ct/url) from perf logs
+# Returns something like:
+#		{
+#          'headers' => {
+#                         'Content-Type' => 'text/html; charset=utf-8',
+#                         'X-Sent-By' => 'WS22DEV1',
+#                         'Server' => 'nginx/1.20.1',
+#                         'Transfer-Encoding' => 'chunked',
+#                         'Connection' => 'keep-alive',
+#                         'Date' => 'Thu, 04 Sep 2025 22:47:14 GMT'
+#                       },
+#          'url' => 'https://tom59.dev.blingua.fr/',
+#          'ts' => '211658.923021',
+#          'frameId' => '2A9D0CD1B73A4F8C7B581CA983F19D77',
+#          'ct' => 'text/html',
+#          'status' => 200
+#        };
+
+sub _extract_main_doc_from_perf_logs {
+    my ( $self, $logs, $final_url ) = @_;
+    return unless $logs && @$logs;
+
+    my @docs;
+    for my $e ( @$logs ){
+        my $msg = $self->_decode_msg( $e ) || next;
+        next unless $msg->{method} eq 'Network.responseReceived';
+        next unless $msg->{params}{type} eq 'Document';
+
+        my $resp = $msg->{params}{response} || next;
+        my $url  = $resp->{url} // '';
+        my $ct   = $resp->{mimeType} || ($resp->{headers} || {})->{'content-type'} || '';
+        my $st   = $resp->{status} // 0;
+
+        # keep candidates; we’ll pick the “best” below
+        push @docs, {
+            status  => $st + 0,
+            ct      => $ct,
+            url     => $url,
+            headers => $resp->{headers} || {},
+            frameId => $msg->{params}{frameId} || '',
+            ts      => $msg->{params}{timestamp} || 0,
+        };
+    }
+    return if !@docs;
+
+    # Prefer the doc whose URL equals final_url (after redirects), else the latest.
+    my ($best) = grep { ($_->{url}||'') eq ($final_url||'') } @docs;
+    $best ||= (sort { ($a->{ts}//0) <=> ($b->{ts}//0) } @docs)[-1];
+
+    # Normalize content-type (lowercase, first token)
+    my $ct = lc($best->{ct} // '');
+    $ct =~ s/;.*$//;  # drop charset etc.
+
+    return { %$best, ct => $ct };
+}
+
+# -------------------------------------------------------------------------------------------------
 # Same-origin fetch of the current page with redirect:'manual' so we see non-200s too.
 
 sub _fetch_status {
@@ -233,11 +291,17 @@ sub _http {
 }
 
 # -------------------------------------------------------------------------------------------------
-# SRD is calling the legacy/execute endpoint even in W3C mode. ChromeDriver expects /execute/sync
-# (or /execute/async), so it rejects the call.
-# You’ve got two clean fixes. The simplest is: stop using JS for sanitizing and do it in Perl off
-# the rendered HTML. That also avoids the “ARRAY(0x…)" you saw (that came from interpolating a
-# Perl array into your JS).
+# clear performance logs before a new nav
+
+sub _perf_logs_drain {
+    my ( $self ) = @_;
+    eval { $self->driver()->get_log( 'performance' ) for 1..2 };  # swallow/ignore
+}
+
+# -------------------------------------------------------------------------------------------------
+# Sanitizing the rendered html let us compute an idempotent md5 hash for this page
+# This md5 hash will be later used to compare the ref and new html pages
+# We honor here the configuration for 'compare.htmls.ignore'
 # Returns an array ( html, md5 )
 
 sub _sanitize_and_hash_html {
@@ -248,12 +312,8 @@ sub _sanitize_and_hash_html {
     my $dom = Mojo::DOM->new( $html );
     my $out = $dom->to_string;
 
-    #my $foundstr = $out =~ /div class="toggled-left" id="wrapper"/;
-    #my $countdom = $dom->find( 'div.toggle-left#wrapper' )->size;
-    #print STDERR "1: found=$foundstr count=$countdom\n";
-
     # 2) drop nodes by CSS selector
-    for my $sel ( @{ $self->conf()->ignoreDOMSelectors() }){
+    for my $sel ( @{ $self->conf()->compareHtmlsIgnoreDOMSelectors() }){
         $dom->find( $sel )->each( sub { $_->remove } );
     }
 
@@ -261,7 +321,7 @@ sub _sanitize_and_hash_html {
     #print STDERR "2: found=$found\n";
 
     # 3) strip/normalize attributes
-    my @attr_rx = map { qr/$_/ } @{ $self->conf()->ignoreDOMAttributes() };
+    my @attr_rx = map { qr/$_/ } @{ $self->conf()->compareHtmlsIgnoreDOMAttributes() };
     $dom->find( '*' )->each( sub {
         my $el = $_;
         my $attrs = $el->attr // {};
@@ -298,7 +358,7 @@ sub _sanitize_and_hash_html {
 
     # 4) text normalization (regexes that cause noise)
     $out = $dom->to_string;
-    for my $pat ( @{ $self->conf()->ignoreTextPatterns() }){
+    for my $pat ( @{ $self->conf()->compareHtmlsIgnoreTextPatterns() }){
         $out =~ s/$pat/<var>/g;
     }
     $out =~ s/\s+/ /g;
@@ -308,6 +368,17 @@ sub _sanitize_and_hash_html {
     #print STDERR "4: found=$foundstr count=$countdom\n";
 
     return ( $out, md5_hex( encode_utf8( NFC( $out // '' ))));
+}
+
+# -------------------------------------------------------------------------------------------------
+# Reset the cached page signature, typically after a navigate or a click, to force a recompute
+# (I):
+# - nothing
+
+sub _signature_clear {
+	my ( $self ) = @_;
+
+    $self->{_signature} = undef;
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -346,6 +417,7 @@ sub _url_ssid {
 
 ### Public methods
 
+=pod
 # -------------------------------------------------------------------------------------------------
 # go back in the history
 # (I):
@@ -361,7 +433,9 @@ sub back {
     $self->driver()->go_back();
     $self->wait_for_page_ready();
 }
+=cut
 
+=pod
 # -------------------------------------------------------------------------------------------------
 # Click and wait for the page be ready
 # (O):
@@ -377,7 +451,9 @@ sub click_and_wait {
 
     return false;
 }
+=cut
 
+=pod
 # -------------------------------------------------------------------------------------------------
 # JS: find element by data-scan-id across top + same-origin iframe docs; click it.
 
@@ -416,16 +492,17 @@ sub click_by_scan_id {
   		})( arguments[0] );
 	};
     if( $self->exec_js_w3c_sync( $js, [ $scan_id ] )){
-        $self->state_reset_key();
+        $self->_signature_clear();
         return true;
     }
     return false;
 }
+=cut
 
 # -------------------------------------------------------------------------------------------------
 # JS: find element by xpath across top + same-origin iframe docs; click it.
 # (O):
-# - returns true if xpath has been found anc clicked
+# - returns true if xpath has been found and clicked
 
 sub click_by_xpath {
     my ( $self, $xpath ) = @_;
@@ -481,14 +558,15 @@ sub click_by_xpath {
         return false;
       })(arguments[0]);
     };
-	$self->perf_logs_drain();
+	$self->_perf_logs_drain();
     if( $self->exec_js_w3c_sync( $js, [ $xpath ] )){
-        $self->state_reset_key();
+        $self->_signature_clear();
         return true;
     }
     return false;
 }
 
+=pod
 # -------------------------------------------------------------------------------------------------
 # JS: walk top document + same-origin iframes, tag clickables with data-scan-id,
 #     and return metadata: id, text, href (may be javascript:...), kind, docKey, frameSrc
@@ -583,6 +661,7 @@ sub clickable_discover_targets_scanid {
     msgVerbose( "clickable_discover_targets_scanid() found ".scalar( @{$list} )." targets" );
     return $list // [];
 }
+=cut
 
 # -------------------------------------------------------------------------------------------------
 # JS: walk top document + same-origin iframes
@@ -749,6 +828,7 @@ sub clickable_discover_targets_xpath {
     return $list // [];
 }
 
+=pod
 # -------------------------------------------------------------------------------------------------
 # action = { kind, text, href, onclick }  -- all optional except kind
 # (I):
@@ -935,6 +1015,7 @@ sub clickable_find_equivalent_scanid {
 	#print STDERR "clickable_find_equivalent() res ".Dumper( $res );
     return $res;
 }
+=cut
 
 # -------------------------------------------------------------------------------------------------
 # When replaying on “new”:
@@ -1104,64 +1185,6 @@ sub exec_js_w3c_sync {
 }
 
 # -------------------------------------------------------------------------------------------------
-# Try to extract the main Document response (status/ct/url) from perf logs
-# Returns something like:
-#		{
-#          'headers' => {
-#                         'Content-Type' => 'text/html; charset=utf-8',
-#                         'X-Sent-By' => 'WS22DEV1',
-#                         'Server' => 'nginx/1.20.1',
-#                         'Transfer-Encoding' => 'chunked',
-#                         'Connection' => 'keep-alive',
-#                         'Date' => 'Thu, 04 Sep 2025 22:47:14 GMT'
-#                       },
-#          'url' => 'https://tom59.dev.blingua.fr/',
-#          'ts' => '211658.923021',
-#          'frameId' => '2A9D0CD1B73A4F8C7B581CA983F19D77',
-#          'ct' => 'text/html',
-#          'status' => 200
-#        };
-
-sub extract_main_doc_from_perf_logs {
-    my ( $self, $logs, $final_url ) = @_;
-    return unless $logs && @$logs;
-
-    my @docs;
-    for my $e ( @$logs ){
-        my $msg = $self->_decode_msg( $e ) || next;
-        next unless $msg->{method} eq 'Network.responseReceived';
-        next unless $msg->{params}{type} eq 'Document';
-		#print STDERR "extract_main_doc_from_perf_logs() msg ".Dumper( $msg );
-
-        my $resp = $msg->{params}{response} || next;
-        my $url  = $resp->{url} // '';
-        my $ct   = $resp->{mimeType} || ($resp->{headers} || {})->{'content-type'} || '';
-        my $st   = $resp->{status} // 0;
-
-        # keep candidates; we’ll pick the “best” below
-        push @docs, {
-            status  => $st + 0,
-            ct      => $ct,
-            url     => $url,
-            headers => $resp->{headers} || {},
-            frameId => $msg->{params}{frameId} || '',
-            ts      => $msg->{params}{timestamp} || 0,
-        };
-    }
-    return if !@docs;
-
-    # Prefer the doc whose URL equals final_url (after redirects), else the latest.
-    my ($best) = grep { ($_->{url}||'') eq ($final_url||'') } @docs;
-    $best ||= (sort { ($a->{ts}//0) <=> ($b->{ts}//0) } @docs)[-1];
-
-    # Normalize content-type (lowercase, first token)
-    my $ct = lc($best->{ct} // '');
-    $ct =~ s/;.*$//;  # drop charset etc.
-
-    return { %$best, ct => $ct };
-}
-
-# -------------------------------------------------------------------------------------------------
 # (I):
 # - nothing
 # (O):
@@ -1203,10 +1226,9 @@ sub navigate {
     msgVerbose( "navigate() url='$url'" );
 
     # Drain logs so we only parse events for THIS navigation
-    $self->perf_logs_drain();
+    $self->_perf_logs_drain();
     $self->driver()->get( $url );
-    $self->role()->clicked_reset();
-    $self->state_reset_key();
+    $self->_signature_clear();
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -1221,14 +1243,6 @@ sub navigate_and_capture {
 
     $self->navigate( $path );
 	return $self->wait_and_capture();
-}
-
-# -------------------------------------------------------------------------------------------------
-# clear performance logs before a new nav
-
-sub perf_logs_drain {
-    my ( $self ) = @_;
-    eval { $self->driver()->get_log( 'performance' ) for 1..2 };  # swallow/ignore
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -1259,27 +1273,37 @@ sub screenshot {
 }
 
 # -------------------------------------------------------------------------------------------------
-# Build a state key for de-duping clicks.
-# code provided by chatgpt
+# Build a page signature which is expected to uniquely identify it.
+# Code provided by chatgpt:
 # + ignoring dom signature
 # + add frame id
 # + warns when iframes do not honor same_host configuration
 # + doesn't install uuid unless installing in new too
 # (O):
-# - a state key as 'top:https://tom59.backup.blingua.fr/fo|if:0#content-frame#/bo/27574/8615#/bo/person/home|if:1#details-frame##|if:2#ifDbox##'
+# - a signature as 'top:https://tom59.ref.blingua.fr/fo|if:0#content-frame#/bo/27574/8615#/bo/person/home|if:1#details-frame##|if:2#ifDbox##'
 
-sub state_get_key {
+sub signature {
     my ( $self ) = @_;
 
-    my $state = $self->{_state_key};
-    if( $state ){
-        msgVerbose( "state_get_key() cached='$state'" );
-        return $state;
+    my $signature = $self->{_signature};
+    if( $signature ){
+        msgVerbose( "signature() cached='$signature'" );
+        return $signature;
     }
 
     my $js = q{
         return (function(){
+            function domSig(doc){
+                try{
+                    const t = (doc.body?.innerText || '').length;
+                    const n = doc.querySelectorAll('*').length;
+                    return String( t )+'|'+String(n);
+                } catch( e ){
+                    return '0|0';
+                }
+            }
             const topHref = location.href;
+            const topSig  = domSig(document);
             const framesInfo = [];
 
             (function walk( doc ){
@@ -1310,13 +1334,14 @@ sub state_get_key {
                 }
             })( document, [] );
 
-            return { topHref, frames: framesInfo };
+            return { topHref, topSig, frames: framesInfo };
         })();
     };
     my $st = $self->exec_js_w3c_sync( $js, [] ) || {};
 
     my $parts = [];
     push( @{$parts}, "top:".( $st->{topHref} // '' ));
+    push( @{$parts}, "doc:".( $st->{topSig} // '' ));
 
     for my $f ( @{ $st->{frames} // [] } ){
         my $path = '';
@@ -1330,22 +1355,11 @@ sub state_get_key {
         }
     }
 
-    $state = join( '|', @$parts );
-    $self->{_state_key} = $state;
-    msgVerbose( "state_get_key() computed='$state'" );
+    $signature = join( '|', @$parts );
+    $self->{_signature} = $signature;
+    msgVerbose( "signature() computed='$signature'" );
 
-    return $state;
-}
-
-# -------------------------------------------------------------------------------------------------
-# Reset the state key, typically after a navigate or a click
-# (I):
-# - nothing
-
-sub state_reset_key {
-	my ( $self ) = @_;
-
-    $self->{_state_key} = undef;
+    return $signature;
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -1426,7 +1440,7 @@ sub wait_and_capture {
 		$logs = eval { $driver->get_log('performance') } // [];
 	}
 
-	my $doc = $self->extract_main_doc_from_perf_logs( $logs, $driver->get_current_url());
+	my $doc = $self->_extract_main_doc_from_perf_logs( $logs, $driver->get_current_url());
 	#print STDERR "wait_and_capture() $args->{label} doc ".Dumper( $doc );
 	my ( $status, $mime, $resp_url, $headers ) = $doc ? @$doc{qw/status ct url headers/} : (undef, undef, undef, {});
 
@@ -1632,6 +1646,20 @@ sub new {
 	my ( $class, $ep, $role, $which, $args ) = @_;
 	$class = ref( $class ) || $class;
 	$args //= {};
+
+	if( !$ep || !blessed( $ep ) || !$ep->isa( 'TTP::EP' )){
+		msgErr( "unexpected ep: ".TTP::chompDumper( $ep ));
+		TTP::stackTrace();
+	}
+	if( !$role || !blessed( $role ) || !$role->isa( 'TTP::HTTP::Compare::Role' )){
+		msgErr( "unexpected role: ".TTP::chompDumper( $role ));
+		TTP::stackTrace();
+	}
+	if( $which ne 'ref' && $which ne 'new' ){
+		msgErr( "unexpected which='$which'" );
+		TTP::stackTrace();
+	}
+
 	my $self = $class->SUPER::new( $ep, $args );
 	bless $self, $class;
 	msgDebug( __PACKAGE__."::new() role='".$role->name()."' which='$which'" );

@@ -30,6 +30,7 @@ use utf8;
 use warnings;
 
 use Data::Dumper;
+use Scalar::Util qw( blessed );
 
 use TTP;
 use vars::global qw( $ep );
@@ -45,18 +46,51 @@ my $Const = {
 
 ### Private methods
 
+# -------------------------------------------------------------------------------------------------
+# Duplication and remove existing chain
+# (I):
+# - nothing
+# (O):
+# - a new QueueItem, identical to self, but without chain
+
+sub _dup_wo_chain {
+	my ( $self ) = @_;
+
+	return TTP::HTTP::Compare::QueueItem->new( $self->ep(), $self->{_conf}, $self->hash());
+}
+
 ### Public methods
 
 # -------------------------------------------------------------------------------------------------
 # (I):
 # - nothing
 # (O):
-# - the array of clicks which were current when this click has been discovered, maybe empty
+# - the array of clicks or links which were current when this click or link has been discovered, maybe empty
 
 sub chain {
 	my ( $self ) = @_;
 
+	#print STDERR "hash: ".Dumper( $self->{_hash} );
 	return $self->{_hash}{chain} // [];
+}
+
+# -------------------------------------------------------------------------------------------------
+# Build a chain which includes the current chain + this queue item
+# (I):
+# - nothing
+# (O):
+# - the new chain, as an array ref
+
+sub chain_plus {
+	my ( $self ) = @_;
+
+	my @chain = @{ $self->chain() };
+	#print STDERR "chain_1: ".ref( \@chain ).", scalar=".( scalar( @chain )).", dump=".Dumper( \@chain );
+
+	push( @chain, $self->_dup_wo_chain());
+	#print STDERR "chain_2: ".ref( \@chain ).", scalar=".( scalar( @chain )).", dump=".Dumper( \@chain );
+
+	return \@chain;
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -106,22 +140,6 @@ sub dump {
 		}
 	}
 	print STDERR "$prefix}".EOL;
-}
-
-# -------------------------------------------------------------------------------------------------
-# Duplication and remove existing chain
-# (I):
-# - nothing
-# (O):
-# - a new QueueItem, identical to self, but without chain
-
-sub dup_wo_chain {
-	my ( $self ) = @_;
-
-	my %hash = %{ $self->{_hash} };
-	delete $hash{chain};
-
-	return TTP::HTTP::Compare::QueueItem->new( $self->ep(), $self->{_conf}, \%hash );
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -200,10 +218,10 @@ sub isLink {
 # (I):
 # - nothing
 # (O):
-# - the key which identifies the current queue item (and so the targeted place)
+# - the signature which identifies the current queue item (and so the targeted place)
 #   this very same key is used to identify the already seen places
 
-sub key {
+sub signature {
 	my ( $self ) = @_;
 
 	my $from = $self->from();
@@ -272,10 +290,10 @@ sub visited {
 	my ( $self, $counter ) = @_;
 
 	if( defined( $counter )){
-		$self->{_visited} = $counter;
+		$self->{_hash}{visited} = $counter;
 	}
 
-	return $self->{_visited} // 0;
+	return $self->{_hash}{visited} // 0;
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -317,6 +335,16 @@ sub xpath {
 sub new {
 	my ( $class, $ep, $conf, $hash ) = @_;
 	$class = ref( $class ) || $class;
+
+	if( !$ep || !blessed( $ep ) || !$ep->isa( 'TTP::EP' )){
+		msgErr( "unexpected ep: ".TTP::chompDumper( $ep ));
+		TTP::stackTrace();
+	}
+	if( !$conf || !blessed( $conf ) || !$conf->isa( 'TTP::HTTP::Compare::Config' )){
+		msgErr( "unexpected conf: ".TTP::chompDumper( $conf ));
+		TTP::stackTrace();
+	}
+
 	my $self = $class->SUPER::new( $ep );
 	bless $self, $class;
 	msgDebug( __PACKAGE__."::new()" );

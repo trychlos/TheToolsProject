@@ -9,6 +9,7 @@
 # @(-) --maxvisited=<count>    maximum count of places to be visited, overriding configured value [${maxvisited}]
 # @(-) --[no]click             whether by click crawl mode is requested, overriding configured value [${click}]
 # @(-) --[no]link              whether by link crawl mode is requested, overriding configured value [${link}]
+# @(-) --logsdir=<dir>         logs root directory [${logsdir}]
 #
 # @(@) Note 1: This verb requires a chromedriver server running locally. It is automatically started as long as it is available.
 #
@@ -52,7 +53,8 @@ my $defaults = {
 	jsonfile => '',
 	maxvisited => TTP::HTTP::Compare::Config::DEFAULT_CRAWL_MAX_VISITED,
 	click => TTP::HTTP::Compare::Config::DEFAULT_CRAWL_BY_CLICK ? 'yes' : 'no',
-	link => TTP::HTTP::Compare::Config::DEFAULT_CRAWL_BY_LINK ? 'yes' : 'no'
+	link => TTP::HTTP::Compare::Config::DEFAULT_CRAWL_BY_LINK ? 'yes' : 'no',
+	logsdir => File::Spec->catdir( TTP::Path::logsCommands(), $ep->runner->runnableBNameShort()."-".$ep->runner()->verb())
 };
 
 my $opt_debug = false;
@@ -60,6 +62,7 @@ my $opt_jsonfile = $defaults->{jsonfile};
 my $opt_maxvisited = $defaults->{maxvisited};
 my $opt_click = TTP::HTTP::Compare::Config::DEFAULT_CRAWL_BY_CLICK;
 my $opt_link = TTP::HTTP::Compare::Config::DEFAULT_CRAWL_BY_LINK;
+my $opt_logsdir = $defaults->{logsdir};
 
 # the JSON compare configuration as a TTP::HTTP::Compare::Config object
 my $conf = undef;
@@ -138,6 +141,7 @@ sub print_results_summary {
 			$hashref->{byRole}{$role}->print_results_summary();
 		}
 	}
+	msgOut( "logs root directory: '$rundir'" );
 	msgOut( "done" );
 }
 
@@ -166,7 +170,8 @@ if( !GetOptions(
 		my ( $name, $value ) = @_;
 		$opt_link = $value;
 		$opt_link_set = true;
-	})){
+	},
+	"logsdir=s"			=> \$opt_logsdir )){
 		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
 }
@@ -184,11 +189,17 @@ msgVerbose( "got jsonfile='$opt_jsonfile'" );
 msgVerbose( "got maxvisited='$opt_maxvisited'" );
 msgVerbose( "got click=".( $opt_click ? 'true':'false' )."'" );
 msgVerbose( "got link=".( $opt_link ? 'true':'false' )."'" );
+msgVerbose( "got logsdir='$opt_logsdir'" );
+
+# if a maxvisited is provided, must be greater or equal to zero
+if( $opt_maxvisited_set ){
+	msgErr( "'--maxvisited' must be greater or equal to zero, got $opt_maxvisited" ) if $opt_maxvisited < 0;
+}
 
 # JSON configuration file is mandatory
 if( $opt_jsonfile ){
 	my $args = {};
-	$args->{max_visited} = $opt_maxvisited if $opt_maxvisited_set;
+	$args->{max_visited} = $opt_maxvisited if $opt_maxvisited_set && !TTP::errs();
 	$args->{by_click} = $opt_click if $opt_click_set;
 	$args->{by_link} = $opt_link if $opt_link_set;
 	$conf = TTP::HTTP::Compare::Config->new( $ep, $opt_jsonfile, $args );
@@ -199,14 +210,11 @@ if( $opt_jsonfile ){
 	msgErr( "'--jsonfile' is required, but is not specified" );
 }
 
-# if a maxvisited is provided, must be greater or equal to zero
-if( $opt_maxvisited_set ){
-	msgErr( "'--maxvisited' must be greater or equal to zero, got $opt_maxvisited" ) if $opt_maxvisited < 0;
+if( !TTP::errs()){
+	$rundir = File::Spec->catdir( $opt_logsdir, Time::Moment->now->strftime( '%y%m%d-%H%M%S' ));
+	make_path( $rundir );
+	msgVerbose( "rundir='$rundir'" );
 }
-
-$rundir = File::Spec->catdir( TTP::Path::logsCommands(), $ep->runner->runnableBNameShort()."-".$ep->runner()->verb(), Time::Moment->now->strftime( '%y%m%d-%H%M%S' ));
-make_path( $rundir );
-msgVerbose( "rundir='$rundir'" );
 
 if( !TTP::errs()){
 	#$driver = TTP::HTTP::Compare::WebDriver->new( $ep, $conf, $rundir );

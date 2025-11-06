@@ -29,6 +29,7 @@ use utf8;
 use warnings;
 
 use Data::Dumper;
+use Scalar::Util qw( blessed );
 
 use TTP;
 use vars::global qw( $ep );
@@ -258,6 +259,16 @@ sub logIn {
 sub new {
 	my ( $class, $ep, $conf ) = @_;
 	$class = ref( $class ) || $class;
+
+	if( !$ep || !blessed( $ep ) || !$ep->isa( 'TTP::EP' )){
+		msgErr( "unexpected ep: ".TTP::chompDumper( $ep ));
+		TTP::stackTrace();
+	}
+	if( !$conf || !blessed( $conf ) || !$conf->isa( 'TTP::HTTP::Compare::Config' )){
+		msgErr( "unexpected conf: ".TTP::chompDumper( $conf ));
+		TTP::stackTrace();
+	}
+
 	my $self = $class->SUPER::new( $ep );
 	bless $self, $class;
 	msgDebug( __PACKAGE__."::new()" );

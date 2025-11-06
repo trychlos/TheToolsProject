@@ -29,7 +29,9 @@ use utf8;
 use warnings;
 
 use Data::Dumper;
+use File::Spec;
 use Role::Tiny::With;
+use Scalar::Util qw( blessed );
 
 with 'TTP::IEnableable', 'TTP::IJSONable';
 
@@ -47,17 +49,18 @@ use constant {
 	DEFAULT_BROWSER_DRIVER_SERVER => '127.0.0.1',
 	DEFAULT_BROWSER_TIMEOUT => 5,
 	DEFAULT_BROWSER_WIDTH => 1366,
-	DEFAULT_COMPARE_IGNORE_DOM_ATTRIBUTES => [
+	DEFAULT_COMPARE_HTML_ENABLED => false,
+	DEFAULT_COMPARE_HTML_IGNORE_DOM_ATTRIBUTES => [
 		"^aria-"
 	],
-	DEFAULT_COMPARE_IGNORE_DOM_SELECTORS => [
+	DEFAULT_COMPARE_HTML_IGNORE_DOM_SELECTORS => [
 		"script",
 		"style"
 	],
-	DEFAULT_COMPARE_IGNORE_TEXT_PATTERNS => [],
-	DEFAULT_COMPARE_SCREENSHOTS_ENABLED => false,
-	DEFAULT_COMPARE_SCREENSHOTS_RMSE => 0.01,
-	DEFAULT_COMPARE_THRESHOLD_COUNT => 0,
+	DEFAULT_COMPARE_HTML_IGNORE_TEXT_PATTERNS => [],
+	DEFAULT_COMPARE_SCREENSHOT_ENABLED => false,
+	DEFAULT_COMPARE_SCREENSHOT_RMSE => 0.01,
+	DEFAULT_COMPARE_SCREENSHOT_THRESHOLD_COUNT => 10,
 	DEFAULT_CRAWL_BY_CLICK => false,
 	DEFAULT_CRAWL_BY_LINK => false,
 	DEFAULT_CRAWL_EXCLUDE_PATTERNS => [],
@@ -201,11 +204,11 @@ sub _loadConfig {
 		# the options which are overridable in verb command-line have a 'run' version
 		#
 		# check max visited count
-		my $max_visited = $args->{max_visited} || $self->crawlMaxVisited();
+		my $max_visited = $args->{max_visited} // $self->crawlMaxVisited();
 		if( $max_visited < 0 ){
 			$msgRef->( "crawl.max_visited='$max_visited' is invalid (less than zero)" );
 		} else {
-			msgVerbose( "got max_visited='$max_visited'" );
+			msgVerbose( "loadConfig() runtime max_visited='$max_visited'" );
 			$self->{_run}{max_visited} = $max_visited;
 		}
 		# whether crawl by click
@@ -355,6 +358,70 @@ sub browserWidth {
 }
 
 # ------------------------------------------------------------------------------------------------
+# Returns the whether comparison of htmls is enabled.
+# (I):
+# - none
+# (O):
+# - returns whether comparison of htmls is enabled
+
+sub compareHtmlsEnabled {
+	my ( $self ) = @_;
+
+	my $enabled = $self->var([ 'compare', 'htmls', 'enabled' ]);
+	$enabled = DEFAULT_COMPARE_HTML_ENABLED if !defined $enabled;
+
+	return $enabled;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns the configured ignored DOM attributes.
+# (I):
+# - none
+# (O):
+# - returns the configured ignored DOM attributes
+
+sub compareHtmlsIgnoreDOMAttributes {
+	my ( $self ) = @_;
+
+	my $ignored = $self->var([ 'compare', 'htmls', 'ignore', 'dom_attributes' ]);
+	$ignored = DEFAULT_COMPARE_HTML_IGNORE_DOM_ATTRIBUTES if !defined $ignored || !scalar( @{$ignored // []} );
+
+	return $ignored;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns the configured ignored DOM selectors.
+# (I):
+# - none
+# (O):
+# - returns the configured ignored DOM selectors
+
+sub compareHtmlsIgnoreDOMSelectors {
+	my ( $self ) = @_;
+
+	my $ignored = $self->var([ 'compare', 'htmls', 'ignore', 'dom_selectors' ]);
+	$ignored = DEFAULT_COMPARE_HTML_IGNORE_DOM_SELECTORS if !defined $ignored || !scalar( @{$ignored // []} );
+
+	return $ignored;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns the configured ignored text patterns.
+# (I):
+# - none
+# (O):
+# - returns the configured ignored text patterns
+
+sub compareHtmlsIgnoreTextPatterns {
+	my ( $self ) = @_;
+
+	my $ignored = $self->var([ 'compare', 'htmls', 'ignore', 'text_patterns' ]);
+	$ignored = DEFAULT_COMPARE_HTML_IGNORE_TEXT_PATTERNS if !defined $ignored || !scalar( @{$ignored // []} );
+
+	return $ignored;
+}
+
+# ------------------------------------------------------------------------------------------------
 # Returns the whether comparison of screenshots is enabled.
 # (I):
 # - none
@@ -364,8 +431,8 @@ sub browserWidth {
 sub compareScreenshotsEnabled {
 	my ( $self ) = @_;
 
-	my $enabled = $self->var([ 'compare_results', 'screenshots', 'enabled' ]);
-	$enabled = DEFAULT_COMPARE_SCREENSHOTS_ENABLED if !defined $enabled;
+	my $enabled = $self->var([ 'compare', 'screenshots', 'enabled' ]);
+	$enabled = DEFAULT_COMPARE_SCREENSHOT_ENABLED if !defined $enabled;
 
 	return $enabled;
 }
@@ -381,8 +448,8 @@ sub compareScreenshotsEnabled {
 sub compareScreenshotsRmse {
 	my ( $self ) = @_;
 
-	my $rmse = $self->var([ 'compare_results', 'screenshots', 'rmse_fail_threshold' ]);
-	$rmse = DEFAULT_COMPARE_SCREENSHOTS_RMSE if !defined $rmse;
+	my $rmse = $self->var([ 'compare', 'screenshots', 'rmse_threshold' ]);
+	$rmse = DEFAULT_COMPARE_SCREENSHOT_RMSE if !defined $rmse;
 
 	return $rmse;
 }
@@ -394,13 +461,13 @@ sub compareScreenshotsRmse {
 # (I):
 # - none
 # (O):
-# - returns accepted count of differences, defaulting to zero
+# - returns accepted count of differences, defaulting to one
 
-sub compareThresholdCount {
+sub compareScreenshotsThresholdCount {
 	my ( $self ) = @_;
 
-	my $count = $self->var([ 'compare_results', 'screenshots', 'threshold_count' ]);
-	$count = DEFAULT_COMPARE_THRESHOLD_COUNT if !defined $count;
+	my $count = $self->var([ 'compare', 'screenshots', 'threshold_count' ]);
+	$count = DEFAULT_COMPARE_SCREENSHOT_THRESHOLD_COUNT if !defined $count;
 
 	return $count;
 }
@@ -614,52 +681,48 @@ sub crawlUrlDenyPatterns {
 	return $list;
 }
 
-# ------------------------------------------------------------------------------------------------
-# Returns the configured ignored DOM attributes.
+# -------------------------------------------------------------------------------------------------
+# Returns the directory where HTMLs files must be kept
 # (I):
-# - none
+# - whether we want the dirs for 'ref' or 'new' site
 # (O):
-# - returns the configured ignored DOM attributes
+# - the subdirectory of the HTMLs files for this site
+#   this may be set empty by configuration, which means doesn't keep
 
-sub ignoreDOMAttributes {
-	my ( $self ) = @_;
+sub dirsHtmls {
+	my ( $self, $which ) = @_;
 
-	my $ignored = $self->var([ 'compare_ignore', 'dom_attributes' ]);
-	$ignored = DEFAULT_COMPARE_IGNORE_DOM_ATTRIBUTES if !defined $ignored || !scalar( @{$ignored // []} );
+	if( $which ne 'diffs' && $which ne 'ref' && $which ne 'new' ){
+		msgErr( "unexpected which='$which'" );
+		TTP::stackTrace();
+	}
 
-	return $ignored;
+	my $def = $which eq 'diffs' ? "" : File::Spec->catdir( $which, "htmls" );
+	my $subdir = $self->var([ 'dirs', $which, 'htmls' ]) // $def;
+
+	return $subdir;
 }
 
-# ------------------------------------------------------------------------------------------------
-# Returns the configured ignored DOM selectors.
+# -------------------------------------------------------------------------------------------------
+# Returns the directory where screenshots must be kept
 # (I):
-# - none
+# - whether we want the dirs for 'ref' or 'new' site
 # (O):
-# - returns the configured ignored DOM selectors
+# - the subdirectory of the screenshots for this site
+#   this may be set empty by configuration, which means doesn't keep
 
-sub ignoreDOMSelectors {
-	my ( $self ) = @_;
+sub dirsScreenshots {
+	my ( $self, $which ) = @_;
 
-	my $ignored = $self->var([ 'compare_ignore', 'dom_selectors' ]);
-	$ignored = DEFAULT_COMPARE_IGNORE_DOM_SELECTORS if !defined $ignored || !scalar( @{$ignored // []} );
+	if( $which ne 'diffs' && $which ne 'ref' && $which ne 'new' ){
+		msgErr( "unexpected which='$which'" );
+		TTP::stackTrace();
+	}
 
-	return $ignored;
-}
+	my $def = $which eq 'diffs' ? "diffs" : File::Spec->catdir( $which, "screenshots" );
+	my $subdir = $self->var([ 'dirs', $which, 'screenshots' ]) // $def;
 
-# ------------------------------------------------------------------------------------------------
-# Returns the configured ignored text patterns.
-# (I):
-# - none
-# (O):
-# - returns the configured ignored text patterns
-
-sub ignoreTextPatterns {
-	my ( $self ) = @_;
-
-	my $ignored = $self->var([ 'compare_ignore', 'text_patterns' ]);
-	$ignored = DEFAULT_COMPARE_IGNORE_TEXT_PATTERNS if !defined $ignored || !scalar( @{$ignored // []} );
-
-	return $ignored;
+	return $subdir;
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -811,6 +874,12 @@ sub new {
 	my ( $class, $ep, $path, $args ) = @_;
 	$class = ref( $class ) || $class;
 	$args //= {};
+
+	if( !$ep || !blessed( $ep ) || !$ep->isa( 'TTP::EP' )){
+		msgErr( "unexpected ep: ".TTP::chompDumper( $ep ));
+		TTP::stackTrace();
+	}
+
 	my $self = $class->SUPER::new( $ep, $args );
 	bless $self, $class;
 	msgDebug( __PACKAGE__."::new() jsonPath='$path'" );

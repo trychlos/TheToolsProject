@@ -49,9 +49,10 @@ sub same_host {
     return ( $u->scheme =~ /^https?$/ ) && ( lc( $u->host // '' ) eq lc( $host ));
 }
 
+=pod
 # -------------------------------------------------------------------------------------------------
 # (I):
-# - a state key as computed by state_get_key()
+# - a state key as computed by ->signature()
 # (O):
 # - the extracted frames signature
 
@@ -65,14 +66,15 @@ sub state_key_to_frames_sig {
 
     return $sig;
 }
+=cut
 
 # -------------------------------------------------------------------------------------------------
 # (I):
-# - a state key as computed by state_get_key()
+# - a state key as computed by ->signature()
 # (O):
 # - the path extracted from the embedded top url
 
-sub state_key_to_path {
+sub page_signature_to_path {
     my ( $state ) = @_;
     TTP::stackTrace() if !$state;
 

@@ -32,6 +32,7 @@ use Data::Dumper;
 use File::Path qw( make_path );
 use File::Spec;
 use List::Util qw( any );
+use Scalar::Util qw( blessed );
 use Test::More;
 use URI;
 
@@ -115,8 +116,13 @@ sub _do_crawl {
 	# - docKey
 	# - kind
 	# - onclick
-	# we add here
-	# - key: the place identifier which will be recorded in 'seen' places
+
+	# if already seen, go next
+	my $key = $queue_item->signature();
+	if( $self->{_result}{seen}{$key} ){
+		msgVerbose( "already seen: '$key'" );
+		return;
+	}
 
 	# what sort of loop item do we have ?
 	my $from = $queue_item->from();
@@ -135,9 +141,6 @@ sub _do_crawl {
 	( $captureRef, $captureNew, $path, $reason ) = @{ $self->_do_crawl_by_link( $queue_item ) } if $from eq 'link';
 
 	if( $captureRef && $captureNew && $path ){
-	
-		# record this click in the clicked chain
-		$self->clicked_push( $queue_item );
 
 		# check that status is OK and same for the two sites
 		my $status_ref = $captureRef->status();
@@ -153,12 +156,12 @@ sub _do_crawl {
 		}
 
 		# write HTML and screenshots if that must be handled
-		# to be done before the comparison to re-use the screenshots if possible
-		$captureRef->writeHtml({ dir => $self->{_roledir}, item => $queue_item });
-		$captureRef->writeScreenshot({ dir => $self->{_roledir}, item => $queue_item });
+		# to be done before the comparison in order to re-use the screenshots if possible
+		$captureRef->writeHtml( $queue_item, { dir => $self->{_roledir}});
+		$captureRef->writeScreenshot( $queue_item, { dir => $self->{_roledir}});
 
-		$captureNew->writeHtml({ dir => $self->{_roledir}, item => $queue_item });
-		$captureNew->writeScreenshot({ dir => $self->{_roledir}, item => $queue_item });
+		$captureNew->writeHtml( $queue_item, { dir => $self->{_roledir}});
+		$captureNew->writeScreenshot( $queue_item, { dir => $self->{_roledir}});
 
 		# compare the two captures
 		# saving the screenshots if a difference is detected
@@ -167,22 +170,17 @@ sub _do_crawl {
 
 		# collect links from ref and queue them
 		# clickables which would be found in new but would be absent from ref are ignored (as new features)
-		$self->_enqueue_clickables( $captureRef ) if $self->conf()->runCrawlByClick();
+		$self->_enqueue_clickables( $captureRef, $queue_item ) if $self->conf()->runCrawlByClick();
 
 		# collect links from ref and enqueue them
 		# links which would be found in new but would be absent from ref are ignored (as new features)
-		$self->_enqueue_links( $captureRef ) if $self->conf()->runCrawlByLink();
+		$self->_enqueue_links( $captureRef, $queue_item ) if $self->conf()->runCrawlByLink();
 
 	} elsif( !defined( $captureRef ) && !defined( $captureNew ) && !defined( $path )){
 		msgVerbose( "do_crawl() all values are undef, just skip" );
 		if( $reason ){
-			# do not count already seen places among visited
-			if( $reason eq "seen" ){
-				$self->{_result}{count}{visited} -= 1;
-			} else {
-				$self->{_result}{cancelled}{$reason} //= [];
-				push( @{$self->{_result}{cancelled}{$reason}}, $queue_item );
-			}
+			$self->{_result}{cancelled}{$reason} //= [];
+			push( @{$self->{_result}{cancelled}{$reason}}, $queue_item );
 		} else {
 			# a reason is mandatory, so this is unexpected
 			msgWarn( "do_crawl() reason is not defined, this is NOT expected" );
@@ -221,26 +219,13 @@ sub _do_crawl_by_click {
 		return [ undef, undef, undef, "no xpath" ];
 	}
 
-	# if already seen, go next
-	my $key = $queue_item->key();
-	if( $self->{_result}{seen}{$key} ){
-		msgVerbose( "already seen: '$key'" );
-		return [ undef, undef, undef, "seen" ];
-	}
-
+	my $key = $queue_item->signature();
 	msgVerbose( "do_crawl_by_click() role='".$self->name()."' key='$key'" );
 	$queue_item->dump();
 
 	my $path = undef;
 	my $captureRef = undef;
 	my $captureNew = undef;
-	my $reason = undef;
-
-	# at least make sure we are at the right top path
-	if( !$self->_restore_path( $queue_item )){
-		msgWarn( "unable to restore the origin '$origin' path" );
-		return [ undef, undef, undef, "restore_path" ];
-	}
 
 	# and try to restore the origin clicks chain if we do not have the same frames
 	if( $self->_restore_chain( $queue_item )){
@@ -258,7 +243,7 @@ sub _do_crawl_by_click {
 	# manage counters
 	$self->{_result}{count}{clicks} += 1;
 
-	return [ $captureRef, $captureNew, $path, $reason ];
+	return [ $captureRef, $captureNew, $path, undef ];
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -272,41 +257,28 @@ sub _do_crawl_by_click {
 sub _do_crawl_by_link {
     my ( $self, $queue_item ) = @_;
 
-	my $path = $queue_item->path();
-	my $captureRef = undef;
-	my $captureNew = undef;
-	my $reason = undef;
-
 	# do we have a path to navigate to ?
+	my $path = $queue_item->path();
 	if( !$path ){
 		msgErr( "do_crawl() link queued item without path" );
 		return [ undef, undef, undef, "no path" ];
 	}
 
-	# if already seen, go next
-	my $key = $queue_item->key();
-	if( $self->{_result}{seen}{$key} ){
-		msgVerbose( "already seen: '$key'" );
-		return [ undef, undef, undef, "seen" ];
-	}
-
 	# navigate and capture
+	my $key = $queue_item->signature();
 	msgVerbose( "do_crawl_by_link() role='".$self->name()."' key='$key'" );
 	$queue_item->dump();
 
-	$captureRef = $self->{_browsers}{ref}->navigate_and_capture( $path );
-	$captureNew = $self->{_browsers}{new}->navigate_and_capture( $path );
+	my $captureRef = $self->{_browsers}{ref}->navigate_and_capture( $path );
+	my $captureNew = $self->{_browsers}{new}->navigate_and_capture( $path );
 
-	# make sure we have a valid dest as initial routes do not have origin
-	my $state = $self->{_browsers}{ref}->state_get_key();
-	$queue_item->dest( $state );
-
-	# record the reached page signature to be used as a preamble to clicked chain restoration
-	$self->{_result}{pagessig}{$state} = $queue_item if !$self->{_result}{pagessig}{$state};
+	# make sure we have a valid dest as initial routes (which are always by 'link' per definition) do not have origin
+	my $page_signature = $self->{_browsers}{ref}->signature();
+	$queue_item->dest( $page_signature );
 
 	$self->{_result}{count}{links} += 1;
 
-	return [ $captureRef, $captureNew, $path, $reason ];
+	return [ $captureRef, $captureNew, $path, undef ];
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -314,12 +286,13 @@ sub _do_crawl_by_link {
 # After a by-scan-id test, prefer by-xpath
 # (I):
 # - the current capture from reference site as a TTP::HTTP::Compare::Capture object
+# - the current queue item
 
 sub _enqueue_clickables {
-    my ( $self, $capture ) = @_;
+    my ( $self, $capture, $queue_item ) = @_;
 
-	my $state = $capture->browser()->state_get_key();
-	msgVerbose( "enqueue_clickables() got state='$state'" );
+	my $page_signature = $capture->browser()->signature();
+	msgVerbose( "enqueue_clickables() got page_signature='$page_signature'" );
 	my $targets = $capture->browser()->clickable_discover_targets_xpath();
 	#print STDERR "targets: ".Dumper( $targets );
 	my $count = 0;
@@ -327,9 +300,10 @@ sub _enqueue_clickables {
 		# each it from clickable_discover_targets_xpath() is a hash { href, text, frameSrc, xpath, docKey, kind, onclick }
 		if( !$self->_match_auto_referenced( $a->{href} ) && !$self->_match_excluded_pattern( $a->{xpath} )){
 			$count += 1;
-			$a->{origin} = $state;
+			$a->{origin} = $page_signature;
 			$a->{from} = 'click';
-			$a->{chain} = $self->clicked_copy();
+			$a->{chain} = $queue_item->chain_plus();
+			#print STDERR "a ".Dumper( $a->{chain} );
 			push( @{$self->{_queue}}, TTP::HTTP::Compare::QueueItem->new( $self->ep(), $self->conf(), $a ));
 		}
     }
@@ -341,9 +315,10 @@ sub _enqueue_clickables {
 # Each link enqueing operation increments the current depth recursion level
 # (I):
 # - the current capture from reference site as a TTP::HTTP::Compare::Capture object
+# - the current queue item
 
 sub _enqueue_links {
-    my ( $self, $capture ) = @_;
+    my ( $self, $capture, $queue_item ) = @_;
 
 	# collect links from the capture
 	my $links = $capture->extract_links();
@@ -371,7 +346,7 @@ sub _enqueue_links {
 	}
 
 	# queue next layer
-	my $state = $capture->browser()->state_get_key();
+	my $page_signature = $capture->browser()->signature();
 	if( scalar( @next_paths )){
 		$self->{_result}{count}{depth} += 1;
 		foreach my $p ( @next_paths ){
@@ -379,7 +354,7 @@ sub _enqueue_links {
 				TTP::HTTP::Compare::QueueItem->new(
 					$self->ep(),
 					$self->conf(),
-					{ path => $p, depth => $self->{_result}{count}{depth}, from => 'link', origin => $state }
+					{ path => $p, depth => $self->{_result}{count}{depth}, from => 'link', origin => $page_signature, chain => $queue_item->chain_plus() }
 			));
 			msgVerbose( "enqueuing '$p'" );
 		}
@@ -402,7 +377,7 @@ sub _hash {
 # (I):
 # - nothing
 # (O):
-# - the configured routes
+# - the configured routes, always at least a '/' one
 
 sub _initial_routes {
 	my ( $self ) = @_;
@@ -500,7 +475,7 @@ sub _record_result {
 	$data->{compare} = $args->{compare} if defined $args->{compare};
 
 	# record all results in a single array
-	my $key = $queue_item->key();
+	my $key = $queue_item->signature();
 	$self->{_result}{seen}{$key} = $data;
 
 	# have an array per reference status
@@ -515,6 +490,7 @@ sub _record_result {
 # -------------------------------------------------------------------------------------------------
 # To be sure the shifted queue item is applyable, try to restore the origin clicks chain.
 # The site is expected to already have been navigated to so do not look at the path but only consider frames
+# We loop into the chain until getting the same page signature than the origin one.
 # (I):
 # - the current queue item
 # (O):
@@ -525,70 +501,57 @@ sub _restore_chain {
 	msgVerbose( "restore_chain()" );
 
 	# make sure we have the same origin frames signature
-	my $current_sig = undef;
-	my $origin_state = $queue_item->origin() || $queue_item->dest();
-	my $origin_sig = TTP::HTTP::Compare::Utils::state_key_to_frames_sig( $origin_state );
+	my $origin_signature = $queue_item->origin() || $queue_item->dest();
+	my $current_signature = $self->{_browsers}{ref}->signature();
 
-	# apply items from pre-recorded pages signature hash if possible
-	my $current_state = $self->{_browsers}{ref}->state_get_key();
-	if( $current_state ne $origin_state ){
-		if( $self->{_result}{pagessig}{$origin_state} ){
-			my $qi = $self->{_result}{pagessig}{$origin_state};
-			if( $qi->isLink()){
-				$self->{_browsers}{ref}->navigate( $qi->path());
-				$self->{_browsers}{new}->navigate( $qi->path());
+	# reapply each and every queued item from the saved chain
+	if( $current_signature ne $origin_signature ){
+		foreach my $qi ( @{ $queue_item->chain() }){
+			# navigate by link
+			my $current_path = TTP::HTTP::Compare::Utils::page_signature_to_path( $current_signature );
+			my $origin_path = TTP::HTTP::Compare::Utils::page_signature_to_path( $queue_item->origin() || $queue_item->dest());
+			if( $qi->isLink() || $current_path ne $origin_path ){
+				#$self->_restore_path( $qi, { force => true, signature => $current_signature });
+				$self->{_browsers}{ref}->navigate( $origin_path );
+				$self->{_browsers}{new}->navigate( $origin_path );
+			# navigate by click
 			} elsif( $qi->isClick()){
-				$self->{_browsers}{ref}->click_by_xpath( $qi->xpath());
-				$self->{_browsers}{new}->click_by_xpath( $qi->xpath());
-			} else {
-				msgWarn( "unexpected from='".$qi->from()."'" );
-			}
-			$self->{_browsers}{ref}->wait_for_page_ready();
-			$self->{_browsers}{new}->wait_for_page_ready();
-		} else {
-			msgVerbose( "origin_state='$origin_state' is not pre-recorded" );
-		}
-	}
-
-	# reapply each and every click from the saved chain
-	foreach my $click ( @{ $queue_item->chain() }){
-		$current_state = $self->{_browsers}{ref}->state_get_key();
-		$current_sig = TTP::HTTP::Compare::Utils::state_key_to_frames_sig( $current_state );
-
-		if( $current_sig ne $origin_sig ){
-			if( $click->isLink()){
-				$self->_restore_path( $click, { force => true });
-
-			} elsif( $click->isClick()){
-				if( !$self->{_browsers}{ref}->click_and_wait( $click->xpath() )){
-					msgVerbose( "restore_chain() unable to click on ref for '".$click->xpath()."'" );
+				if( !$self->{_browsers}{ref}->click_by_xpath( $qi->xpath() )){
+					msgVerbose( "restore_chain() unable to click on ref for '".$qi->xpath()."'" );
 					return false;
 				}
-				my $match_new = $self->{_browsers}{new}->clickable_find_equivalent_xpath( $click );
+				my $match_new = $self->{_browsers}{new}->clickable_find_equivalent_xpath( $qi );
 				if( !$match_new ){
-					msgVerbose( "restore_chain() unable to find a new equivalent for '".$click->xpath()."'" );
+					msgVerbose( "restore_chain() unable to find a new equivalent for '".$qi->xpath()."'" );
 					return false;
 				}
 				if( !$self->{_browsers}{new}->click_by_xpath( $match_new )){
 					msgVerbose( "restore_chain() unable to click on new for '$match_new'" );
 					return false;
 				}
-
 			} else {
-				msgWarn( "unexpected from='".$click->from()."'" );
+				msgWarn( "unexpected from='".$qi->from()."'" );
 			}
-		} else {
-			msgVerbose( "restore_chain() origin='$origin_sig' current='^$current_sig': fine" );
-			last;
+			# prepare the post-navigation label
+			my $label = sprintf( "restored_%06d", $qi->visited());
+			# take a screenshot post-navigate
+			my $cap = $self->{_browsers}{ref}->wait_and_capture();
+			$cap->writeScreenshot( $queue_item, { dir => $self->{_roledir}, suffix => $label });
+			# and same on new site
+			$cap = $self->{_browsers}{new}->wait_and_capture();
+			$cap->writeScreenshot( $queue_item, { dir => $self->{_roledir}, suffix => $label });
+			# check the new signature
+			$current_signature = $self->{_browsers}{ref}->signature();
+			last if $current_signature eq $origin_signature;
 		}
 	}
 
 	# check the result
-	$current_state = $self->{_browsers}{ref}->state_get_key();
-	$current_sig = TTP::HTTP::Compare::Utils::state_key_to_frames_sig( $current_state );
-	if( $current_sig ne $origin_sig ){
-		msgVerbose( "restore_chain() unsuccessful (got signature='$current_sig')" );
+	if( $current_signature ne $origin_signature ){
+		msgVerbose( "restore_chain() unsuccessful (got signature='$current_signature')" );
 		return false;
+	} else {
+		msgVerbose( "restore_chain() origin='$origin_signature' current='$current_signature': fine" );
 	}
 
 	return $self->{_browsers}{ref}->click_by_xpath( $queue_item->xpath());
@@ -601,6 +564,7 @@ sub _restore_chain {
 # - the current queue item
 # - an optional options hash with following keys:
 #   > force: whether we force the nvagation, defaulting to false
+#   > signature: the current page signature, defaulting to none
 # (O):
 # - whether we have successively restored the origin path
 
@@ -612,25 +576,21 @@ sub _restore_path {
 	$force = $args->{force} if defined $args->{force};
 
 	# make sure we have the origin top path
-	my $current_state = $self->{_browsers}{ref}->state_get_key();
-	my $current_p = TTP::HTTP::Compare::Utils::state_key_to_path( $current_state );
-	my $origin_p = TTP::HTTP::Compare::Utils::state_key_to_path( $queue_item->origin() || $queue_item->dest());
+	my $current_signature = $args->{signature} // $self->{_browsers}{ref}->signature();
+	my $current_p = TTP::HTTP::Compare::Utils::page_signature_to_path( $current_signature );
+	my $origin_p = TTP::HTTP::Compare::Utils::page_signature_to_path( $queue_item->origin() || $queue_item->dest());
 
 	if( $force || $current_p ne $origin_p ){
 		msgVerbose( "restore_path() ref path has changed to '$current_p' (or force=$force), try to re-navigate to '$origin_p'" );
-		my $label = "navigated";
-
-		# take a screenshot post-navigate
-		my $cap = $self->{_browsers}{ref}->navigate_and_capture( $origin_p );
-		$cap->writeScreenshot({ dir => $self->{_roledir}, item => $queue_item, add => $label });
-
-		# and same on new site
-		$cap = $self->{_browsers}{new}->navigate_and_capture( $origin_p );
-		$cap->writeScreenshot({ dir => $self->{_roledir}, item => $queue_item, add => $label });
-
-		# and check that the navigation was successful
-		$current_state = $self->{_browsers}{ref}->state_get_key();
-		$current_p = TTP::HTTP::Compare::Utils::state_key_to_path( $current_state );
+		# navigate on ref
+		$self->{_browsers}{ref}->navigate( $origin_p );
+		$self->{_browsers}{ref}->wait_for_page_ready();
+		# navigate on new
+		$self->{_browsers}{new}->navigate( $origin_p );
+		$self->{_browsers}{new}->wait_for_page_ready();
+		# check the navigation result
+		$current_signature = $self->{_browsers}{ref}->signature();
+		$current_p = TTP::HTTP::Compare::Utils::page_signature_to_path( $current_signature );
 		if( $current_p ne $origin_p ){
 			msgVerbose( "restore_path() unsuccessful (got path='$current_p')" );
 			return false;
@@ -708,41 +668,6 @@ sub _wants_login {
 ### Public methods
 
 # -------------------------------------------------------------------------------------------------
-# Copy the current clicked chain to the item to be queued
-# (O):
-# - a deep copy of the current clicked chain
-
-sub clicked_copy {
-    my ( $self ) = @_;
-
-	my @chain = @{ $self->{_result}{clicked} };
-	
-	return \@chain;
-}
-
-# -------------------------------------------------------------------------------------------------
-# Push a new queue item in the clicked chain.
-# NB: we actually push a new QueueItem, built from the provided QueueItem without its own chain
-#  (as our restore chain is not recursive)
-# (I):
-# - the just used queue item
-
-sub clicked_push {
-    my ( $self, $queue_item ) = @_;
-
-	push( @{$self->{_result}{clicked}}, $queue_item->dup_wo_chain());
-}
-
-# -------------------------------------------------------------------------------------------------
-# Reset the clicked chain when we navigate to a new url
-
-sub clicked_reset {
-    my ( $self ) = @_;
-
-	$self->{_result}{clicked} = [];
-}
-
-# -------------------------------------------------------------------------------------------------
 # (I):
 # - nothing
 # (O):
@@ -777,8 +702,7 @@ sub doCompare {
 	$self->{_result}{count}{clicks} = 0;	# the count of tried crawl by clicks
 	$self->{_result}{count}{links} = 0;		# the count of tried crawl by links
 	#
-	$self->{_result}{seen} = {};		    # the result of each and every seen place
-	$self->{_result}{pagessig} = {};	    # page sig -> clicked chain
+	$self->{_result}{seen} = {};		    # the result of each and every seen place a hash of queue_items signature -> result
 	$self->{_result}{status} = {};			# results per http status
 	$self->{_result}{errors} = [];			# list of full results which have at least an error
 	$self->{_result}{cancelled} = {};		# list of cancelled queue items
@@ -816,10 +740,10 @@ sub doCompare {
 		}
 	}
 
-	# continue if we are logged-in on each site (or not logged-in at all)
+	# continue if we are logged-in on each site (or login is not required)
 	if( !TTP::errs()){
 		# make sure the role has its output dirs
-		# diffs, htmls and screenshots dirs are of the form 'which=ref|new/html' (resp. which=ref|new/screenshot)
+		# diffs, htmls and screenshots dirs are configured and of the form 'which=ref|new/diffs|html|screenshots'
 		make_path( $self->resultsDir());
 
 		# initialize the queue with the configured routes (making sure we have absolute paths)
@@ -936,11 +860,6 @@ sub print_results_summary {
 			msgOut( "    [".join( ", ", sort { $a <=> $b } @c )."]");
 		}
 	}
-	# as an indication, dump the recorded pages signature
-	msgOut( "  - recorded pages signatures:" );
-	foreach my $sig ( sort keys %{ $self->{_result}{pagessig} } ){
-		msgOut( "    $sig: ".$self->{_result}{pagessig}{$sig}->dump());
-	}
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -969,6 +888,16 @@ sub resultsDir {
 sub new {
 	my ( $class, $ep, $role, $conf ) = @_;
 	$class = ref( $class ) || $class;
+
+	if( !$ep || !blessed( $ep ) || !$ep->isa( 'TTP::EP' )){
+		msgErr( "unexpected ep: ".TTP::chompDumper( $ep ));
+		TTP::stackTrace();
+	}
+	if( !$conf || !blessed( $conf ) || !$conf->isa( 'TTP::HTTP::Compare::Config' )){
+		msgErr( "unexpected conf: ".TTP::chompDumper( $conf ));
+		TTP::stackTrace();
+	}
+
 	my $self = $class->SUPER::new( $ep );
 	bless $self, $class;
 	msgDebug( __PACKAGE__."::new() role='$role'" );

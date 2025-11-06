@@ -29,12 +29,13 @@ use utf8;
 use warnings;
 
 use Data::Dumper;
-use File::Copy qw( move );
+use File::Copy qw( copy move );
 use File::Path qw( make_path );
 use File::Spec;
 use File::Temp;
 use Image::Compare;
 use Mojo::DOM;
+use Scalar::Util qw( blessed );
 use Test::More;
 use URI;
 
@@ -55,28 +56,38 @@ my $Const = {
 
 # -------------------------------------------------------------------------------------------------
 # (I):
+# - whether we work for 'ref' or 'new' site
 # - the current queue item
+# - the desired extension
+# - an arguments hash with following keys:
+#   > counter: a counter, defaulting to the queue_item->visited() one
+#   > suffix: a suffix to be added, defaulting to ''
 # (O):
-# - returns the basename to be considered when writing a file
-#   the final basename is built like '000006_new__fo_if_0#content-frame#_bo_fo#_bo_person_home_if_1#details-frame##_if_2#ifDbox##___html[1]_body[1]_div[1]_div[1]_div[1]_div[1]_div[1]_ul[1]_li[2]_a[1].png'
-#                                     counter|which|path|                    state_key                                         | xpath
-#   counter and which are added by the caller
-#   we provide here the 'path|state_key|xpath' part
+# - returns the filename
 
-sub _bname {
-	my ( $self, $queue_item ) = @_;
+sub _fname {
+	my ( $self, $which, $queue_item, $extension, $args ) = @_;
+	$args //= {};
 
+	# 1. a counter
+	my $counter = $args->{counter} // $queue_item->visited() // 0;
+	# 2. the which part, as-is
+	# 3. a path part
 	my $path = $self->browser()->current_path();
-	my $state = $self->browser()->state_get_key();
-	# remove the topHref part
-	my @w = split( /\|/, $state );
-	shift( @w );
+	# 4. the page signature without the URL
+	my $signature = $self->browser()->signature();
+	my @w = split( /\|/, $signature );
+	shift( @w );	# remove the topHref part
+	# 5. the current xpath
 	my $xpath = $queue_item->isClick() ? $queue_item->xpath() : '';
+	# maybe a suffix
+	my $suffix = $args->{suffix} || '';
+	$suffix = "_$suffix" if $suffix;
+	# last build the filename
+	my $fname = sprintf( "%06d_%s_%s%s.html", $counter, $which, join( "|", $path, @w, $xpath ), $suffix );
+	$fname =~ s![/\.\|:]!_!g;
 
-	my $bname = join( "|", $path, @w, $xpath );
-	$bname =~ s![/\.\|:]!_!g;
-
-	return $bname;
+	return $fname;
 }
 
 =pod
@@ -275,6 +286,52 @@ sub _temp_screenshot {
 	return [ $fname, $tmp ];
 }
 
+# -------------------------------------------------------------------------------------------------
+# Copy the different screenshots to the 'diff' dir
+# This is a copy because:
+# - we want keep original screenshots in their respective directories
+# - eventual temmp files will be deleted later
+# (I):
+# - the ref screenshot
+# - the new screenshot
+# - an optional options hash with following keys:
+#   > dir: the root output directory for the role, defaulting to standard temp dir
+#   > item: the current queue item
+
+sub _write_diffs {
+    my ( $self, $ref, $new, $args ) = @_;
+	$args //= {};
+
+	my $subdirs = $self->browser()->conf()->dirsScreenshots( 'diffs' );
+	if( $subdirs ){
+		my @dirs = File::Spec->splitdir( $subdirs );
+		my $fdir = File::Spec->catdir( $args->{dir} || File::Temp->tempdir(), @dirs );
+		make_path( $fdir );
+		$self->_write_diffs_which( $ref, $fdir, $args->{item}, 'ref' );
+		$self->_write_diffs_which( $new, $fdir, $args->{item}, 'new' );
+	}
+}
+
+# -------------------------------------------------------------------------------------------------
+# Copy the provided file to the specified directory
+# (I):
+# - the filename to be copied
+# - the output (existing) directory
+# - the current queue item
+# - whether we work for 'ref' or 'new' site
+
+sub _write_diffs_which {
+    my ( $self, $fref, $dir, $queue_item, $which ) = @_;
+
+	my $fname = File::Spec->catfile( $dir, $self->_fname( $which, $queue_item, '.png' ));
+	if( $fref eq $fname ){
+		msgWarn( "cannot save '$fref' to same '$fname': you should review 'dirs.diffs' configuration" );
+	} else {
+		msgVerbose( "write_diffs() saving '$fref' to '$fname'" );
+		copy( $fref, $fname );
+	}
+}
+
 ### Public methods
 
 # -------------------------------------------------------------------------------------------------
@@ -310,9 +367,7 @@ sub content_type {
 # - the capture from the new site (self being the reference one)
 # - an optional options hash with following keys:
 #   > dir: the root output directory for the role, defaulting to standard temp dir
-#   > counter: a counter
 #   > item: the current queue item
-#   > add: a suffix to be added, defaulting to ''
 # (O):
 # - the result as a ref to an array of error messages
 
@@ -327,12 +382,16 @@ sub compare {
 	my $role = $self->browser()->role()->name();
 	my @errs = ();
 
-	# must have same content-type
-	is( lc( $self->content_type() // ''), lc( $other->content_type() // ''), "[$role ($path)] got same content-type (".lc( $self->content_type() // '').")" )
-		|| push( @errs, "content-type" );
-	# must have same DOM hash
-	is( $self->dom_hash(), $other->dom_hash(), "[$role ($path)] sanitized DOM hashes matches (".$self->dom_hash().")" )
-		|| push( @errs, "DOM hash" );
+	# compare rendered HTMLs if configured
+	if( $self->browser()->conf()->compareHtmlsEnabled()){
+		# must have same content-type
+		is( lc( $self->content_type() // ''), lc( $other->content_type() // ''), "[$role ($path)] got same content-type (".lc( $self->content_type() // '').")" )
+			|| push( @errs, "content-type" );
+		# must have same DOM hash
+		is( $self->dom_hash(), $other->dom_hash(), "[$role ($path)] sanitized DOM hashes matches (".$self->dom_hash().")" )
+			|| push( @errs, "DOM hash" );
+	}
+
 	# must not have any alert from reference site
 	ok( !scalar( @{ $self->alerts() }), "[$role ($path)] no alert from ref site" )
 		|| push( @errs, "ref alerts: ".join( ' | ', @{ $self->alerts() }));
@@ -372,47 +431,31 @@ sub compare {
 		$cmp->set_image1( img => $dumpref, type => 'png' );
 		$cmp->set_image2( img => $dumpnew, type => 'png' );
 		my $threshold = $self->browser()->conf()->compareScreenshotsRmse() * 441.67;
-		my $maxcount = $self->browser()->conf()->compareThresholdCount();
+		my $maxcount = $self->browser()->conf()->compareScreenshotsThresholdCount();
 
 		# try some methods
-		# threshold seems to be a bit too exact - even 5% detect non-visible differences
-		#$cmp->set_method( method => &Image::Compare::THRESHOLD, args => $threshold );
-		#my $res = $cmp->compare();
-		#print STDERR "threshold: ".Dumper( $res );
-		#ok( $res, "[$role ($path)] screenshots threshold comparison is OK" )
-		#	|| push( @errs, "screenshot_threshold" );
+		# threshold seems to be a bit too exact - even 5% reports non-visible differences
+		# avg_threshold is a boolean - useless here
 
+		# counting the differences seems usable:
+		# non visible differences may count until 75 or less
+		# one line diff counts for more than 10000
 		$cmp->set_method( method => &Image::Compare::THRESHOLD_COUNT, args => $threshold );
 		my $res = $cmp->compare();
 		#print STDERR "threshold_count: ".Dumper( $res );
-		ok( $res <= $maxcount, "[$role ($path)] screenshots threshold_count '$res <= $maxcount' is OK" )
-			|| push( @errs, "screenshot_threshold_count" );
-
-		# avg_threshold is a boolean - useless here
-		#$cmp->set_method( method => &Image::Compare::AVG_THRESHOLD, args => { type  => &Image::Compare::AVG_THRESHOLD::MEAN, value => 35 });
-		#$res = $cmp->compare();
-		#print STDERR "avg_threshold: ".Dumper( $res );
-		#ok( $res, "[$role ($path)] screenshots avg_threshold comparison is OK" )
-		#	|| push( @errs, "screenshot_avg_threshold" );
-
-		# if we detect a difference, and have a 'diff' directory, then keep the screenshots
-		if( !$res && $args->{diff} ){
-			#my $fref = File::Spec->catfile( $args->{diff}, sprintf( "%06d_ref_%s.png", $args->{counter}, $self->_bname( $args->{item} )));
-			#move( $tmpref, $fref );
-			#my $fnew = File::Spec->catfile( $args->{diff}, sprintf( "%06d_new_%s.png", $args->{counter}, $self->_bname( $args->{item} )));
-			#move( $tmpnew, $fnew );
-			#msgVerbose( "keeping diff screenshots in '$fref' and '$fnew'" );
+		if( !ok( $res <= $maxcount, "[$role ($path)] screenshots threshold_count '$res <= $maxcount' is OK" )){
+			push( @errs, "screenshot_threshold_count" );
+			$self->_write_diffs( $dumpref, $dumpnew, $args );
+		}	
 
 		# unlink temporary files
-		} else {
-			if( $isreftmp ){
-				unlink( $dumpref );
-				msgVerbose( "unlinking '$dumpref'" );
-			}
-			if( $isnewtmp ){
-				unlink( $dumpnew );
-				msgVerbose( "unlinking '$dumpnew'" );
-			}
+		if( $isreftmp ){
+			unlink( $dumpref );
+			msgVerbose( "unlinking '$dumpref'" );
+		}
+		if( $isnewtmp ){
+			unlink( $dumpnew );
+			msgVerbose( "unlinking '$dumpnew'" );
 		}
 	}
 
@@ -488,26 +531,28 @@ sub html {
 
 # -------------------------------------------------------------------------------------------------
 # Write the HTML file
-# (I):
+# (I)
+# - the current queue item
 # - an arguments hash with following keys:
 #   > dir: the root output directory for the role, defaulting to standard temp dir
 #   > counter: a counter, defaulting to the queue_item->visited() one
-#   > item: the current queue item
-#   > add: a suffix to be added, defaulting to ''
+#   > suffix: a suffix to be added, defaulting to ''
 
 sub writeHtml {
-    my ( $self, $args ) = @_;
+    my ( $self, $queue_item, $args ) = @_;
+
+	if( !$queue_item || !blessed( $queue_item ) || !$queue_item->isa( 'TTP::HTTP::Compare::QueueItem' )){
+		msgErr( "unexpected queue item: ".TTP::chompDumper( $queue_item ));
+		TTP::stackTrace();
+	}
 
 	my $which = $self->browser()->which();
-	my $subdirs = $self->browser()->conf()->var([ 'dirs', $which, 'htmls' ]) // "$which/htmls";
+	my $subdirs = $self->browser()->conf()->dirsHtmls( $which );
 	if( $subdirs ){
 		my @dirs = File::Spec->splitdir( $subdirs );
 		my $fdir = File::Spec->catdir( $args->{dir} || File::Temp->tempdir(), @dirs );
 		make_path( $fdir );
-		my $suffix = $args->{add} || '';
-		$suffix = "_$suffix" if $suffix;
-		my $counter = $args->{counter} // $args->{item}->visited() // 0;
-		my $fname = File::Spec->catfile( $fdir, sprintf( "%06d_%s_%s%s.html", $counter, $which, $self->_bname( $args->{item} ), $suffix ));
+		my $fname = File::Spec->catfile( $fdir, $self->_fname( $which, $queue_item, '.html', $args ));
 		msgVerbose( "dumping '$which' HTML to $fname" );
 		open my $fh, '>:utf8', $fname or die "open $fname: $!";
 		print {$fh} $self->{_hash}{html};
@@ -521,14 +566,19 @@ sub writeHtml {
 # -------------------------------------------------------------------------------------------------
 # Write the page screenshot
 # (I):
+# - the current queue item
 # - an arguments hash with following keys:
 #   > dir: the root output directory for the role, defaulting to standard temp dir
 #   > counter: a counter
-#   > item: the current queue item
-#   > add: a suffix to be added, defaulting to ''
+#   > suffix: a suffix to be added, defaulting to ''
 
 sub writeScreenshot {
-    my ( $self, $args ) = @_;
+    my ( $self, $queue_item, $args ) = @_;
+
+	if( !$queue_item || !blessed( $queue_item ) || !$queue_item->isa( 'TTP::HTTP::Compare::QueueItem' )){
+		msgErr( "unexpected queue item: ".TTP::chompDumper( $queue_item ));
+		TTP::stackTrace();
+	}
 
 	my $which = $self->browser()->which();
 	my $subdirs = $self->browser()->conf()->var([ 'dirs', $which, 'screenshots' ]) // "$which/screenshots";
@@ -536,10 +586,7 @@ sub writeScreenshot {
 		my @dirs = File::Spec->splitdir( $subdirs );
 		my $fdir = File::Spec->catdir( $args->{dir} || File::Temp->tempdir(), @dirs );
 		make_path( $fdir );
-		my $suffix = $args->{add} || '';
-		$suffix = "_$suffix" if $suffix;
-		my $counter = $args->{counter} // $args->{item}->visited() // 0;
-		my $fname = File::Spec->catfile( $fdir, sprintf( "%06d_%s_%s%s.png", $counter, $which, $self->_bname( $args->{item} ), $suffix ));
+		my $fname = File::Spec->catfile( $fdir, $self->_fname( $which, $queue_item, '.png', $args ));
 		msgVerbose( "writing '$which' page screenshot to $fname" );
 		my $png = $self->browser()->screenshot();
 		open my $fh, '>:raw', $fname or die "open $fname: $!";
@@ -573,6 +620,20 @@ sub writeScreenshot {
 sub new {
 	my ( $class, $ep, $browser, $hash ) = @_;
 	$class = ref( $class ) || $class;
+
+	if( !$ep || !blessed( $ep ) || !$ep->isa( 'TTP::EP' )){
+		msgErr( "unexpected ep: ".TTP::chompDumper( $ep ));
+		TTP::stackTrace();
+	}
+	if( !$browser || !blessed( $browser ) || !$browser->isa( 'TTP::HTTP::Compare::Browser' )){
+		msgErr( "unexpected browser: ".TTP::chompDumper( $browser ));
+		TTP::stackTrace();
+	}
+	if( !$hash || ref( $hash ) ne 'HASH' ){
+		msgErr( "unexpected hash: ".TTP::chompDumper( $hash ));
+		TTP::stackTrace();
+	}
+
 	my $self = $class->SUPER::new( $ep );
 	bless $self, $class;
 	msgDebug( __PACKAGE__."::new()" );
