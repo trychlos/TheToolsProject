@@ -639,7 +639,7 @@ sub clickable_discover_targets_xpath {
     my ( $self ) = @_;
 
     my $js = q{
-      return (function(){
+      return (function( finders ){
         /* ---------- helpers ---------- */
 
         function sameOriginFrameDocs(rootDoc){
@@ -744,7 +744,7 @@ sub clickable_discover_targets_xpath {
 
           // Build a unique set of candidates per document
           const pool = new Set();
-          d.querySelectorAll('a[href], [role="link"], [data-link], [data-router-link], button, [onclick]').forEach(n => pool.add(n));
+          d.querySelectorAll( finders.join( ',' )).forEach( n => pool.add( n ));
 
           for (const el of pool){
             if (!visible(el)) continue;
@@ -779,9 +779,10 @@ sub clickable_discover_targets_xpath {
           }
         }
         return out;
-      })();
+      })( arguments[0] );
     };
-    my $list = $self->exec_js_w3c_sync( $js, [] );
+    my $list = $self->exec_js_w3c_sync( $js, [ $self->conf()->confCrawlByClickFinders() ]);
+    #print STDERR "clickables: ".Dumper( $list );
     return $list // [];
 }
 
@@ -1236,15 +1237,23 @@ sub screenshot {
 # + add frame id
 # + warns when iframes do not honor same_host configuration
 # + doesn't install uuid unless installing in new too
+# (I):
+# - an optional options hash with following keys:
+#   > label: the label of this page signature, to be displayed when verbose, defaulting to ''
+#     when set, should end with a space as it used as a prefix
 # (O):
 # - a signature as 'top:https://tom59.ref.blingua.fr/fo|if:0#content-frame#/bo/27574/8615#/bo/person/home|if:1#details-frame##|if:2#ifDbox##'
 
 sub signature {
-    my ( $self ) = @_;
+    my ( $self, $args ) = @_;
+    $args //= {};
+
+    my $label = $args->{label} // '';
+    $label .= ' ' if $label && $label !~ /\s$/;
 
     my $signature = $self->{_signature};
     if( $signature ){
-        msgVerbose( "signature() cached='$signature'" );
+        msgVerbose( "${label}signature() cached='$signature'" );
         return $signature;
     }
 
@@ -1314,7 +1323,7 @@ sub signature {
 
     $signature = join( '|', @$parts );
     $self->{_signature} = $signature;
-    msgVerbose( "signature() computed='$signature'" );
+    msgVerbose( "${label}signature() computed='$signature'" );
 
     return $signature;
 }

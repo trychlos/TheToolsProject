@@ -534,7 +534,7 @@ sub _extract_links_href_allowed {
 	my $denied = $conf->runCrawlByLinkHrefDenyPatterns() || [];
     if( scalar( @{$denied} )){
         if( any { $href =~ $_ } @{ $denied } ){
-			#msgVerbose( "extract_links_allowed() '$href' denied by regex" );
+			msgVerbose( "extract_links_allowed() '$href' denied by regex" );
 			return false;
 		}
     }
@@ -562,7 +562,7 @@ sub _extract_links_url_allowed {
 	my $denied = $conf->runCrawlByLinkUrlDenyPatterns() || [];
     if( scalar( @{$denied} )){
         if( any { $url =~ $_ } @{ $denied } ){
-			#msgVerbose( "extract_links_allowed() '$url' denied by regex" );
+			msgVerbose( "extract_links_allowed() '$url' denied by regex" );
 			return false;
 		}
     }

@@ -295,20 +295,58 @@ sub _enqueue_clickables {
 	my $page_signature = $capture->browser()->signature();
 	msgVerbose( "enqueue_clickables() got page_signature='$page_signature'" );
 	my $targets = $capture->browser()->clickable_discover_targets_xpath();
-	#print STDERR "targets: ".Dumper( $targets );
 	my $count = 0;
+	#print STDERR "targets: ".Dumper( $targets );
     for my $a ( @{$targets} ){
-		# each it from clickable_discover_targets_xpath() is a hash { href, text, frameSrc, xpath, docKey, kind, onclick }
-		if( !$self->_match_auto_referenced( $a->{href} ) && !$self->_match_excluded_pattern( $a->{xpath} )){
-			$count += 1;
-			$a->{origin} = $page_signature;
-			$a->{from} = 'click';
-			$a->{chain} = $queue_item->chain_plus();
-			#print STDERR "a ".Dumper( $a->{chain} );
-			push( @{$self->{_queue}}, TTP::HTTP::Compare::QueueItem->new( $self->ep(), $self->conf(), $a ));
-		}
+		next if !$self->_enqueue_clickables_href_allowed( $a->{href} );
+		next if !$self->_enqueue_clickables_xpath_allowed( $a->{xpath} );
+		$a->{origin} = $page_signature;
+		$a->{from} = 'click';
+		$a->{chain} = $queue_item->chain_plus();
+		#print STDERR "a ".Dumper( $a->{chain} );
+		push( @{$self->{_queue}}, TTP::HTTP::Compare::QueueItem->new( $self->ep(), $self->conf(), $a ));
+		$count += 1;
     }
 	msgVerbose( "enqueue_clickables() got $count targets" );
+}
+
+# -------------------------------------------------------------------------------------------------
+# Whether the href is allowed
+# (I):
+# - the candidate href
+
+sub _enqueue_clickables_href_allowed {
+    my ( $self, $href ) = @_;
+
+	my $denied = $self->conf()->runCrawlByClickHrefDenyPatterns() || [];
+    if( scalar( @{$denied} )){
+        if( any { $href =~ $_ } @{ $denied } ){
+			msgVerbose( "_enqueue_clickables_href_allowed() '$href' denied by regex" );
+			return false;
+		}
+    }
+
+	return true;
+}
+
+# -------------------------------------------------------------------------------------------------
+# Whether the xpath
+# After a by-scan-id test, prefer by-xpath
+# (I):
+# - the candidate xpath
+
+sub _enqueue_clickables_xpath_allowed {
+    my ( $self, $xpath ) = @_;
+
+	my $denied = $self->conf()->runCrawlByClickXpathDenyPatterns() || [];
+    if( scalar( @{$denied} )){
+        if( any { $xpath =~ $_ } @{ $denied } ){
+			msgVerbose( "_enqueue_clickables_xpath_allowed() '$xpath' denied by regex" );
+			return false;
+		}
+    }
+
+	return true;
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -365,46 +403,6 @@ sub _initial_routes {
 	my $hash = $self->_hash();
 
 	return $hash->{routes} || [ '/' ];
-}
-
-# -------------------------------------------------------------------------------------------------
-# Returns true if the provided href match an auto-referenced link, i.e. something like href='#xxx'
-# (I):
-# - a 'href' attribute
-# (O):
-# - whether we match an exclusion
-
-sub _match_auto_referenced {
-	my ( $self, $href ) = @_;
-
-	# remove id=#.. (auto-referenced)
-	if( $href =~ m/^#/ ){
-		msgVerbose( "matched href='$href' against auto-referenced '^#'" );
-		return true;
-	}
-
-	return false;
-}
-
-# -------------------------------------------------------------------------------------------------
-# Returns true if the provided xpath match an excluded pattern
-# (I):
-# - a xpath
-# (O):
-# - whether we match an exclusion
-
-sub _match_excluded_pattern {
-	my ( $self, $xpath ) = @_;
-
-	my $excluded = $self->conf()->runExcludePatterns();
-	for my $rx ( @{$excluded} ){
-		if( $xpath =~ m/$rx/i ){
-			msgVerbose( "matched xpath='$xpath' against excluded '$rx'" );
-			return true;
-		}
-	}
-
-	return false;
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -483,16 +481,16 @@ sub _restore_chain {
 
 	# make sure we have the same origin frames signature
 	my $origin_signature = $queue_item->origin() || $queue_item->dest();
-	my $current_signature = $self->{_browsers}{ref}->signature();
+	my $current_signature = $self->{_browsers}{ref}->signature({ label => 'current' });
 
 	# reapply each and every queued item from the saved chain
 	if( $current_signature ne $origin_signature ){
+		msgVerbose( "expected signature='$origin_signature'" );
 		foreach my $qi ( @{ $queue_item->chain() }){
 			# navigate by link
 			my $current_path = TTP::HTTP::Compare::Utils::page_signature_to_path( $current_signature );
 			my $origin_path = TTP::HTTP::Compare::Utils::page_signature_to_path( $queue_item->origin() || $queue_item->dest());
 			if( $qi->isLink() || $current_path ne $origin_path ){
-				#$self->_restore_path( $qi, { force => true, signature => $current_signature });
 				$self->{_browsers}{ref}->navigate( $origin_path );
 				$self->{_browsers}{new}->navigate( $origin_path );
 			# navigate by click
@@ -513,16 +511,21 @@ sub _restore_chain {
 			} else {
 				msgWarn( "unexpected from='".$qi->from()."'" );
 			}
-			# prepare the post-navigation label
-			my $label = sprintf( "restored_%06d", $qi->visited());
+			# wait for page ready
+			$self->{_browsers}{ref}->wait_for_page_ready();
+			$self->{_browsers}{new}->wait_for_page_ready();
 			# take a screenshot post-navigate
-			my $cap = $self->{_browsers}{ref}->wait_and_capture();
-			$cap->writeScreenshot( $queue_item, { dir => $self->{_roledir}, suffix => $label });
-			# and same on new site
-			$cap = $self->{_browsers}{new}->wait_and_capture();
-			$cap->writeScreenshot( $queue_item, { dir => $self->{_roledir}, suffix => $label });
+			if( $self->conf()->confCrawlByClickIntermediateScreenshots()){
+				# prepare the post-navigation label
+				my $label = sprintf( "restored_%06d", $qi->visited());
+				my $cap = $self->{_browsers}{ref}->wait_and_capture({ wait => false });
+				$cap->writeScreenshot( $queue_item, { dir => $self->{_roledir}, suffix => $label });
+				# and same on new site
+				$cap = $self->{_browsers}{new}->wait_and_capture({ wait => false });
+				$cap->writeScreenshot( $queue_item, { dir => $self->{_roledir}, suffix => $label });
+			}
 			# check the new signature
-			$current_signature = $self->{_browsers}{ref}->signature();
+			$current_signature = $self->{_browsers}{ref}->signature({ label => 'current' });
 			last if $current_signature eq $origin_signature;
 		}
 	}
@@ -532,7 +535,7 @@ sub _restore_chain {
 		msgVerbose( "restore_chain() unsuccessful (got signature='$current_signature')" );
 		return false;
 	} else {
-		msgVerbose( "restore_chain() origin='$origin_signature' current='$current_signature': fine" );
+		msgVerbose( "restore_chain() success" );
 	}
 
 	return $self->{_browsers}{ref}->click_by_xpath( $queue_item->xpath());

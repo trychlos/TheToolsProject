@@ -151,6 +151,47 @@
                             "description": "Whether we want crawl by clicking anywhere. Overridable in the command-line.",
                             "type": "boolean",
                             "default": false
+                        },
+                        "finders": {
+                            "description": "How to find the clickables in this website.",
+                            "type": "array",
+                            "item": "string",
+                            "default": [
+                                "a[href]",
+                                "[role=\"link\"]",
+                                "[data-link]",
+                                "[data-router-link]",
+                                "button",
+                                "[onclick]"
+                            ]
+                        },
+                        "href_deny_paterns": {
+                            "description": "The list of href patterns to exclude. Empty means none. Patterns are applied against the 'href' attribute of the clickable.",
+                            "type": "array",
+                            "items": "string",
+                            "default": [
+                                "^#",
+                                "^callto:",
+                                "^mailto:",
+                                "^tel:"
+                            ]
+                        },
+                        "intermediate_screenshots": {
+                            "description": "Whether to save intermediate screenshots when restoring a chain. Mostly useful while debugging the verb.",
+                            "type": "boolean",
+                            "default": false
+                        },
+                        "xpath_deny_paterns": {
+                            "description": "The list of xpath patterns to exclude. Empty means none.",
+                            "type": "array",
+                            "items": "string",
+                            "default": [
+                                "\\bexit\\b",
+                                "\\blogout\\b",
+                                "\\bdelete\\b",
+                                "\\signin\\b",
+                                "\\signout\\b"
+                            ]
                         }
                     }
                 },
@@ -194,16 +235,17 @@
                             "default": true
                         },
                         "href_allow_patterns": {
-                            "description": "The list of patterns of href member to allow. Empty means all. Patterns are applied against the 'member' of the current finder expression.",
+                            "description": "The list of href member patterns to allow. Empty means all. Patterns are applied against the 'member' of the current finder expression.",
                             "type": "array",
                             "items": "string",
                             "default": []
                         },
                         "href_deny_paterns": {
-                            "description": "The list of patterns of href member to exclude. Empty means none. Patterns are applied against the 'member' of the current finder expression.",
+                            "description": "The list of href member patterns to exclude. Empty means none. Patterns are applied against the 'member' of the current finder expression.",
                             "type": "array",
                             "items": "string",
                             "default": [
+                                "^#",
                                 "^callto:",
                                 "^javascript:",
                                 "^mailto:",
@@ -211,30 +253,24 @@
                             ]
                         },
                         "url_allow_patterns": {
-                            "description": "The list of patterns of URLs to allow. Empty means all. Patterns are applied against the full candidate URL.",
+                            "description": "The list of URLs patterns to allow. Empty means all. Patterns are applied against the full candidate URL.",
                             "type": "array",
                             "items": "string",
                             "default": []
                         },
                         "url_deny_paterns": {
-                            "description": "The list of patterns of URLs to exclude. Empty means none. Patterns are applied against the full candidate URL.",
+                            "description": "The list of URLs patterns to exclude. Empty means none. Patterns are applied against the full candidate URL.",
                             "type": "array",
                             "items": "string",
                             "default": [
+                                "\\bexit\\b",
                                 "\\blogout\\b",
                                 "\\bdelete\\b",
                                 "\\signin\\b",
-                                "\\signout\\b",
-                                "\\.xls$"
+                                "\\signout\\b"
                             ]
                         }
                     }
-                },
-                "exclude_patterns": {
-                    "description": "A list of patterns to be compared against XPATH when identifying clickable areas.",
-                    "type": "array",
-                    "items": "string",
-                    "default": []
                 },
                 "make_sitemap_csv": {
                     "description": "Whether to build a sitemap at the end.",
@@ -246,23 +282,10 @@
                     "type": "integer",
                     "default": 10
                 },
-                "prefix_path": {
-                    "description": "A list of prefixes to be prepended to extracted paths, useful when the website itself prefixes its links.",
-                    "type": "array",
-                    "items": "string",
-                    "default": [
-                        ""
-                    ]
-                },
                 "same_host": {
                     "description": "Whether to stay inside of the same domain.",
                     "type": "boolean",
                     "default": true
-                },
-                "text_deny_paterns": {
-                    "description": "The list of text patterns to exclude. Empty means none.",
-                    "type": "array",
-                    "items": "string"
                 }
             }
         },
