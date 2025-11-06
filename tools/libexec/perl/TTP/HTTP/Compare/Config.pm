@@ -61,28 +61,34 @@ use constant {
 	DEFAULT_COMPARE_SCREENSHOT_ENABLED => false,
 	DEFAULT_COMPARE_SCREENSHOT_RMSE => 0.01,
 	DEFAULT_COMPARE_SCREENSHOT_THRESHOLD_COUNT => 10,
-	DEFAULT_CRAWL_BY_CLICK => false,
-	DEFAULT_CRAWL_BY_LINK => false,
+	DEFAULT_CRAWL_BY_CLICK_ENABLED => false,
 	DEFAULT_CRAWL_EXCLUDE_PATTERNS => [],
-	DEFAULT_CRAWL_FIND_LINKS => [
+	DEFAULT_CRAWL_BY_LINK_ENABLED => false,
+	DEFAULT_CRAWL_BY_LINK_FINDERS => [
 		{
 			find => "a[href]",
 			member => "href"
 		}
 	],
-	DEFAULT_CRAWL_FOLLOW_QUERY => false,
+	DEFAULT_CRAWL_BY_LINK_HONOR_QUERY => true,
+	DEFAULT_CRAWL_BY_LINK_HREF_ALLOW_PATTERNS => [],
+	DEFAULT_CRAWL_BY_LINK_HREF_DENY_PATTERNS => [
+		"\^javascript:\|\^callto:\|\^mailto:\|\^tel:"
+	],
+	DEFAULT_CRAWL_BY_LINK_URL_ALLOW_PATTERNS => [],
+	DEFAULT_CRAWL_BY_LINK_URL_DENY_PATTERNS => [
+		"\\blogout\\b",
+		"\\bdelete\\b",
+		"\\bsignin\\b",
+		"\\bsignout\\b",
+		"\\.xls\$"
+	],
 	DEFAULT_CRAWL_KEEP_HTMLS => false,
 	DEFAULT_CRAWL_KEEP_SCREENSHOTS => false,
 	DEFAULT_CRAWL_MAX_VISITED => 10,
 	DEFAULT_CRAWL_MODE => 'link',
 	DEFAULT_CRAWL_PREFIX_PATH => [ '' ],
 	DEFAULT_CRAWL_SAME_HOST => true,
-	DEFAULT_CRAWL_URL_ALLOW_PATTERNS => [],
-	DEFAULT_CRAWL_URL_DENY_PATTERNS => [
-		"\\blogout\\b",
-		"\\bdelete\\b",
-		"\\.xls\\b"
-	],
 	MIN_BROWSER_HEIGHT => 3,
 	MIN_BROWSER_WIDTH => 4
 };
@@ -103,8 +109,8 @@ my $Const = {
 sub _compile_regex_patterns {
     my ( $self ) = @_;
 
-	# url allowed patterns
-    my $raw = $self->crawlUrlAllowPatterns();
+	# href allowed patterns
+    my $raw = $self->confCrawlByLinkHrefAllowPatterns();
 	my @regex = ();
     for my $s (@{ $raw // [] }){
         next unless defined $s && length $s;
@@ -115,12 +121,12 @@ sub _compile_regex_patterns {
         }
         push( @regex, $rx );
     }
-	$self->{_run}{allow_rx} = \@regex;
+	$self->{_run}{link_href_allow_rx} = [ @regex ];
     # add a flag so checks are cheap during crawl
-    $self->{_run}{allow_all} = ( @regex == 0 ) ? true : false;
+    $self->{_run}{link_href_allow_all} = ( @regex == 0 ) ? true : false;
 
-	# url denied patterns
-    $raw = $self->crawlUrlDenyPatterns();
+	# href denied patterns
+    $raw = $self->confCrawlByLinkHrefDenyPatterns();
 	@regex = ();
     for my $s (@{ $raw // [] }) {
         next unless defined $s && length $s;
@@ -131,7 +137,37 @@ sub _compile_regex_patterns {
         }
         push( @regex, $rx );
     }
-	$self->{_run}{deny_rx} = \@regex;
+	$self->{_run}{link_href_deny_rx} = [ @regex ];
+
+	# url allowed patterns
+    $raw = $self->confCrawlByLinkUrlAllowPatterns();
+	@regex = ();
+    for my $s (@{ $raw // [] }){
+        next unless defined $s && length $s;
+        my $rx = eval { qr/$s/ };
+        if ($@) {
+            msgWarn( "Invalid allow regex '$s': $@ (skipping)" );
+            next;
+        }
+        push( @regex, $rx );
+    }
+	$self->{_run}{link_url_allow_rx} = [ @regex ];
+    # add a flag so checks are cheap during crawl
+    $self->{_run}{link_url_allow_all} = ( @regex == 0 ) ? true : false;
+
+	# url denied patterns
+    $raw = $self->confCrawlByLinkUrlDenyPatterns();
+	@regex = ();
+    for my $s (@{ $raw // [] }) {
+        next unless defined $s && length $s;
+        my $rx = eval { qr/$s/ };
+        if ($@) {
+            msgWarn( "Invalid deny regex '$s': $@ (skipping)" );
+            next;
+        }
+        push( @regex, $rx );
+    }
+	$self->{_run}{link_url_deny_rx} = [ @regex ];
 
 	# clickables exclude patterns
     $raw = $self->crawlExcludePatterns();
@@ -145,7 +181,7 @@ sub _compile_regex_patterns {
         }
         push( @regex, $rx );
     }
-	$self->{_run}{exclude_rx} = \@regex;
+	$self->{_run}{exclude_rx} = [ @regex ];
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -174,29 +210,29 @@ sub _loadConfig {
 		my $msgRef = $self->ep()->runner()->dummy() ? \&msgWarn : \&msgErr;
 
 		# must have ref and new URLs
-		my $bases_ref = $self->basesRef();
+		my $bases_ref = $self->confBasesRef();
 		if( !$bases_ref ){
 			$msgRef->( "$path: bases.ref URL is not specified" );
 		}
-		my $bases_new = $self->basesNew();
+		my $bases_new = $self->confBasesNew();
 		if( !$bases_new ){
 			$msgRef->( "$path: bases.new URL is not specified" );
 		}
 		# check browser width and height as these data are needed to handle it
-		my $width = $self->browserWidth();
+		my $width = $self->confBrowserWidth();
 		if( $width <= MIN_BROWSER_WIDTH ){
 			$msgRef->( "browser.width='$width' is less or equal to the minimum accepted (".MIN_BROWSER_WIDTH.")" );
 		}
-		my $height = $self->browserHeight();
+		my $height = $self->confBrowserHeight();
 		if( $height <= MIN_BROWSER_HEIGHT ){
 			$msgRef->( "browser.height='$height' is less or equal to the minimum accepted (".MIN_BROWSER_HEIGHT.")" );
 		}
 		# check chromedriver address and port
-		my $server = $self->browserDriverServer();
+		my $server = $self->confBrowserDriverServer();
 		if( !$server ){
 			$msgRef->( "browser.driver_server is not defined" );
 		}
-		my $port = $self->browserDriverPort();
+		my $port = $self->confBrowserDriverPort();
 		if( !$port || $port < 1 ){
 			$msgRef->( "browser.driver_port=".( $port || '(undef)' )." is not defined or invalid" );
 		}
@@ -212,13 +248,13 @@ sub _loadConfig {
 			$self->{_run}{max_visited} = $max_visited;
 		}
 		# whether crawl by click
-		my $click = $self->crawlByClick();
-		$click = $args->{by_click} if defined $args->{by_click};
-		$self->{_run}{crawl_by_click} = $click;
+		my $mode = $self->confCrawlByClickEnabled();
+		$mode = $args->{by_click} if defined $args->{by_click};
+		$self->{_run}{crawl_by_click} = $mode;
 		# whether crawl by link
-		$click = $self->crawlByLink();
-		$click = $args->{by_link} if defined $args->{by_link};
-		$self->{_run}{crawl_by_link} = $click;
+		$mode = $self->confCrawlByLinkEnabled();
+		$mode = $args->{by_link} if defined $args->{by_link};
+		$self->{_run}{crawl_by_link} = $mode;
 
 		# if the JSON configuration has been checked but misses some informations, then says we cannot load
 		if( TTP::errs()){
@@ -238,7 +274,7 @@ sub _loadConfig {
 # (O):
 # - returns the configured base new URL
 
-sub basesNew {
+sub confBasesNew {
 	my ( $self ) = @_;
 
 	my $url = $self->var([ 'bases', 'new' ]);
@@ -253,7 +289,7 @@ sub basesNew {
 # (O):
 # - returns the configured base reference URL
 
-sub basesRef {
+sub confBasesRef {
 	my ( $self ) = @_;
 
 	my $url = $self->var([ 'bases', 'ref' ]);
@@ -268,7 +304,7 @@ sub basesRef {
 # (O):
 # - returns the configured chromedriver start command
 
-sub browserCommand {
+sub confBrowserCommand {
 	my ( $self ) = @_;
 
 	my $command = $self->var([ 'browser', 'command' ]);
@@ -284,7 +320,7 @@ sub browserCommand {
 # (O):
 # - returns the configured chromedriver listening port
 
-sub browserDriverPort {
+sub confBrowserDriverPort {
 	my ( $self ) = @_;
 
 	my $port = $self->var([ 'browser', 'driver_port' ]);
@@ -300,7 +336,7 @@ sub browserDriverPort {
 # (O):
 # - returns the configured chromedriver server ip addr
 
-sub browserDriverServer {
+sub confBrowserDriverServer {
 	my ( $self ) = @_;
 
 	my $server = $self->var([ 'browser', 'driver_server' ]);
@@ -316,7 +352,7 @@ sub browserDriverServer {
 # (O):
 # - returns the configured browser height
 
-sub browserHeight {
+sub confBrowserHeight {
 	my ( $self ) = @_;
 
 	my $height = $self->var([ 'browser', 'height' ]);
@@ -332,7 +368,7 @@ sub browserHeight {
 # (O):
 # - returns the configured browser timeout
 
-sub browserTimeout {
+sub confBrowserTimeout {
 	my ( $self ) = @_;
 
 	my $timeout = $self->var([ 'browser', 'timeout' ]);
@@ -348,7 +384,7 @@ sub browserTimeout {
 # (O):
 # - returns the configured browser width
 
-sub browserWidth {
+sub confBrowserWidth {
 	my ( $self ) = @_;
 
 	my $width = $self->var([ 'browser', 'width' ]);
@@ -364,7 +400,7 @@ sub browserWidth {
 # (O):
 # - returns whether comparison of htmls is enabled
 
-sub compareHtmlsEnabled {
+sub confCompareHtmlsEnabled {
 	my ( $self ) = @_;
 
 	my $enabled = $self->var([ 'compare', 'htmls', 'enabled' ]);
@@ -380,7 +416,7 @@ sub compareHtmlsEnabled {
 # (O):
 # - returns the configured ignored DOM attributes
 
-sub compareHtmlsIgnoreDOMAttributes {
+sub confCompareHtmlsIgnoreDOMAttributes {
 	my ( $self ) = @_;
 
 	my $ignored = $self->var([ 'compare', 'htmls', 'ignore', 'dom_attributes' ]);
@@ -396,7 +432,7 @@ sub compareHtmlsIgnoreDOMAttributes {
 # (O):
 # - returns the configured ignored DOM selectors
 
-sub compareHtmlsIgnoreDOMSelectors {
+sub confCompareHtmlsIgnoreDOMSelectors {
 	my ( $self ) = @_;
 
 	my $ignored = $self->var([ 'compare', 'htmls', 'ignore', 'dom_selectors' ]);
@@ -412,7 +448,7 @@ sub compareHtmlsIgnoreDOMSelectors {
 # (O):
 # - returns the configured ignored text patterns
 
-sub compareHtmlsIgnoreTextPatterns {
+sub confCompareHtmlsIgnoreTextPatterns {
 	my ( $self ) = @_;
 
 	my $ignored = $self->var([ 'compare', 'htmls', 'ignore', 'text_patterns' ]);
@@ -428,7 +464,7 @@ sub compareHtmlsIgnoreTextPatterns {
 # (O):
 # - returns whether comparison of screenshots is enabled
 
-sub compareScreenshotsEnabled {
+sub confCompareScreenshotsEnabled {
 	my ( $self ) = @_;
 
 	my $enabled = $self->var([ 'compare', 'screenshots', 'enabled' ]);
@@ -445,7 +481,7 @@ sub compareScreenshotsEnabled {
 # (O):
 # - returns pixel error threshold when comparing screenshots
 
-sub compareScreenshotsRmse {
+sub confCompareScreenshotsRmse {
 	my ( $self ) = @_;
 
 	my $rmse = $self->var([ 'compare', 'screenshots', 'rmse_threshold' ]);
@@ -463,7 +499,7 @@ sub compareScreenshotsRmse {
 # (O):
 # - returns accepted count of differences, defaulting to one
 
-sub compareScreenshotsThresholdCount {
+sub confCompareScreenshotsThresholdCount {
 	my ( $self ) = @_;
 
 	my $count = $self->var([ 'compare', 'screenshots', 'threshold_count' ]);
@@ -479,11 +515,11 @@ sub compareScreenshotsThresholdCount {
 # (O):
 # - returns whether we crawl by clicks
 
-sub crawlByClick {
+sub confCrawlByClickEnabled {
 	my ( $self ) = @_;
 
 	my $crawl = $self->var([ 'crawl', 'crawl_by_click' ]);
-	$crawl = DEFAULT_CRAWL_BY_CLICK if !defined $crawl;
+	$crawl = DEFAULT_CRAWL_BY_CLICK_ENABLED if !defined $crawl;
 
 	return $crawl;
 }
@@ -495,13 +531,109 @@ sub crawlByClick {
 # (O):
 # - returns whether we crawl by links
 
-sub crawlByLink {
+sub confCrawlByLinkEnabled {
 	my ( $self ) = @_;
 
-	my $crawl = $self->var([ 'crawl', 'crawl_by_link' ]);
-	$crawl = DEFAULT_CRAWL_BY_LINK if !defined $crawl;
+	my $crawl = $self->var([ 'crawl', 'by_link', 'enabled' ]);
+	$crawl = DEFAULT_CRAWL_BY_LINK_ENABLED if !defined $crawl;
 
 	return $crawl;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns the list of link selectors.
+# (I):
+# - none
+# (O):
+# - returns the list of link selectors
+
+sub confCrawlByLinkFinders {
+	my ( $self ) = @_;
+
+	my $list = $self->var([ 'crawl', 'by_link', 'finders' ]);
+	$list = DEFAULT_CRAWL_BY_LINK_FINDERS if !defined $list;
+
+	return $list;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns whether to follow and honor the query fragments.
+# (I):
+# - none
+# (O):
+# - returns whether to follow and honor the query fragments
+
+sub confCrawlByLinkHonorQuery {
+	my ( $self ) = @_;
+
+	my $follow = $self->var([ 'crawl', 'by_link', 'honor_query' ]);
+	$follow = DEFAULT_CRAWL_BY_LINK_HONOR_QUERY if !defined $follow;
+
+	return $follow;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns the configured href allowed patterns, defaulting to all
+# (I):
+# - none
+# (O):
+# - returns the configured href allowed patterns
+
+sub confCrawlByLinkHrefAllowPatterns {
+	my ( $self ) = @_;
+
+	my $list = $self->var([ 'crawl', 'by_link', 'href_allow_patterns' ]);
+	$list = DEFAULT_CRAWL_BY_LINK_HREF_ALLOW_PATTERNS if !defined $list;
+
+	return $list;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns the configured href denied patterns, defaulting to the hardcoded list
+# (I):
+# - none
+# (O):
+# - returns the configured href denied patterns
+
+sub confCrawlByLinkHrefDenyPatterns {
+	my ( $self ) = @_;
+
+	my $list = $self->var([ 'crawl', 'by_link', 'href_deny_patterns' ]);
+	$list = DEFAULT_CRAWL_BY_LINK_HREF_DENY_PATTERNS if !defined $list;
+
+	return $list;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns the configured url allowed patterns, defaulting to all
+# (I):
+# - none
+# (O):
+# - returns the configured url allowed patterns
+
+sub confCrawlByLinkUrlAllowPatterns {
+	my ( $self ) = @_;
+
+	my $list = $self->var([ 'crawl', 'by_link', 'url_allow_patterns' ]);
+	$list = DEFAULT_CRAWL_BY_LINK_URL_ALLOW_PATTERNS if !defined $list;
+
+	return $list;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns the configured url denied patterns, defaulting to the hardcoded list
+# (I):
+# - none
+# (O):
+# - returns the configured url denied patterns
+
+sub confCrawlByLinkUrlDenyPatterns {
+	my ( $self ) = @_;
+
+	my $list = $self->var([ 'crawl', 'by_link', 'url_deny_patterns' ]);
+	$list = DEFAULT_CRAWL_BY_LINK_URL_DENY_PATTERNS if !defined $list;
+
+	return $list;
 }
 
 # ------------------------------------------------------------------------------------------------
@@ -518,38 +650,6 @@ sub crawlExcludePatterns {
 	$list = DEFAULT_CRAWL_EXCLUDE_PATTERNS if !defined $list;
 
 	return $list;
-}
-
-# ------------------------------------------------------------------------------------------------
-# Returns the list of link selectors.
-# (I):
-# - none
-# (O):
-# - returns the list of link selectors
-
-sub crawlFindLinks {
-	my ( $self ) = @_;
-
-	my $list = $self->var([ 'crawl', 'find_links' ]);
-	$list = DEFAULT_CRAWL_FIND_LINKS if !defined $list;
-
-	return $list;
-}
-
-# ------------------------------------------------------------------------------------------------
-# Returns whether to follow and honor the query fragments.
-# (I):
-# - none
-# (O):
-# - returns whether to follow and honor the query fragments
-
-sub crawlFollowQuery {
-	my ( $self ) = @_;
-
-	my $follow = $self->var([ 'crawl', 'follow_query' ]);
-	$follow = DEFAULT_CRAWL_FOLLOW_QUERY if !defined $follow;
-
-	return $follow;
 }
 
 # ------------------------------------------------------------------------------------------------
@@ -602,22 +702,6 @@ sub crawlMaxVisited {
 }
 
 # ------------------------------------------------------------------------------------------------
-# Returns the configured crawling mode, defaulting to 'link'.
-# (I):
-# - none
-# (O):
-# - returns the configured base new URL
-
-sub crawlMode {
-	my ( $self ) = @_;
-
-	my $mode = $self->var([ 'crawl', 'mode' ]);
-	$mode = DEFAULT_CRAWL_MODE if !$mode;
-
-	return $mode;
-}
-
-# ------------------------------------------------------------------------------------------------
 # Returns the configured list of path prefixes.
 # (I):
 # - none
@@ -640,45 +724,13 @@ sub crawlPrefixPath {
 # (O):
 # - returns whether we must stay inside the same host
 
-sub crawlSameHost {
+sub confCrawlSameHost {
 	my ( $self ) = @_;
 
 	my $same = $self->var([ 'crawl', 'same_host' ]);
 	$same = DEFAULT_CRAWL_SAME_HOST if !defined $same;
 
 	return $same;
-}
-
-# ------------------------------------------------------------------------------------------------
-# Returns the configured url allowed patterns, defaulting to all
-# (I):
-# - none
-# (O):
-# - returns the configured url allowed patterns
-
-sub crawlUrlAllowPatterns {
-	my ( $self ) = @_;
-
-	my $list = $self->var([ 'crawl', 'url_allow_patterns' ]);
-	$list = DEFAULT_CRAWL_URL_ALLOW_PATTERNS if !defined $list;
-
-	return $list;
-}
-
-# ------------------------------------------------------------------------------------------------
-# Returns the configured url denied patterns, defaulting to the hardcoded list
-# (I):
-# - none
-# (O):
-# - returns the configured url denied patterns
-
-sub crawlUrlDenyPatterns {
-	my ( $self ) = @_;
-
-	my $list = $self->var([ 'crawl', 'url_deny_patterns' ]);
-	$list = DEFAULT_CRAWL_URL_DENY_PATTERNS if !defined $list;
-
-	return $list;
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -746,7 +798,7 @@ sub roles {
 # (O):
 # - whether we want crawl by click
 
-sub runCrawlByClick {
+sub runCrawlByClickEnabled {
 	my ( $self ) = @_;
 
 	my $crawl = $self->{_run}{crawl_by_click};
@@ -760,12 +812,96 @@ sub runCrawlByClick {
 # (O):
 # - whether we want crawl by link
 
-sub runCrawlByLink {
+sub runCrawlByLinkEnabled {
 	my ( $self ) = @_;
 
 	my $crawl = $self->{_run}{crawl_by_link};
 
 	return $crawl;
+}
+
+# -------------------------------------------------------------------------------------------------
+# (I):
+# - nothing
+# (O):
+# - whether all HREFs are allowed
+
+sub runCrawlByLinkHrefAllowedAll {
+	my ( $self ) = @_;
+
+	my $bool = $self->{_run}{link_href_allow_all};
+
+	return $bool;
+}
+
+# -------------------------------------------------------------------------------------------------
+# (I):
+# - nothing
+# (O):
+# - the running allowed href patterns, as a ref to an array of compiled regex
+
+sub runCrawlByLinkHrefAllowPatterns {
+	my ( $self ) = @_;
+
+	my $ref = $self->{_run}{link_href_allow_rx};
+
+	return $ref;
+}
+
+# -------------------------------------------------------------------------------------------------
+# (I):
+# - nothing
+# (O):
+# - the running denied href patterns, as a ref to an array of compiled regex
+
+sub runCrawlByLinkHrefDenyPatterns {
+	my ( $self ) = @_;
+
+	my $ref = $self->{_run}{link_href_deny_rx};
+
+	return $ref;
+}
+
+# -------------------------------------------------------------------------------------------------
+# (I):
+# - nothing
+# (O):
+# - whether all URLs are allowed
+
+sub runCrawlByLinkUrlAllowedAll {
+	my ( $self ) = @_;
+
+	my $bool = $self->{_run}{link_url_allow_all};
+
+	return $bool;
+}
+
+# -------------------------------------------------------------------------------------------------
+# (I):
+# - nothing
+# (O):
+# - the running allowed URL patterns, as a ref to an array of compiled regex
+
+sub runCrawlByLinkUrlAllowPatterns {
+	my ( $self ) = @_;
+
+	my $ref = $self->{_run}{link_url_allow_rx};
+
+	return $ref;
+}
+
+# -------------------------------------------------------------------------------------------------
+# (I):
+# - nothing
+# (O):
+# - the running denied URL patterns, as a ref to an array of compiled regex
+
+sub runCrawlByLinkUrlDenyPatterns {
+	my ( $self ) = @_;
+
+	my $ref = $self->{_run}{link_url_deny_rx};
+
+	return $ref;
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -794,48 +930,6 @@ sub runMaxVisited {
 	my $max = $self->{_run}{max_visited};
 
 	return $max;
-}
-
-# -------------------------------------------------------------------------------------------------
-# (I):
-# - nothing
-# (O):
-# - whether all URLs are allowed
-
-sub runUrlAllowedAll {
-	my ( $self ) = @_;
-
-	my $bool = $self->{_run}{allow_all};
-
-	return $bool;
-}
-
-# -------------------------------------------------------------------------------------------------
-# (I):
-# - nothing
-# (O):
-# - the running allowed URL patterns, as a ref to an array of compiled regex
-
-sub runUrlAllowedRegex {
-	my ( $self ) = @_;
-
-	my $ref = $self->{_run}{allow_rx};
-
-	return $ref;
-}
-
-# -------------------------------------------------------------------------------------------------
-# (I):
-# - nothing
-# (O):
-# - the running denied URL patterns, as a ref to an array of compiled regex
-
-sub runUrlDeniedRegex {
-	my ( $self ) = @_;
-
-	my $ref = $self->{_run}{deny_rx};
-
-	return $ref;
 }
 
 # -------------------------------------------------------------------------------------------------

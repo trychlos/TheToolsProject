@@ -119,6 +119,7 @@ sub _do_crawl {
 
 	# if already seen, go next
 	my $key = $queue_item->signature();
+	msgVerbose( "do_crawl() queue signature='$key'" );
 	if( $self->{_result}{seen}{$key} ){
 		msgVerbose( "already seen: '$key'" );
 		return;
@@ -170,11 +171,11 @@ sub _do_crawl {
 
 		# collect links from ref and queue them
 		# clickables which would be found in new but would be absent from ref are ignored (as new features)
-		$self->_enqueue_clickables( $captureRef, $queue_item ) if $self->conf()->runCrawlByClick();
+		$self->_enqueue_clickables( $captureRef, $queue_item ) if $self->conf()->runCrawlByClickEnabled();
 
 		# collect links from ref and enqueue them
 		# links which would be found in new but would be absent from ref are ignored (as new features)
-		$self->_enqueue_links( $captureRef, $queue_item ) if $self->conf()->runCrawlByLink();
+		$self->_enqueue_links( $captureRef, $queue_item ) if $self->conf()->runCrawlByLinkEnabled();
 
 	} elsif( !defined( $captureRef ) && !defined( $captureNew ) && !defined( $path )){
 		msgVerbose( "do_crawl() all values are undef, just skip" );
@@ -274,7 +275,7 @@ sub _do_crawl_by_link {
 
 	# make sure we have a valid dest as initial routes (which are always by 'link' per definition) do not have origin
 	my $page_signature = $self->{_browsers}{ref}->signature();
-	$queue_item->dest( $page_signature );
+	$queue_item->dest( $page_signature ) if !$queue_item->origin();
 
 	$self->{_result}{count}{links} += 1;
 
@@ -323,38 +324,17 @@ sub _enqueue_links {
 	# collect links from the capture
 	my $links = $capture->extract_links();
 
-	# from each link, get the full absolute path, maybe with its query fragment
-	my @next_paths;
-	my $prefixes = $self->conf()->crawlPrefixPath() || [ '' ];
-	my $follow_query = $self->conf()->crawlFollowQuery();
-
-	for my $abs ( @{$links} ){
-		# whether to follow only the path or also the query fragment
-    	my $u = URI->new( $abs );
-    	$u->fragment( undef );
-		my $p = $follow_query ? $u->path_query : $u->path;
-		next if $p eq '';
-		next if $p =~ m{^/logout\b}i; # extra guard
-		next unless $self->_url_allowed( $p );
-		# honor candidate path prefixes
-		foreach my $prefix ( @{$prefixes} ){
-			my $key = "link|$prefix.$p";
-			if( !$self->{_result}{seen}{$key} ){
-				push( @next_paths, "$prefix$p" );
-			}
-		}
-	}
-
 	# queue next layer
 	my $page_signature = $capture->browser()->signature();
-	if( scalar( @next_paths )){
+	if( scalar( @{$links} )){
 		$self->{_result}{count}{depth} += 1;
-		foreach my $p ( @next_paths ){
+		foreach my $p ( @{$links} ){
+			my $u = URI->new( $p );
 			push( @{$self->{_queue}},
 				TTP::HTTP::Compare::QueueItem->new(
 					$self->ep(),
 					$self->conf(),
-					{ path => $p, depth => $self->{_result}{count}{depth}, from => 'link', origin => $page_signature, chain => $queue_item->chain_plus() }
+					{ path => $u->path_query || '/', depth => $self->{_result}{count}{depth}, from => 'link', origin => $page_signature, chain => $queue_item->chain_plus() }
 			));
 			msgVerbose( "enqueuing '$p'" );
 		}
@@ -477,6 +457,7 @@ sub _record_result {
 	# record all results in a single array
 	my $key = $queue_item->signature();
 	$self->{_result}{seen}{$key} = $data;
+	msgVerbose( "record_result() queue_signature='$key'" );
 
 	# have an array per reference status
 	my $status_ref = $ref->status();
@@ -602,6 +583,7 @@ sub _restore_path {
 	return true;
 }
 
+=pod
 # -------------------------------------------------------------------------------------------------
 # (I):
 # - the candidate url
@@ -612,17 +594,18 @@ sub _url_allowed {
 	my ( $self, $url ) = @_;
 
     # Deny first
-	my $denied = $self->conf()->runUrlDeniedRegex() || [];
+	my $denied = $self->conf()->runCrawlByLinkUrlDenyPatterns() || [];
     if( scalar( @{$denied} )){
         return false if any { $url =~ $_ } @{ $denied };
     }
 
     # If no allow patterns provided/compiled -> allow everything (default)
-    return true if $self->conf()->runUrlAllowedAll();
+    return true if $self->conf()->runCrawlByLinkUrlAllowedAll();
 
     # Else require at least one allow match
-    return any { $url =~ $_ } @{ $self->conf()->runUrlAllowedRegex() };
+    return any { $url =~ $_ } @{ $self->conf()->runCrawlByLinkUrlAllowPatterns() };
 }
+=cut
 
 # -------------------------------------------------------------------------------------------------
 # (I):
@@ -860,6 +843,7 @@ sub print_results_summary {
 			msgOut( "    [".join( ", ", sort { $a <=> $b } @c )."]");
 		}
 	}
+	#print STDERR "seen: ".Dumper( $self->{_result}{seen} );
 }
 
 # -------------------------------------------------------------------------------------------------

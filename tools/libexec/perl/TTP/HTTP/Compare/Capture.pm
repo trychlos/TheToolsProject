@@ -34,6 +34,7 @@ use File::Path qw( make_path );
 use File::Spec;
 use File::Temp;
 use Image::Compare;
+use List::Util qw( any );
 use Mojo::DOM;
 use Scalar::Util qw( blessed );
 use Test::More;
@@ -84,8 +85,8 @@ sub _fname {
 	my $suffix = $args->{suffix} || '';
 	$suffix = "_$suffix" if $suffix;
 	# last build the filename
-	my $fname = sprintf( "%06d_%s_%s%s.html", $counter, $which, join( "|", $path, @w, $xpath ), $suffix );
-	$fname =~ s![/\.\|:]!_!g;
+	my $fname = sprintf( "%06d_%s_%s%s%s", $counter, $which, join( "|", $path, @w, $xpath ), $suffix, $extension );
+	$fname =~ s![/\|:"\*]!_!g;
 
 	return $fname;
 }
@@ -383,7 +384,7 @@ sub compare {
 	my @errs = ();
 
 	# compare rendered HTMLs if configured
-	if( $self->browser()->conf()->compareHtmlsEnabled()){
+	if( $self->browser()->conf()->confCompareHtmlsEnabled()){
 		# must have same content-type
 		is( lc( $self->content_type() // ''), lc( $other->content_type() // ''), "[$role ($path)] got same content-type (".lc( $self->content_type() // '').")" )
 			|| push( @errs, "content-type" );
@@ -400,7 +401,7 @@ sub compare {
 		|| push( @errs, "new alerts: ".join( ' | ', @{$other->alerts() }));
 
 	# optional visual diff
-	if( $self->browser()->conf()->compareScreenshotsEnabled()){
+	if( $self->browser()->conf()->confCompareScreenshotsEnabled()){
 
 		# Which align should you use?
 		# 	crop (default): safest with your stitched full-page shots (they should be same width and very close in height; compares the overlapping area only).
@@ -408,7 +409,7 @@ sub compare {
 		#	resize: if widths differ due to different breakpoints (less common in your setup). It scales both to a common width first, then compares.
 		#my $ref = 
 		#my $new = $new->browser()->screenshot();
-		#my $threshold = $self->browser()->conf()->compareScreenshotsRmse();
+		#my $threshold = $self->browser()->conf()->confCompareScreenshotsRmse();
 		#my $res = $self->_compare_screenshots( $other, 
 		#	a         => $capture_ref->{shotdump},
 		#	b         => $capture_new->{shotdump},
@@ -430,8 +431,8 @@ sub compare {
 		my $cmp = Image::Compare->new();
 		$cmp->set_image1( img => $dumpref, type => 'png' );
 		$cmp->set_image2( img => $dumpnew, type => 'png' );
-		my $threshold = $self->browser()->conf()->compareScreenshotsRmse() * 441.67;
-		my $maxcount = $self->browser()->conf()->compareScreenshotsThresholdCount();
+		my $threshold = $self->browser()->conf()->confCompareScreenshotsRmse() * 441.67;
+		my $maxcount = $self->browser()->conf()->confCompareScreenshotsThresholdCount();
 
 		# try some methods
 		# threshold seems to be a bit too exact - even 5% reports non-visible differences
@@ -481,26 +482,32 @@ sub extract_links {
     my ( $self ) = @_;
 
     my $dom = Mojo::DOM->new( $self->html());
-
-    # remove excluded regions from DOM before link harvest
-	my $excluded = $self->browser()->conf()->crawlExcludeSelectors();
-    for my $sel ( @{ $excluded // [] } ){
-        $dom->find( $sel )->each( sub { $_->remove });
-    }
+	my $conf = $self->browser()->conf();
 
     my %uniq;
-	my $finders = $self->browser()->conf()->crawlFindLinks() || [{ find => 'a[href]', member => 'href' }];
+	my $finders = $conf->confCrawlByLinkFinders();
+	my $wants_same_host = $conf->confCrawlSameHost();
+	my $url_base = $self->browser()->urlBase();
+	my $host_ref = URI->new( $url_base )->host;
+	my $honor_query = $conf->confCrawlByLinkHonorQuery();
 
-	my $wants_same_host = $self->browser()->conf()->crawlSameHost();
-	my $host_ref = URI->new( $self->browser()->urlBase())->host;
-
+	# '$finders' is configured to address all the links of the page (mostly when there is some 'href' inside)
 	foreach my $it ( @{$finders} ){
 		$dom->find( $it->{find} )->each( sub {
 			my $href = $_->attr( $it->{member} ) // return;
 			$href =~ s/^\s+|\s+$//g;
-			return if $href eq '' || $href =~ m/^javascript:|^mailto:|^tel:|\.xls$/i;
-
-			my $abs = URI->new_abs( $href, $self->browser()->urlBase())->as_string;
+			#return if $href eq '' || $href =~ m/^javascript:|^mailto:|^tel:|\.xls$/i;
+			return if !$href;
+			# apply href inclusions/exclusions
+			return unless $self->_extract_links_href_allowed( $it, $href );
+			# whether to follow only the path or also the query fragment
+			my $u = URI->new( $href );
+			$u->fragment( undef );
+			my $p = $u->can( 'path_query' ) ? ( $honor_query ? $u->path_query : $u->path ) : $u->path;
+			# compute an absolute url
+			my $abs = URI->new_abs( $p, $url_base )->as_string;
+			# apply url inclusions/exclusions
+			return unless $self->_extract_links_url_allowed( $it, $abs );
 			# honor same host
 			return if $wants_same_host && !TTP::HTTP::Compare::Utils::same_host( $abs, $host_ref );
 
@@ -509,6 +516,62 @@ sub extract_links {
 	}
 
     return [ sort keys %uniq ];
+}
+
+# -------------------------------------------------------------------------------------------------
+# (I):
+# - the finder item
+# - the candidate url
+# (O):
+# - whether the href is allowed to be crawled
+
+sub _extract_links_href_allowed {
+	my ( $self, $finder, $href ) = @_;
+
+	my $conf = $self->browser()->conf();
+
+    # Deny first
+	my $denied = $conf->runCrawlByLinkHrefDenyPatterns() || [];
+    if( scalar( @{$denied} )){
+        if( any { $href =~ $_ } @{ $denied } ){
+			#msgVerbose( "extract_links_allowed() '$href' denied by regex" );
+			return false;
+		}
+    }
+
+    # If no allow patterns provided/compiled -> allow everything (default)
+    return true if $conf->runCrawlByLinkHrefAllowedAll();
+
+    # Else require at least one allow match
+    return any { $href =~ $_ } @{ $conf->runCrawlByLinkHrefAllowPatterns() };
+}
+
+# -------------------------------------------------------------------------------------------------
+# (I):
+# - the finder item
+# - the candidate url
+# (O):
+# - whether the url is allowed to be crawled
+
+sub _extract_links_url_allowed {
+	my ( $self, $finder, $url ) = @_;
+
+	my $conf = $self->browser()->conf();
+
+    # Deny first
+	my $denied = $conf->runCrawlByLinkUrlDenyPatterns() || [];
+    if( scalar( @{$denied} )){
+        if( any { $url =~ $_ } @{ $denied } ){
+			#msgVerbose( "extract_links_allowed() '$url' denied by regex" );
+			return false;
+		}
+    }
+
+    # If no allow patterns provided/compiled -> allow everything (default)
+    return true if $conf->runCrawlByLinkUrlAllowedAll();
+
+    # Else require at least one allow match
+    return any { $url =~ $_ } @{ $conf->runCrawlByLinkUrlAllowPatterns() };
 }
 
 # -------------------------------------------------------------------------------------------------

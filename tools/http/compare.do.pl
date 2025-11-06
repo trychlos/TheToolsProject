@@ -52,16 +52,16 @@ my $defaults = {
 	debug => 'no',
 	jsonfile => '',
 	maxvisited => TTP::HTTP::Compare::Config::DEFAULT_CRAWL_MAX_VISITED,
-	click => TTP::HTTP::Compare::Config::DEFAULT_CRAWL_BY_CLICK ? 'yes' : 'no',
-	link => TTP::HTTP::Compare::Config::DEFAULT_CRAWL_BY_LINK ? 'yes' : 'no',
+	click => TTP::HTTP::Compare::Config::DEFAULT_CRAWL_BY_CLICK_ENABLED ? 'yes' : 'no',
+	link => TTP::HTTP::Compare::Config::DEFAULT_CRAWL_BY_LINK_ENABLED ? 'yes' : 'no',
 	logsdir => File::Spec->catdir( TTP::Path::logsCommands(), $ep->runner->runnableBNameShort()."-".$ep->runner()->verb())
 };
 
 my $opt_debug = false;
 my $opt_jsonfile = $defaults->{jsonfile};
 my $opt_maxvisited = $defaults->{maxvisited};
-my $opt_click = TTP::HTTP::Compare::Config::DEFAULT_CRAWL_BY_CLICK;
-my $opt_link = TTP::HTTP::Compare::Config::DEFAULT_CRAWL_BY_LINK;
+my $opt_click = TTP::HTTP::Compare::Config::DEFAULT_CRAWL_BY_CLICK_ENABLED;
+my $opt_link = TTP::HTTP::Compare::Config::DEFAULT_CRAWL_BY_LINK_ENABLED;
 my $opt_logsdir = $defaults->{logsdir};
 
 # the JSON compare configuration as a TTP::HTTP::Compare::Config object
@@ -89,7 +89,7 @@ my $Const = {
 # Compare two websites
 
 sub doCompare {
-	msgOut( "comparing '".$conf->basesNew()."' against ref '".$conf->basesRef()."' URLs..." );
+	msgOut( "comparing '".$conf->confBasesNew()."' against ref '".$conf->confBasesRef()."' URLs..." );
 	$hashref->{run} //= {};
 	# iter on roles
 	$hashref->{byRole} //= {};

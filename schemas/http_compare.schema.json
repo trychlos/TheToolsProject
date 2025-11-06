@@ -140,18 +140,95 @@
             }
         },
         "crawl": {
-            "description": "The configuration of the recursive search.",
+            "description": "The full configuration of the iterative/recursive searches.",
             "type": "object",
             "properties": {
-                "crawl_by_click": {
-                    "description": "Whether we try a crawl by clicks.",
-                    "type": "boolean",
-                    "default": false
+                "by_click": {
+                    "description": "The description of a crawling operations by clicking anywhere.",
+                    "type": "object",
+                    "properties": {
+                        "enabled": {
+                            "description": "Whether we want crawl by clicking anywhere. Overridable in the command-line.",
+                            "type": "boolean",
+                            "default": false
+                        }
+                    }
                 },
-                "crawl_by_link": {
-                    "description": "Whether we try a crawl by links.",
-                    "type": "boolean",
-                    "default": false
+                "by_link": {
+                    "description_array": [
+                        "The description of a crawling operations by following the links.",
+                        "Please note that this 'by link' crawl mode is not the best adapted to the SPA and/or multi-frames sites."
+                    ],
+                    "type": "object",
+                    "properties": {
+                        "enabled": {
+                            "description": "Whether we want crawl by following the links. Overridable in the command-line.",
+                            "type": "boolean",
+                            "default": false
+                        },
+                        "finders": {
+                            "description_array": [
+                                "How to find the links in this website.",
+                                "The links are extracted from the sanitized HTML, so after having applied the 'compare.ignore' exclusions."
+                            ],
+                            "type": "array",
+                            "items": "object",
+                            "properties": {
+                                "find": {
+                                    "description": "The CSS selector to find a link.",
+                                    "type": "string"
+                                },
+                                "member": {
+                                    "description": "The member of the hash from where the link is readable.",
+                                    "type": "string"
+                                }
+                            },
+                            "default": {
+                                "find": "a[href]",
+                                "member": "href"
+                            }
+                        },
+                        "honor_query": {
+                            "description": "Whether to follow and honor the query fragment of the URI.",
+                            "type": "boolean",
+                            "default": true
+                        },
+                        "href_allow_patterns": {
+                            "description": "The list of patterns of href member to allow. Empty means all. Patterns are applied against the 'member' of the current finder expression.",
+                            "type": "array",
+                            "items": "string",
+                            "default": []
+                        },
+                        "href_deny_paterns": {
+                            "description": "The list of patterns of href member to exclude. Empty means none. Patterns are applied against the 'member' of the current finder expression.",
+                            "type": "array",
+                            "items": "string",
+                            "default": [
+                                "^callto:",
+                                "^javascript:",
+                                "^mailto:",
+                                "^tel:"
+                            ]
+                        },
+                        "url_allow_patterns": {
+                            "description": "The list of patterns of URLs to allow. Empty means all. Patterns are applied against the full candidate URL.",
+                            "type": "array",
+                            "items": "string",
+                            "default": []
+                        },
+                        "url_deny_paterns": {
+                            "description": "The list of patterns of URLs to exclude. Empty means none. Patterns are applied against the full candidate URL.",
+                            "type": "array",
+                            "items": "string",
+                            "default": [
+                                "\\blogout\\b",
+                                "\\bdelete\\b",
+                                "\\signin\\b",
+                                "\\signout\\b",
+                                "\\.xls$"
+                            ]
+                        }
+                    }
                 },
                 "exclude_patterns": {
                     "description": "A list of patterns to be compared against XPATH when identifying clickable areas.",
@@ -159,37 +236,13 @@
                     "items": "string",
                     "default": []
                 },
-                "find_links": {
-                    "description": "How to find the links in this website.",
-                    "type": "array",
-                    "items": "object",
-                    "properties": {
-                        "find": {
-                            "description": "The CSS selector to find a link.",
-                            "type": "string"
-                        },
-                        "member": {
-                            "description": "The member of the hash from where the link is readable.",
-                            "type": "string"
-                        }
-                    },
-                    "default": {
-                        "find": "a[href]",
-                        "member": "href"
-                    }
-                },
-                "follow_query": {
-                    "description": "Whether to follow and honor the query fragment of the URI.",
-                    "type": "boolean",
-                    "default": false
-                },
                 "make_sitemap_csv": {
                     "description": "Whether to build a sitemap at the end.",
                     "type": "boolean",
                     "default": false
                 },
                 "max_visited": {
-                    "description": "The maximum total count of visited pages. Zero stands for unlimited.",
+                    "description": "The maximum total count of visited pages. Zero stands for unlimited. Overridable in the command-line.",
                     "type": "integer",
                     "default": 10
                 },
@@ -210,22 +263,6 @@
                     "description": "The list of text patterns to exclude. Empty means none.",
                     "type": "array",
                     "items": "string"
-                },
-                "url_allow_patterns": {
-                    "description": "The list of patterns of URLs to follow. Empty means all.",
-                    "type": "array",
-                    "items": "string",
-                    "default": []
-                },
-                "url_deny_paterns": {
-                    "description": "The list of patterns of URLs to exclude. Empty means none.",
-                    "type": "array",
-                    "items": "string",
-                    "default": [
-                        "\\blogout\\b",
-                        "\\bdelete\\b",
-                        "\\.xls\\b"
-                    ]
                 }
             }
         },

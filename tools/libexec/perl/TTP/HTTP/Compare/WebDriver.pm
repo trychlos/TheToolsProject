@@ -95,7 +95,7 @@ sub new {
 
 	$self->{_conf} = $conf;
 
-    my $cmd = $conf->browserCommand();
+    my $cmd = $conf->confBrowserCommand();
     if( $cmd ){
         my $fname = File::Spec->catfile( $logsdir, "webdriver.log" );
         # search the executable path

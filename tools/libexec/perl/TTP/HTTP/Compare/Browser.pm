@@ -148,8 +148,8 @@ sub _driver_start {
 	my ( $self ) = @_;
 
 	my $caps = $Const->{caps};
-	my $width = $self->conf()->browserWidth();
-	my $height = $self->conf()->browserHeight();
+	my $width = $self->conf()->confBrowserWidth();
+	my $height = $self->conf()->confBrowserHeight();
 	push( @{$caps->{capabilities}{alwaysMatch}{'goog:chromeOptions'}{args}}, "--window-size=$width,$height" );
 	#print "caps: ".Dumper( $caps );
 
@@ -167,8 +167,8 @@ sub _driver_start {
   
 	my $driver = Selenium::Remote::Driver->new(
 		session_id => $session_id,
-		remote_server_addr => $self->conf()->browserDriverServer(),
-		port => $self->conf()->browserDriverPort(),
+		remote_server_addr => $self->conf()->confBrowserDriverServer(),
+		port => $self->conf()->confBrowserDriverPort(),
 		path => $Const->{path},
 		is_w3c => true,
 		debug => $self->isDebug()
@@ -287,7 +287,7 @@ sub _hash {
 sub _http {
     my ( $self ) = @_;
 
-	return HTTP::Tiny->new( timeout => $self->conf()->browserTimeout());
+	return HTTP::Tiny->new( timeout => $self->conf()->confBrowserTimeout());
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -313,15 +313,12 @@ sub _sanitize_and_hash_html {
     my $out = $dom->to_string;
 
     # 2) drop nodes by CSS selector
-    for my $sel ( @{ $self->conf()->compareHtmlsIgnoreDOMSelectors() }){
+    for my $sel ( @{ $self->conf()->confCompareHtmlsIgnoreDOMSelectors() }){
         $dom->find( $sel )->each( sub { $_->remove } );
     }
 
-    #$found = $dom->find( 'div.toggle-left#wrapper' );
-    #print STDERR "2: found=$found\n";
-
     # 3) strip/normalize attributes
-    my @attr_rx = map { qr/$_/ } @{ $self->conf()->compareHtmlsIgnoreDOMAttributes() };
+    my @attr_rx = map { qr/$_/ } @{ $self->conf()->confCompareHtmlsIgnoreDOMAttributes() };
     $dom->find( '*' )->each( sub {
         my $el = $_;
         my $attrs = $el->attr // {};
@@ -358,14 +355,10 @@ sub _sanitize_and_hash_html {
 
     # 4) text normalization (regexes that cause noise)
     $out = $dom->to_string;
-    for my $pat ( @{ $self->conf()->compareHtmlsIgnoreTextPatterns() }){
+    for my $pat ( @{ $self->conf()->confCompareHtmlsIgnoreTextPatterns() }){
         $out =~ s/$pat/<var>/g;
     }
     $out =~ s/\s+/ /g;
-
-    #$foundstr = $out =~ /div class="toggled-left" id="wrapper"/;
-    #$countdom = $dom->find( 'div.toggle-left#wrapper' )->size;
-    #print STDERR "4: found=$foundstr count=$countdom\n";
 
     return ( $out, md5_hex( encode_utf8( NFC( $out // '' ))));
 }
@@ -390,7 +383,7 @@ sub _signature_clear {
 sub _url_driver {
     my ( $self ) = @_;
 
-	return "http://".$self->conf()->browserDriverServer().":".$self->conf()->browserDriverPort()."$Const->{path}/session";
+	return "http://".$self->conf()->confBrowserDriverServer().":".$self->conf()->confBrowserDriverPort()."$Const->{path}/session";
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -416,42 +409,6 @@ sub _url_ssid {
 }
 
 ### Public methods
-
-=pod
-# -------------------------------------------------------------------------------------------------
-# go back in the history
-# (I):
-# - nothing
-# (O):
-# -nothing
-# Returns after having waited for the page
-
-sub back {
-    my ( $self ) = @_;
-
-    #eval { $self->exec_js_w3c_sync( 'history.back(); return true;', [] ); };
-    $self->driver()->go_back();
-    $self->wait_for_page_ready();
-}
-=cut
-
-=pod
-# -------------------------------------------------------------------------------------------------
-# Click and wait for the page be ready
-# (O):
-# - whether the click was successful
-
-sub click_and_wait {
-    my ( $self, $xpath ) = @_;
-
-    if( $self->click_by_xpath( $xpath )){
-        $self->wait_for_page_ready();
-        return true;
-    }
-
-    return false;
-}
-=cut
 
 =pod
 # -------------------------------------------------------------------------------------------------
@@ -1350,7 +1307,7 @@ sub signature {
             $path = $path->path;
         }
         push( @{$parts}, "if:$f->{index}#$f->{id}#$f->{src}#$path" );
-        if (!$f->{sameOrigin} && $self->conf()->crawlSameHost()){
+        if (!$f->{sameOrigin} && $self->conf()->confCrawlSameHost()){
             msgWarn( "found cross origin $f->{href}" );
         }
     }
@@ -1374,9 +1331,9 @@ sub urlBase {
     my $which = $self->which();
     my $url = undef;
     if( $which eq 'ref' ){
-        $url = $self->role()->conf()->basesRef();
+        $url = $self->role()->conf()->confBasesRef();
     } elsif( $which eq 'new' ){
-        $url = $self->role()->conf()->basesNew();
+        $url = $self->role()->conf()->confBasesNew();
     } else {
         msgErr( "urlBase() which='$which' is not handled" );
     }
@@ -1391,17 +1348,6 @@ sub urlPath {
     my $u = URI->new( $self->driver()->get_current_url());
     return $u->path || '/';
 }
-
-=pod
-# -------------------------------------------------------------------------------------------------
-# Take a WebDriver screenshot (viewport) through SRD
-
-sub viewport_png_bytes {
-    my ( $self ) = @_;
-    my $b64 = $self->driver()->screenshot();    # base64
-    return decode_base64( $b64 );
-}
-=cut
 
 # -------------------------------------------------------------------------------------------------
 # capture the data extracted from the current page
@@ -1485,7 +1431,7 @@ sub wait_for_body {
     my ( $self ) = @_;
     my $t0 = time;
 	my @alerts = ();
-	my $timeout = $self->conf()->browserTimeout();
+	my $timeout = $self->conf()->confBrowserTimeout();
     while ( time - $t0 < $timeout ){
         my $el = eval { $self->driver()->find_element_by_css( 'body' ) };
 		msgVerbose( "wait_for_body() got el=$el" );
@@ -1510,7 +1456,7 @@ sub wait_for_dom_stable {
     my $last_sig;
     my $last_change_t = Time::HiRes::time;
     my $t0 = Time::HiRes::time;
-	my $timeout = $self->conf()->browserTimeout();
+	my $timeout = $self->conf()->confBrowserTimeout();
 
     while( Time::HiRes::time - $t0 < $timeout ){
         my $sig = $self->exec_js_w3c_sync( q{
@@ -1547,7 +1493,7 @@ sub wait_for_network_idle {
 
     my $t0 = Time::HiRes::time;
     my $last_event_t = $t0;
-	my $timeout = $self->conf()->browserTimeout();
+	my $timeout = $self->conf()->confBrowserTimeout();
 
     my @all;                 # we keep EVERYTHING we read
     my $had_doc_response = 0;
@@ -1610,7 +1556,7 @@ sub wait_until {
     my $cond = $opt{cond} or die "wait_until: missing cond";
     my $interval = $opt{interval} // 0.1;   # seconds
     my $start = time;
-	my $timeout = $self->conf()->browserTimeout();
+	my $timeout = $self->conf()->confBrowserTimeout();
     while( time - $start < $timeout ){
         my $val = eval { $cond->() };
         return $val if $val;

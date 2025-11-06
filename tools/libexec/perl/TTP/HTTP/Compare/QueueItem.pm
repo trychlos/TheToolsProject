@@ -271,7 +271,7 @@ sub path {
 	my $path = undef;
 
 	if( $self->isLink()){
-		$path = $self->{_hash}{path};
+		$path = $self->{_hash}{path} // '/';
 	}
 
 	return $path;
