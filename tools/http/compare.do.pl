@@ -9,7 +9,8 @@
 # @(-) --maxvisited=<count>    maximum count of places to be visited, overriding configured value [${maxvisited}]
 # @(-) --[no]click             whether by click crawl mode is requested, overriding configured value [${click}]
 # @(-) --[no]link              whether by link crawl mode is requested, overriding configured value [${link}]
-# @(-) --logsdir=<dir>         logs root directory [${logsdir}]
+# @(-) --logsdir=<dir>         logs root directory of this TTP verb [${logsdir}]
+# @(-) --workdir=<dir>         chromedriver working directory [${workdir}]
 #
 # @(@) Note 1: This verb requires a chromedriver server running locally. It is automatically started as long as it is available.
 #
@@ -54,7 +55,8 @@ my $defaults = {
 	maxvisited => TTP::HTTP::Compare::Config::DEFAULT_CRAWL_MAX_VISITED,
 	click => TTP::HTTP::Compare::Config::DEFAULT_CRAWL_BY_CLICK_ENABLED ? 'yes' : 'no',
 	link => TTP::HTTP::Compare::Config::DEFAULT_CRAWL_BY_LINK_ENABLED ? 'yes' : 'no',
-	logsdir => File::Spec->catdir( TTP::Path::logsCommands(), $ep->runner->runnableBNameShort()."-".$ep->runner()->verb())
+	logsdir => File::Spec->catdir( TTP::Path::logsCommands(), $ep->runner->runnableBNameShort()."-".$ep->runner()->verb()),
+	workdir => TTP::tempDir()
 };
 
 my $opt_debug = false;
@@ -63,6 +65,7 @@ my $opt_maxvisited = $defaults->{maxvisited};
 my $opt_click = TTP::HTTP::Compare::Config::DEFAULT_CRAWL_BY_CLICK_ENABLED;
 my $opt_link = TTP::HTTP::Compare::Config::DEFAULT_CRAWL_BY_LINK_ENABLED;
 my $opt_logsdir = $defaults->{logsdir};
+my $opt_workdir = $defaults->{workdir};
 
 # the JSON compare configuration as a TTP::HTTP::Compare::Config object
 my $conf = undef;
@@ -80,6 +83,7 @@ my $driver = undef;
 my $opt_maxvisited_set = false;
 my $opt_click_set = false;
 my $opt_link_set = false;
+my $opt_workdir_set = false;
 
 # some constants
 my $Const = {
@@ -171,7 +175,12 @@ if( !GetOptions(
 		$opt_link = $value;
 		$opt_link_set = true;
 	},
-	"logsdir=s"			=> \$opt_logsdir )){
+	"logsdir=s"			=> \$opt_logsdir,
+	"workdir=s"			=> sub {
+		my ( $name, $value ) = @_;
+		$opt_workdir = $value;
+		$opt_workdir_set = true;
+	})){
 		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
 }
@@ -190,6 +199,7 @@ msgVerbose( "got maxvisited='$opt_maxvisited'" );
 msgVerbose( "got click=".( $opt_click ? 'true':'false' )."'" );
 msgVerbose( "got link=".( $opt_link ? 'true':'false' )."'" );
 msgVerbose( "got logsdir='$opt_logsdir'" );
+msgVerbose( "got workdir='$opt_workdir'" );
 
 # if a maxvisited is provided, must be greater or equal to zero
 if( $opt_maxvisited_set ){
@@ -202,6 +212,7 @@ if( $opt_jsonfile ){
 	$args->{max_visited} = $opt_maxvisited if $opt_maxvisited_set && !TTP::errs();
 	$args->{by_click} = $opt_click if $opt_click_set;
 	$args->{by_link} = $opt_link if $opt_link_set;
+	$args->{browser_workdir} = $opt_workdir if $opt_workdir_set;
 	$conf = TTP::HTTP::Compare::Config->new( $ep, $opt_jsonfile, $args );
 	if( !$conf->jsonLoaded()){
 		msgErr( "JSON not loaded" );

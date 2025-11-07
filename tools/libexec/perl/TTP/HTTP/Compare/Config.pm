@@ -245,6 +245,7 @@ sub _compile_regex_patterns {
 sub _loadConfig {
 	my ( $self, $path, $args ) = @_;
 	$args //= {};
+	#print STDERR "args: ".Dumper( $args );
 
 	# IJSONable role takes care of validating the acceptability and the enable-ity
 	my $loaded = $self->jsonLoad({ path => $path });
@@ -302,6 +303,10 @@ sub _loadConfig {
 		$mode = $self->confCrawlByLinkEnabled();
 		$mode = $args->{by_link} if defined $args->{by_link};
 		$self->{_run}{crawl_by_link} = $mode;
+		# browser working directory
+		my $workdir = $self->confBrowserWorkdir();
+		$workdir = $args->{browser_workdir} if defined $args->{browser_workdir};
+		$self->{_run}{browser_workdir} = $workdir;
 
 		# if the JSON configuration has been checked but misses some informations, then says we cannot load
 		if( TTP::errs()){
@@ -438,6 +443,21 @@ sub confBrowserWidth {
 	$width = DEFAULT_BROWSER_WIDTH if !defined $width;
 
 	return $width;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns the configured browser working dir.
+# (I):
+# - none
+# (O):
+# - returns the configured browser working dir
+
+sub confBrowserWorkdir {
+	my ( $self ) = @_;
+
+	my $dir = $self->var([ 'browser', 'workdir' ]) // "";
+
+	return $dir;
 }
 
 # ------------------------------------------------------------------------------------------------
@@ -853,6 +873,20 @@ sub roles {
 	my $ref = $self->var([ 'roles' ]);
 
 	return sort keys %{$ref};
+}
+
+# -------------------------------------------------------------------------------------------------
+# (I):
+# - nothing
+# (O):
+# - the browser working directory
+
+sub runBrowserWorkdir {
+	my ( $self ) = @_;
+
+	my $dir = $self->{_run}{browser_workdir};
+
+	return $dir;
 }
 
 # -------------------------------------------------------------------------------------------------

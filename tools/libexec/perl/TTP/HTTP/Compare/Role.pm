@@ -101,6 +101,21 @@ sub _capture_by_click {
 sub _do_crawl {
     my ( $self, $queue_item, $args ) = @_;
 	$args //= {};
+	msgVerbose( "do_crawl() role='".$self->name()."'" );
+
+	# increments before visiting so that all the dumped files are numbered correctly
+	$self->{_result}{count}{visited} += 1;
+	$queue_item->visited( $self->{_result}{count}{visited} );
+	msgVerbose( "do_crawl() visiting=".$queue_item->visited());
+
+	# and logs the key signature
+	my $key = $queue_item->signature();
+	msgVerbose( "do_crawl() queue signature='$key'" );
+	# if already seen, go next
+	if( $self->{_result}{seen}{$key} ){
+		msgVerbose( "already seen, returning" );
+		return;
+	}
 
 	# items in queue are hashes with following keys:
 	# - from: whether the item comes by 'link' or by 'click', defaulting to 'link'
@@ -116,22 +131,10 @@ sub _do_crawl {
 	# - docKey
 	# - kind
 	# - onclick
-
-	# if already seen, go next
-	my $key = $queue_item->signature();
-	msgVerbose( "do_crawl() queue signature='$key'" );
-	if( $self->{_result}{seen}{$key} ){
-		msgVerbose( "already seen: '$key'" );
-		return;
-	}
+	$queue_item->dump();
 
 	# what sort of loop item do we have ?
 	my $from = $queue_item->from();
-
-	# increments before visiting so that all the dumped files are numbered correctly
-	$self->{_result}{count}{visited} += 1;
-	$queue_item->visited( $self->{_result}{count}{visited} );
-	msgVerbose( "do_crawl() from='$from' visiting=".$queue_item->visited());
 
 	my $path = undef;
 	my $captureRef = undef;
@@ -205,6 +208,7 @@ sub _do_crawl {
 
 sub _do_crawl_by_click {
     my ( $self, $queue_item ) = @_;
+	msgVerbose( "do_crawl_by_click()" );
 
 	# must have an origin and a xpath
 	my $origin = $queue_item->origin();
@@ -219,10 +223,6 @@ sub _do_crawl_by_click {
 		}
 		return [ undef, undef, undef, "no xpath" ];
 	}
-
-	my $key = $queue_item->signature();
-	msgVerbose( "do_crawl_by_click() role='".$self->name()."' key='$key'" );
-	$queue_item->dump();
 
 	my $path = undef;
 	my $captureRef = undef;
@@ -257,6 +257,7 @@ sub _do_crawl_by_click {
 
 sub _do_crawl_by_link {
     my ( $self, $queue_item ) = @_;
+	msgVerbose( "do_crawl_by_link()" );
 
 	# do we have a path to navigate to ?
 	my $path = $queue_item->path();
@@ -266,10 +267,6 @@ sub _do_crawl_by_link {
 	}
 
 	# navigate and capture
-	my $key = $queue_item->signature();
-	msgVerbose( "do_crawl_by_link() role='".$self->name()."' key='$key'" );
-	$queue_item->dump();
-
 	my $captureRef = $self->{_browsers}{ref}->navigate_and_capture( $path );
 	my $captureNew = $self->{_browsers}{new}->navigate_and_capture( $path );
 

@@ -31,6 +31,9 @@ use warnings;
 use Data::Dumper;
 use Digest::MD5 qw( md5_hex );
 use Encode qw( encode_utf8 );
+use File::Path qw( make_path );
+use File::Spec;
+use File::Temp qw( tempdir );
 use HTTP::Tiny;
 use JSON;
 use List::Util qw( any );
@@ -147,14 +150,25 @@ sub _decode_msg {
 sub _driver_start {
 	my ( $self ) = @_;
 
+    my $which = $self->which();
+
 	my $caps = $Const->{caps};
 	my $width = $self->conf()->confBrowserWidth();
 	my $height = $self->conf()->confBrowserHeight();
 	push( @{$caps->{capabilities}{alwaysMatch}{'goog:chromeOptions'}{args}}, "--window-size=$width,$height" );
+
+    # have a user-data-dir per site
+    my $workdir = $self->conf()->runBrowserWorkdir();
+    if( $workdir ){
+        my $userdir = tempdir( "profile-$which.XXXXXX", DIR => $workdir );
+        make_path( $userdir );
+        msgVerbose( "driver_start() which='$which' userdir='$userdir'" );
+        push( @{$caps->{capabilities}{alwaysMatch}{'goog:chromeOptions'}{args}}, "--user-data-dir=$userdir" );
+    }
 	#print "caps: ".Dumper( $caps );
 
     my $url = $self->_url_driver();
-	msgVerbose( "creating session with url_driver='$url'" );
+	msgVerbose( "driver_start() which='$which' creating session with url_driver='$url'" );
 	my $res = $self->_http()->post( $url, {
 		headers => { 'Content-Type' => 'application/json' },
 		content => encode_json( $caps )
@@ -163,7 +177,7 @@ sub _driver_start {
 
 	my $payload = decode_json( $res->{content} );
 	my $session_id = $payload->{sessionId} // $payload->{value}{sessionId} or die "no sessionId in response";
-	msgVerbose( "got driver sessionId='$session_id' for ".$self->urlBase());
+	msgVerbose( "driver_start() which='$which' got sessionId='$session_id' for ".$self->urlBase());
   
 	my $driver = Selenium::Remote::Driver->new(
 		session_id => $session_id,
@@ -464,7 +478,7 @@ sub click_by_scan_id {
 sub click_by_xpath {
     my ( $self, $xpath ) = @_;
     TTP::stackTrace() if !$xpath;
-	msgVerbose( "click_by_xpath() xpath='$xpath'" );
+	msgVerbose( "click_by_xpath() which='".$self->which()."' xpath='$xpath'" );
     my $js = q{
       return (function(xp){
         function allDocs(rootDoc){
@@ -1181,7 +1195,7 @@ sub navigate {
 	my ( $self, $path ) = @_;
 
     my $url = $self->urlBase().$path;
-    msgVerbose( "navigate() url='$url'" );
+    msgVerbose( "navigate() which='".$self->which()."' url='$url'" );
 
     # Drain logs so we only parse events for THIS navigation
     $self->_perf_logs_drain();

@@ -63,6 +63,11 @@
                     "description": "The width in pixels of the internal browser window.",
                     "type": "integer",
                     "default": 1366
+                },
+                "workdir": {
+                    "description": "Let the created browsers define their user-data-dir inside of 'owrkdir'. Must be inside of a POSIX filesystem.",
+                    "type": "string",
+                    "default": "The user .cache/ directory."
                 }
             }
         },
