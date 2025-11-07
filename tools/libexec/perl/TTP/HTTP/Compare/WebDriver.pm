@@ -141,8 +141,6 @@ sub DESTROY {
     } else {
         msgVerbose( "WebDriver is not defined" );
     }
-
-	return;
 }
 
 ### Global functions

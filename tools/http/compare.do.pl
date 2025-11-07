@@ -130,6 +130,8 @@ sub doCompareByRole {
 	$hashref->{byRole}{$role} = $roleObj;
 	my $result = $roleObj->doCompare( $rundir, { debug => $opt_debug });
 	#print STDERR "result: ".Dumper( $result );
+	# cleanup the object and all its dependencies *before* DESTRUCT phase
+	$roleObj->destroy();
 }
 
 # -------------------------------------------------------------------------------------------------

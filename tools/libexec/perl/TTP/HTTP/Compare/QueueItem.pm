@@ -355,18 +355,6 @@ sub new {
 	return $self;
 }
 
-# -------------------------------------------------------------------------------------------------
-# Destructor
-# (I):
-# - instance
-# (O):
-
-sub DESTROY {
-	my $self = shift;
-	$self->SUPER::DESTROY();
-	return;
-}
-
 ### Global functions
 ### Note for the developer: while a global function doesn't take any argument, it can be called both
 ### as a class method 'TTP::Package->method()' or as a global function 'TTP::Package::method()',

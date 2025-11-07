@@ -31,7 +31,7 @@ use warnings;
 use Data::Dumper;
 use Digest::MD5 qw( md5_hex );
 use Encode qw( encode_utf8 );
-use File::Path qw( make_path );
+use File::Path qw( make_path rmtree );
 use File::Spec;
 use File::Temp qw( tempdir );
 use HTTP::Tiny;
@@ -160,9 +160,10 @@ sub _driver_start {
     # have a user-data-dir per site
     my $workdir = $self->conf()->runBrowserWorkdir();
     if( $workdir ){
-        my $userdir = tempdir( "profile-$which.XXXXXX", DIR => $workdir );
+        my $userdir = tempdir( "profile-$which.XXXXXXXX", DIR => $workdir );
         make_path( $userdir );
         msgVerbose( "driver_start() which='$which' userdir='$userdir'" );
+        $self->{_userdir} = $userdir;
         push( @{$caps->{capabilities}{alwaysMatch}{'goog:chromeOptions'}{args}}, "--user-data-dir=$userdir" );
     }
 	#print "caps: ".Dumper( $caps );
@@ -1119,6 +1120,34 @@ sub current_path {
 }
 
 # -------------------------------------------------------------------------------------------------
+# close all the objects just before running the DESTRUCT phase
+
+sub destroy {
+	my ( $self ) = @_;
+
+	my $driver = $self->driver();
+    if( $driver ){
+    	$driver->quit();
+        msgVerbose( "'".$self->which()."' driver quitting" );
+    } else {
+        msgVerbose( "'".$self->which()."' driver is not defined" );
+    }
+
+    # should be automatic, but isn't
+    my $userdir = $self->{_userdir};
+    if( $userdir ){
+        rmtree( $userdir );
+        if( -d $userdir ){
+            msgVerbose( "unable to rmtree '$userdir'" );
+        } else {
+            msgVerbose( "successfully removed '$userdir' tree" );
+        }
+    } else {
+        msgVerbose( "'".$self->which()."' userdir is not defined" );
+    }
+}
+
+# -------------------------------------------------------------------------------------------------
 # (I):
 # - nothing
 # (O):
@@ -1640,27 +1669,6 @@ sub new {
 	$self->{_driver} = $self->_driver_start();
 
 	return $self;
-}
-
-# -------------------------------------------------------------------------------------------------
-# Destructor
-# (I):
-# - instance
-# (O):
-
-sub DESTROY {
-	my $self = shift;
-	$self->SUPER::DESTROY();
-
-	my $driver = $self->driver();
-    if( $driver ){
-    	$driver->quit();
-        msgVerbose( "driver quitting" );
-    } else {
-        msgVerbose( "driver is not defined" );
-    }
-
-	return;
 }
 
 ### Global functions

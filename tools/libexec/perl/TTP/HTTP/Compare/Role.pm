@@ -663,6 +663,17 @@ sub conf {
 }
 
 # -------------------------------------------------------------------------------------------------
+# Seems that the DESTRUCT Perl phase, which should run the DESTROY sub of the classes, doesn't work
+# very well - just call it before while still in RUN phase
+
+sub destroy {
+    my ( $self ) = @_;
+
+	$self->{_browsers}{ref}->destroy();
+	$self->{_browsers}{new}->destroy();
+}
+
+# -------------------------------------------------------------------------------------------------
 # Compare the provided URLs for the role.
 # (I):
 # - the output root directory
@@ -890,18 +901,6 @@ sub new {
 	$self->{conf} = $conf;
 
 	return $self;
-}
-
-# -------------------------------------------------------------------------------------------------
-# Destructor
-# (I):
-# - instance
-# (O):
-
-sub DESTROY {
-	my $self = shift;
-	$self->SUPER::DESTROY();
-	return;
 }
 
 ### Global functions
