@@ -60,38 +60,6 @@ my $Const = {
 ### Private methods
 
 # -------------------------------------------------------------------------------------------------
-# Capture both on ref and new site.
-# (I):
-# - the current queue item, which is expected to have been already successfully clicked
-# (O):
-# - capture from ref site
-# - capture from new site
-
-sub _capture_by_click {
-	my ( $self, $queue_item ) = @_;
-
-	my $cap_ref = $self->{_browsers}{ref}->wait_and_capture();
-
-	# Re-discover a clickable with same visible text (best effort) and click there too
-	if( !$self->{_browsers}{new}->click_by_xpath( $queue_item->xpath())){
-		msgVerbose( "xpath='".$queue_item->xpath()."' not available on new site" );
-		my $match_new = $self->{_browsers}{new}->clickable_find_equivalent_xpath( $queue_item );
-		if( $match_new ){
-			if( $self->{_browsers}{new}->click_by_xpath( $match_new )){
-				msgVerbose( "match found '$match_new' on new site" );
-			} else {
-				msgVerbose( "unable to find a equivalent match for '".$queue_item->xpath()."', cancelling" );
-				return [ undef, undef ];
-			}
-		}
-	}
-
-	my $cap_new = $self->{_browsers}{new}->wait_and_capture();
-
-	return [ $cap_ref, $cap_new ];
-}
-
-# -------------------------------------------------------------------------------------------------
 # we enter with the next route to examine
 # activate all links and click everywhere here
 # go on until having reached first of max_depth, or max_links, or max_pages
@@ -180,6 +148,11 @@ sub _do_crawl {
 		# links which would be found in new but would be absent from ref are ignored (as new features)
 		$self->_enqueue_links( $captureRef, $queue_item ) if $self->conf()->runCrawlByLinkEnabled();
 
+		# if not error have been found, try to handle the forms
+		if( !scalar( @{ $res })){
+			$self->_handle_forms( $self->conf()->confForms());
+		}
+
 	} elsif( !defined( $captureRef ) && !defined( $captureNew ) && !defined( $path )){
 		msgVerbose( "do_crawl() all values are undef, just skip" );
 		if( $reason ){
@@ -230,9 +203,21 @@ sub _do_crawl_by_click {
 
 	# and try to restore the origin clicks chain if we do not have the same frames
 	if( $self->_restore_chain( $queue_item )){
-		( $captureRef, $captureNew ) = @{ $self->_capture_by_click( $queue_item ) };
-		return [ undef, undef, undef, "no_capture" ] if !$captureRef || !$captureNew;
-
+		$captureRef = $self->{_browsers}{ref}->wait_and_capture();
+		# re-discover a clickable with same visible text (best effort) and click there too
+		if( !$self->{_browsers}{new}->click_by_xpath( $queue_item->xpath())){
+			msgVerbose( "xpath='".$queue_item->xpath()."' not available on new site" );
+			my $match_new = $self->{_browsers}{new}->clickable_find_equivalent_xpath( $queue_item );
+			if( $match_new ){
+				if( $self->{_browsers}{new}->click_by_xpath( $match_new )){
+					msgVerbose( "match found '$match_new' on new site" );
+				} else {
+					msgVerbose( "unable to find a equivalent match for '".$queue_item->xpath()."', cancelling" );
+					return [ undef, undef, undef, "no new xpath" ];
+				}
+			}
+		}
+		$captureNew = $self->{_browsers}{new}->wait_and_capture();
 	} else {
 		msgWarn( "unable to restore the clicks chain" );
 		return [ undef, undef, undef, "restore_chain" ];
@@ -377,6 +362,32 @@ sub _enqueue_links {
 }
 
 # -------------------------------------------------------------------------------------------------
+# Handle the provided form
+# (I):
+# - the form selector
+# - the form description
+
+sub _handle_form {
+    my ( $self, $selector, $description ) = @_;
+
+	my $formRef = $self->{_browsers}{ref}->handleForm( $selector, $description );
+	my $formNew = $formRef ? $self->{_browsers}{new}->handleForm( $selector, $description ) : undef;
+}
+
+# -------------------------------------------------------------------------------------------------
+# Handle the forms in the page
+# (I):
+# - the configured forms
+
+sub _handle_forms {
+    my ( $self, $forms ) = @_;
+
+	for my $form_selector ( sort keys %{$forms} ){
+		$self->_handle_form( $form_selector, $forms->{$form_selector} );
+	}
+}
+
+# -------------------------------------------------------------------------------------------------
 # (I):
 # - nothing
 # (O):
@@ -409,7 +420,7 @@ sub _initial_routes {
 
 sub _max_reached {
 	my ( $self ) = @_;
-	return true if $self->{_result}{count}{visited} >= $self->conf()->runMaxVisited() && $self->conf()->runMaxVisited() > 0;
+	return true if $self->{_result}{count}{visited} >= $self->conf()->runCrawlMaxVisited() && $self->conf()->runCrawlMaxVisited() > 0;
 	return false;
 }
 
@@ -496,17 +507,13 @@ sub _restore_chain {
 					msgVerbose( "restore_chain() unable to click on ref for '".$qi->xpath()."'" );
 					return false;
 				}
-				my $match_new = $self->{_browsers}{new}->clickable_find_equivalent_xpath( $qi );
-				if( !$match_new ){
-					msgVerbose( "restore_chain() unable to find a new equivalent for '".$qi->xpath()."'" );
-					return false;
-				}
-				if( !$self->{_browsers}{new}->click_by_xpath( $match_new )){
-					msgVerbose( "restore_chain() unable to click on new for '$match_new'" );
+				if( !$self->{_browsers}{new}->click_by_xpath( $qi->xpath() )){
+					msgVerbose( "restore_chain() unable to click on new for '".$qi->xpath()."'" );
 					return false;
 				}
 			} else {
 				msgWarn( "unexpected from='".$qi->from()."'" );
+				return false;
 			}
 			# wait for page ready
 			$self->{_browsers}{ref}->wait_for_page_ready();

@@ -61,6 +61,9 @@ use constant {
 	DEFAULT_COMPARE_SCREENSHOT_ENABLED => false,
 	DEFAULT_COMPARE_SCREENSHOT_RMSE => 0.01,
 	DEFAULT_COMPARE_SCREENSHOT_THRESHOLD_COUNT => 10,
+	DEFAULT_CRAWL_BY_CLICK_CSS_EXCLUDES => [
+		"th > a"
+	],
 	DEFAULT_CRAWL_BY_CLICK_ENABLED => false,
 	DEFAULT_CRAWL_BY_CLICK_FINDERS => [
 		"a[href]",
@@ -81,7 +84,9 @@ use constant {
 		"\\bsignin\\b",
 		"\\bsignout\\b"
 	],
-	DEFAULT_CRAWL_EXCLUDE_PATTERNS => [],
+	DEFAULT_CRAWL_BY_LINK_CSS_EXCLUDES => [
+		"th > a"
+	],
 	DEFAULT_CRAWL_BY_LINK_ENABLED => false,
 	DEFAULT_CRAWL_BY_LINK_FINDERS => [
 		{
@@ -215,20 +220,6 @@ sub _compile_regex_patterns {
         push( @regex, $rx );
     }
 	$self->{_run}{link_url_deny_rx} = [ @regex ];
-
-	# clickables exclude patterns
-    $raw = $self->crawlExcludePatterns();
-	@regex = ();
-    for my $s (@{ $raw // [] }) {
-        next unless defined $s && length $s;
-        my $rx = eval { qr/$s/ };
-        if ($@) {
-            msgWarn( "Invalid exclude regex '$s': $@ (skipping)" );
-            next;
-        }
-        push( @regex, $rx );
-    }
-	$self->{_run}{exclude_rx} = [ @regex ];
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -288,7 +279,7 @@ sub _loadConfig {
 		# the options which are overridable in verb command-line have a 'run' version
 		#
 		# check max visited count
-		my $max_visited = $args->{max_visited} // $self->crawlMaxVisited();
+		my $max_visited = $args->{max_visited} // $self->confCrawlMaxVisited();
 		if( $max_visited < 0 ){
 			$msgRef->( "crawl.max_visited='$max_visited' is invalid (less than zero)" );
 		} else {
@@ -576,6 +567,21 @@ sub confCompareScreenshotsThresholdCount {
 }
 
 # ------------------------------------------------------------------------------------------------
+# (I):
+# - none
+# (O):
+# - returns the list of CSS deny patterns when crawling by click
+
+sub confCrawlByClickCssExcludes {
+	my ( $self ) = @_;
+
+	my $list = $self->var([ 'crawl', 'by_click', 'css_excludes' ]);
+	$list = DEFAULT_CRAWL_BY_CLICK_CSS_EXCLUDES if !defined $list;
+
+	return $list;
+}
+
+# ------------------------------------------------------------------------------------------------
 # Returns whether we crawl by clicks.
 # (I):
 # - none
@@ -651,6 +657,21 @@ sub confCrawlByClickXpathDenyPatterns {
 
 	my $list = $self->var([ 'crawl', 'by_click', 'xpath_deny_patterns' ]);
 	$list = DEFAULT_CRAWL_BY_CLICK_XPATH_DENY_PATTERNS if !defined $list;
+
+	return $list;
+}
+
+# ------------------------------------------------------------------------------------------------
+# (I):
+# - none
+# (O):
+# - returns the list of CSS deny patterns when crawling by link
+
+sub confCrawlByLinkCssExcludes {
+	my ( $self ) = @_;
+
+	my $list = $self->var([ 'crawl', 'by_link', 'css_excludes' ]);
+	$list = DEFAULT_CRAWL_BY_LINK_CSS_EXCLUDES if !defined $list;
 
 	return $list;
 }
@@ -768,22 +789,6 @@ sub confCrawlByLinkUrlDenyPatterns {
 }
 
 # ------------------------------------------------------------------------------------------------
-# Returns the list of patterns excluded from clicks/links extraction.
-# (I):
-# - none
-# (O):
-# - returns the list of selector excluded from clicks/links extraction
-
-sub crawlExcludePatterns {
-	my ( $self ) = @_;
-
-	my $list = $self->var([ 'crawl', 'exclude_patterns' ]);
-	$list = DEFAULT_CRAWL_EXCLUDE_PATTERNS if !defined $list;
-
-	return $list;
-}
-
-# ------------------------------------------------------------------------------------------------
 # Returns the configured max count of pages to visit.
 # 'visited' here means both when following a link (page count) or when clicking in an area.
 # (I):
@@ -791,7 +796,7 @@ sub crawlExcludePatterns {
 # (O):
 # - returns the configured max count of pages to visit
 
-sub crawlMaxVisited {
+sub confCrawlMaxVisited {
 	my ( $self ) = @_;
 
 	my $max = $self->var([ 'crawl', 'max_visited' ]);
@@ -824,7 +829,7 @@ sub confCrawlSameHost {
 # - the subdirectory of the HTMLs files for this site
 #   this may be set empty by configuration, which means doesn't keep
 
-sub dirsHtmls {
+sub confDirsHtmls {
 	my ( $self, $which ) = @_;
 
 	if( $which ne 'diffs' && $which ne 'ref' && $which ne 'new' ){
@@ -846,7 +851,7 @@ sub dirsHtmls {
 # - the subdirectory of the screenshots for this site
 #   this may be set empty by configuration, which means doesn't keep
 
-sub dirsScreenshots {
+sub confDirsScreenshots {
 	my ( $self, $which ) = @_;
 
 	if( $which ne 'diffs' && $which ne 'ref' && $which ne 'new' ){
@@ -858,6 +863,20 @@ sub dirsScreenshots {
 	my $subdir = $self->var([ 'dirs', $which, 'screenshots' ]) // $def;
 
 	return $subdir;
+}
+
+# -------------------------------------------------------------------------------------------------
+# (I):
+# - nothing
+# (O):
+# - a ref to a hash which contains the forms to be handled, maybe empty
+
+sub confForms {
+	my ( $self ) = @_;
+
+	my $ref = $self->var([ 'forms' ]) // {};
+
+	return $ref;
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -1033,23 +1052,9 @@ sub runCrawlByLinkUrlDenyPatterns {
 # (I):
 # - nothing
 # (O):
-# - the list of Regexes to exclude when identifying cliks/links areas
-
-sub runExcludePatterns {
-	my ( $self ) = @_;
-
-	my $list = $self->{_run}{exclude_rx};
-
-	return $list;
-}
-
-# -------------------------------------------------------------------------------------------------
-# (I):
-# - nothing
-# (O):
 # - the running max count of visited places
 
-sub runMaxVisited {
+sub runCrawlMaxVisited {
 	my ( $self ) = @_;
 
 	my $max = $self->{_run}{max_visited};

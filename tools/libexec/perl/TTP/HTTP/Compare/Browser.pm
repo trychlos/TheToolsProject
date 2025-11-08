@@ -52,6 +52,7 @@ use vars::global qw( $ep );
 
 use TTP::Constants qw( :all );
 use TTP::HTTP::Compare::Capture;
+use TTP::HTTP::Compare::Form;
 use TTP::Message qw( :all );
 
 use constant {
@@ -425,52 +426,6 @@ sub _url_ssid {
 
 ### Public methods
 
-=pod
-# -------------------------------------------------------------------------------------------------
-# JS: find element by data-scan-id across top + same-origin iframe docs; click it.
-
-sub click_by_scan_id {
-    my ( $self, $scan_id ) = @_;
-	msgVerbose( "click_by_scan_id() scan_id='$scan_id'" );
-	my $js = q{
-  		return ( function( scanId ){
-    		function allDocs( rootDoc ){
-      			const out = [ rootDoc ];
-      			( function walk( doc ){
-        			const frames = doc.querySelectorAll( 'iframe,frame' );
-        			for( const f of frames ){
-          				try {
-            				const cd = f.contentDocument;
-            				if( !cd ) continue;
-            				out.push( cd );
-            				walk( cd );
-          				} catch( e ){
-							/* cross-origin -> skip */
-						}
-        			}
-      			})( rootDoc );
-      			return out;
-    		}
-    		const docs = allDocs( document );
-    		for( const d of docs ){
-      			const el = d.querySelector( '[data-scan-id="'+scanId+'"]' );
-      			if( el ){
-        			el.scrollIntoView({ block:'center', inline:'center' });
-        			el.click();
-        			return true;
-      			}
-    		}
-    		return false;
-  		})( arguments[0] );
-	};
-    if( $self->exec_js_w3c_sync( $js, [ $scan_id ] )){
-        $self->_signature_clear();
-        return true;
-    }
-    return false;
-}
-=cut
-
 # -------------------------------------------------------------------------------------------------
 # JS: find element by xpath across top + same-origin iframe docs; click it.
 # (O):
@@ -538,103 +493,6 @@ sub click_by_xpath {
     return false;
 }
 
-=pod
-# -------------------------------------------------------------------------------------------------
-# JS: walk top document + same-origin iframes, tag clickables with data-scan-id,
-#     and return metadata: id, text, href (may be javascript:...), kind, docKey, frameSrc
-
-sub clickable_discover_targets_scanid {
-    my ( $self ) = @_;
-	my $js = q{
-  		return( function(){
-    		function sameOriginFrameDocs( rootDoc ){
-      			const out = [{doc: rootDoc, frameSrc: null, docKey: 'top'}];
-      			function walk( doc, prefix ){
-        			const frames = doc.querySelectorAll( 'iframe,frame' );
-        			let idx = 0;
-        			for( const f of frames ){
-          				idx++;
-          				try {
-            				const cd = f.contentDocument;
-            				if( !cd ) continue; // not loaded or cross-origin
-            				const src = f.getAttribute('src') || '';
-            				const key = (prefix? prefix+'>' : '') + 'iframe['+idx+']:' + src;
-            				out.push({ doc: cd, frameSrc: src, docKey: key });
-            				walk( cd, key );
-          				} catch(e){
-							/* cross-origin -> skip */
-						}
-        			}
-      			}
-      			walk( rootDoc, '' );
-      			return out;
-    		}
-
-    		function visible( el ){
-      			const cs = el.ownerDocument.defaultView.getComputedStyle( el );
-      			if( !cs ) return false;
-      			if( cs.display === 'none' || cs.visibility === 'hidden' || +cs.opacity === 0 ) return false;
-      			const rect = el.getBoundingClientRect();
-      			return ( rect.width > 0 && rect.height > 0 );
-    		}
-
-    		const docs = sameOriginFrameDocs( document );
-    		const out = [];
-
-			// make sure the sane scan-id is not reused by having a global counter
-			// because the initial compare is dumped to n°1, start here with 2 so that the 'visited' counter is tried to be kept aligned with the scan id's
-			window.__scanCounter = window.__scanCounter || 2;
-
-    		for( const ctx of docs ){
-      			const d = ctx.doc;
-      			const list = new Set();
-      			d.querySelectorAll( 'a[href], [role="link"], [data-link], [data-router-link], button, [onclick]' ).forEach( n => list.add( n ));
-
-      			for( const el of list ){
-        			if( !visible( el )) continue;
-        			if( el.hasAttribute( 'disabled' ) || el.getAttribute( 'aria-disabled' ) === 'true' ) continue;
-
-        			let href = el.getAttribute( 'href' ) || '';
-        			if( !href && el.closest( 'a[href]' )) href = el.closest( 'a[href]' ).getAttribute( 'href' ) || '';
-
-        			const text = ( el.innerText || el.textContent || '' ).trim().replace( /\s+/g,' ' ).slice( 0,160 );
-        			const tag = el.tagName.toLowerCase();
-        			const kind =
-          				tag === 'a' ? 'a' :
-          				tag === 'button' ? 'button' :
-          				el.hasAttribute('onclick') ? 'onclick' :
-          				el.getAttribute('role') === 'link' ? 'role-link' :
-          				'other';
-					const onclick = el.getAttribute('onclick') || '';
-					const onclickEff = onclick || (/^\s*javascript:/i.test(href) ? href.replace(/^\s*javascript:\s*/i,'') : '');
-
-        			if( !el.dataset.scanId ){
-						const frameHint = (ctx.docKey || 'top').slice(0,40).replace( /[^\w\-:]/g, '_' );
-						const id = `scan-${frameHint}-${window.__scanCounter++}`;
-						el.dataset.scanId = id;
-					}
-
-        			out.push({
-          				id: el.dataset.scanId,
-          				text,
-						href,
-						kind,
-          				docKey: ctx.docKey,
-          				frameSrc: ctx.frameSrc || '',
-						onclick: onclickEff
-        			});
-      			}
-			}
-    		return out;
-  		})();
-	};
-    my $list = $self->exec_js_w3c_sync( $js, [] );
-    #print STDERR "clickable_discover_targets_scanid() ".Dumper( $list );
-    msgVerbose( "clickable_discover_targets_scanid() found ".scalar( @{$list} )." targets" );
-    return $list // [];
-}
-=cut
-
 # -------------------------------------------------------------------------------------------------
 # JS: walk top document + same-origin iframes
 # Replace the above scan_id way by a XPATH implementation
@@ -654,7 +512,7 @@ sub clickable_discover_targets_xpath {
     my ( $self ) = @_;
 
     my $js = q{
-      return (function( finders ){
+      return (function( finders, css_excluded ){
         /* ---------- helpers ---------- */
 
         function sameOriginFrameDocs(rootDoc){
@@ -759,11 +617,21 @@ sub clickable_discover_targets_xpath {
 
           // Build a unique set of candidates per document
           const pool = new Set();
-          d.querySelectorAll( finders.join( ',' )).forEach( n => pool.add( n ));
+          d.querySelectorAll( finders ).forEach( n => pool.add( n ));
 
           for (const el of pool){
             if (!visible(el)) continue;
             if (el.hasAttribute('disabled') || el.getAttribute('aria-disabled') === 'true') continue;
+
+            // honors css excludes selectors
+            let match = false;
+            for( const sel of css_excluded ){
+                if( el.matches( sel )){
+                    match = true;
+                    break;
+                }
+            }
+            if( match ) continue;
 
             let href = el.getAttribute('href') || '';
             if (!href && el.closest('a[href]')) href = el.closest('a[href]').getAttribute('href') || '';
@@ -794,201 +662,12 @@ sub clickable_discover_targets_xpath {
           }
         }
         return out;
-      })( arguments[0] );
+      })( arguments[0], arguments[1] );
     };
-    my $list = $self->exec_js_w3c_sync( $js, [ $self->conf()->confCrawlByClickFinders() ]);
+    my $list = $self->exec_js_w3c_sync( $js, [ $self->conf()->confCrawlByClickFinders(), $self->conf()->confCrawlByClickCssExcludes() ]);
     #print STDERR "clickables: ".Dumper( $list );
     return $list // [];
 }
-
-=pod
-# -------------------------------------------------------------------------------------------------
-# action = { kind, text, href, onclick }  -- all optional except kind
-# (I):
-# - the current queue item
-# (O):
-# - the best found match as a scan id available on the page
-
-sub clickable_find_equivalent_scanid {
-	my ( $self, $queue_item ) = @_;
-	my $diag_js = q{
-		return (function(){
-			function canon(s){ return (s||'').replace(/\u00A0/g,' ').replace(/\s+/g,' ').trim(); }
-			function canReadFrame(f) {
-			try { return !!f.contentDocument; } catch(e){ return false; }
-			}
-			const out = {
-			top: {
-				href: location.href,
-				readyState: document.readyState,
-				body: !!document.body,
-				aCount: document.querySelectorAll('a').length,
-				sample: Array.from(document.querySelectorAll('a')).slice(0,5).map(a=>({
-				text: canon(a.innerText||a.textContent||'').slice(0,80),
-				href: a.getAttribute('href')||''
-				})),
-			},
-			iframes: []
-			};
-			const frs = Array.from(document.querySelectorAll('iframe,frame'));
-			frs.forEach((f,i)=>{
-			const src = f.getAttribute('src')||'';
-			const sandbox = f.getAttribute('sandbox')||'';
-			const readable = canReadFrame(f);
-			const entry = { index:i, src, sandbox, readable, aCount:null, sample:[] };
-			if (readable) {
-				try{
-				const d = f.contentDocument;
-				const as = Array.from(d.querySelectorAll('a'));
-				entry.aCount = as.length;
-				entry.sample = as.slice(0,5).map(a=>({
-					text: canon(a.innerText||a.textContent||'').slice(0,80),
-					href: a.getAttribute('href')||''
-				}));
-				} catch(e){ entry.readable = false; }
-			}
-			out.iframes.push(entry);
-			});
-			return out;
-		})();
-	};
-	my $js = q{
-  		return ( function( meta ){
-    		function canonText( s ){
-      			if( !s ) return '';
-      			return s
-        			.replace(/&nbsp;/g, ' ')
-        			.replace(/\u00A0/g, ' ')
-        			.replace(/\s+/g, ' ')
-        			.trim();
-    		}
-
-    		function lcCanon( s ){
-				return canonText( s ).toLowerCase();
-			}
-
-		    function pathOnly( u ){
-      			try {
-        			const uu = new URL( u, document.location.href );
-        			return uu.pathname + ( uu.search || '' );
-      			} catch( e ){
-					return '';
-				}
-    		}
-
-    		function parseJsSig( a ){
-      			// Try onclick attribute or javascript:href; return "name(arg1,arg2,...)"
-      			let txt = a.getAttribute( 'onclick' ) || '';
-      			if( !txt ){
-        			const h = a.getAttribute( 'href' ) || '';
-        			if( /^\s*javascript:/i.test( h )) txt = h.replace( /^\s*javascript:\s*/i, '' );
-      			}
-      			if( !txt ) return null;
-      			// normalize spaces
-      			txt = txt.replace( /\s+/g, ' ' );
-      			// shrink "parent.ObjectClick(...)" -> "ObjectClick(arg,arg,...)"
-      			const m = txt.match( /([A-Za-z_$][\w$\.]*)\s*\(([^)]*)\)/ );
-      			if( !m ) return null;
-      			const name = m[1].split( '.' ).pop();     // drop parent./window.
-      			const args = m[2].split( ',' ).map( s=>s.trim()).join( ',' );
-      			return name + '(' + args + ')';
-    		}
-
-    		function ensureScanId( el ){
-      			if( !el.dataset.scanId ) el.dataset.scanId = 'scan-' + Math.floor( Math.random()*1e9 );
-      			return el.dataset.scanId;
-    		}
-
-    		function jaccardTokens( a, b ){
-      			const A = new Set( lcCanon( a ).split( /\s+/ ).filter( Boolean ));
-      			const B = new Set( lcCanon( b ).split( /\s+/ ).filter( Boolean ));
-      			if( !A.size && !B.size ) return 1;
-      			let inter=0;
-				for( const t of A ){
-					if( B.has( t )) inter++;
-				}
-      			return inter / ( A.size + B.size - inter || 1 );
-    		}
-
-    		const wantKind = ( meta.kind || 'a,button,[role="link"]' ).trim();
-    		const wantText = canonText(meta.text||'');
-    		const wantTextLC = lcCanon(wantText);
-    		const wantPrefix = wantText.slice(0,40);
-    		const wantHrefPath = pathOnly(meta.href||'');
-    		const wantSig = (meta.onclick ? meta.onclick : null);
-
-    		const nodes = Array.from( document.querySelectorAll( wantKind ));
-			/*
-    		const nodes = Array.from( document.querySelectorAll( 'a' ));
-			return nodes.map( el => ({
-				text: (el.innerText || "").trim().slice(0,80),
-				href: el.getAttribute("href") || "",
-				hasScanId: !!el.dataset.scanId
-			}));
-			*/
-
-			// Pass 1: exact text
-			for( const el of nodes ){
-			    const t = canonText( el.innerText || el.textContent || '' );
-			    if( t === wantText ) return ensureScanId(el);
-			}
-
-			// Pass 2: case-insensitive text
-			for( const el of nodes ){
-			    const t = lcCanon( el.innerText || el.textContent || '' );
-			    if( t === wantTextLC ) return ensureScanId(el);
-			}
-
-			// Pass 3: prefix contains
-			if( wantPrefix ){
-			    for( const el of nodes ){
-				    const t = canonText( el.innerText || el.textContent || '' );
-				    if( t.indexOf( wantPrefix ) >= 0 ) return ensureScanId(el);
-			    }
-			}
-
-			// Pass 4: href path equality
-			if( wantHrefPath ){
-			    for( const el of nodes ){
-				    const h = el.getAttribute && el.getAttribute( 'href' );
-				    if( !h ) continue;
-				    if( pathOnly( h ) === wantHrefPath ) return ensureScanId(el);
-			    }
-			}
-
-			// Pass 5: onclick/javascript signature equality
-			if( wantSig ){
-			    for( const el of nodes ){
-				    const sig = parseJsSig( el );
-				    if( sig && sig === wantSig ) return ensureScanId(el);
-			    }
-			} else {
-                // If ref had no onclick saved, but this candidate does and matches text closely, accept
-                for (const el of nodes){
-                    const sig = parseJsSig(el);
-                    if (!sig) continue;
-                    const score = jaccardTokens(el.innerText||el.textContent||'', wantText);
-                    if (score >= 0.9) return ensureScanId(el);
-                }
-			}
-
-			// Pass 6: fuzzy text score, pick best over threshold
-			let best = {score: 0, el: null};
-			for (const el of nodes){
-			    const t = el.innerText || el.textContent || '';
-			    const s = jaccardTokens(t, wantText);
-			    if (s > best.score) best = { score: s, el };
-			}
-			if (best.el && best.score >= 0.8) return ensureScanId(best.el);
-
-			return null;
-		})( arguments[0] );
-	};
-	my $res = $self->exec_js_w3c_sync( $js, [ $queue_item->hash() ] );
-	#print STDERR "clickable_find_equivalent() res ".Dumper( $res );
-    return $res;
-}
-=cut
 
 # -------------------------------------------------------------------------------------------------
 # When replaying on “new”:
@@ -1183,6 +862,27 @@ sub exec_js_w3c_sync {
     };
     msgErr( "exec_js_w3c_sync() status=$res->{status} reason='$res->{reason}' content='$res->{content}'" ) unless $res->{success};
     return decode_json( $res->{content} )->{value};
+}
+
+# -------------------------------------------------------------------------------------------------
+# (I):
+# - the form selector
+# - the form description
+# (O):
+# - 
+
+sub handleForm {
+	my ( $self, $selector, $description ) = @_;
+
+    my $element = eval { $self->driver()->find_element( $selector, 'css' ) };
+
+    my $form = $element ? TTP::HTTP::Compare::Form->new( $self->ep(), $self, $selector, $description, $element ) : undef;
+
+    if( $form ){
+        $form->handle();
+    }
+
+    return $form;
 }
 
 # -------------------------------------------------------------------------------------------------

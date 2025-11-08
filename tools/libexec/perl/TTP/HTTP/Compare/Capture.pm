@@ -303,7 +303,7 @@ sub _write_diffs {
     my ( $self, $ref, $new, $args ) = @_;
 	$args //= {};
 
-	my $subdirs = $self->browser()->conf()->dirsScreenshots( 'diffs' );
+	my $subdirs = $self->browser()->conf()->confDirsScreenshots( 'diffs' );
 	if( $subdirs ){
 		my @dirs = File::Spec->splitdir( $subdirs );
 		my $fdir = File::Spec->catdir( $args->{dir} || File::Temp->tempdir(), @dirs );
@@ -610,7 +610,7 @@ sub writeHtml {
 	}
 
 	my $which = $self->browser()->which();
-	my $subdirs = $self->browser()->conf()->dirsHtmls( $which );
+	my $subdirs = $self->browser()->conf()->confDirsHtmls( $which );
 	if( $subdirs ){
 		my @dirs = File::Spec->splitdir( $subdirs );
 		my $fdir = File::Spec->catdir( $args->{dir} || File::Temp->tempdir(), @dirs );

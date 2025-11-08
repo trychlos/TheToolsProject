@@ -152,6 +152,14 @@
                     "description": "The description of a crawling operations by clicking anywhere.",
                     "type": "object",
                     "properties": {
+                        "css_excludes": {
+                            "description": "The list of CSS selectors to exclude. Empty means none. Patterns are applied against the CSS selector of the clickable.",
+                            "type": "array",
+                            "items": "string",
+                            "default": [
+                                "th > a"
+                            ]
+                        },
                         "enabled": {
                             "description": "Whether we want crawl by clicking anywhere. Overridable in the command-line.",
                             "type": "boolean",
@@ -207,6 +215,14 @@
                     ],
                     "type": "object",
                     "properties": {
+                        "css_excludes": {
+                            "description": "The list of CSS selectors to exclude. Empty means none. Patterns are applied against the CSS selector of the current element.",
+                            "type": "array",
+                            "items": "string",
+                            "default": [
+                                "th > a"
+                            ]
+                        },
                         "enabled": {
                             "description": "Whether we want crawl by following the links. Overridable in the command-line.",
                             "type": "boolean",
@@ -351,6 +367,23 @@
                             "default": "ref/screenshots"
                         }
                     }
+                }
+            }
+        },
+        "forms": {
+            "description": "The list and description of forms to be handled.",
+            "type": "object",
+            "patternProperties": {
+                "^.*$": {
+                    "description": "The form CSS selector.",
+                    "type": "string"
+                }
+            },
+            "properties": {
+                "submit_selector": {
+                    "description": "The CSS selector of the submit element.",
+                    "type": "string",
+                    "default": "When not specified, the form is expected to react on 'change' event."
                 }
             }
         },
