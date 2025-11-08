@@ -56,6 +56,11 @@ sub _handle_select {
     my $driver = $self->{_browser}->driver();
     my $select = eval { $self->find_element( 'select', 'css' ) };
     if( $select ){
+        my $selector = $self->{_selector};
+        my $description = $self->{_description};
+        my $form = $self->{_form};
+        msgWarn( "handling '$selector' form" ); # just to be visible in the outpout
+
         # collect candidate option values (skip disabled/empty)
         my @opts = eval { $select->find_elements( 'option' ) } // ();
         my @vals;
@@ -69,9 +74,6 @@ sub _handle_select {
         }
         if( @vals ){
             # try each value -> submit
-            my $selector = $self->{_selector};
-            my $description = $self->{_description};
-            my $form = $self->{_form};
             for my $v ( @vals ){
                 # set value via JS + change event (most reliable for SPAs)
                 my $ok = eval {

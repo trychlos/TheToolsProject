@@ -74,7 +74,7 @@ use constant {
 		"[onclick]"
 	],
 	DEFAULT_CRAWL_BY_CLICK_HREF_DENY_PATTERNS => [
-		"^#|^callto:|^mailto:|^tel:"
+		"^#.+|^callto:|^mailto:|^tel:"
 	],
 	DEFAULT_CRAWL_BY_CLICK_INTERMEDIATE_SCREENSHOTS => false,
 	DEFAULT_CRAWL_BY_CLICK_XPATH_DENY_PATTERNS => [
@@ -97,7 +97,7 @@ use constant {
 	DEFAULT_CRAWL_BY_LINK_HONOR_QUERY => true,
 	DEFAULT_CRAWL_BY_LINK_HREF_ALLOW_PATTERNS => [],
 	DEFAULT_CRAWL_BY_LINK_HREF_DENY_PATTERNS => [
-		"^#|^javascript:|^callto:|^mailto:|^tel:"
+		"^#.+|^javascript:|^callto:|^mailto:|^tel:"
 	],
 	DEFAULT_CRAWL_BY_LINK_URL_ALLOW_PATTERNS => [],
 	DEFAULT_CRAWL_BY_LINK_URL_DENY_PATTERNS => [
@@ -113,6 +113,18 @@ use constant {
 	DEFAULT_CRAWL_MODE => 'link',
 	DEFAULT_CRAWL_PREFIX_PATH => [ '' ],
 	DEFAULT_CRAWL_SAME_HOST => true,
+	DEFAULT_DIRS_HTMLS => {
+		diffs => "",
+		new => File::Spec->catdir( "new", "htmls" ),
+		ref => File::Spec->catdir( "ref", "htmls" ),
+		restored => ""
+	},
+	DEFAULT_DIRS_SCREENSHOTS => {
+		diffs => File::Spec->catdir( "diffs", "screenshots" ),
+		new => File::Spec->catdir( "new", "screenshots" ),
+		ref => File::Spec->catdir( "ref", "screenshots" ),
+		restored => File::Spec->catdir( "restored", "screenshots" ),
+	},
 	MIN_BROWSER_HEIGHT => 3,
 	MIN_BROWSER_WIDTH => 4
 };
@@ -832,13 +844,14 @@ sub confCrawlSameHost {
 sub confDirsHtmls {
 	my ( $self, $which ) = @_;
 
-	if( $which ne 'diffs' && $which ne 'ref' && $which ne 'new' ){
+	my $dirs = DEFAULT_DIRS_HTMLS // {};
+
+	if( !grep( /^$which$/, keys %{$dirs} )){
 		msgErr( "unexpected which='$which'" );
 		TTP::stackTrace();
 	}
 
-	my $def = $which eq 'diffs' ? "" : File::Spec->catdir( $which, "htmls" );
-	my $subdir = $self->var([ 'dirs', $which, 'htmls' ]) // $def;
+	my $subdir = $self->var([ 'dirs', $which, 'htmls' ]) // $dirs->{$which};
 
 	return $subdir;
 }
@@ -854,13 +867,14 @@ sub confDirsHtmls {
 sub confDirsScreenshots {
 	my ( $self, $which ) = @_;
 
-	if( $which ne 'diffs' && $which ne 'ref' && $which ne 'new' ){
+	my $dirs = DEFAULT_DIRS_SCREENSHOTS // {};
+
+	if( !grep( /^$which$/, keys %{$dirs} )){
 		msgErr( "unexpected which='$which'" );
 		TTP::stackTrace();
 	}
 
-	my $def = $which eq 'diffs' ? "diffs" : File::Spec->catdir( $which, "screenshots" );
-	my $subdir = $self->var([ 'dirs', $which, 'screenshots' ]) // $def;
+	my $subdir = $self->var([ 'dirs', $which, 'screenshots' ]) // $dirs->{$which};
 
 	return $subdir;
 }

@@ -610,7 +610,8 @@ sub writeHtml {
 	}
 
 	my $which = $self->browser()->which();
-	my $subdirs = $self->browser()->conf()->confDirsHtmls( $which );
+	my $whichdir = $args->{subdir} // $self->browser()->which();
+	my $subdirs = $self->browser()->conf()->confDirsHtmls( $whichdir );
 	if( $subdirs ){
 		my @dirs = File::Spec->splitdir( $subdirs );
 		my $fdir = File::Spec->catdir( $args->{dir} || File::Temp->tempdir(), @dirs );
@@ -622,7 +623,7 @@ sub writeHtml {
 		close $fh;
 		$self->{_hash}{htmldump} = $fname;
 	} else {
-		msgVerbose( "not writing HTML file as disabled by configuration" )
+		msgVerbose( "not writing '$which' HTML file as disabled by configuration" )
 	}
 }
 
@@ -634,9 +635,11 @@ sub writeHtml {
 #   > dir: the root output directory for the role, defaulting to standard temp dir
 #   > counter: a counter
 #   > suffix: a suffix to be added, defaulting to ''
+#   > subdir: the which to address the subdir
 
 sub writeScreenshot {
     my ( $self, $queue_item, $args ) = @_;
+	$args //= {};
 
 	if( !$queue_item || !blessed( $queue_item ) || !$queue_item->isa( 'TTP::HTTP::Compare::QueueItem' )){
 		msgErr( "unexpected queue item: ".TTP::chompDumper( $queue_item ));
@@ -644,7 +647,8 @@ sub writeScreenshot {
 	}
 
 	my $which = $self->browser()->which();
-	my $subdirs = $self->browser()->conf()->var([ 'dirs', $which, 'screenshots' ]) // "$which/screenshots";
+	my $whichdir = $args->{subdir} // $self->browser()->which();
+	my $subdirs = $self->browser()->conf()->confDirsScreenshots( $whichdir );
 	if( $subdirs ){
 		my @dirs = File::Spec->splitdir( $subdirs );
 		my $fdir = File::Spec->catdir( $args->{dir} || File::Temp->tempdir(), @dirs );
@@ -657,7 +661,7 @@ sub writeScreenshot {
 		close $fh;
 		$self->{_hash}{screendump} = $fname;
 	} else {
-		msgVerbose( "not writing screenshot file as disabled by configuration" )
+		msgVerbose( "not writing '$which' screenshot file as disabled by configuration" )
 	}
 }
 

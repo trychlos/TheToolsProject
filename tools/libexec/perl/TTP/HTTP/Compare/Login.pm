@@ -29,6 +29,7 @@ use utf8;
 use warnings;
 
 use Data::Dumper;
+use POSIX qw( strftime );
 use Scalar::Util qw( blessed );
 
 use TTP;
@@ -62,6 +63,22 @@ sub _excluded_cookies {
 	$excluded = DEFAULT_EXCLUDED_COOKIES if !defined $excluded || !$excluded || !scalar( @{$excluded} );
 
 	return $excluded;
+}
+
+# -------------------------------------------------------------------------------------------------
+# (I):
+# - the expiration date epoch
+# (O):
+# - a string with the delay
+
+sub _fmt_ttl {
+    my ( $self, $s ) = @_;
+
+    return "expired" if $s <= 0;
+    my $d = int($s / 86400); $s %= 86400;
+    my $h = int($s / 3600);  $s %= 3600;
+    my $m = int($s / 60);    $s %= 60;
+    return sprintf( "%dd %dh %dm %ds", $d, $h, $m, $s );
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -243,6 +260,12 @@ sub logIn {
 		}
 	}
 	#print STDERR "session_cookie ".Dumper( $session_cookie );
+	if( $session_cookie ){
+		my $now = time();
+		my $ttl = $session_cookie->{expiry} - $now;
+		msgVerbose( "cookie validity: ".$self->_fmt_ttl( $ttl ));
+		msgVerbose( "cookie expiration: ". strftime( "%Y-%m-%d %H:%M:%S %Z", localtime( $session_cookie->{expiry} )));
+	}
 	return $session_cookie;
 }
 

@@ -49,28 +49,27 @@ sub same_host {
     return ( $u->scheme =~ /^https?$/ ) && ( lc( $u->host // '' ) eq lc( $host ));
 }
 
-=pod
 # -------------------------------------------------------------------------------------------------
 # (I):
-# - a state key as computed by ->signature()
+# - the page signature on a site
+# - the page signature on another site
 # (O):
-# - the extracted frames signature
+# - true if the signatures are the same, but the URL
 
-sub state_key_to_frames_sig {
-    my ( $state ) = @_;
-    TTP::stackTrace() if !$state;
+sub page_signature_are_same {
+    my ( $signature1, $signature2 ) = @_;
+    TTP::stackTrace() if !$signature1;
+    TTP::stackTrace() if !$signature2;
 
-    my @w = split( /\|/, $state );
-    shift @w;   # remove the top href first part
-    my $sig = join( '|', @w );
+    my $new1 = TTP::HTTP::Compare::Utils::page_signature_wo_url( $signature1 );
+    my $new2 = TTP::HTTP::Compare::Utils::page_signature_wo_url( $signature2 );
 
-    return $sig;
+    return $new1 eq $new2;
 }
-=cut
 
 # -------------------------------------------------------------------------------------------------
 # (I):
-# - a state key as computed by ->signature()
+# - a page signature as computed by Browser->signature()
 # (O):
 # - the path extracted from the embedded top url
 
@@ -83,6 +82,28 @@ sub page_signature_to_path {
     my $uri = URI->new( $url );
 
     return $uri->path;
+}
+
+# -------------------------------------------------------------------------------------------------
+# (I):
+# - a page signature
+# (O):
+# - the same page signature without the URL part
+#   i.e. 'top:https://tom59.ref.blingua.fr/fo|doc:132|268|if:0#content-frame#/bo/fo#/bo/person/home|if:1#details-frame##|if:2#ifDbox##'
+#   returns: 'top:/fo|doc:132|268|if:0#content-frame#/bo/fo#/bo/person/home|if:1#details-frame##|if:2#ifDbox##'
+
+sub page_signature_wo_url {
+    my ( $signature ) = @_;
+    TTP::stackTrace() if !$signature;
+
+    # page signature is: 'top:https://tom59.ref.blingua.fr/fo|doc:132|268|if:0#content-frame#/bo/fo#/bo/person/home|if:1#details-frame##|if:2#ifDbox##'
+    my @w = split( /\|/, $signature );
+    my $first = shift @w;
+    my $url = substr( $first, 4 );   # remove the 'top:' part
+    my $uri = URI->new( $url );
+    my $path = $uri->path_and_query;
+
+    return join( '|', 'top:', $path, @w );
 }
 
 1;

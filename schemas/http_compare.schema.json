@@ -183,7 +183,7 @@
                             "type": "array",
                             "items": "string",
                             "default": [
-                                "^#",
+                                "^#.+",
                                 "^callto:",
                                 "^mailto:",
                                 "^tel:"
@@ -314,7 +314,7 @@
             "description_array": [
                 "The subdirectory parts of output directories.",
                 "They are all subdirectories of the per-role log directory.",
-                "We have six potential output directories which are 'ref', 'new' and 'diffs' crossed with 'htmls' and 'screenshots', but we only manage five as we do not try to keep html diffs.",
+                "We have eight potential output directories which are 'ref', 'new', 'restored' and 'diffs' crossed with 'htmls' and 'screenshots', but we only manage five as we do not try to keep htmls restored not diffs.",
                 "This object says how they are organized.",
                 "An empty string means that the files must not be kept."
             ],
@@ -332,7 +332,7 @@
                         "screenshots": {
                             "description": "The subdirectories of differences screenshots.",
                             "type": "string",
-                            "default": "diffs"
+                            "default": "diffs/screenshots"
                         }
                     }
                 },
@@ -365,6 +365,22 @@
                             "description": "The subdirectories of reference kept screenshots.",
                             "type": "string",
                             "default": "ref/screenshots"
+                        }
+                    }
+                },
+                "restored": {
+                    "description": "The restored output directories.",
+                    "type": "object",
+                    "properties": {
+                        "htmls": {
+                            "description": "The subdirectories of restored kept html files.",
+                            "type": "string",
+                            "default": ""
+                        },
+                        "screenshots": {
+                            "description": "The subdirectories of reference kept screenshots.",
+                            "type": "string",
+                            "default": "restored/screenshots"
                         }
                     }
                 }

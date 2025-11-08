@@ -985,7 +985,7 @@ sub screenshot {
 #   > label: the label of this page signature, to be displayed when verbose, defaulting to ''
 #     when set, should end with a space as it used as a prefix
 # (O):
-# - a signature as 'top:https://tom59.ref.blingua.fr/fo|if:0#content-frame#/bo/27574/8615#/bo/person/home|if:1#details-frame##|if:2#ifDbox##'
+# - a signature as 'top:https://tom59.ref.blingua.fr/fo|doc:132|268|if:0#content-frame#/bo/fo#/bo/person/home|if:1#details-frame##|if:2#ifDbox##'
 
 sub signature {
     my ( $self, $args ) = @_;

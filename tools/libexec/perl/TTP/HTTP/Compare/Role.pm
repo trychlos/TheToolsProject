@@ -74,14 +74,14 @@ sub _do_crawl {
 	# increments before visiting so that all the dumped files are numbered correctly
 	$self->{_result}{count}{visited} += 1;
 	$queue_item->visited( $self->{_result}{count}{visited} );
-	msgVerbose( "do_crawl() visiting=".$queue_item->visited());
+	msgVerbose( "do_crawl() visiting=".$queue_item->visited(). " (queue size=".scalar( @{ $self->{_queue} } ).")" );
 
 	# and logs the key signature
 	my $key = $queue_item->signature();
 	msgVerbose( "do_crawl() queue signature='$key'" );
 	# if already seen, go next
 	if( $self->{_result}{seen}{$key} ){
-		msgVerbose( "already seen, returning" );
+		msgVerbose( "do_crawl() already seen, returning" );
 		return;
 	}
 
@@ -170,6 +170,9 @@ sub _do_crawl {
 		$self->{_result}{unexpected}{not_all_undef} //= [];
 		push( @{$self->{_result}{unexpected}{not_all_undef}}, $queue_item );
 	}
+
+	# try to print an intermediate result each 100 visits
+	$self->_try_to_print_intermediate_results();
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -481,7 +484,7 @@ sub _record_result {
 # (I):
 # - the current queue item
 # (O):
-# - whether we have successively restored the clicks chain, and clicked on this ref site target
+# - whether we have successively restored the clicks chain, and clicked on this ref site target, so true|false
 
 sub _restore_chain {
 	my ( $self, $queue_item ) = @_;
@@ -491,7 +494,7 @@ sub _restore_chain {
 	my $origin_signature = $queue_item->origin() || $queue_item->dest();
 	my $current_signature = $self->{_browsers}{ref}->signature({ label => 'current' });
 
-	# reapply each and every queued item from the saved chain
+	# reapply each and every queued item from the saved chain on both ref and new sites
 	if( $current_signature ne $origin_signature ){
 		msgVerbose( "expected signature='$origin_signature'" );
 		foreach my $qi ( @{ $queue_item->chain() }){
@@ -523,14 +526,19 @@ sub _restore_chain {
 				# prepare the post-navigation label
 				my $label = sprintf( "restored_%06d", $qi->visited());
 				my $cap = $self->{_browsers}{ref}->wait_and_capture({ wait => false });
-				$cap->writeScreenshot( $queue_item, { dir => $self->{_roledir}, suffix => $label });
+				$cap->writeScreenshot( $queue_item, { dir => $self->{_roledir}, suffix => $label, subdir => 'restored' });
 				# and same on new site
 				$cap = $self->{_browsers}{new}->wait_and_capture({ wait => false });
-				$cap->writeScreenshot( $queue_item, { dir => $self->{_roledir}, suffix => $label });
+				$cap->writeScreenshot( $queue_item, { dir => $self->{_roledir}, suffix => $label, subdir => 'restored' });
 			}
-			# check the new signature
+			# check the new signature exiting this restore loop as soon as we have got the right signature on the both sites
 			$current_signature = $self->{_browsers}{ref}->signature({ label => 'current' });
-			last if $current_signature eq $origin_signature;
+			my $new_signature = $self->{_browsers}{new}->signature();
+			last if $current_signature eq $origin_signature && TTP::HTTP::Compare::Utils::page_signature_are_same( $current_signature, $new_signature );
+			# retry this same restore chain once if a cookie have expired
+			if( $self->_try_to_relogin( 'ref', $current_signature ) || $self->_try_to_relogin( 'new', $new_signature )){
+				return $self->_restore_chain( $queue_item );
+			}
 		}
 	}
 
@@ -590,29 +598,58 @@ sub _restore_path {
 	return true;
 }
 
-=pod
 # -------------------------------------------------------------------------------------------------
+# try to print an intermediate result for the role
+# each 100 visits
 # (I):
-# - the candidate url
-# (O):
-# - whether the url is allowed to be crawled
+# - nothing
 
-sub _url_allowed {
-	my ( $self, $url ) = @_;
+sub _try_to_print_intermediate_results {
+	my ( $self ) = @_;
 
-    # Deny first
-	my $denied = $self->conf()->runCrawlByLinkUrlDenyPatterns() || [];
-    if( scalar( @{$denied} )){
-        return false if any { $url =~ $_ } @{ $denied };
-    }
+	my $visits = $self->{_result}{count}{visited};
 
-    # If no allow patterns provided/compiled -> allow everything (default)
-    return true if $self->conf()->runCrawlByLinkUrlAllowedAll();
-
-    # Else require at least one allow match
-    return any { $url =~ $_ } @{ $self->conf()->runCrawlByLinkUrlAllowPatterns() };
+	if( $visits % 100 == 0 ){
+		$self->print_results_summary();
+	}
 }
-=cut
+
+# -------------------------------------------------------------------------------------------------
+# try to relogin on the site if we have got the signin page
+# (I):
+# - the which site 'ref'|'new'
+# - the page signature
+# (O):
+# - true if we had to re-login and this re-login has been successful, so wants to re-run the restore chain
+# - false else (just continue as we can)
+
+sub _try_to_relogin {
+	my ( $self, $which, $page_signature ) = @_;
+
+	my $rerun = false;
+	my $page_path = TTP::HTTP::Compare::Utils::page_signature_to_path( $page_signature );
+	my $loginConf = $self->conf()->var( 'login' ) // {};
+	my $loginPath = $loginConf->{path} // '';
+
+	if( $page_path eq $loginPath ){
+		# yes the site has reached a login page, most probably because the cookie has expired
+		# renew the login		
+		my $loginObj = TTP::HTTP::Compare::Login->new( $self->ep(), $self->conf());
+		if( !TTP::errs() && $loginObj->isDefined() && $self->_wants_login()){
+			$self->{_logins}{$which} = $loginObj->logIn( $self->{_browsers}{$which}, $self->_username(), $self->_password());
+			if( !$self->{_logins}{$which} ){
+				msgErr( "unable to log-in/authenticate on '$which' site" );
+				# login unsuccessful: just continue as we can
+				return false;
+			} else {
+				msgVerbose( "successful re-login" );
+				$rerun = true;
+			}
+		}
+	}
+
+	return $rerun;
+}
 
 # -------------------------------------------------------------------------------------------------
 # (I):

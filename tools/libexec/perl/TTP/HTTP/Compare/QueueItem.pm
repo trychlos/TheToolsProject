@@ -17,7 +17,25 @@
 # see <http://www.gnu.org/licenses/>.
 #
 # http.pl compare queue item.
-# Each link or clickable is queued as a QueueItem item.
+# Each link or clickable is queued as a QueueItem item:
+
+# data common to all kinds of queue items:
+# - from: whether the item comes by 'link' or by 'click', defaulting to 'link'
+# - chain: the list of queue items which have led to the current situation
+#
+# for link's:
+# - path: the path of the route to navigate to
+# - depth: the recursion level, defaulting to zero
+#
+# for click's:
+# - origin: the origin page signature (from Browser->signature() method)
+# - href
+# - text
+# - frameSrc
+# - xpath
+# - docKey
+# - kind
+# - onclick
 
 package TTP::HTTP::Compare::QueueItem;
 die __PACKAGE__ . " must be loaded as TTP::HTTP::Compare::QueueItem\n" unless __PACKAGE__ eq 'TTP::HTTP::Compare::QueueItem';
@@ -70,7 +88,6 @@ sub _dup_wo_chain {
 sub chain {
 	my ( $self ) = @_;
 
-	#print STDERR "hash: ".Dumper( $self->{_hash} );
 	return $self->{_hash}{chain} // [];
 }
 
@@ -117,29 +134,35 @@ sub dest {
 # (I):
 # - an optional options hash with following keys:
 #   > prefix: a prefix, defaulting to ''
+#   > comma: whether to end with a comma, defaulting to false
 
 sub dump {
 	my ( $self, $args ) = @_;
 	$args //= {};
 	my $prefix = $args->{prefix} // '';
+	my $have_comma = $args->{comma} // false;
+	my $sp4 = '    ';
 
-	if( $prefix ){
-		print STDERR "$prefix {".EOL;
-	} else {
-		print STDERR "QueueItem: {".EOL;
-	}
+	msgOut( $prefix ? "$prefix " : "QueueItem: ", { withPrefix => false, withEol => false });
+	msgOut( "{", { withPrefix => false });
 	foreach my $k ( sort keys %{ $self->{_hash} }){
 		if( $k eq 'chain' ){
-			print STDERR "$prefix    '$k' => [".EOL;
+			my $total_count = scalar( @{ $self->{_hash}{$k} });
+			my $count = 0;
+			msgOut( "$prefix$sp4'$k' => [", { withPrefix => false });
 			foreach my $it ( @{$self->{_hash}{$k}} ){
-				$it->dump({ prefix => "             " });
+				$count += 1;
+				my $comma = ( $count < $total_count );
+				$it->dump({ prefix => "$sp4$sp4", comma => $comma });
 			}
-			print STDERR "$prefix    ]".EOL;
+			msgOut( "$prefix$sp4]", { withPrefix => false });
 		} else {
-			print STDERR "$prefix    '$k' => $self->{_hash}{$k}".EOL;
+			msgOut( "$prefix$sp4'$k' => $self->{_hash}{$k}", { withPrefix => false });
 		}
 	}
-	print STDERR "$prefix}".EOL;
+	msgOut( "$prefix}", { withPrefix => false, withEol => false });
+	msgOut( ",", { withPrefix => false, withEol => false }) if $have_comma;
+	msgOut( "", { withPrefix => false });
 }
 
 # -------------------------------------------------------------------------------------------------
