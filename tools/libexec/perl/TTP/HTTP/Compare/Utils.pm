@@ -71,6 +71,28 @@ sub page_signature_are_same {
 # (I):
 # - a page signature as computed by Browser->signature()
 # (O):
+# - an array which contains the path from each iframes
+
+sub page_signature_to_frames_path {
+    my ( $state ) = @_;
+    TTP::stackTrace() if !$state;
+
+    my @w = split( /\|/, $state );
+    shift @w; # remove the topdoc url
+    shift @w; # remove the topdoc signature
+    my @paths = ();
+    foreach my $p ( @w ){
+        my @ww = split( /#/, $p );
+        push( @paths, pop( @ww ));
+    }
+
+    return \@paths;
+}
+
+# -------------------------------------------------------------------------------------------------
+# (I):
+# - a page signature as computed by Browser->signature()
+# (O):
 # - the path extracted from the embedded top url
 
 sub page_signature_to_path {
@@ -101,9 +123,10 @@ sub page_signature_wo_url {
     my $first = shift @w;
     my $url = substr( $first, 4 );   # remove the 'top:' part
     my $uri = URI->new( $url );
-    my $path = $uri->path_and_query;
+    my $path = $uri->path_query;
 
-    return join( '|', 'top:', $path, @w );
+    my $reduced = join( '|', "top:$path", @w );
+    return $reduced;
 }
 
 1;

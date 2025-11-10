@@ -74,7 +74,8 @@ use constant {
 		"[onclick]"
 	],
 	DEFAULT_CRAWL_BY_CLICK_HREF_DENY_PATTERNS => [
-		"^#.+|^callto:|^mailto:|^tel:"
+		"^#.+|^callto:|^mailto:|^tel:",
+		"\.xls\$"
 	],
 	DEFAULT_CRAWL_BY_CLICK_INTERMEDIATE_SCREENSHOTS => false,
 	DEFAULT_CRAWL_BY_CLICK_XPATH_DENY_PATTERNS => [
@@ -97,7 +98,8 @@ use constant {
 	DEFAULT_CRAWL_BY_LINK_HONOR_QUERY => true,
 	DEFAULT_CRAWL_BY_LINK_HREF_ALLOW_PATTERNS => [],
 	DEFAULT_CRAWL_BY_LINK_HREF_DENY_PATTERNS => [
-		"^#.+|^javascript:|^callto:|^mailto:|^tel:"
+		"^#.+|^javascript:|^callto:|^mailto:|^tel:",
+		"\.xls\$"
 	],
 	DEFAULT_CRAWL_BY_LINK_URL_ALLOW_PATTERNS => [],
 	DEFAULT_CRAWL_BY_LINK_URL_DENY_PATTERNS => [

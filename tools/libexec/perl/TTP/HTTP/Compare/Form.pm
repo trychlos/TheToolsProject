@@ -185,7 +185,8 @@ sub new {
 
 	my $self = $class->SUPER::new( $ep, $args );
 	bless $self, $class;
-	msgDebug( __PACKAGE__."::new() selector='$selector'" );
+	#msgDebug( __PACKAGE__."::new() selector='$selector'" );
+	msgVerbose( __PACKAGE__."::new() selector='$selector'" );
 
 	$self->{_browser} = $browser;
 	$self->{_selector} = $selector;

@@ -71,12 +71,7 @@ sub _do_crawl {
 	$args //= {};
 	msgVerbose( "do_crawl() role='".$self->name()."'" );
 
-	# increments before visiting so that all the dumped files are numbered correctly
-	$self->{_result}{count}{visited} += 1;
-	$queue_item->visited( $self->{_result}{count}{visited} );
-	msgVerbose( "do_crawl() visiting=".$queue_item->visited(). " (queue size=".scalar( @{ $self->{_queue} } ).")" );
-
-	# and logs the key signature
+	# test the key signature before incrementing the visited count
 	my $key = $queue_item->signature();
 	msgVerbose( "do_crawl() queue signature='$key'" );
 	# if already seen, go next
@@ -84,6 +79,11 @@ sub _do_crawl {
 		msgVerbose( "do_crawl() already seen, returning" );
 		return;
 	}
+
+	# increments before visiting so that all the dumped files are numbered correctly
+	$self->{_result}{count}{visited} += 1;
+	$queue_item->visited( $self->{_result}{count}{visited} );
+	msgVerbose( "do_crawl() visiting=".$queue_item->visited(). " (queue size=".scalar( @{ $self->{_queue} } ).")" );
 
 	# items in queue are hashes with following keys:
 	# - from: whether the item comes by 'link' or by 'click', defaulting to 'link'
@@ -148,10 +148,8 @@ sub _do_crawl {
 		# links which would be found in new but would be absent from ref are ignored (as new features)
 		$self->_enqueue_links( $captureRef, $queue_item ) if $self->conf()->runCrawlByLinkEnabled();
 
-		# if not error have been found, try to handle the forms
-		if( !scalar( @{ $res })){
-			$self->_handle_forms( $self->conf()->confForms());
-		}
+		# do we have forms to be handled ?
+		$self->_handle_forms( $self->conf()->confForms());
 
 	} elsif( !defined( $captureRef ) && !defined( $captureNew ) && !defined( $path )){
 		msgVerbose( "do_crawl() all values are undef, just skip" );
@@ -289,7 +287,10 @@ sub _enqueue_clickables {
 		$a->{from} = 'click';
 		$a->{chain} = $queue_item->chain_plus();
 		#print STDERR "a ".Dumper( $a->{chain} );
-		push( @{$self->{_queue}}, TTP::HTTP::Compare::QueueItem->new( $self->ep(), $self->conf(), $a ));
+		my $item = TTP::HTTP::Compare::QueueItem->new( $self->ep(), $self->conf(), $a );
+		push( @{$self->{_queue}}, $item );
+		msgVerbose( "enqueue_clickables() enqueuing '".$item->signature()."'" );
+		$item->dump({ prefix => "enqueuing" });
 		$count += 1;
     }
 	msgVerbose( "enqueue_clickables() got $count targets" );
@@ -403,17 +404,35 @@ sub _hash {
 }
 
 # -------------------------------------------------------------------------------------------------
-# (I):
-# - nothing
-# (O):
-# - the configured routes, always at least a '/' one
+# Initialize the queue items by queue signatures, or by the routes
+# - routes is a list of initial routes as strings
+# - signatures is a list of initial queue chains, as an array of objects
 
-sub _initial_routes {
+sub _initialize {
 	my ( $self ) = @_;
 
-	my $hash = $self->_hash();
-
-	return $hash->{routes} || [ '/' ];
+	my $initial_signatures = $self->_hash()->{signatures} // [];
+	if( scalar( @{ $initial_signatures } )){
+		foreach my $chain_object ( @{ $initial_signatures }){
+			my $label = $chain_object->{label} // '';
+			msgVerbose( "initialize() signature for '$label'" );
+			if( scalar( @{ $chain_object->{chain} })){
+				my $item = TTP::HTTP::Compare::QueueItem->new_by_chain( $self->ep(), $self->conf(), $chain_object->{chain} );
+				#$item->dump();
+				push( @{ $self->{_queue} }, $item );
+			} else {
+				msgVerbose( "chain is empty" );
+			}
+		}
+	} else {
+		my $initial_routes = $self->_hash()->{routes} || [ '/' ];
+		foreach my $route ( @{ $initial_routes }){
+			# make sure the path is absolute
+			$route = "/$route" if $route !~ /^\//;
+			# and push
+			push( @{ $self->{_queue} }, TTP::HTTP::Compare::QueueItem->new( $self->ep(), $self->conf(), { path => $route }));
+		}
+	}
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -483,11 +502,14 @@ sub _record_result {
 # We loop into the chain until getting the same page signature than the origin one.
 # (I):
 # - the current queue item
+# - an optional options hash with following keys:
+#   > relogin: true when run for the second time, so do not try to re-login another time, defaulting to false
 # (O):
 # - whether we have successively restored the clicks chain, and clicked on this ref site target, so true|false
 
 sub _restore_chain {
-	my ( $self, $queue_item ) = @_;
+	my ( $self, $queue_item, $args ) = @_;
+	$args //= {};
 	msgVerbose( "restore_chain()" );
 
 	# make sure we have the same origin frames signature
@@ -498,6 +520,7 @@ sub _restore_chain {
 	if( $current_signature ne $origin_signature ){
 		msgVerbose( "expected signature='$origin_signature'" );
 		foreach my $qi ( @{ $queue_item->chain() }){
+			msgVerbose( "restore_chain() restoring qi='".$qi->signature()."'" );
 			# navigate by link
 			my $current_path = TTP::HTTP::Compare::Utils::page_signature_to_path( $current_signature );
 			my $origin_path = TTP::HTTP::Compare::Utils::page_signature_to_path( $queue_item->origin() || $queue_item->dest());
@@ -533,11 +556,12 @@ sub _restore_chain {
 			}
 			# check the new signature exiting this restore loop as soon as we have got the right signature on the both sites
 			$current_signature = $self->{_browsers}{ref}->signature({ label => 'current' });
-			my $new_signature = $self->{_browsers}{new}->signature();
+			my $new_signature = $self->{_browsers}{new}->signature({ label => 'new' });
 			last if $current_signature eq $origin_signature && TTP::HTTP::Compare::Utils::page_signature_are_same( $current_signature, $new_signature );
 			# retry this same restore chain once if a cookie have expired
-			if( $self->_try_to_relogin( 'ref', $current_signature ) || $self->_try_to_relogin( 'new', $new_signature )){
-				return $self->_restore_chain( $queue_item );
+			my $relogin = $args->{relogin} // false;
+			if( !$relogin && ( $self->_try_to_relogin( 'ref', $current_signature ) || $self->_try_to_relogin( 'new', $new_signature ))){
+				return $self->_restore_chain( $queue_item, { relogin => true });
 			}
 		}
 	}
@@ -628,12 +652,14 @@ sub _try_to_relogin {
 
 	my $rerun = false;
 	my $page_path = TTP::HTTP::Compare::Utils::page_signature_to_path( $page_signature );
+	my $frames_paths = TTP::HTTP::Compare::Utils::page_signature_to_frames_path( $page_signature );
 	my $loginConf = $self->conf()->var( 'login' ) // {};
 	my $loginPath = $loginConf->{path} // '';
 
-	if( $page_path eq $loginPath ){
+	if( $page_path eq $loginPath || grep( /$loginPath/, @{ $frames_paths })){
 		# yes the site has reached a login page, most probably because the cookie has expired
-		# renew the login		
+		# renew the login
+		msgVerbose( "trying to re-login" );
 		my $loginObj = TTP::HTTP::Compare::Login->new( $self->ep(), $self->conf());
 		if( !TTP::errs() && $loginObj->isDefined() && $self->_wants_login()){
 			$self->{_logins}{$which} = $loginObj->logIn( $self->{_browsers}{$which}, $self->_username(), $self->_password());
@@ -723,6 +749,7 @@ sub destroy {
 # - the output root directory
 # - an optional options hash with following keys:
 #   > debug: whether we want run thr browser drivers in debug mode, defaulting to false
+#   > signatures: a TTP::HTTP::Compare::Signatures object or undef
 # (O):
 # - the comparison result as a ref to a hash
 
@@ -785,12 +812,7 @@ sub doCompare {
 		make_path( $self->resultsDir());
 
 		# initialize the queue with the configured routes (making sure we have absolute paths)
-		foreach my $route ( @{ $self->_initial_routes() }){
-			# make sure the path is absolute
-			$route = "/$route" if $route !~ /^\//;
-			# and push
-			push( @{ $self->{_queue} }, TTP::HTTP::Compare::QueueItem->new( $self->ep(), $self->conf(), { path => $route }));
-		}
+		$self->_initialize();
 
 		# and crawl until the queue is empty
 		while ( @{$self->{_queue}} ){

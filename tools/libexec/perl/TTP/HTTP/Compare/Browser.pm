@@ -1006,7 +1006,7 @@ sub signature {
                 try{
                     const t = (doc.body?.innerText || '').length;
                     const n = doc.querySelectorAll('*').length;
-                    return String( t )+'|'+String(n);
+                    return String( t )+'#'+String(n);
                 } catch( e ){
                     return '0|0';
                 }

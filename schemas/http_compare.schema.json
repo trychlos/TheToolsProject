@@ -8,11 +8,7 @@
         "- a chromedriver server to talk to the Selenium::Remote::Driver package; runs it with '~/data/chromedriver-linux64/chromedriver --port=9515',",
         "- a local nginx server which redirects the configured port (defaulting to 9516) to the chromedriver listening port (here, 9515).",
         "NB:",
-        "1. The chromedriver version MUST match the currently running Chromium version.",
-        "",
-        "",
-        "",
-        ""
+        "1. The chromedriver version MUST match the currently running Chromium version."
     ],
     "type": "object",
     "properties": {
@@ -473,12 +469,32 @@
                     "default": true
                 },
                 "routes": {
-                    "description": "the list of paths to be tested.",
+                    "description": "The list of paths to be tested.",
                     "type": "array",
                     "items": "string",
                     "default": [
                         "/"
                     ]
+                },
+                "signatures": {
+                    "description": "The initial list of queue signature chains to be tested. When provided, routes are not considered.",
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": "object",
+                        "properties": {
+                            "label": {
+                                "description": "A description of this signatures chain.",
+                                "type": "string",
+                                "default": ""
+                            },
+                            "chain": {
+                                "description": "The array of queue signatures.",
+                                "type": "array",
+                                "items": "string"
+                            }
+                        }
+                    }
                 }
             }
         }

@@ -49,6 +49,7 @@ use warnings;
 
 use Data::Dumper;
 use Scalar::Util qw( blessed );
+use URI;
 
 use TTP;
 use vars::global qw( $ep );
@@ -238,34 +239,6 @@ sub isLink {
 }
 
 # -------------------------------------------------------------------------------------------------
-# (I):
-# - nothing
-# (O):
-# - the signature which identifies the current queue item (and so the targeted place)
-#   this very same key is used to identify the already seen places
-
-sub signature {
-	my ( $self ) = @_;
-
-	my $from = $self->from();
-	my $add = '';
-
-	if( $from eq 'link' ){
-		$add = $self->path();
-
-	} elsif( $from eq 'click' ){
-		$add = $self->origin()."|".$self->xpath();
-
-	} else {
-		msgWarn( "key() unexpected from='$from'" );
-	}
-
-	my $key = "$from|$add";
-
-	return $key;
-}
-
-# -------------------------------------------------------------------------------------------------
 # getter/setter
 # (I):
 # - nothing
@@ -298,6 +271,34 @@ sub path {
 	}
 
 	return $path;
+}
+
+# -------------------------------------------------------------------------------------------------
+# (I):
+# - nothing
+# (O):
+# - the signature which identifies the current queue item (and so the targeted place)
+#   this very same key is used to identify the already seen places
+
+sub signature {
+	my ( $self ) = @_;
+
+	my $from = $self->from();
+	my $add = '';
+
+	if( $from eq 'link' ){
+		$add = $self->path();
+
+	} elsif( $from eq 'click' ){
+		$add = $self->origin()."|".$self->xpath();
+
+	} else {
+		msgWarn( "key() unexpected from='$from'" );
+	}
+
+	my $key = "$from|$add";
+
+	return $key;
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -373,6 +374,96 @@ sub new {
 	msgDebug( __PACKAGE__."::new()" );
 
 	$self->{_conf} = $conf;
+	$self->{_hash} = \%{ $hash };
+
+	return $self;
+}
+
+# -------------------------------------------------------------------------------------------------
+# Constructor
+# (I):
+# - the TTP::EP entry point
+# - the TTP::HTTP::Compare::Config configuration object
+# - an array of queue signatures
+#   which is transformed of a QueueItem with a chain of the n-1 items of the input array
+# (O):
+# - this object
+
+sub new_by_chain {
+	my ( $class, $ep, $conf, $signatures ) = @_;
+	$class = ref( $class ) || $class;
+
+	if( !$ep || !blessed( $ep ) || !$ep->isa( 'TTP::EP' )){
+		msgErr( "unexpected ep: ".TTP::chompDumper( $ep ));
+		TTP::stackTrace();
+	}
+	if( !$conf || !blessed( $conf ) || !$conf->isa( 'TTP::HTTP::Compare::Config' )){
+		msgErr( "unexpected conf: ".TTP::chompDumper( $conf ));
+		TTP::stackTrace();
+	}
+
+	# the last element will be the actual queue item (this object)
+	# the n-1 first elements will be the chain items
+	my $last = pop( @{ $signatures} );
+
+	my $self = $class->new_by_signature( $ep, $conf, $last );
+
+	my $chain = [];
+	foreach my $sig ( @{ $signatures }){
+		push( @{ $chain }, $class->new_by_signature( $ep, $conf, $sig ));
+	}
+	$self->{_hash}{chain} = $chain;
+
+	return $self;
+}
+
+# -------------------------------------------------------------------------------------------------
+# Constructor
+# (I):
+# - the TTP::EP entry point
+# - the TTP::HTTP::Compare::Config configuration object
+# - a queue signature
+#   the second part, beginning with 'top:' may contain or not a full URL (but at least a path)
+# (O):
+# - this object
+
+sub new_by_signature {
+	my ( $class, $ep, $conf, $signature ) = @_;
+	$class = ref( $class ) || $class;
+
+	if( !$ep || !blessed( $ep ) || !$ep->isa( 'TTP::EP' )){
+		msgErr( "unexpected ep: ".TTP::chompDumper( $ep ));
+		TTP::stackTrace();
+	}
+	if( !$conf || !blessed( $conf ) || !$conf->isa( 'TTP::HTTP::Compare::Config' )){
+		msgErr( "unexpected conf: ".TTP::chompDumper( $conf ));
+		TTP::stackTrace();
+	}
+
+	my $self = $class->SUPER::new( $ep );
+	bless $self, $class;
+	msgDebug( __PACKAGE__."::new() signature='$signature'" );
+
+	$self->{_conf} = $conf;
+
+	my $hash = {};
+	my @w = split( /\|/, $signature );
+	$hash->{from} = shift( @w );
+
+	if( $hash->{from} eq 'link' ){
+		my $one = ( $w[0] =~ m/^top:/ ? substr( $w[0], 4 ) : $w[0] ) // '/';
+		my $u = URI->new( $one );
+		$hash->{path} = $u->path;
+
+	} elsif( $hash->{from} eq 'click' ){
+		my $xpath = pop( @w );
+		$hash->{origin} = join( '|', @w );
+		$hash->{xpath} = $xpath;
+
+	} else {
+		msgWarn( "new_by_signature() unmanaged which='$hash->{from}'" );
+	}
+
 	$self->{_hash} = $hash;
 
 	return $self;
