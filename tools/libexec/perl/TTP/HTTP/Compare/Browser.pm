@@ -190,6 +190,10 @@ sub _driver_start {
 		debug => $self->isDebug()
 	);
 
+    $driver->set_timeout( "script", 5000 );  # ms
+    $driver->set_timeout( "implicit", 5000 );  # ms
+    $driver->set_timeout( "page load", 5000 );  # ms
+
 	#print STDERR "driver ".Dumper( $driver );
 	return $driver;
 }

@@ -429,6 +429,7 @@ sub _initialize {
 		foreach my $route ( @{ $initial_routes }){
 			# make sure the path is absolute
 			$route = "/$route" if $route !~ /^\//;
+			msgVerbose( "initialize() route='$route'" );
 			# and push
 			push( @{ $self->{_queue} }, TTP::HTTP::Compare::QueueItem->new( $self->ep(), $self->conf(), { path => $route }));
 		}

@@ -29,6 +29,7 @@ use utf8;
 use warnings;
 
 use Data::Dumper;
+use Data::UUID;
 use File::Copy qw( copy move );
 use File::Path qw( make_path );
 use File::Spec;
@@ -48,6 +49,7 @@ use TTP::HTTP::Compare::Utils;
 use TTP::Message qw( :all );
 
 use constant {
+	FNAME_MAX_LENGTH => 255
 };
 
 my $Const = {
@@ -84,8 +86,14 @@ sub _fname {
 	# maybe a suffix
 	my $suffix = $args->{suffix} || '';
 	$suffix = "_$suffix" if $suffix;
-	# last build the filename
+	# build a filename first try
 	my $fname = sprintf( "%06d_%s_%s%s%s", $counter, $which, join( "|", $path, @w, $xpath ), $suffix, $extension );
+	# if filename exceeds max length, then replace then end with an uuid
+	if( length( $fname ) >= FNAME_MAX_LENGTH ){
+		my $ug = Data::UUID->new;
+		my $str = lc( $ug->create_str());
+		$fname = substr( $fname, -1*( length( $str )+length( $extension )+2 ))."_${str}${extension}";
+	}
 	$fname =~ s![/\|:"\*]!_!g;
 
 	return $fname;
