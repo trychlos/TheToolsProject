@@ -85,8 +85,9 @@
                         "  - <TITLE> the title of the alert,",
                         "  - <MESSAGE>the message of the alert,",
                         "  - <STAMP> the timestamp as a string 'yyyy-mm-dd hh:mi:ss.cccccc +02:00',",
-                        "  - <OPTIONS> additional options provided to the alert,",
-                        "  - <JSON> a JSON stringified version of the alert data.",
+                        "  - <OPTIONS> additional options provided to the alert, most probably targeting the underlying command,",
+                        "  - <JSON> a JSON stringified version of the alert data,",
+                        "  - <ATTACHED> an optional attached piece.",
                         "When specifying a command, either as a simple string or as a 'byOS' object, you should take care that the specified command will not",
                         "inherit of '--dummy' or '--verbose' options of the parent command. Be cautious about what you exactly want."
                     ],
@@ -146,6 +147,67 @@
                                     "description": "Whether the JSON string should be prettified.",
                                     "type": "boolean",
                                     "default": true
+                                }
+                            }
+                        },
+                        "withMms": {
+                            "description": "Whether and how send the alert by MMS.",
+                            "type": "object",
+                            "properties": {
+                                "default": {
+                                    "description": "Whether publishing alerts by MMS is a default of the 'ttp.pl alert' command.",
+                                    "type": "boolean",
+                                    "default": false
+                                },
+                                "enabled": {
+                                    "description": "Whether publishing alerts by MMS is an enabled capability of the site.",
+                                    "type": "boolean",
+                                    "default": true
+                                },
+                                "command": {
+                                    "description": "The command to be used to send the alert by MMS. Freely intercheangeable with 'commands'."
+                                },
+                                "commands": {
+                                    "description_array": [
+                                        "The command(s) to be used to send the alert by MMS.",
+                                        "The command has access to additional macros:",
+                                        "- <RECIPIENTS> is resolved with a comma-separated list of the recipients,",
+                                        "- <CONTENTFNAME> is the filename of a text file which contains the full message.",
+                                        "No default command is provided as of v4.24"
+                                    ],
+                                    "type": [
+                                        "string",
+                                        "array",
+                                        "object"
+                                    ],
+                                    "items": [
+                                        "string",
+                                        "object"
+                                    ],
+                                    "properties": {
+                                        "byOS": {
+                                            "description": "Let a command be specific to the running OS.",
+                                            "type": "object",
+                                            "patternProperties": {
+                                                "^.*$": {
+                                                    "description": "The OS name as reported by Perl-Config, the value being the command to be applied for this OS.",
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "prettyJson": {
+                                    "description": "Whether the JSON string should be prettified.",
+                                    "type": "boolean",
+                                    "default": true
+                                },
+                                "recipients": {
+                                    "description": "The list of the recipients of the alert by MMS",
+                                    "type": "array",
+                                    "items": "string",
+                                    "default": [
+                                    ]
                                 }
                             }
                         },

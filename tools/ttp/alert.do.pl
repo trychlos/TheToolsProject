@@ -9,12 +9,14 @@
 # @(-) --title=<name>          the alert title [${title}]
 # @(-) --message=<name>        the alert message [${message}]
 # @(-) --[no]file              create a JSON file alert, monitorable e.g. by the alert daemon [${file}]
+# @(-) --[no]mms               send the alert by MMS [${mms}]
 # @(-) --[no]mqtt              send the alert on the MQTT bus [${mqtt}]
 # @(-) --[no]sms               send the alert by SMS [${sms}]
 # @(-) --[no]smtp              send the alert by SMTP [${smtp}]
 # @(-) --[no]tts               send the alert with text-to-speech [${tts}]
 # @(-) --list-levels           display the known alert levels [${listLevels}]
 # @(-) --options=<options>     additional options to be passed to the command [${options}]
+# @(-) --attach=<file>         join a piece to the message [${attach}]
 #
 # TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
@@ -56,7 +58,8 @@ my $defaults = {
 	title => '',
 	message => '',
 	listLevels => 'no',
-	options => ''
+	options => '',
+	attach => ''
 };
 
 my $opt_emitter = $defaults->{emitter};
@@ -65,6 +68,7 @@ my $opt_title = $defaults->{title};
 my $opt_message = $defaults->{message};
 my $opt_listLevels = false;
 my $opt_options = $defaults->{options};
+my $opt_attach = $defaults->{attach};
 
 my $opt_file = TTP::var([ 'alerts', 'withFile', 'default' ]);
 $opt_file = false if !defined $opt_file;
@@ -73,6 +77,14 @@ $file_enabled = true if !defined $file_enabled;
 msgErr( "alerts.withFile.default=true while alerts.withFile.enabled=false which is not consistent" ) if $opt_file && !$file_enabled;
 $defaults->{file} = $opt_file && $file_enabled ? 'yes' : 'no';
 my $opt_file_set = false;
+
+my $opt_mms = TTP::var([ 'alerts', 'withMms', 'default' ]);
+$opt_mms = false if !defined $opt_mms;
+my $mms_enabled = $ep->var([ 'alerts', 'withMms', 'enabled' ]);
+$mms_enabled = true if !defined $mms_enabled;
+msgErr( "alerts.withMms.default=true while alerts.withMms.enabled=false which is not consistent" ) if $opt_mms && !$mms_enabled;
+$defaults->{mms} = $opt_mms && $mms_enabled ? 'yes' : 'no';
+my $opt_mms_set = false;
 
 my $opt_mqtt = TTP::var([ 'alerts', 'withMqtt', 'default' ]);
 $opt_mqtt = false if !defined $opt_mqtt;
@@ -172,9 +184,53 @@ sub doFileAlert {
 		MESSAGE => $opt_message,
 		JSON => $json,
 		STAMP => $data->{stamp},
-		OPTIONS => $opt_options
+		OPTIONS => $opt_options,
+		ATTACHED => $opt_attach
 	};
 	execute( $commands, $macros, "success", "alert by File NOT OK" );
+}
+
+# -------------------------------------------------------------------------------------------------
+# send the alert by MMS
+# Expects some sort of configuration in TTP json
+# No default command as of v4.24
+
+sub doMmsAlert {
+	if( $opt_attach ){
+		msgOut( "sending a '$opt_level' alert by MMS (attaching '$opt_attach')..." );
+	} else {
+		msgOut( "sending a '$opt_level' alert by MMS..." );
+	}
+	my $commands = TTP::commandByOS([ 'alerts', 'withMms' ]);
+	if( $commands && scalar( @{$commands} )){
+		my $recipients = $ep->var([ 'alerts', 'withMms', 'recipients' ]) || [];
+		if( scalar( @{$recipients} )){
+			my $prettyJson = $ep->var([ 'alerts', 'withMms', 'prettyJson' ]);
+			$prettyJson = true if !defined $prettyJson;
+			my $data = buildAlertData();
+			my $json = $prettyJson ? JSON->new->pretty->encode( $data ) : JSON->new->encode( $data );
+			my $textfname = TTP::getTempFileName();
+			my $fh = path( $textfname );
+			$fh->spew( $json );
+			my $macros = {
+				EMITTER => $opt_emitter,
+				LEVEL => $opt_level,
+				TITLE => $opt_title,
+				MESSAGE => $opt_message,
+				JSON => $json,
+				STAMP => $data->{stamp},
+				OPTIONS => $opt_options,
+				ATTACHED => $opt_attach,
+				RECIPIENTS => join( ',', @{$recipients} ),
+				CONTENTFNAME => $textfname
+			};
+			execute( $commands, $macros, "success", "alert by MMS NOT OK" );
+		} else {
+			msgWarn( "no recipients is provided by the site: it is not possible to send MMS" );
+		}
+	} else {
+		msgWarn( "no command is provided by the site: it is not possible to send MMS" );
+	}
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -200,14 +256,15 @@ sub doMqttAlert {
 		MESSAGE => $opt_message,
 		JSON => $json,
 		STAMP => $data->{stamp},
-		OPTIONS => $opt_options
+		OPTIONS => $opt_options,
+		ATTACHED => $opt_attach
 	};
 	execute( $commands, $macros, "success", "alert by MQTT NOT OK" );
 }
 
 # -------------------------------------------------------------------------------------------------
 # send the alert by SMS
-# Expects have some sort of configuration in TTP json
+# Expects some sort of configuration in TTP json
 # No default command as of v4.1
 
 sub doSmsAlert {
@@ -231,6 +288,7 @@ sub doSmsAlert {
 				JSON => $json,
 				STAMP => $data->{stamp},
 				OPTIONS => $opt_options,
+				ATTACHED => $opt_attach,
 				RECIPIENTS => join( ',', @{$recipients} ),
 				CONTENTFNAME => $textfname
 			};
@@ -291,6 +349,7 @@ $mailfrom
 		JSON => $json,
 		STAMP => $data->{stamp},
 		OPTIONS => $opt_options,
+		ATTACHED => $opt_attach,
 		RECIPIENTS => join( ',', @{$recipients} ),
 		CONTENTFNAME => $textfname
 	};
@@ -315,6 +374,7 @@ sub doTextToSpeechAlert {
 			JSON => encode_json( $data ),
 			STAMP => $data->{stamp},
 			OPTIONS => $opt_options,
+			ATTACHED => $opt_attach,
 			TEXT => $text
 		};
 		execute( $commands, $macros, "success", "alert by TTS NOT OK" );
@@ -359,6 +419,11 @@ if( !GetOptions(
 		$opt_file = $value;
 		$opt_file_set = true;
 	},
+	"mms!"				=> sub {
+		my( $name, $value ) = @_;
+		$opt_mms = $value;
+		$opt_mms_set = true;
+	},
 	"mqtt!"				=> sub {
 		my( $name, $value ) = @_;
 		$opt_mqtt = $value;
@@ -380,7 +445,8 @@ if( !GetOptions(
 		$opt_tts_set = true;
 	},
 	"list-levels!"		=> \$opt_listLevels,
-	"options=s"			=> \$opt_options )){
+	"options=s"			=> \$opt_options,
+	"attach=s"			=> \$opt_attach )){
 		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
 }
@@ -398,12 +464,14 @@ msgVerbose( "got level='$opt_level'" );
 msgVerbose( "got title='$opt_title'" );
 msgVerbose( "got message='$opt_message'" );
 msgVerbose( "got file='".( $opt_file ? 'true':'false' )."'" );
+msgVerbose( "got mms='".( $opt_mms ? 'true':'false' )."'" );
 msgVerbose( "got mqtt='".( $opt_mqtt ? 'true':'false' )."'" );
 msgVerbose( "got sms='".( $opt_sms ? 'true':'false' )."'" );
 msgVerbose( "got smtp='".( $opt_smtp ? 'true':'false' )."'" );
 msgVerbose( "got tts='".( $opt_tts ? 'true':'false' )."'" );
 msgVerbose( "got list-levels='".( $opt_listLevels ? 'true':'false' )."'" );
 msgVerbose( "got options='$opt_options'" );
+msgVerbose( "got attach='$opt_attach'" );
 
 if( $opt_listLevels ){
 	# nothing to check here
@@ -424,6 +492,16 @@ if( $opt_listLevels ){
 			} else {
 				msgWarn( "File medium is disabled and thus ignored" );
 				$opt_file = false;
+			}
+		}
+	}
+	if( $opt_mms ){
+		if( !$mms_enabled ){
+			if( $opt_mms_set ){
+				msgErr( "MMS medium is disabled, --mms option is not valid" );
+			} else {
+				msgWarn( "MMS medium is disabled and thus ignored" );
+				$opt_mms = false;
 			}
 		}
 	}
@@ -469,7 +547,7 @@ if( $opt_listLevels ){
 	}
 
 	# at least one medium must be specified
-	if( !$opt_file && !$opt_mqtt && !$opt_smtp && !$opt_sms && !$opt_tts ){
+	if( !$opt_file && !$opt_mms && !$opt_mqtt && !$opt_sms && !$opt_smtp && !$opt_tts ){
 		msgWarn( "at least one of '--file', '--mqtt', '--smtp', '--sms' or '--tts' options should be specified" );
 	}
 }
@@ -480,6 +558,7 @@ if( !TTP::errs()){
 	} else {
 		$opt_level = uc $opt_level;
 		doFileAlert() if $opt_file;
+		doMmsAlert() if $opt_mms;
 		doMqttAlert() if $opt_mqtt;
 		doSmtpAlert() if $opt_smtp;
 		doSmsAlert() if $opt_sms;

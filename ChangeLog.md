@@ -2,6 +2,12 @@
 
 ## ChangeLog
 
+### 4.24.0-rc.0
+
+    Release date: 
+
+    - ttp.pl alert now supports MMS, thus bumping minor candidate version number
+
 ### 4.23.0
 
     Release date: 2025-10-27
