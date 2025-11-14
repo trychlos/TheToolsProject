@@ -85,6 +85,15 @@ my $Const = {
 	},
 	# constant prefix used by ChromeDriver for all its paths
 	path => '/wd/hub',
+    # some timeouts and max retries
+    # ua timeout must be set in seconds
+    ua => {
+        timeout => 10
+    },
+    navigate => {
+        retries => 3,
+        sleep => 2  # sec.
+    }
 };
 
 ### Private methods
@@ -190,9 +199,12 @@ sub _driver_start {
 		debug => $self->isDebug()
 	);
 
-    $driver->set_timeout( "script", 5000 );  # ms
-    $driver->set_timeout( "implicit", 5000 );  # ms
-    $driver->set_timeout( "page load", 5000 );  # ms
+    # Can't use string ("timeout") as a HASH ref while "strict refs" in use at /usr/local/share/perl5/5.40/Selenium/Remote/Commands.pm line 497
+    #$driver->set_timeout( "script", 5000 );  # ms
+    #$driver->set_timeout( "implicit", 5000 );  # ms
+    #$driver->set_timeout( "page load", 5000 );  # ms
+    # Server returned error message read timeout at /usr/share/perl5/vendor_perl/Net/HTTP/Methods.pm line 274.
+    $driver->ua->timeout( $Const->{ua}{timeout} ); # sec.
 
 	#print STDERR "driver ".Dumper( $driver );
 	return $driver;
@@ -932,7 +944,7 @@ sub navigate {
 
     # Drain logs so we only parse events for THIS navigation
     $self->_perf_logs_drain();
-    $self->driver()->get( $url );
+    TTP::HTTP::Compare::Utils::with_retry( sub { $self->driver()->get( $url ); }, $Const->{navigate}{timeout}, $Const->{navigate}{sleep} );
     $self->_signature_clear();
 }
 
