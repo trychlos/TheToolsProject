@@ -112,6 +112,23 @@ sub chain_plus {
 }
 
 # -------------------------------------------------------------------------------------------------
+# (I):
+# - nothing
+# (O):
+# - the array of signatures of each chain item
+
+sub chain_signatures {
+	my ( $self ) = @_;
+
+	my $signs = [];
+	foreach my $it ( @{ $self->chain() } ){
+		push( @{$signs}, $it->signature());
+	}
+
+	return $signs;
+}
+
+# -------------------------------------------------------------------------------------------------
 # getter/setter
 # we may want register the destination state_key in the queue item
 # so that initialized routes - which do not have any origin - have still a state to rely on

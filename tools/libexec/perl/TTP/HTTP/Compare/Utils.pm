@@ -129,18 +129,4 @@ sub page_signature_wo_url {
     return $reduced;
 }
 
-# -------------------------------------------------------------------------------------------------
-# retries some code known to be subject to timeouts
-
-sub with_retry {
-    my ( $code, $tries, $sleep  ) = (@_, 3, 2);
-    while ( $tries-- ){
-        my $ok = eval { $code->(); 1 };
-        return 1 if $ok;
-        my $e = "$@";
-        die $e unless $e =~ /read timeout/i && $tries;
-        sleep $sleep;
-    }
-}
-
 1;

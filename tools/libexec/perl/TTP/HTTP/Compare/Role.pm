@@ -290,7 +290,8 @@ sub _enqueue_clickables {
 		my $item = TTP::HTTP::Compare::QueueItem->new( $self->ep(), $self->conf(), $a );
 		push( @{$self->{_queue}}, $item );
 		msgVerbose( "enqueue_clickables() enqueuing '".$item->signature()."'" );
-		$item->dump({ prefix => "enqueuing" });
+		msgVerbose( "enqueue_clickables()   with chain [ '".join( "', '", @{$item->chain_signatures()} )."' ]" );
+		#$item->dump({ prefix => "enqueuing" });
 		$count += 1;
     }
 	msgVerbose( "enqueue_clickables() got $count targets" );
@@ -558,11 +559,26 @@ sub _restore_chain {
 			# check the new signature exiting this restore loop as soon as we have got the right signature on the both sites
 			$current_signature = $self->{_browsers}{ref}->signature({ label => 'current' });
 			my $new_signature = $self->{_browsers}{new}->signature({ label => 'new' });
-			last if $current_signature eq $origin_signature && TTP::HTTP::Compare::Utils::page_signature_are_same( $current_signature, $new_signature );
-			# retry this same restore chain once if a cookie have expired
-			my $relogin = $args->{relogin} // false;
-			if( !$relogin && ( $self->_try_to_relogin( 'ref', $current_signature ) || $self->_try_to_relogin( 'new', $new_signature ))){
-				return $self->_restore_chain( $queue_item, { relogin => true });
+			if( $current_signature eq $origin_signature && TTP::HTTP::Compare::Utils::page_signature_are_same( $current_signature, $new_signature )){
+				msgVerbose( "restore_chain() got same signature '$origin_signature': fine" );
+				last;
+			}
+			# if we have landed on a signin page, what to do ?
+			# at least dump the performance logs ring
+			my $ref_signin = $self->_should_signin( $current_signature );
+			my $new_signin = $self->_should_signin( $new_signature );
+			if( $ref_signin || $new_signin ){
+				my $relogin = $args->{relogin} // false;
+				if( $relogin ){
+					$self->{_browsers}{ref}->dump_performance_ring( $queue_item ) if $ref_signin;
+					$self->{_browsers}{new}->dump_performance_ring( $queue_item ) if $new_signin;
+					msgVerbose( "restore_chain() signin loop" );
+					return false;
+				} else {
+					$self->_try_to_relogin( 'ref' ) if $ref_signin;
+					$self->_try_to_relogin( 'new' ) if $new_signin;
+					return $self->_restore_chain( $queue_item, { relogin => true });
+				}
 			}
 		}
 	}
@@ -624,6 +640,25 @@ sub _restore_path {
 }
 
 # -------------------------------------------------------------------------------------------------
+# whether we have (unexpectedly) landed on a signin page
+# (I):
+# - the page signature
+# (O):
+# - true if we had to re-login and this re-login has been successful, so wants to re-run the restore chain
+# - false else (just continue as we can)
+
+sub _should_signin {
+	my ( $self, $page_signature ) = @_;
+
+	my $page_path = TTP::HTTP::Compare::Utils::page_signature_to_path( $page_signature );
+	my $frames_paths = TTP::HTTP::Compare::Utils::page_signature_to_frames_path( $page_signature );
+	my $loginConf = $self->conf()->var( 'login' ) // {};
+	my $loginPath = $loginConf->{path} // '';
+
+	return $page_path eq $loginPath || grep( /$loginPath/, @{ $frames_paths });
+}
+
+# -------------------------------------------------------------------------------------------------
 # try to print an intermediate result for the role
 # each 100 visits
 # (I):
@@ -643,39 +678,27 @@ sub _try_to_print_intermediate_results {
 # try to relogin on the site if we have got the signin page
 # (I):
 # - the which site 'ref'|'new'
-# - the page signature
 # (O):
-# - true if we had to re-login and this re-login has been successful, so wants to re-run the restore chain
+# - true if this re-login has been successful (so wants to re-run the restore chain)
 # - false else (just continue as we can)
 
 sub _try_to_relogin {
-	my ( $self, $which, $page_signature ) = @_;
+	my ( $self, $which ) = @_;
 
-	my $rerun = false;
-	my $page_path = TTP::HTTP::Compare::Utils::page_signature_to_path( $page_signature );
-	my $frames_paths = TTP::HTTP::Compare::Utils::page_signature_to_frames_path( $page_signature );
-	my $loginConf = $self->conf()->var( 'login' ) // {};
-	my $loginPath = $loginConf->{path} // '';
-
-	if( $page_path eq $loginPath || grep( /$loginPath/, @{ $frames_paths })){
-		# yes the site has reached a login page, most probably because the cookie has expired
-		# renew the login
-		msgVerbose( "trying to re-login" );
-		my $loginObj = TTP::HTTP::Compare::Login->new( $self->ep(), $self->conf());
-		if( !TTP::errs() && $loginObj->isDefined() && $self->_wants_login()){
-			$self->{_logins}{$which} = $loginObj->logIn( $self->{_browsers}{$which}, $self->_username(), $self->_password());
-			if( !$self->{_logins}{$which} ){
-				msgErr( "unable to log-in/authenticate on '$which' site" );
-				# login unsuccessful: just continue as we can
-				return false;
-			} else {
-				msgVerbose( "successful re-login" );
-				$rerun = true;
-			}
+	msgVerbose( "trying to re-login" );
+	my $loginObj = TTP::HTTP::Compare::Login->new( $self->ep(), $self->conf());
+	if( !TTP::errs() && $loginObj->isDefined() && $self->_wants_login()){
+		$self->{_logins}{$which} = $loginObj->logIn( $self->{_browsers}{$which}, $self->_username(), $self->_password());
+		if( !$self->{_logins}{$which} ){
+			msgErr( "unable to log-in/authenticate on '$which' site" );
+			# login unsuccessful: just continue as we can
+			return false;
+		} else {
+			msgVerbose( "successful re-login" );
 		}
 	}
 
-	return $rerun;
+	return true;
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -928,12 +951,24 @@ sub print_results_summary {
 # (I):
 # - nothing
 # (O):
+# - the top directory of the role output tree
+
+sub roleDir {
+	my ( $self ) = @_;
+
+	return $self->{_roledir};
+}
+
+# -------------------------------------------------------------------------------------------------
+# (I):
+# - nothing
+# (O):
 # - the directory where the results have to be written
 
 sub resultsDir {
 	my ( $self ) = @_;
 
-	return File::Spec->catdir( $self->{_roledir}, "results" );
+	return File::Spec->catdir( $self->roleDir(), "results" );
 }
 
 ### Class methods

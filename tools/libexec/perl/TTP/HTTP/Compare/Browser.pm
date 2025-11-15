@@ -78,7 +78,7 @@ my $Const = {
 						'--disable-dev-shm-usage'
 					]
 				},
-				'goog:loggingPrefs' => { performance => 'ALL' },
+				'goog:loggingPrefs' => { performance => 'ALL', browser => 'ALL' },
 				unhandledPromptBehavior => 'accept and notify'
 			}
 		}
@@ -91,8 +91,12 @@ my $Const = {
         timeout => 10
     },
     navigate => {
-        retries => 3,
-        sleep => 2  # sec.
+        retries => 5,
+        sleep => 5  # sec.
+    },
+    # the size of the performance logs ring
+    performance_logs => {
+        ring_size => 5000
     }
 };
 
@@ -324,10 +328,26 @@ sub _http {
 
 # -------------------------------------------------------------------------------------------------
 # clear performance logs before a new nav
+# while clearing, also keep the got line into a ring
 
-sub _perf_logs_drain {
+sub _performance_logs_drain {
     my ( $self ) = @_;
-    eval { $self->driver()->get_log( 'performance' ) for 1..2 };  # swallow/ignore
+    #eval { $self->driver()->get_log( 'performance' ) for 1..2 };  # swallow/ignore
+    $self->_performance_logs_get();
+}
+
+sub _performance_logs_get {
+    my ( $self ) = @_;
+
+    my $entries = $self->driver()->get_log( 'performance' ) // [];
+    $self->{_perf_logs} //= [];
+    # keep a rolling window of raw messages
+    for my $e ( @{$entries} ){
+        push( @{$self->{_perf_logs}}, $e );
+        shift( @{$self->{_perf_logs}} ) while @{$self->{_perf_logs}} > $Const->{performance_logs}{ring_size};
+    }
+
+    return $entries;
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -501,7 +521,7 @@ sub click_by_xpath {
         return false;
       })(arguments[0]);
     };
-	$self->_perf_logs_drain();
+	$self->_performance_logs_drain();
     if( $self->exec_js_w3c_sync( $js, [ $xpath ] )){
         $self->_signature_clear();
         return true;
@@ -855,6 +875,32 @@ sub driver {
 }
 
 # -------------------------------------------------------------------------------------------------
+# when an anomaly is detected, dump the current ring to a file
+# (I):
+# - the current queue item
+# - an arguments hash with following keys:
+#   > dir: the root output directory for the role, defaulting to standard temp dir
+
+sub dump_performance_ring {
+    my ( $self, $queue_item, $args ) = @_;
+    $args //= {};
+
+	if( !$queue_item || !blessed( $queue_item ) || !$queue_item->isa( 'TTP::HTTP::Compare::QueueItem' )){
+		msgErr( "unexpected queue item: ".TTP::chompDumper( $queue_item ));
+		TTP::stackTrace();
+	}
+
+    my $which = $self->which();
+    my $fdir = File::Spec->catdir( $args->{dir} || $self->role()->roleDir() || File::Temp->tempdir(), "perf_logs" );
+    make_path( $fdir );
+    my $path = File::Spec->catfile( $fdir, sprintf( "%06d_%s_%s", $queue_item->visited(), $which, "".time().".log" ));
+    msgVerbose( "writing '$which' perf logs to $path" );
+    open my $fh, '>:utf8', $path or die "open $path: $!";
+    print $fh $_->{message}, "\n" for @{$self->{_perf_logs}};   # raw DevTools JSON per line
+    close $fh;
+}
+
+# -------------------------------------------------------------------------------------------------
 # Execute JS (sync) via W3C endpoint (no SRD quirks)
 
 sub exec_js_w3c_sync {
@@ -943,8 +989,17 @@ sub navigate {
     msgVerbose( "navigate() which='".$self->which()."' url='$url'" );
 
     # Drain logs so we only parse events for THIS navigation
-    $self->_perf_logs_drain();
-    TTP::HTTP::Compare::Utils::with_retry( sub { $self->driver()->get( $url ); }, $Const->{navigate}{timeout}, $Const->{navigate}{sleep} );
+    # Retry on timed out
+    $self->_performance_logs_drain();
+    my $tries = $Const->{navigate}{retries};
+    while ( $tries-- ){
+        my $ok = eval { $self->driver()->get( $url ); 1 };
+        last if $ok;
+        my $e = "$@";
+        die $e unless $e =~ /read timeout/i && $tries;
+        msgVerbose( "navigate() sleeping for $Const->{navigate}{sleep}s (tries=$tries)" );
+        sleep $Const->{navigate}{sleep};
+    }
     $self->_signature_clear();
 }
 
@@ -1151,7 +1206,7 @@ sub wait_and_capture {
     # Grab performance log entries and find the main Document response
 	# If they are not provided, collect logs now (once).
 	if( !scalar( @{$logs} )){
-		$logs = eval { $driver->get_log('performance') } // [];
+		$logs = eval { $self->_performance_logs_get() };
 	}
 
 	my $doc = $self->_extract_main_doc_from_perf_logs( $logs, $driver->get_current_url());
@@ -1267,7 +1322,7 @@ sub wait_for_network_idle {
     my $had_doc_response = 0;
 
     while( Time::HiRes::time - $t0 < $timeout ){
-        my $logs = eval { $self->driver()->get_log('performance') } // ();
+        my $logs = eval { $self->_performance_logs_get(); };
         if( scalar( @{$logs} )){
             push @all, @{$logs};
             for my $e ( @{$logs} ){

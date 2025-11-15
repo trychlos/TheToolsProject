@@ -259,8 +259,8 @@ sub logIn {
 			}
 		}
 	}
-	#print STDERR "session_cookie ".Dumper( $session_cookie );
 	if( $session_cookie ){
+		msgVerbose( "session_cookie ".TTP::chompDumper( $session_cookie ));
 		my $now = time();
 		my $ttl = $session_cookie->{expiry} - $now;
 		msgVerbose( "cookie validity: ".$self->_fmt_ttl( $ttl ));
