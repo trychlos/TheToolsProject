@@ -32,6 +32,7 @@ use Data::Dumper;
 use File::Path qw( make_path );
 use File::Spec;
 use List::Util qw( any );
+use POSIX qw( strftime );
 use Scalar::Util qw( blessed );
 use Test::More;
 use URI;
@@ -69,7 +70,7 @@ my $Const = {
 sub _do_crawl {
     my ( $self, $queue_item, $args ) = @_;
 	$args //= {};
-	msgVerbose( "do_crawl() role='".$self->name()."'" );
+	msgVerbose( "do_crawl() role='".$self->name()."' (now is ".strftime( '%Y%m%d-%H%M%S', localtime()).")" );
 
 	# test the key signature before incrementing the visited count
 	my $key = $queue_item->signature();
@@ -282,6 +283,7 @@ sub _enqueue_clickables {
 	#print STDERR "targets: ".Dumper( $targets );
     for my $a ( @{$targets} ){
 		next if !$self->_enqueue_clickables_href_allowed( $a->{href} );
+		next if !$self->_enqueue_clickables_text_allowed( $a->{text} );
 		next if !$self->_enqueue_clickables_xpath_allowed( $a->{xpath} );
 		$a->{origin} = $page_signature;
 		$a->{from} = 'click';
@@ -305,33 +307,57 @@ sub _enqueue_clickables {
 sub _enqueue_clickables_href_allowed {
     my ( $self, $href ) = @_;
 
-	my $denied = $self->conf()->runCrawlByClickHrefDenyPatterns() || [];
-    if( scalar( @{$denied} )){
-        if( any { $href =~ $_ } @{ $denied } ){
-			msgVerbose( "_enqueue_clickables_href_allowed() '$href' denied by regex" );
-			return false;
+	if( $href ){
+		my $denied = $self->conf()->runCrawlByClickHrefDenyPatterns() || [];
+		if( scalar( @{$denied} )){
+			if( any { $href =~ $_ } @{ $denied } ){
+				msgVerbose( "_enqueue_clickables_href_allowed() '$href' denied by regex" );
+				return false;
+			}
 		}
-    }
+	}
 
 	return true;
 }
 
 # -------------------------------------------------------------------------------------------------
-# Whether the xpath
-# After a by-scan-id test, prefer by-xpath
+# Whether the text is allowed
+# (I):
+# - the candidate text
+
+sub _enqueue_clickables_text_allowed {
+    my ( $self, $text ) = @_;
+
+	if( $text ){
+		my $denied = $self->conf()->runCrawlByClickTextDenyPatterns() || [];
+		if( scalar( @{$denied} )){
+			if( any { $text =~ $_ } @{ $denied } ){
+				msgVerbose( "_enqueue_clickables_text_allowed() '$text' denied by regex" );
+				return false;
+			}
+		}
+	}
+
+	return true;
+}
+
+# -------------------------------------------------------------------------------------------------
+# Whether the xpath is allowed
 # (I):
 # - the candidate xpath
 
 sub _enqueue_clickables_xpath_allowed {
     my ( $self, $xpath ) = @_;
 
-	my $denied = $self->conf()->runCrawlByClickXpathDenyPatterns() || [];
-    if( scalar( @{$denied} )){
-        if( any { $xpath =~ $_ } @{ $denied } ){
-			msgVerbose( "_enqueue_clickables_xpath_allowed() '$xpath' denied by regex" );
-			return false;
+	if( $xpath ){
+		my $denied = $self->conf()->runCrawlByClickXpathDenyPatterns() || [];
+		if( scalar( @{$denied} )){
+			if( any { $xpath =~ $_ } @{ $denied } ){
+				msgVerbose( "_enqueue_clickables_xpath_allowed() '$xpath' denied by regex" );
+				return false;
+			}
 		}
-    }
+	}
 
 	return true;
 }
@@ -523,10 +549,14 @@ sub _restore_chain {
 		msgVerbose( "expected signature='$origin_signature'" );
 		foreach my $qi ( @{ $queue_item->chain() }){
 			msgVerbose( "restore_chain() restoring qi='".$qi->signature()."'" );
-			# navigate by link
 			my $current_path = TTP::HTTP::Compare::Utils::page_signature_to_path( $current_signature );
 			my $origin_path = TTP::HTTP::Compare::Utils::page_signature_to_path( $queue_item->origin() || $queue_item->dest());
+			# navigate by link
 			if( $qi->isLink() || $current_path ne $origin_path ){
+				if( $current_path ne $origin_path ){
+					$self->{_browsers}{ref}->reset_spa({ path => $origin_path });
+					$self->{_browsers}{new}->reset_spa({ path => $origin_path });
+				}
 				$self->{_browsers}{ref}->navigate( $origin_path );
 				$self->{_browsers}{new}->navigate( $origin_path );
 			# navigate by click
@@ -689,12 +719,13 @@ sub _try_to_relogin {
 	my $loginObj = TTP::HTTP::Compare::Login->new( $self->ep(), $self->conf());
 	if( !TTP::errs() && $loginObj->isDefined() && $self->_wants_login()){
 		$self->{_logins}{$which} = $loginObj->logIn( $self->{_browsers}{$which}, $self->_username(), $self->_password());
-		if( !$self->{_logins}{$which} ){
+		if( $self->{_logins}{$which} ){
+			$self->{_browsers}{$which}->reset_spa();
+			msgVerbose( "successful re-login" );
+		} else {
 			msgErr( "unable to log-in/authenticate on '$which' site" );
 			# login unsuccessful: just continue as we can
 			return false;
-		} else {
-			msgVerbose( "successful re-login" );
 		}
 	}
 

@@ -60,7 +60,7 @@ use constant {
 	DEFAULT_COMPARE_HTML_IGNORE_TEXT_PATTERNS => [],
 	DEFAULT_COMPARE_SCREENSHOT_ENABLED => false,
 	DEFAULT_COMPARE_SCREENSHOT_RMSE => 0.01,
-	DEFAULT_COMPARE_SCREENSHOT_THRESHOLD_COUNT => 10,
+	DEFAULT_COMPARE_SCREENSHOT_THRESHOLD_COUNT => 150,
 	DEFAULT_CRAWL_BY_CLICK_CSS_EXCLUDES => [
 		"th > a"
 	],
@@ -78,6 +78,8 @@ use constant {
 		"\.xls\$"
 	],
 	DEFAULT_CRAWL_BY_CLICK_INTERMEDIATE_SCREENSHOTS => false,
+	DEFAULT_CRAWL_BY_CLICK_TEXT_DENY_PATTERNS => [
+	],
 	DEFAULT_CRAWL_BY_CLICK_XPATH_DENY_PATTERNS => [
 		"\\bexit\\b",
 		"\\blogout\\b",
@@ -100,6 +102,8 @@ use constant {
 	DEFAULT_CRAWL_BY_LINK_HREF_DENY_PATTERNS => [
 		"^#.+|^javascript:|^callto:|^mailto:|^tel:",
 		"\.xls\$"
+	],
+	DEFAULT_CRAWL_BY_LINK_TEXT_DENY_PATTERNS => [
 	],
 	DEFAULT_CRAWL_BY_LINK_URL_ALLOW_PATTERNS => [],
 	DEFAULT_CRAWL_BY_LINK_URL_DENY_PATTERNS => [
@@ -161,6 +165,20 @@ sub _compile_regex_patterns {
     }
 	$self->{_run}{click_href_deny_rx} = [ @regex ];
 
+	# by click text denied patterns
+    $raw = $self->confCrawlByClickTextDenyPatterns();
+	@regex = ();
+    for my $s (@{ $raw // [] }) {
+        next unless defined $s && length $s;
+        my $rx = eval { qr/$s/ };
+        if ($@) {
+            msgWarn( "Invalid deny regex '$s': $@ (skipping)" );
+            next;
+        }
+        push( @regex, $rx );
+    }
+	$self->{_run}{click_text_deny_rx} = [ @regex ];
+
 	# by click xpath denied patterns
     $raw = $self->confCrawlByClickXpathDenyPatterns();
 	@regex = ();
@@ -204,6 +222,20 @@ sub _compile_regex_patterns {
         push( @regex, $rx );
     }
 	$self->{_run}{link_href_deny_rx} = [ @regex ];
+
+	# by link text denied patterns
+    $raw = $self->confCrawlByLinkTextDenyPatterns();
+	@regex = ();
+    for my $s (@{ $raw // [] }) {
+        next unless defined $s && length $s;
+        my $rx = eval { qr/$s/ };
+        if ($@) {
+            msgWarn( "Invalid deny regex '$s': $@ (skipping)" );
+            next;
+        }
+        push( @regex, $rx );
+    }
+	$self->{_run}{link_text_deny_rx} = [ @regex ];
 
 	# by link url allowed patterns
     $raw = $self->confCrawlByLinkUrlAllowPatterns();
@@ -660,6 +692,22 @@ sub confCrawlByClickIntermediateScreenshots {
 }
 
 # ------------------------------------------------------------------------------------------------
+# Returns the configured text denied patterns, defaulting to the hardcoded list
+# (I):
+# - none
+# (O):
+# - returns the configured text denied patterns
+
+sub confCrawlByClickTextDenyPatterns {
+	my ( $self ) = @_;
+
+	my $list = $self->var([ 'crawl', 'by_click', 'text_deny_patterns' ]);
+	$list = DEFAULT_CRAWL_BY_CLICK_TEXT_DENY_PATTERNS if !defined $list;
+
+	return $list;
+}
+
+# ------------------------------------------------------------------------------------------------
 # Returns the configured xpath denied patterns, defaulting to the hardcoded list
 # (I):
 # - none
@@ -766,6 +814,22 @@ sub confCrawlByLinkHrefDenyPatterns {
 
 	my $list = $self->var([ 'crawl', 'by_link', 'href_deny_patterns' ]);
 	$list = DEFAULT_CRAWL_BY_LINK_HREF_DENY_PATTERNS if !defined $list;
+
+	return $list;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns the configured text denied patterns, defaulting to the hardcoded list
+# (I):
+# - none
+# (O):
+# - returns the configured text denied patterns
+
+sub confCrawlByLinkTextDenyPatterns {
+	my ( $self ) = @_;
+
+	my $list = $self->var([ 'crawl', 'by_link', 'text_deny_patterns' ]);
+	$list = DEFAULT_CRAWL_BY_LINK_TEXT_DENY_PATTERNS if !defined $list;
 
 	return $list;
 }
@@ -956,6 +1020,20 @@ sub runCrawlByClickHrefDenyPatterns {
 # (I):
 # - none
 # (O):
+# - returns the configured text denied patterns
+
+sub runCrawlByClickTextDenyPatterns {
+	my ( $self ) = @_;
+
+	my $ref = $self->{_run}{click_text_deny_rx};
+
+	return $ref;
+}
+
+# ------------------------------------------------------------------------------------------------
+# (I):
+# - none
+# (O):
 # - returns the configured xpath denied patterns
 
 sub runCrawlByClickXpathDenyPatterns {
@@ -1018,6 +1096,20 @@ sub runCrawlByLinkHrefDenyPatterns {
 	my ( $self ) = @_;
 
 	my $ref = $self->{_run}{link_href_deny_rx};
+
+	return $ref;
+}
+
+# ------------------------------------------------------------------------------------------------
+# (I):
+# - none
+# (O):
+# - returns the configured text denied patterns
+
+sub runCrawlByLinkTextDenyPatterns {
+	my ( $self ) = @_;
+
+	my $ref = $self->{_run}{link_text_deny_rx};
 
 	return $ref;
 }

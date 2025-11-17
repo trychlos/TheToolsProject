@@ -501,13 +501,17 @@ sub extract_links {
 
 	# '$finders' is configured to address all the links of the page (mostly when there is some 'href' inside)
 	foreach my $it ( @{$finders} ){
+		#print STDERR "item ".Dumper( $it );
 		$dom->find( $it->{find} )->each( sub {
+			#print STDERR "elt ".Dumper( $_ );
 			my $href = $_->attr( $it->{member} ) // return;
 			$href =~ s/^\s+|\s+$//g;
-			#return if $href eq '' || $href =~ m/^javascript:|^mailto:|^tel:|\.xls$/i;
 			return if !$href;
 			# apply href inclusions/exclusions
 			return unless $self->_extract_links_href_allowed( $it, $href );
+			# apply text excludes
+			my $text = $_->attr( 'text' );
+			return unless $self->_extract_links_text_allowed( $it, $text );
 			# whether to follow only the path or also the query fragment
 			my $u = URI->new( $href );
 			$u->fragment( undef );
@@ -552,6 +556,31 @@ sub _extract_links_href_allowed {
 
     # Else require at least one allow match
     return any { $href =~ $_ } @{ $conf->runCrawlByLinkHrefAllowPatterns() };
+}
+
+# -------------------------------------------------------------------------------------------------
+# (I):
+# - the finder item
+# - the candidate text
+# (O):
+# - whether the text is allowed to be crawled
+
+sub _extract_links_text_allowed {
+	my ( $self, $finder, $text ) = @_;
+
+	my $conf = $self->browser()->conf();
+
+	if( $text ){
+		my $denied = $conf->runCrawlByLinkTextDenyPatterns() || [];
+		if( scalar( @{$denied} )){
+			if( any { $text =~ $_ } @{ $denied } ){
+				msgVerbose( "extract_links_allowed() '$text' denied by regex" );
+				return false;
+			}
+		}
+	}
+
+	return true;
 }
 
 # -------------------------------------------------------------------------------------------------

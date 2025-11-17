@@ -1018,6 +1018,32 @@ sub navigate_and_capture {
 }
 
 # -------------------------------------------------------------------------------------------------
+# Reset the SPA application
+# (I):
+# - an optional options hash with follogin keys:
+#   > path: the path to navigate to
+# (O):
+# -
+
+sub reset_spa {
+	my ( $self, $args ) = @_;
+    $args //= {};
+
+    my $path = $args->{path} // '/';
+    msgVerbose( "reset_spa() which='".$self->which()."' path='$path'" );
+
+    # clean SPA state:
+    $self->exec_js_w3c_sync( q{
+            localStorage.clear();
+            sessionStorage.clear();
+        }, [] );
+
+    # hard reload the root SPA entry (fresh bootstrap)
+    $self->navigate( "$path?__ttprand=".int( rand( 1_000_000 )));
+    $self->wait_for_page_ready();
+}
+
+# -------------------------------------------------------------------------------------------------
 # (I):
 # - nothing
 # (O):

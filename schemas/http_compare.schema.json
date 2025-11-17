@@ -5,8 +5,7 @@
     "description_array": [
         "The http.pl compare verb relies on:",
         "- a JSON configuration file addressed by the '--json' command-line option,",
-        "- a chromedriver server to talk to the Selenium::Remote::Driver package; runs it with '~/data/chromedriver-linux64/chromedriver --port=9515',",
-        "- a local nginx server which redirects the configured port (defaulting to 9516) to the chromedriver listening port (here, 9515).",
+        "- a chromedriver server to talk to the Selenium::Remote::Driver package; runs it with '~/data/chromedriver-linux64/chromedriver --port=9515'.",
         "NB:",
         "1. The chromedriver version MUST match the currently running Chromium version."
     ],
@@ -134,7 +133,7 @@
                         "threshold_count": {
                             "description": "The count of accepted differences, computed with an avg square method.",
                             "type": "integer",
-                            "default": 10
+                            "default": 150
                         }
                     }
                 }
@@ -189,6 +188,13 @@
                             "description": "Whether to save intermediate screenshots when restoring a chain. Mostly useful while debugging the verb.",
                             "type": "boolean",
                             "default": false
+                        },
+                        "text_deny_paterns": {
+                            "description": "The list of text patterns to exclude. Empty means none.",
+                            "type": "array",
+                            "items": "string",
+                            "default": [
+                            ]
                         },
                         "xpath_deny_paterns": {
                             "description": "The list of xpath patterns to exclude. Empty means none.",
@@ -267,6 +273,13 @@
                                 "^javascript:",
                                 "^mailto:",
                                 "^tel:"
+                            ]
+                        },
+                        "text_deny_paterns": {
+                            "description": "The list of text patterns to exclude. Empty means none.",
+                            "type": "array",
+                            "items": "string",
+                            "default": [
                             ]
                         },
                         "url_allow_patterns": {
