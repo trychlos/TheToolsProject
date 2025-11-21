@@ -519,6 +519,7 @@ sub _mqtt_disconnect {
 
 sub _mqtt_publish {
 	my ( $self, $item ) = @_;
+	$item->{payload} //= '';
 	msgVerbose( __PACKAGE__."::_mqtt_publish() $item->{topic} [$item->{payload}] retain=".( $item->{retain} ? 'true' : 'false' ));
 
 	if( $self->{_mqtt} && $item && $item->{topic} ){
