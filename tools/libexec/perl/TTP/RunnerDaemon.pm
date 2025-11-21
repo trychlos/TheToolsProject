@@ -1055,6 +1055,8 @@ sub startDaemon {
 	} else {
 		$res = Proc::Background->new({
 			stdin => undef,
+			stdout => TTP::getTempFileName({ suffix => "_stdout" }),
+			stderr => TTP::getTempFileName({ suffix => "_stderr" }),
 			command => $command
 		});
 	}

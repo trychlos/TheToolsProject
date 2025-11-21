@@ -12,6 +12,7 @@
     - HTTP::Compare::Browser no more considers linux-specific arguments
     - Align site.example/Commands/backup-monitor-daemon.pl to new semantics
     - TTP::getTempFileName() now accepts an optional options argument
+    - RunnerDaemon::startDaemon() now writes its standard outputs (stdout, stderr) to temporary files
 
 ### 4.24.0
 
