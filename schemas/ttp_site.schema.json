@@ -1608,6 +1608,36 @@
                                 }
                             }
                         },
+                        "ping": {
+                            "description_array": [
+                                "Default values for 'telemetry.pl ping' verb.",
+                                "This verb honors all telemetry macros, plus following ones:",
+                                "- <DEVICE>: the device name."
+                            ],
+                            "type": "object",
+                            "properties": {
+                                "alert_on_errors": {
+                                    "description": "Whether an alert must be sent after <count> successive errors, or -1 to disable the feature.",
+                                    "type": "integer",
+                                    "default": 2
+                                },
+                                "description": {
+                                    "description": "The default description radical of the telemetry. It is suffixed with the publication feature.",
+                                    "type": "string",
+                                    "default": "ttp_ping_<DEVICE>"
+                                },
+                                "publish_errors": {
+                                    "description": "Whether to publish the count of errors. The publication is suffixed with '_errors'.",
+                                    "type": "boolean",
+                                    "default": true
+                                },
+                                "publish_latency": {
+                                    "description": "Whether to publish the latency as ms delay. The publication is suffixed with '_latency'.",
+                                    "type": "boolean",
+                                    "default": true
+                                }
+                            }
+                        },
                         "withHttp": {
                             "description": "The HTTP-based configuration of the telemetry, which addresses the Prometheus PushGateway nstalled besides of the Prometheus server.",
                             "type": "object",

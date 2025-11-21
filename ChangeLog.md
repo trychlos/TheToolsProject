@@ -14,6 +14,7 @@
     - TTP::getTempFileName() now accepts an optional options argument
     - RunnerDaemon::startDaemon() now writes its standard outputs (stdout, stderr) to temporary files
     - Fix "Use of uninitialized value in concatenation (.) or string at C:\INLINGUA\TheToolsProject\tools\libexec\perl/TTP/RunnerDaemon.pm line 522"
+    - HTTP::Compare::Browser now manages timeout and retries count in exec_js() method
 
 ### 4.24.0
 

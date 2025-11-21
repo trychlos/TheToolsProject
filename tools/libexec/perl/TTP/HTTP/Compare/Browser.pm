@@ -61,8 +61,8 @@ use constant {
 
 my $Const = {
 	# browser driver capabilities
-    # binary => '/usr/lib64/chromium-browser/chromium-browser',
-    # platformName => 'linux',
+					#binary => '/usr/lib64/chromium-browser/chromium-browser',
+                #platformName => 'linux',
 	caps => {
 		path => '',
 		capabilities => {
@@ -89,6 +89,10 @@ my $Const = {
     # ua timeout must be set in seconds
     ua => {
         timeout => 10
+    },
+    exec_js => {
+        retries => 5,
+        sleep => 5  # sec.
     },
     navigate => {
         retries => 5,
@@ -907,22 +911,28 @@ sub exec_js_w3c_sync {
     my ( $self, $script, $args ) = @_;
     my $url = $self->_url_ssid()."/execute/sync";
     my $res;
-    try {
-        $res = $self->_http()->post( $url, {
-            headers => { 'Content-Type' => 'application/json' },
-            content => encode_json({ script => $script, args => $args // [] }),
-        });
-    } catch {
-        # at visited=79
-        # [http.pl compare] (ERR) do /home/pierre/data/dev/TheToolsProject/tools/http/compare.do.pl: encountered object 'TTP::HTTP::Compare::QueueItem=HASH(0x55876f2d5028)',
-        # but neither allow_blessed, convert_blessed nor allow_tags settings are enabled (or TO_JSON/FREEZE method missing)
-        # at /home/pierre/data/dev/TheToolsProject/tools/libexec/perl/TTP/HTTP/Compare/Browser.pm line 1085.
-        print STDERR "script: ".Dumper( $script );
-        print STDERR "args: ".Dumper( $args );
-        msgErr( $_ );
-        TTP::stackTrace();
-    };
-    msgErr( "exec_js_w3c_sync() status=$res->{status} reason='$res->{reason}' content='$res->{content}'" ) unless $res->{success};
+    my $tries = $Const->{exec_js}{retries};
+    while ( $tries-- ){
+		try {
+			$res = $self->_http()->post( $url, {
+				headers => { 'Content-Type' => 'application/json' },
+				content => encode_json({ script => $script, args => $args // [] }),
+			});
+		} catch {
+			# at visited=79
+			# [http.pl compare] (ERR) do /home/pierre/data/dev/TheToolsProject/tools/http/compare.do.pl: encountered object 'TTP::HTTP::Compare::QueueItem=HASH(0x55876f2d5028)',
+			# but neither allow_blessed, convert_blessed nor allow_tags settings are enabled (or TO_JSON/FREEZE method missing)
+			# at /home/pierre/data/dev/TheToolsProject/tools/libexec/perl/TTP/HTTP/Compare/Browser.pm line 1085.
+			print STDERR "script: ".Dumper( $script );
+			print STDERR "args: ".Dumper( $args );
+			msgErr( $_ );
+			TTP::stackTrace();
+		};
+		last if $res->{success};
+		die( "exec_js_w3c_sync() status=$res->{status} reason='$res->{reason}' content='$res->{content}'" ) unless $res->{content} =~ /Timed out/i && $tries;
+        msgVerbose( "exec_js_w3c_sync() sleeping for $Const->{exec_js}{sleep}s (tries=$tries)" );
+        sleep $Const->{exec_js}{sleep};
+	}
     return decode_json( $res->{content} )->{value};
 }
 
