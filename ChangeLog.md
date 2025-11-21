@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.24.0-rc.0
+### 4.24.0
 
-    Release date: 
+    Release date: 2025-11-21
 
     - ttp.pl alert now supports MMS, thus bumping minor candidate version number
     - Define new http.pl compare verb
