@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - Define new TTP::max() and TTP::min() functions
 
 ### 4.24.0
 

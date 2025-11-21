@@ -1070,6 +1070,28 @@ sub logsRoot {
 
 # ------------------------------------------------------------------------------------------------
 # (I):
+# - scalar
+# - scalar
+# (O):
+# - the bigger of the two scalars
+
+sub max {
+	return $_[$_[0] < $_[1]];
+}
+
+# ------------------------------------------------------------------------------------------------
+# (I):
+# - scalar
+# - scalar
+# (O):
+# - the lower of the two scalars
+
+sub min {
+	return $_[$_[0] > $_[1]];
+}
+
+# ------------------------------------------------------------------------------------------------
+# (I):
 # - none
 # (O):
 # - returns the name of the current node, which may be undef in the very early stage of bootstrap
