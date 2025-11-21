@@ -61,16 +61,16 @@ use constant {
 
 my $Const = {
 	# browser driver capabilities
+    # binary => '/usr/lib64/chromium-browser/chromium-browser',
+    # platformName => 'linux',
 	caps => {
 		path => '',
 		capabilities => {
 			firstMatch => [{}],
 			alwaysMatch => {
 				browserName => 'chrome',
-      			platformName => 'linux',
       			acceptInsecureCerts => JSON::true,
 				'goog:chromeOptions' => {
-					binary => '/usr/lib64/chromium-browser/chromium-browser',
 					args => [
 						'--headless=new',
 						'--no-sandbox',

@@ -9,6 +9,7 @@
     - Define new TTP::max() and TTP::min() functions
     - Define new TTP::Path::checkLength() function with per-OS configuration
     - http.pl compare takes advantage of new checkLength() function when creating dump files
+    - HTTP::Compare::Browser no more considers linux-specific arguments
 
 ### 4.24.0
 
