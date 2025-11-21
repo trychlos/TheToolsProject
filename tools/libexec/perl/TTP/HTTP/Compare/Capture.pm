@@ -29,7 +29,6 @@ use utf8;
 use warnings;
 
 use Data::Dumper;
-use Data::UUID;
 use File::Copy qw( copy move );
 use File::Path qw( make_path );
 use File::Spec;
@@ -47,9 +46,9 @@ use vars::global qw( $ep );
 use TTP::Constants qw( :all );
 use TTP::HTTP::Compare::Utils;
 use TTP::Message qw( :all );
+use TTP::Path;
 
 use constant {
-	FNAME_MAX_LENGTH => 255
 };
 
 my $Const = {
@@ -88,13 +87,8 @@ sub _fname {
 	$suffix = "_$suffix" if $suffix;
 	# build a filename first try
 	my $fname = sprintf( "%06d_%s_%s%s%s", $counter, $which, join( "|", $path, @w, $xpath ), $suffix, $extension );
-	# if filename exceeds max length, then replace then end with an uuid
-	if( length( $fname ) >= FNAME_MAX_LENGTH ){
-		my $ug = Data::UUID->new;
-		my $str = lc( $ug->create_str());
-		$fname = substr( $fname, -1*( length( $str )+length( $extension )+2 ))."_${str}${extension}";
-	}
-	$fname =~ s![/\|:"\*]!_!g;
+	# forbidden chars
+	$fname =~ s![/\|:"\*<>\?]!_!g;
 
 	return $fname;
 }
@@ -332,7 +326,7 @@ sub _write_diffs {
 sub _write_diffs_which {
     my ( $self, $fref, $dir, $queue_item, $which ) = @_;
 
-	my $fname = File::Spec->catfile( $dir, $self->_fname( $which, $queue_item, '.png' ));
+	my $fname = TTP::Path::checkLength( File::Spec->catfile( $dir, $self->_fname( $which, $queue_item, '.png' )));
 	if( $fref eq $fname ){
 		msgWarn( "cannot save '$fref' to same '$fname': you should review 'dirs.diffs' configuration" );
 	} else {
@@ -397,7 +391,7 @@ sub compare {
 		is( lc( $self->content_type() // ''), lc( $other->content_type() // ''), "[$role ($path)] got same content-type (".lc( $self->content_type() // '').")" )
 			|| push( @errs, "content-type" );
 		# must have same DOM hash
-		is( $self->dom_hash(), $other->dom_hash(), "[$role ($path)] sanitized DOM hashes matches (".$self->dom_hash().")" )
+		is( $self->dom_hash(), $other->dom_hash(), "[$role ($path)] sanitized DOM hashes match (".$self->dom_hash().")" )
 			|| push( @errs, "DOM hash" );
 	}
 
@@ -653,7 +647,7 @@ sub writeHtml {
 		my @dirs = File::Spec->splitdir( $subdirs );
 		my $fdir = File::Spec->catdir( $args->{dir} || File::Temp->tempdir(), @dirs );
 		make_path( $fdir );
-		my $fname = File::Spec->catfile( $fdir, $self->_fname( $which, $queue_item, '.html', $args ));
+		my $fname = TTP::Path::checkLength( File::Spec->catfile( $fdir, $self->_fname( $which, $queue_item, '.html', $args )));
 		msgVerbose( "dumping '$which' HTML to $fname" );
 		open my $fh, '>:utf8', $fname or die "open $fname: $!";
 		print {$fh} $self->{_hash}{html};
@@ -690,7 +684,7 @@ sub writeScreenshot {
 		my @dirs = File::Spec->splitdir( $subdirs );
 		my $fdir = File::Spec->catdir( $args->{dir} || File::Temp->tempdir(), @dirs );
 		make_path( $fdir );
-		my $fname = File::Spec->catfile( $fdir, $self->_fname( $which, $queue_item, '.png', $args ));
+		my $fname = TTP::Path::checkLength( File::Spec->catfile( $fdir, $self->_fname( $which, $queue_item, '.png', $args )));
 		msgVerbose( "writing '$which' page screenshot to $fname" );
 		my $png = $self->browser()->screenshot();
 		open my $fh, '>:raw', $fname or die "open $fname: $!";
