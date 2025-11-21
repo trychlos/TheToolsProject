@@ -7,6 +7,7 @@
     Release date: 
 
     - Define new TTP::max() and TTP::min() functions
+    - Define new TTP::Path::checkLength() function with per-OS configuration
 
 ### 4.24.0
 

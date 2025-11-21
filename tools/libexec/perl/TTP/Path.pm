@@ -27,6 +27,7 @@ use warnings;
 
 use Config;
 use Data::Dumper;
+use Data::UUID;
 use File::Basename;
 use File::Copy::Recursive qw( dircopy fcopy );
 use File::Find;
@@ -41,6 +42,24 @@ use TTP::Constants qw( :all );
 use TTP::Finder;
 use TTP::Message qw( :all );
 
+my $Const = {
+	# defaults which depend of the host OS provided by 'Config{osname}' package's value
+	byOS => {
+		darwin => {
+			path => 4096,
+			component => 255
+		},
+		linux => {
+			path => 4096,
+			component => 255
+		},
+		MSWin32 => {
+			path => 255,
+			component => 255
+		}
+	}
+};
+
 # -------------------------------------------------------------------------------------------------
 # Returns the configured alertsDir (when alerts are sent by file), defaulting to tempDir()
 # (I):
@@ -51,6 +70,50 @@ use TTP::Message qw( :all );
 sub alertsFileDropdir {
 	my $dir = $ep->var([ 'alerts', 'withFile', 'dropDir' ]) || File::Spec->catdir( TTP::tempDir(), 'TTP', 'alerts' );
 	return $dir;
+}
+
+# -------------------------------------------------------------------------------------------------
+# Windows expects each filename component be less than 259 chars
+# see https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file?redirectedfrom=MSDN#maximum-path-length-limitation
+# Linux expects each component be less than 255 chars while the full path can go up to 4096
+# We consider that our path components are fine and that only the basename and the full pathname are to be checked,
+# only adjusting the basename if needed
+# (I):
+# - the candidate full pathname
+# (O):
+# - the checked full pathname
+
+sub checkLength {
+	my ( $path ) = @_;
+
+	my $maxPath = $Const->{byOS}{$Config{osname}}{path};
+	my $maxComponent = $Const->{byOS}{$Config{osname}}{component};
+
+	my ( $volume, $directories, $file ) = File::Spec->splitpath( $path );
+	my @dirs = File::Spec->splitdir( $directories );
+
+	# whether the full pathname of any of its components is too long
+	my $toolong = false;
+	$toolong = true if !$toolong && length( $path ) > $maxPath;
+	$toolong = true if !$toolong && length( $file ) > $maxComponent;
+	#foreach my $dir ( @dirs ){
+	#	$toolong = true if !$toolong && length( $dir ) > $maxComponent;
+	#}
+
+	# if too long then correct the basename, keeping the extension
+	# the new basename must be smaller that maxComponent and resulting path must be smaller than maxPath
+	if( $toolong ){
+		my $ug = Data::UUID->new;
+		my $str = lc( $ug->create_str());
+		my ( $base, undef, $extension ) = fileparse( $file, qr/\.[^.]*/ );
+		#print STDERR "base='$base' extension='$extension'".EOL;
+		my $flmax = TTP::min( $maxComponent, ( $maxPath - ( length( $path )-length( $file )-1 )));
+		$flmax -= length( $str ) + length( $extension ) + 2;
+		$file = substr( $base, 0, $flmax )."_${str}${extension}";
+		$path = File::Spec->catpath( $volume, $directories, $file );
+	}
+
+	return $path;
 }
 
 # -------------------------------------------------------------------------------------------------
