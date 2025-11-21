@@ -819,8 +819,14 @@ sub filter {
 
 # -------------------------------------------------------------------------------------------------
 # returns a new unique temp filename built with the qualifiers and a random string
+# (I):
+# - an optional options args with following keys:
+#   > suffix: a filename suffix, defaulting to empty
 
 sub getTempFileName {
+	my ( $args ) = @_;
+	$args //= {};
+
 	my $fname = $ep->runner()->runnableBNameShort();
 	my @qualifiers = @{$ep->runner()->runnableQualifiers()};
 	if( scalar( @qualifiers ) > 0 ){
@@ -828,8 +834,10 @@ sub getTempFileName {
 		$fname .= "-".join( '-', @qualifiers );
 	}
 	my $random = random();
-	my $tempfname = File::Spec->catfile( logsCommands(), "$fname-$random.tmp" );
+	my $suffix = $args->{suffix} // '';
+	my $tempfname = File::Spec->catfile( logsCommands(), "${fname}-${random}${suffix}.tmp" );
 	msgVerbose( "getTempFileName() tempfname='$tempfname'" );
+
 	return $tempfname;
 }
 

@@ -11,6 +11,7 @@
     - http.pl compare takes advantage of new checkLength() function when creating dump files
     - HTTP::Compare::Browser no more considers linux-specific arguments
     - Align site.example/Commands/backup-monitor-daemon.pl to new semantics
+    - TTP::getTempFileName() now accepts an optional options argument
 
 ### 4.24.0
 
