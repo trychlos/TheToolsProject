@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.24.1-rc.0
+### 4.24.1
 
-    Release date: 
+    Release date: 2025-11-22
 
     - Define new TTP::max() and TTP::min() functions
     - Define new TTP::Path::checkLength() function with per-OS configuration
