@@ -85,19 +85,6 @@ my $Const = {
 	},
 	# constant prefix used by ChromeDriver for all its paths
 	path => '/wd/hub',
-    # some timeouts and max retries
-    # ua timeout must be set in seconds
-    ua => {
-        timeout => 10
-    },
-    exec_js => {
-        retries => 5,
-        sleep => 5  # sec.
-    },
-    navigate => {
-        retries => 5,
-        sleep => 5  # sec.
-    },
     # the size of the performance logs ring
     performance_logs => {
         ring_size => 5000
@@ -212,7 +199,7 @@ sub _driver_start {
     #$driver->set_timeout( "implicit", 5000 );  # ms
     #$driver->set_timeout( "page load", 5000 );  # ms
     # Server returned error message read timeout at /usr/share/perl5/vendor_perl/Net/HTTP/Methods.pm line 274.
-    $driver->ua->timeout( $Const->{ua}{timeout} ); # sec.
+    $driver->ua->timeout( $self->conf()->confBrowserUaTimeout());
 
 	#print STDERR "driver ".Dumper( $driver );
 	return $driver;
@@ -911,7 +898,7 @@ sub exec_js_w3c_sync {
     my ( $self, $script, $args ) = @_;
     my $url = $self->_url_ssid()."/execute/sync";
     my $res;
-    my $tries = $Const->{exec_js}{retries};
+    my $tries = $self->conf()->confBrowserExecjsRetries();
     while ( $tries-- ){
 		try {
 			$res = $self->_http()->post( $url, {
@@ -931,7 +918,7 @@ sub exec_js_w3c_sync {
 		last if $res->{success};
 		die( "exec_js_w3c_sync() status=$res->{status} reason='$res->{reason}' content='$res->{content}'" ) unless $res->{content} =~ /Timed out/i && $tries;
         msgVerbose( "exec_js_w3c_sync() sleeping for $Const->{exec_js}{sleep}s (tries=$tries)" );
-        sleep $Const->{exec_js}{sleep};
+        sleep $self->conf()->confBrowserExecjsSleep();
 	}
     return decode_json( $res->{content} )->{value};
 }
@@ -1001,14 +988,14 @@ sub navigate {
     # Drain logs so we only parse events for THIS navigation
     # Retry on timed out
     $self->_performance_logs_drain();
-    my $tries = $Const->{navigate}{retries};
+    my $tries = $self->conf()->confBrowserNavigateRetries();
     while ( $tries-- ){
         my $ok = eval { $self->driver()->get( $url ); 1 };
         last if $ok;
         my $e = "$@";
         die $e unless $e =~ /read timeout/i && $tries;
         msgVerbose( "navigate() sleeping for $Const->{navigate}{sleep}s (tries=$tries)" );
-        sleep $Const->{navigate}{sleep};
+        sleep $self->conf()->confBrowserNavigateSleep();
     }
     $self->_signature_clear();
 }

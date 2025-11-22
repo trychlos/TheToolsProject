@@ -44,15 +44,58 @@
                     "type": "string",
                     "default": "127.0.0.1"
                 },
+                "exec_js": {
+                    "description": "Handle the javascript executions on the sites.",
+                    "type": "object",
+                    "properties": {
+                        "retries": {
+                            "description": "The count of retries when the javascript execution times out.",
+                            "type": "integer",
+                            "default": 5
+                        },
+                        "sleep": {
+                            "description": "How many seconds wait between two timed-out javascript executions.",
+                            "type": "integer",
+                            "default": 5
+                        }
+                    }
+                },
                 "height": {
                     "description": "The height in pixels of the internal browser window.",
                     "type": "integer",
                     "default": 768
                 },
+                "navigate": {
+                    "description": "Handle the navigation on the sites.",
+                    "type": "object",
+                    "properties": {
+                        "retries": {
+                            "description": "The count of retries when the navigation times out.",
+                            "type": "integer",
+                            "default": 5
+                        },
+                        "sleep": {
+                            "description": "How many seconds wait between two timed-out navigations.",
+                            "type": "integer",
+                            "default": 5
+                        }
+                    }
+                },
                 "timeout": {
                     "description": "The timeout in seconds of interactions with internal browser.",
                     "type": "integer",
                     "default": 5
+                },
+                "ua": {
+                    "description": "The underlying HTTP user agent configuration.",
+                    "type": "object",
+                    "properties": {
+                        "timeout": {
+                            "description": "The user agent timeout in seconds.",
+                            "type": "integer",
+                            "default": 10
+                        }
+                    }
                 },
                 "width": {
                     "description": "The width in pixels of the internal browser window.",

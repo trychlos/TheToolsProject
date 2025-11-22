@@ -47,7 +47,12 @@ use constant {
 	DEFAULT_BROWSER_HEIGHT => 768,
 	DEFAULT_BROWSER_DRIVER_PORT => 9515,
 	DEFAULT_BROWSER_DRIVER_SERVER => '127.0.0.1',
+	DEFAULT_BROWSER_EXECJS_RETRIES => 5,
+	DEFAULT_BROWSER_EXECJS_SLEEP => 5,
+	DEFAULT_BROWSER_NAVIGATE_RETRIES => 5,
+	DEFAULT_BROWSER_NAVIGATE_SLEEP => 5,
 	DEFAULT_BROWSER_TIMEOUT => 5,
+	DEFAULT_BROWSER_UA_TIMEOUT => 10,
 	DEFAULT_BROWSER_WIDTH => 1366,
 	DEFAULT_COMPARE_HTML_ENABLED => false,
 	DEFAULT_COMPARE_HTML_IGNORE_DOM_ATTRIBUTES => [
@@ -435,6 +440,38 @@ sub confBrowserDriverServer {
 }
 
 # ------------------------------------------------------------------------------------------------
+# Returns the configured browser javascript execution retries count, defaulting to 5.
+# (I):
+# - none
+# (O):
+# - returns the configured browser javascript execution retries count
+
+sub confBrowserExecjsRetries {
+	my ( $self ) = @_;
+
+	my $count = $self->var([ 'browser', 'exec_js', 'retries' ]);
+	$count = DEFAULT_BROWSER_EXECJS_RETRIES if !defined $count;
+
+	return $count;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns the configured browser javascript execution sleep, defaulting to 5 s.
+# (I):
+# - none
+# (O):
+# - returns the configured browser javascript execution sleep
+
+sub confBrowserExecjsSleep {
+	my ( $self ) = @_;
+
+	my $sleep = $self->var([ 'browser', 'exec_js', 'sleep' ]);
+	$sleep = DEFAULT_BROWSER_EXECJS_SLEEP if !defined $sleep;
+
+	return $sleep;
+}
+
+# ------------------------------------------------------------------------------------------------
 # Returns the configured browser height, defaulting to 768.
 # (I):
 # - none
@@ -451,6 +488,38 @@ sub confBrowserHeight {
 }
 
 # ------------------------------------------------------------------------------------------------
+# Returns the configured browser navigation retries count, defaulting to 5.
+# (I):
+# - none
+# (O):
+# - returns the configured browser navigation retries count
+
+sub confBrowserNavigateRetries {
+	my ( $self ) = @_;
+
+	my $count = $self->var([ 'browser', 'navigate', 'retries' ]);
+	$count = DEFAULT_BROWSER_NAVIGATE_RETRIES if !defined $count;
+
+	return $count;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns the configured browser navigation sleep, defaulting to 5 s.
+# (I):
+# - none
+# (O):
+# - returns the configured browser navigation sleep
+
+sub confBrowserNavigateSleep {
+	my ( $self ) = @_;
+
+	my $sleep = $self->var([ 'browser', 'navigate', 'sleep' ]);
+	$sleep = DEFAULT_BROWSER_NAVIGATE_SLEEP if !defined $sleep;
+
+	return $sleep;
+}
+
+# ------------------------------------------------------------------------------------------------
 # Returns the configured browser timeout, defaulting to 5 sec.
 # (I):
 # - none
@@ -462,6 +531,22 @@ sub confBrowserTimeout {
 
 	my $timeout = $self->var([ 'browser', 'timeout' ]);
 	$timeout = DEFAULT_BROWSER_TIMEOUT if !defined $timeout;
+
+	return $timeout;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns the configured browser timeout of underlying HTTP user agent, defaulting to 5 sec.
+# (I):
+# - none
+# (O):
+# - returns the configured browser timeout
+
+sub confBrowserUaTimeout {
+	my ( $self ) = @_;
+
+	my $timeout = $self->var([ 'browser', 'ua', 'timeout' ]);
+	$timeout = DEFAULT_BROWSER_UA_TIMEOUT if !defined $timeout;
 
 	return $timeout;
 }

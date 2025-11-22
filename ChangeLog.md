@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - http.pl compare now can configure navigation, js execution and user agent sleeps, retries and timeouts
 
 ### 4.24.1
 
