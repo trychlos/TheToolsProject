@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.24.2-rc.0
+### 4.24.2
 
-    Release date: 
+    Release date: 2025-11-23
 
     - http.pl compare now can configure navigation, js execution and user agent sleeps, retries and timeouts
 
