@@ -26,6 +26,10 @@ use utf8;
 use warnings;
 
 use Data::Dumper;
+use File::Path qw ( make_path );
+use File::Spec;
+use Path::Tiny;
+use Scalar::Util qw( looks_like_number );
 
 use TTP::Constants qw( :all );
 use TTP::Message qw( :all );
@@ -49,6 +53,19 @@ my $Const = {
 		'TEXT_NODROPDIR'
 	]
 };
+
+# -------------------------------------------------------------------------------------------------
+# Determines the dropDir directory for Text telemetries
+# (I):
+# - none
+# (O):
+# - the dropDir directory, making sure it exists
+
+sub dropDir {
+	my $dropDir = TTP::Telemetry::var([ 'withText', 'dropDir' ]) || File::Spec->catdir( TTP::tempDir(), 'TTP', 'collector' );
+	make_path( $dropDir );
+	return $dropDir;
+}
 
 # -------------------------------------------------------------------------------------------------
 # Determines if Text-based telemetry is a site default, defaulting to false
@@ -100,7 +117,7 @@ sub publish {
 	my $res = 0;
 
 	if( isEnabled()){
-		my $dropdir = TTP::Telemetry::var([ 'withText', 'dropDir' ]);
+		my $dropdir = TTP::Telemetry::Text::dropDir();
 		if( $dropdir ){
 			# get and maybe prefix the name
 			# final metric name will "'ttp_'+<provided_prefix>+<metric_name>"
@@ -109,14 +126,31 @@ sub publish {
 			if( $prefix ){
 				$name = "$prefix$name";
 			}
-			# pwi 2024- 5- 1 do not remember the reason why ?
-			#$name =~ s/\./_/g;
 			$name = "$Const->{prefix}$name" if $Const->{prefix} && $name !~ m/^$Const->{prefix}/;
 			my $value = $metric->value();
 			if( looks_like_number( $value )){
-				# do we run in dummy mode ?
+				# build the published text
+				my $text = "";
+				my $help = $metric->help();
+				$text .= "# HELP $name $help\n" if $help;
+				my $type = $metric->type();
+				$text .= "# TYPE $name $type\n" if $type;
+				$text .= $name;
+				my $labels = $metric->labels();
+				if( scalar( @{$labels} )){
+					$text .= '{'.join( ',', @{$labels} ).'}';
+				}
+				$text .= " $value\n";
+				$text = $metric->apply_macros( $text );
+				# build the text fname
+				my $fname = File::Spec->catfile( dropDir(), "$name.prom" );
+				# and try to publish
 				my $dummy = $metric->ep()->runner()->dummy();
-				# and so...??
+				if( $dummy ){
+					msgDummy( "publishing '$text' to '$fname'" );
+				} else {
+					path( $fname )->spew_utf8( $text );
+				}
 			} else {
 				$res = VALUE_UNSUITED;
 			}

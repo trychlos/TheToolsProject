@@ -1610,31 +1610,144 @@
                         },
                         "ping": {
                             "description_array": [
-                                "Default values for 'telemetry.pl ping' verb.",
-                                "This verb honors all telemetry macros, plus following ones:",
-                                "- <DEVICE>: the device name."
+                                "The 'telemetry.pl ping' verb let us ping any device, providing an errors count and a latency.",
+                                "The verb honors all telemetry macros, plus following ones:",
+                                "- <DEVICE>: the device name.",
+                                "- <SUFFIX>: the configured suffix for the metric."
                             ],
                             "type": "object",
                             "properties": {
-                                "alert_on_errors": {
-                                    "description": "Whether an alert must be sent after <count> successive errors, or -1 to disable the feature.",
-                                    "type": "integer",
-                                    "default": 2
+                                "errors": {
+                                    "description": "What to do with the errors count.",
+                                    "type": "object",
+                                    "properties": {
+                                        "alert": {
+                                            "description": "Whether and how alert on errors count.",
+                                            "type": "object",
+                                            "properties": {
+                                                "enabled": {
+                                                    "description": "Whether to alert on errors count.",
+                                                    "type": "boolean",
+                                                    "default": "true"
+                                                },
+                                                "media": {
+                                                    "description_array": [
+                                                        "The list of media to use when alerting among those allowed in the site.",
+                                                        "Can be one of 'mms', 'mqtt', 'sms', 'smtp', 'tts' or 'all'.",
+                                                        "The medium is just ignored if not allowed by the general site configuration."
+                                                    ],
+                                                    "type": "array",
+                                                    "item": "string",
+                                                    "default": [
+                                                        "all"
+                                                    ]
+                                                },
+                                                "threshold": {
+                                                    "description": "Send an alert when the errors count reaches this threshold.",
+                                                    "type": "integer",
+                                                    "default": 2
+                                                }
+                                            }
+                                        },
+                                        "publish": {
+                                            "description": "Whether and how publish the errors count.",
+                                            "type": "object",
+                                            "properties": {
+                                                "enabled": {
+                                                    "description": "Whether to publish the errors count.",
+                                                    "type": "boolean",
+                                                    "default": "true"
+                                                },
+                                                "description": {
+                                                    "description": "The description of the metric.",
+                                                    "type": "string",
+                                                    "default": "ttp_ping_<DEVICE>_<SUFFIX>"
+                                                },
+                                                "media": {
+                                                    "description_array": [
+                                                        "The list of media to use when publishing among those allowed in the site.",
+                                                        "Can be one of 'http', 'mqtt', 'text', or 'all'.",
+                                                        "The medium is just ignored if not allowed by the general site configuration."
+                                                    ],
+                                                    "type": "array",
+                                                    "item": "string",
+                                                    "default": [
+                                                        "all"
+                                                    ]
+                                                },
+                                                "name": {
+                                                    "description": "The name of the metric.",
+                                                    "type": "string",
+                                                    "default": "ttp_ping_<DEVICE>_<SUFFIX>"
+                                                },
+                                                "suffix": {
+                                                    "description": "The suffix of the metric name.",
+                                                    "type": "string",
+                                                    "default": "errors"
+                                                }
+                                            }
+                                        }
+                                    }
                                 },
-                                "description": {
-                                    "description": "The default description radical of the telemetry. It is suffixed with the publication feature.",
-                                    "type": "string",
-                                    "default": "ttp_ping_<DEVICE>"
-                                },
-                                "publish_errors": {
-                                    "description": "Whether to publish the count of errors. The publication is suffixed with '_errors'.",
-                                    "type": "boolean",
-                                    "default": true
-                                },
-                                "publish_latency": {
-                                    "description": "Whether to publish the latency as ms delay. The publication is suffixed with '_latency'.",
-                                    "type": "boolean",
-                                    "default": true
+                                "latency": {
+                                    "description": "Whether and how publish the seen latency.",
+                                    "type": "object",
+                                    "properties": {
+                                        "alert": {
+                                            "description": "Whether and how alert on latency.",
+                                            "type": "object",
+                                            "properties": {
+                                                "enabled": {
+                                                    "description": "Whether to alert on latency.",
+                                                    "type": "boolean",
+                                                    "default": "true"
+                                                },
+                                                "threshold": {
+                                                    "description": "Send an alert when the latency (in ms) reaches this threshold.",
+                                                    "type": "integer",
+                                                    "default": 1000
+                                                }
+                                            }
+                                        },
+                                        "publish": {
+                                            "description": "Whether and how publish the latency.",
+                                            "type": "object",
+                                            "properties": {
+                                                "enabled": {
+                                                    "description": "Whether to publish the latency.",
+                                                    "type": "boolean",
+                                                    "default": "true"
+                                                },
+                                                "description": {
+                                                    "description": "The description of the metric.",
+                                                    "type": "string",
+                                                    "default": "ttp_ping_<DEVICE>_<SUFFIX>"
+                                                },
+                                                "media": {
+                                                    "description_array": [
+                                                        "The list of media to use when publishing among those allowed in the site.",
+                                                        "Can be one of 'http', 'mqtt', 'text', or 'all'.",
+                                                        "The medium is just ignored if not allowed by the general site configuration."
+                                                    ],
+                                                    "type": "array",
+                                                    "item": "string",
+                                                    "default": [
+                                                        "all"
+                                                    ]
+                                                },
+                                                "name": {
+                                                    "description": "The name of the metric.",
+                                                    "type": "string",
+                                                    "default": "ttp_ping_<DEVICE>_<SUFFIX>"
+                                                },
+                                                "suffix": {
+                                                    "description": "The suffix of the metric name.",
+                                                    "type": "string",
+                                                    "default": "latency"
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         },

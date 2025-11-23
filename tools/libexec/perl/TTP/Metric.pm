@@ -83,6 +83,66 @@ my $Const = {
 # -------------------------------------------------------------------------------------------------
 # Getter/Setter
 # (I):
+# - an optional macros hash
+# (O):
+# - the current macros hash, which may be undef
+
+sub additionals {
+	my ( $self, $arg ) = @_;
+
+	$self->{_metric}{additionals} = $arg if defined $arg;
+
+	return $self->{_metric}{additionals};
+}
+
+# -------------------------------------------------------------------------------------------------
+# (I):
+# - a string, or an array of strings, on which the macros should be applied
+# - an optional options hash with following keys:
+#   > not: do not try to substitute this macro (do not create a call loop with the caller)
+# (O):
+# - the input data (with the very same type), after having applied the macros
+
+sub apply_macros {
+	my ( $self, $data, $args ) = @_;
+	$args //= {};
+
+	my $macros = $self->macros( $args );
+
+	#print STDERR "data ".Dumper( $data );
+	#print STDERR "args ".Dumper( $args );
+	#print STDERR "macros ".Dumper( $macros );
+
+	my $ref = ref( $data );
+	if( $ref eq 'ARRAY' ){
+		my $out = [];
+		foreach my $line ( @{ $data} ){
+			push( @{$out}, TTP::substituteMacros( $line, $macros ));
+		}
+		$data = $out;
+	} else {
+		$data = TTP::substituteMacros( $data, $macros );
+	}
+
+	return $data;
+}
+
+# -------------------------------------------------------------------------------------------------
+# Apply macros on all fields
+
+sub apply_macros_all {
+	my ( $self ) = @_;
+
+	my $macros = $self->macros();
+	$self->name( TTP::substituteMacros( $self->name(), $macros ));
+	$self->help( TTP::substituteMacros( $self->help(), $macros ));
+	$self->type( TTP::substituteMacros( $self->type(), $macros ));
+	$self->labels( TTP::substituteMacros( $self->labels(), $macros ));
+}
+
+# -------------------------------------------------------------------------------------------------
+# Getter/Setter
+# (I):
 # - an optional one-liner description
 # (O):
 # - the current description
@@ -115,13 +175,13 @@ sub labels {
 
 		foreach my $it ( @{$arg} ){
 			my @words = split( /=/, $it );
-			if( scalar( @words ) == 2 && $words[0] =~ m/$Const->{labelNameRE}/ && $words[1] =~ m/$Const->{labelValueRE}/ ){
+			if( scalar( @words ) == 2 ){
 				push( @{$labels}, "$words[0]=$words[1]" );
 				push( @{$names}, "$words[0]" );
 				push( @{$values}, "$words[1]" );
 			} else {
 				$errs += 1;
-				msgErr( __PACKAGE__."::labels() '$it' doesn't conform to accepted label name or value regexes" );
+				msgErr( __PACKAGE__."::labels() '$it' doesn't conform to 'name=value' model" );
 			}
 		}
 
@@ -136,6 +196,30 @@ sub labels {
 	}
 
 	return $self->{_metric}{labels} || [];
+}
+
+# -------------------------------------------------------------------------------------------------
+# Check that the labels match the relevant regular expression
+# (I):
+# - nothing
+# (O):
+# true|false
+
+sub labels_check {
+	my ( $self ) = @_;
+
+	my $labels = $self->labels();
+	my $errs = 0;
+
+	foreach my $it ( @{$labels} ){
+		my @words = split( /=/, $it );
+		if( $words[0] !~ m/$Const->{labelNameRE}/ || $words[1] !~ m/$Const->{labelValueRE}/ ){
+			$errs += 1;
+			msgErr( __PACKAGE__."::labels() '$it' doesn't conform to accepted label name or value regexes" );
+		}
+	}
+
+	return $errs == 0;
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -167,28 +251,38 @@ sub label_values {
 # -------------------------------------------------------------------------------------------------
 # Getter
 # (I):
-# - none
+# - an optional options hash with following keys:
+#   > not: do not try to substitute this macro (do not create a call loop with the caller)
 # (O):
-# - returns a hash with the known macros
+# - returns a hash with the known macros,
+#   including the optional additional macros defined at instanciation time
 
 sub macros {
-	my ( $self ) = @_;
+	my ( $self, $args ) = @_;
+	$args //= {};
 
-	my $macros = {
-		NAME => $self->name(),
-		VALUE => $self->value(),
-		HELP => $self->help(),
-		LABELS => join( ',', @{$self->labels()} ),
-		LABEL_NAMES => join( ',', @{$self->label_names()} ),
-		LABEL_VALUES => join( ',', @{$self->label_values()} )
-	};
+	# do not try to substitute this macro
+	my $not = $args->{not} // '';
+
+	my $macros = {};
+	$macros->{NAME} = $self->name() if $not ne 'NAME';
+	$macros->{VALUE} = $self->value() if $not ne 'VALUE';
+	$macros->{HELP} = $self->help() if $not ne 'HELP';
+	$macros->{LABELS} = join( ',', @{$self->labels() // []} ) if $not ne 'LABELS';
+	$macros->{LABEL_NAMES} = join( ',', @{$self->label_names() // []} ) if $not ne 'LABEL_NAMES';
+	$macros->{LABEL_VALUES} = join( ',', @{$self->label_values() // []} ) if $not ne 'LABEL_VALUES';
+
+	# honors optional additional macros hash
+	my $additionals = $self->additionals() || {};
+	foreach my $k ( keys %{ $additionals} ){
+		$macros->{$k} = $additionals->{$k} if $not ne $k;
+	}
 
 	return $macros;
 }
 
 # -------------------------------------------------------------------------------------------------
 # Getter/Setter
-# Check that the name matches the relevant regular expression
 # (I):
 # - an optional name
 # (O):
@@ -199,12 +293,10 @@ sub name {
 
 	if( defined( $arg ) && !ref( $arg ) && $arg ){
 		# pwi 2024- 5- 1 Prometheus names do not accept dots
+		# that should actually be done by each and every caller (provide an acceptable name) but do that here as a convenient shortcut
 		$arg =~ s/\./_/g;
-		if( $arg =~ m/$Const->{nameRE}/ ){
-			$self->{_metric}{name} = $arg;
-		} else {
-			msgErr( __PACKAGE__."::name() '$arg' doesn't conform to accepted name regex" );
-		}
+		# and store
+		$self->{_metric}{name} = $arg;
 	} elsif( defined( $arg )){
 		msgErr( __PACKAGE__."::name() expects a scalar, found '".ref( $arg )."'" );
 	}
@@ -213,7 +305,28 @@ sub name {
 }
 
 # -------------------------------------------------------------------------------------------------
-# Publish the metric to the specified medua
+# Check that the name matches the relevant regular expression
+# (I):
+# - nothing
+# (O):
+# - true|false
+
+sub name_check {
+	my ( $self ) = @_;
+
+	my $name = $self->name();
+	my $ok = true;
+
+	if( $name !~ m/$Const->{nameRE}/ ){
+		msgErr( __PACKAGE__."::name_check() '$name' doesn't conform to accepted name regex" );
+		$ok = false;
+	}
+
+	return $ok;
+}
+
+# -------------------------------------------------------------------------------------------------
+# Publish the metric to the specified media
 # (I):
 # - an arguments hash ref with following keys:
 #   > mqtt, whether to publish to (MQTT-based) messaging system, defaulting to false
@@ -324,6 +437,7 @@ sub value {
 #   > name
 #   > value
 #   > labels as an array ref
+#   > additionals, an optional additional macros hash
 # (O):
 # - this object
 
@@ -344,17 +458,29 @@ sub new {
 		$self->type( $args->{type} ) if defined $args->{type};
 		$self->value( $args->{value} ) if defined $args->{value};
 		$self->labels( $args->{labels} || [] );
+		$self->additionals( $args->{additionals} || {} );
 
+		# apply macros on each data once at instanciation
+		$self->apply_macros_all();
+
+		# check the syntax
 		# check that the mandatory values are here
 		my $errs = 0;
 
-		if( !$self->name()){
+		if( !$self->name_check()){
+			$errs += 1;
+		} elsif( !$self->name()){
 			msgErr( __PACKAGE__."::new() expects a metric name, not found" );
 			$errs += 1;
 		}
 		if( !defined( $args->{value} )){
 			msgErr( __PACKAGE__."::new() expects a metric value, not found" );
 			$errs += 1;
+		}
+		if( $args->{labels} ){
+			if( !$self->labels_check()){
+				$errs += 1;
+			}
 		}
 		if( $errs ){
 			TTP::stackTrace();

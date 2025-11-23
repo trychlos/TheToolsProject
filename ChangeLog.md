@@ -2,11 +2,11 @@
 
 ## ChangeLog
 
-### 4.24.3-rc.0
+### 4.25.0-rc.0
 
     Release date: 
 
-    - 
+    - Define new telemetry.pl ping verb, thus bumping minor candidate version number
 
 ### 4.24.2
 
