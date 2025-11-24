@@ -606,6 +606,27 @@ sub _extract_links_url_allowed {
 }
 
 # -------------------------------------------------------------------------------------------------
+# Check that the actual document dimensions are inside the browser viewport height
+
+sub get_height {
+    my ( $self ) = @_;
+
+	my $browser = $self->browser();
+
+    my $vh = $browser->exec_js_w3c_sync( 'return window.innerHeight;', [] );
+    my $doc_h = $browser->exec_js_w3c_sync( q{
+        return Math.max(
+          document.documentElement.scrollHeight,
+          document.body ? document.body.scrollHeight : 0,
+          document.documentElement.offsetHeight,
+          document.documentElement.clientHeight
+        );
+    }, []);
+
+	msgVerbose( "get_height() height viewport=$vh document=$doc_h" );
+}
+
+# -------------------------------------------------------------------------------------------------
 # Returns the HTTP status
 
 sub status {

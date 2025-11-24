@@ -7,6 +7,7 @@
     Release date: 
 
     - Define new telemetry.pl ping verb, thus bumping minor candidate version number
+    - Define new TTP::HTTP::Compare::Capture->get_height() method
 
 ### 4.24.2
 
