@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.25.0-rc.0
+### 4.25.0
 
-    Release date: 
+    Release date: 2025-11-24
 
     - Define new telemetry.pl ping verb, thus bumping minor candidate version number
     - Define new TTP::HTTP::Compare::Capture->get_height() method
@@ -728,4 +728,4 @@
 
 ---
 P. Wieser
-- Last updated on 2025, Oct. 27th
+- Last updated on 2025, Nov. 24th
