@@ -6,7 +6,8 @@
 
     Release date: 
 
-    - 
+    - telemetry.pl ping: fix alert title quotation
+    - telemetry.pl ping: command-line arguments are all prefixed, either 'alert-' or 'publish-'
 
 ### 4.25.1
 

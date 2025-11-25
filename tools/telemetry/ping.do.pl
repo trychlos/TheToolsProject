@@ -6,12 +6,12 @@
 # @(-) --[no]verbose           run verbosely [${verbose}]
 # @(-) --device=<name>         the device to be pinged [${device}]
 # @(-)   alert options:
-# @(-) --[no]file              create a JSON file alert, monitorable e.g. by the alert daemon [${file}]
-# @(-) --[no]mms               send the alert by MMS [${mms}]
-# @(-) --[no]mqtt              send the alert on the MQTT bus [${mqtt}]
-# @(-) --[no]sms               send the alert by SMS [${sms}]
-# @(-) --[no]smtp              send the alert by SMTP [${smtp}]
-# @(-) --[no]tts               send the alert with text-to-speech [${tts}]
+# @(-) --[no]alert-file        create a JSON file alert, monitorable e.g. by the alert daemon [${file}]
+# @(-) --[no]alert-mms         send the alert by MMS [${mms}]
+# @(-) --[no]alert-mqtt        send the alert on the MQTT bus [${mqtt}]
+# @(-) --[no]alert-sms         send the alert by SMS [${sms}]
+# @(-) --[no]alert-smtp        send the alert by SMTP [${smtp}]
+# @(-) --[no]alert-tts         send the alert with text-to-speech [${tts}]
 # @(-)   telemetry options:
 # @(-) --metric=<name>         the metric to be published [${metric}]
 # @(-) --description=<string>  a one-line help description [${description}]
@@ -80,29 +80,29 @@ my @opt_prepends = ();
 my @opt_appends = ();
 
 # alert options
-my ( $opt_file, $file_enabled ) = TTP::alertsWithFile();
-$defaults->{file} = $opt_file && $file_enabled ? 'yes' : 'no';
-my $opt_file_set = false;
+my ( $opt_alert_file, $file_enabled ) = TTP::alertsWithFile();
+$defaults->{alert_file} = $opt_alert_file && $file_enabled ? 'yes' : 'no';
+my $opt_alert_file_set = false;
 
-my ( $opt_mms, $mms_enabled ) = TTP::alertsWithMms();
-$defaults->{mms} = $opt_mms && $mms_enabled ? 'yes' : 'no';
-my $opt_mms_set = false;
+my ( $opt_alert_mms, $mms_enabled ) = TTP::alertsWithMms();
+$defaults->{alert_mms} = $opt_alert_mms && $mms_enabled ? 'yes' : 'no';
+my $opt_alert_mms_set = false;
 
-my ( $opt_mqtt, $mqtt_enabled ) = TTP::alertsWithMms();
-$defaults->{mqtt} = $opt_mqtt && $mqtt_enabled ? 'yes' : 'no';
-my $opt_mqtt_set = false;
+my ( $opt_alert_mqtt, $mqtt_enabled ) = TTP::alertsWithMms();
+$defaults->{alert_mqtt} = $opt_alert_mqtt && $mqtt_enabled ? 'yes' : 'no';
+my $opt_alert_mqtt_set = false;
 
-my ( $opt_sms, $sms_enabled ) = TTP::alertsWithSms();
-$defaults->{sms} = $opt_sms && $sms_enabled ? 'yes' : 'no';
-my $opt_sms_set = false;
+my ( $opt_alert_sms, $sms_enabled ) = TTP::alertsWithSms();
+$defaults->{alert_sms} = $opt_alert_sms && $sms_enabled ? 'yes' : 'no';
+my $opt_alert_sms_set = false;
 
-my ( $opt_smtp, $smtp_enabled ) = TTP::alertsWithSmtp();
-$defaults->{smtp} = $opt_smtp && $smtp_enabled ? 'yes' : 'no';
-my $opt_smtp_set = false;
+my ( $opt_alert_smtp, $smtp_enabled ) = TTP::alertsWithSmtp();
+$defaults->{alert_smtp} = $opt_alert_smtp && $smtp_enabled ? 'yes' : 'no';
+my $opt_alert_smtp_set = false;
 
-my ( $opt_tts, $tts_enabled ) = TTP::alertsWithTts();
-$defaults->{tts} = $opt_tts && $tts_enabled ? 'yes' : 'no';
-my $opt_tts_set = false;
+my ( $opt_alert_tts, $tts_enabled ) = TTP::alertsWithTts();
+$defaults->{alert_tts} = $opt_alert_tts && $tts_enabled ? 'yes' : 'no';
+my $opt_alert_tts_set = false;
 
 # telemetry options
 my $opt_publish_mqtt = TTP::Telemetry::Mqtt::getDefault();
@@ -139,14 +139,14 @@ sub alert {
 	if( $enabled ){
 		my $threshold = TTP::Telemetry::var([ 'ping', $which, 'alert', 'threshold' ]) // $Const->{$which}{threshold};
 		if( $res->{value} >= $threshold ){
-			my $file = $opt_file_set && $opt_file ? "--file" : "";
-			my $mms = $opt_mms_set && $opt_mms ? "--mms" : "";
-			my $mqtt = $opt_mqtt_set && $opt_mqtt ? "--mqtt" : "";
-			my $sms = $opt_sms_set && $opt_sms ? "--sms" : "";
-			my $smtp = $opt_smtp_set && $opt_smtp ? "--smtp" : "";
-			my $tts = $opt_tts_set && $opt_tts ? "--tts" : "";
+			my $file = $opt_alert_file_set && $opt_alert_file ? "--file" : "";
+			my $mms = $opt_alert_mms_set && $opt_alert_mms ? "--mms" : "";
+			my $mqtt = $opt_alert_mqtt_set && $opt_alert_mqtt ? "--mqtt" : "";
+			my $sms = $opt_alert_sms_set && $opt_alert_sms ? "--sms" : "";
+			my $smtp = $opt_alert_smtp_set && $opt_alert_smtp ? "--smtp" : "";
+			my $tts = $opt_alert_tts_set && $opt_alert_tts ? "--tts" : "";
 			my $title = $which eq "errors" ? "$opt_device doesn't answer to ping (errors count=$res->{value})" : "$opt_device exhibits high $res->{value} ms latency";
-			my $command = "ttp.pl alert -title $title $file $mms $mqtt $sms $smtp $tts";
+			my $command = "ttp.pl alert -title \"$title\" $file $mms $mqtt $sms $smtp $tts";
 			TTP::commandExec( $command );
 		} else {
 			msgVerbose( "value='$res->{value}' less than threshold='$threshold', do not alert" );
@@ -317,35 +317,35 @@ if( !GetOptions(
 	"metric=s"			=> \$opt_metric,
 	"description=s"		=> \$opt_description,
 	# alert options
-	"file!"				=> sub {
+	"alert-file!"		=> sub {
 		my( $name, $value ) = @_;
-		$opt_file = $value;
-		$opt_file_set = true;
+		$opt_alert_file = $value;
+		$opt_alert_file_set = true;
 	},
-	"mms!"				=> sub {
+	"alert-mms!"		=> sub {
 		my( $name, $value ) = @_;
-		$opt_mms = $value;
-		$opt_mms_set = true;
+		$opt_alert_mms = $value;
+		$opt_alert_mms_set = true;
 	},
-	"mqtt!"				=> sub {
+	"alert-mqtt!"		=> sub {
 		my( $name, $value ) = @_;
-		$opt_mqtt = $value;
-		$opt_mqtt_set = true;
+		$opt_alert_mqtt = $value;
+		$opt_alert_mqtt_set = true;
 	},
-	"sms!"				=> sub {
+	"alert-sms!"		=> sub {
 		my( $name, $value ) = @_;
-		$opt_sms = $value;
-		$opt_sms_set = true;
+		$opt_alert_sms = $value;
+		$opt_alert_sms_set = true;
 	},
-	"smtp!"				=> sub {
+	"alert-smtp!"		=> sub {
 		my( $name, $value ) = @_;
-		$opt_smtp = $value;
-		$opt_smtp_set = true;
+		$opt_alert_smtp = $value;
+		$opt_alert_smtp_set = true;
 	},
-	"tts!"				=> sub {
+	"alert-tts!"		=> sub {
 		my( $name, $value ) = @_;
-		$opt_tts = $value;
-		$opt_tts_set = true;
+		$opt_alert_tts = $value;
+		$opt_alert_tts_set = true;
 	},
 	# telemetry options
 	"publish-mqtt!"		=> sub {
@@ -383,12 +383,12 @@ msgVerbose( "got dummy='".( $ep->runner()->dummy() ? 'true':'false' )."'" );
 msgVerbose( "got verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got device='$opt_device'" );
 # alert options
-msgVerbose( "got file='".( $opt_file ? 'true':'false' )."'" );
-msgVerbose( "got mms='".( $opt_mms ? 'true':'false' )."'" );
-msgVerbose( "got mqtt='".( $opt_mqtt ? 'true':'false' )."'" );
-msgVerbose( "got sms='".( $opt_sms ? 'true':'false' )."'" );
-msgVerbose( "got smtp='".( $opt_smtp ? 'true':'false' )."'" );
-msgVerbose( "got tts='".( $opt_tts ? 'true':'false' )."'" );
+msgVerbose( "got alert-file='".( $opt_alert_file ? 'true':'false' )."'" );
+msgVerbose( "got alert-mms='".( $opt_alert_mms ? 'true':'false' )."'" );
+msgVerbose( "got alert-mqtt='".( $opt_alert_mqtt ? 'true':'false' )."'" );
+msgVerbose( "got alert-sms='".( $opt_alert_sms ? 'true':'false' )."'" );
+msgVerbose( "got alert-smtp='".( $opt_alert_smtp ? 'true':'false' )."'" );
+msgVerbose( "got alert-tts='".( $opt_alert_tts ? 'true':'false' )."'" );
 # telemetry options
 msgVerbose( "got metric='$opt_metric'" );
 msgVerbose( "got description='$opt_description'" );
@@ -408,63 +408,63 @@ msgErr( "'--device' option is required, but is not specified" ) if !$opt_device;
 
 # alert options
 # disabled media are just ignored (or refused if option was explicit)
-if( $opt_file ){
+if( $opt_alert_file ){
 	if( !$file_enabled ){
-		if( $opt_file_set ){
+		if( $opt_alert_file_set ){
 			msgErr( "File medium is disabled, --file option is not valid" );
 		} else {
 			msgWarn( "File medium is disabled and thus ignored" );
-			$opt_file = false;
+			$opt_alert_file = false;
 		}
 	}
 }
-if( $opt_mms ){
+if( $opt_alert_mms ){
 	if( !$mms_enabled ){
-		if( $opt_mms_set ){
+		if( $opt_alert_mms_set ){
 			msgErr( "MMS medium is disabled, --mms option is not valid" );
 		} else {
 			msgWarn( "MMS medium is disabled and thus ignored" );
-			$opt_mms = false;
+			$opt_alert_mms = false;
 		}
 	}
 }
-if( $opt_mqtt ){
+if( $opt_alert_mqtt ){
 	if( !$mqtt_enabled ){
-		if( $opt_mqtt_set ){
+		if( $opt_alert_mqtt_set ){
 			msgErr( "MQTT medium is disabled, --mqtt option is not valid" );
 		} else {
 			msgWarn( "MQTT medium is disabled and thus ignored" );
-			$opt_mqtt = false;
+			$opt_alert_mqtt = false;
 		}
 	}
 }
-if( $opt_sms ){
+if( $opt_alert_sms ){
 	if( !$sms_enabled ){
-		if( $opt_sms_set ){
+		if( $opt_alert_sms_set ){
 			msgErr( "SMS medium is disabled, --sms option is not valid" );
 		} else {
 			msgWarn( "SMS medium is disabled and thus ignored" );
-			$opt_sms = false;
+			$opt_alert_sms = false;
 		}
 	}
 }
-if( $opt_smtp ){
+if( $opt_alert_smtp ){
 	if( !$smtp_enabled ){
-		if( $opt_smtp_set ){
+		if( $opt_alert_smtp_set ){
 			msgErr( "SMTP medium is disabled, --smtp option is not valid" );
 		} else {
 			msgWarn( "SMTP medium is disabled and thus ignored" );
-			$opt_smtp = false;
+			$opt_alert_smtp = false;
 		}
 	}
 }
-if( $opt_tts ){
+if( $opt_alert_tts ){
 	if( !$tts_enabled ){
-		if( $opt_tts_set ){
+		if( $opt_alert_tts_set ){
 			msgErr( "Text-To-Speech medium is disabled, --tts option is not valid" );
 		} else {
 			msgWarn( "Text-To-Speech medium is disabled and thus ignored" );
-			$opt_tts = false;
+			$opt_alert_tts = false;
 		}
 	}
 }
