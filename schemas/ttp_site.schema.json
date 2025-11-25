@@ -120,10 +120,12 @@
                                         "array",
                                         "object"
                                     ],
-                                    "items": [
-                                        "string",
-                                        "object"
-                                    ],
+                                    "items": {
+                                        "type": [
+                                            "string",
+                                            "object"
+                                        ]
+                                    },
                                     "properties": {
                                         "byOS": {
                                             "description": "Let a command be specific to the running OS.",
@@ -180,10 +182,12 @@
                                         "array",
                                         "object"
                                     ],
-                                    "items": [
-                                        "string",
-                                        "object"
-                                    ],
+                                    "items": {
+                                        "type": [
+                                            "string",
+                                            "object"
+                                        ]
+                                    },
                                     "properties": {
                                         "byOS": {
                                             "description": "Let a command be specific to the running OS.",
@@ -205,9 +209,10 @@
                                 "recipients": {
                                     "description": "The list of the recipients of the alert by MMS",
                                     "type": "array",
-                                    "items": "string",
-                                    "default": [
-                                    ]
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "default": []
                                 }
                             }
                         },
@@ -235,10 +240,12 @@
                                         "array",
                                         "object"
                                     ],
-                                    "items": [
-                                        "string",
-                                        "object"
-                                    ],
+                                    "items": {
+                                        "type": [
+                                            "string",
+                                            "object"
+                                        ]
+                                    },
                                     "properties": {
                                         "byOS": {
                                             "description": "Let a command be specific to the running OS.",
@@ -290,10 +297,12 @@
                                         "array",
                                         "object"
                                     ],
-                                    "items": [
-                                        "string",
-                                        "object"
-                                    ],
+                                    "items": {
+                                        "type": [
+                                            "string",
+                                            "object"
+                                        ]
+                                    },
                                     "properties": {
                                         "byOS": {
                                             "description": "Let a command be specific to the running OS.",
@@ -315,9 +324,10 @@
                                 "recipients": {
                                     "description": "The list of the recipients of the alert by SMS",
                                     "type": "array",
-                                    "items": "string",
-                                    "default": [
-                                    ]
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "default": []
                                 }
                             }
                         },
@@ -350,10 +360,12 @@
                                         "array",
                                         "object"
                                     ],
-                                    "items": [
-                                        "string",
-                                        "object"
-                                    ],
+                                    "items": {
+                                        "type": [
+                                            "string",
+                                            "object"
+                                        ]
+                                    },
                                     "properties": {
                                         "byOS": {
                                             "description": "Let a command be specific to the running OS.",
@@ -381,7 +393,9 @@
                                 "recipients": {
                                     "description": "The list of the recipients of the alert email",
                                     "type": "array",
-                                    "items": "string",
+                                    "items": {
+                                        "type": "string"
+                                    },
                                     "default": [
                                         "root@localhost"
                                     ]
@@ -416,10 +430,12 @@
                                         "array",
                                         "object"
                                     ],
-                                    "items": [
-                                        "string",
-                                        "object"
-                                    ],
+                                    "items": {
+                                        "type": [
+                                            "string",
+                                            "object"
+                                        ]
+                                    },
                                     "properties": {
                                         "byOS": {
                                             "description": "Let a command be specific to the running OS.",
@@ -462,10 +478,12 @@
                                 "array",
                                 "object"
                             ],
-                            "items": [
-                                "string",
-                                "object"
-                            ],
+                            "items": {
+                                "type": [
+                                    "string",
+                                    "object"
+                                ]
+                            },
                             "properties": {
                                 "byOS": {
                                     "description": "Let a command be specific to the running OS.",
@@ -517,10 +535,12 @@
                                 "array",
                                 "object"
                             ],
-                            "items": [
-                                "string",
-                                "object"
-                            ],
+                            "items": {
+                                "type": [
+                                    "string",
+                                    "object"
+                                ]
+                            },
                             "properties": {
                                 "byOS": {
                                     "description": "Let a command be specific to the running OS.",
@@ -548,7 +568,9 @@
                         "dirs": {
                             "description": "The list of subdirectories of TTP_ROOTS trees where we search for credentials.",
                             "type": "array",
-                            "items": "string",
+                            "items": {
+                                "type": "string"
+                            },
                             "default": [
                                 "etc/credentials",
                                 "etc/private"
@@ -563,7 +585,9 @@
                         "confDirs": {
                             "description": "The list of subdirectories of TTP_ROOTS trees where we search for daemons JSON configurations.",
                             "type": "array",
-                            "items": "string",
+                            "items": {
+                                "type": "string"
+                            },
                             "default": [
                                 "etc/daemons",
                                 "daemons"
@@ -572,7 +596,9 @@
                         "execDirs": {
                             "description": "The list of subdirectories of TTP_ROOTS trees where we search for daemons executables.",
                             "type": "array",
-                            "items": "string",
+                            "items": {
+                                "type": "string"
+                            },
                             "default": [
                                 "libexec/daemons"
                             ]
@@ -647,10 +673,12 @@
                                                         "array",
                                                         "object"
                                                     ],
-                                                    "items": [
-                                                        "string",
-                                                        "object"
-                                                    ],
+                                                    "items": {
+                                                        "type": [
+                                                            "string",
+                                                            "object"
+                                                        ]
+                                                    },
                                                     "properties": {
                                                         "byOS": {
                                                             "description": "Let a command be specific to the running OS.",
@@ -699,10 +727,12 @@
                                                         "array",
                                                         "object"
                                                     ],
-                                                    "items": [
-                                                        "string",
-                                                        "object"
-                                                    ],
+                                                    "items": {
+                                                        "type": [
+                                                            "string",
+                                                            "object"
+                                                        ]
+                                                    },
                                                     "properties": {
                                                         "byOS": {
                                                             "description": "Let a command be specific to the running OS.",
@@ -785,10 +815,12 @@
                                                         "array",
                                                         "object"
                                                     ],
-                                                    "items": [
-                                                        "string",
-                                                        "object"
-                                                    ],
+                                                    "items": {
+                                                        "type": [
+                                                            "string",
+                                                            "object"
+                                                        ]
+                                                    },
                                                     "properties": {
                                                         "byOS": {
                                                             "description": "Let a command be specific to the running OS.",
@@ -837,10 +869,12 @@
                                                         "array",
                                                         "object"
                                                     ],
-                                                    "items": [
-                                                        "string",
-                                                        "object"
-                                                    ],
+                                                    "items": {
+                                                        "type": [
+                                                            "string",
+                                                            "object"
+                                                        ]
+                                                    },
                                                     "properties": {
                                                         "byOS": {
                                                             "description": "Let a command be specific to the running OS.",
@@ -878,7 +912,9 @@
                         "trees": {
                             "description": "The list of involved trees to be deployed everywhere on the parc.",
                             "type": "array",
-                            "items": "object",
+                            "items": {
+                                "type": "object"
+                            },
                             "properties": {
                                 "source": {
                                     "description": "The path of the source tree.",
@@ -907,13 +943,17 @@
                         "excludeDirs": {
                             "description": "The default list of directory globs to exclude from the deployment, can be overriden in 'ttp.pl push' command.",
                             "type": "array",
-                            "items": "string",
+                            "items": {
+                                "type": "string"
+                            },
                             "default": []
                         },
                         "excludeFiles": {
                             "description": "The default list of file globs to exclude from the deployment, can be overriden in 'ttp.pl push' command.",
                             "type": "array",
-                            "items": "string",
+                            "items": {
+                                "type": "string"
+                            },
                             "default": []
                         }
                     }
@@ -949,10 +989,12 @@
                                         "array",
                                         "object"
                                     ],
-                                    "items": [
-                                        "string",
-                                        "object"
-                                    ],
+                                    "items": {
+                                        "type": [
+                                            "string",
+                                            "object"
+                                        ]
+                                    },
                                     "properties": {
                                         "byOS": {
                                             "description": "Let a command be specific to the running OS.",
@@ -983,10 +1025,12 @@
                                         "array",
                                         "object"
                                     ],
-                                    "items": [
-                                        "string",
-                                        "object"
-                                    ],
+                                    "items": {
+                                        "type": [
+                                            "string",
+                                            "object"
+                                        ]
+                                    },
                                     "properties": {
                                         "byOS": {
                                             "description": "Let a command be specific to the running OS.",
@@ -1017,10 +1061,12 @@
                                         "array",
                                         "object"
                                     ],
-                                    "items": [
-                                        "string",
-                                        "object"
-                                    ],
+                                    "items": {
+                                        "type": [
+                                            "string",
+                                            "object"
+                                        ]
+                                    },
                                     "properties": {
                                         "byOS": {
                                             "description": "Let a command be specific to the running OS.",
@@ -1087,10 +1133,12 @@
                                         "array",
                                         "object"
                                     ],
-                                    "items": [
-                                        "string",
-                                        "object"
-                                    ],
+                                    "items": {
+                                        "type": [
+                                            "string",
+                                            "object"
+                                        ]
+                                    },
                                     "properties": {
                                         "byOS": {
                                             "description": "Let a command be specific to the running OS.",
@@ -1149,10 +1197,12 @@
                                         "array",
                                         "object"
                                     ],
-                                    "items": [
-                                        "string",
-                                        "object"
-                                    ],
+                                    "items": {
+                                        "type": [
+                                            "string",
+                                            "object"
+                                        ]
+                                    },
                                     "properties": {
                                         "byOS": {
                                             "description": "Let a command be specific to the running OS.",
@@ -1613,7 +1663,9 @@
                                 "The 'telemetry.pl ping' verb let us ping any device, providing an errors count and a latency.",
                                 "The verb honors all telemetry macros, plus following ones:",
                                 "- <DEVICE>: the device name.",
-                                "- <SUFFIX>: the configured suffix for the metric."
+                                "- <SUFFIX>: the configured suffix for the metric.",
+                                "When alerting is enabled, the used media are chosen based on the general site 'alerts' configuration.",
+                                "When publishing is enabled, the used media are chosen based on the general site 'telemetry' configuration."
                             ],
                             "type": "object",
                             "properties": {
@@ -1628,19 +1680,7 @@
                                                 "enabled": {
                                                     "description": "Whether to alert on errors count.",
                                                     "type": "boolean",
-                                                    "default": "true"
-                                                },
-                                                "media": {
-                                                    "description_array": [
-                                                        "The list of media to use when alerting among those allowed in the site.",
-                                                        "Can be one of 'mms', 'mqtt', 'sms', 'smtp', 'tts' or 'all'.",
-                                                        "The medium is just ignored if not allowed by the general site configuration."
-                                                    ],
-                                                    "type": "array",
-                                                    "item": "string",
-                                                    "default": [
-                                                        "all"
-                                                    ]
+                                                    "default": "false"
                                                 },
                                                 "threshold": {
                                                     "description": "Send an alert when the errors count reaches this threshold.",
@@ -1656,24 +1696,12 @@
                                                 "enabled": {
                                                     "description": "Whether to publish the errors count.",
                                                     "type": "boolean",
-                                                    "default": "true"
+                                                    "default": "false"
                                                 },
                                                 "description": {
                                                     "description": "The description of the metric.",
                                                     "type": "string",
                                                     "default": "ttp_ping_<DEVICE>_<SUFFIX>"
-                                                },
-                                                "media": {
-                                                    "description_array": [
-                                                        "The list of media to use when publishing among those allowed in the site.",
-                                                        "Can be one of 'http', 'mqtt', 'text', or 'all'.",
-                                                        "The medium is just ignored if not allowed by the general site configuration."
-                                                    ],
-                                                    "type": "array",
-                                                    "item": "string",
-                                                    "default": [
-                                                        "all"
-                                                    ]
                                                 },
                                                 "name": {
                                                     "description": "The name of the metric.",
@@ -1700,7 +1728,7 @@
                                                 "enabled": {
                                                     "description": "Whether to alert on latency.",
                                                     "type": "boolean",
-                                                    "default": "true"
+                                                    "default": "false"
                                                 },
                                                 "threshold": {
                                                     "description": "Send an alert when the latency (in ms) reaches this threshold.",
@@ -1716,24 +1744,12 @@
                                                 "enabled": {
                                                     "description": "Whether to publish the latency.",
                                                     "type": "boolean",
-                                                    "default": "true"
+                                                    "default": "false"
                                                 },
                                                 "description": {
                                                     "description": "The description of the metric.",
                                                     "type": "string",
                                                     "default": "ttp_ping_<DEVICE>_<SUFFIX>"
-                                                },
-                                                "media": {
-                                                    "description_array": [
-                                                        "The list of media to use when publishing among those allowed in the site.",
-                                                        "Can be one of 'http', 'mqtt', 'text', or 'all'.",
-                                                        "The medium is just ignored if not allowed by the general site configuration."
-                                                    ],
-                                                    "type": "array",
-                                                    "item": "string",
-                                                    "default": [
-                                                        "all"
-                                                    ]
                                                 },
                                                 "name": {
                                                     "description": "The name of the metric.",
@@ -1775,10 +1791,12 @@
                                         "array",
                                         "object"
                                     ],
-                                    "items": [
-                                        "string",
-                                        "object"
-                                    ],
+                                    "items": {
+                                        "type": [
+                                            "string",
+                                            "object"
+                                        ]
+                                    },
                                     "properties": {
                                         "byOS": {
                                             "description": "Let a command be specific to the running OS.",
@@ -1818,10 +1836,12 @@
                                         "array",
                                         "object"
                                     ],
-                                    "items": [
-                                        "string",
-                                        "object"
-                                    ],
+                                    "items": {
+                                        "type": [
+                                            "string",
+                                            "object"
+                                        ]
+                                    },
                                     "properties": {
                                         "byOS": {
                                             "description": "Let a command be specific to the running OS.",
@@ -1887,10 +1907,12 @@
                                 "array",
                                 "object"
                             ],
-                            "items": [
-                                "string",
-                                "object"
-                            ],
+                            "items": {
+                                "type": [
+                                    "string",
+                                    "object"
+                                ]
+                            },
                             "properties": {
                                 "byOS": {
                                     "description": "Let a command be specific to the running OS.",
@@ -1908,7 +1930,9 @@
                         "recipients": {
                             "description": "The list of the email recipients of the workload summary",
                             "type": "array",
-                            "items": "string",
+                            "items": {
+                                "type": "string"
+                            },
                             "default": [
                                 "root@localhost"
                             ]

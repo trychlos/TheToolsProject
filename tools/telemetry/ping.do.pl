@@ -5,14 +5,21 @@
 # @(-) --[no]dummy             dummy run (ignored here) [${dummy}]
 # @(-) --[no]verbose           run verbosely [${verbose}]
 # @(-) --device=<name>         the device to be pinged [${device}]
+# @(-)   alert options:
+# @(-) --[no]file              create a JSON file alert, monitorable e.g. by the alert daemon [${file}]
+# @(-) --[no]mms               send the alert by MMS [${mms}]
+# @(-) --[no]mqtt              send the alert on the MQTT bus [${mqtt}]
+# @(-) --[no]sms               send the alert by SMS [${sms}]
+# @(-) --[no]smtp              send the alert by SMTP [${smtp}]
+# @(-) --[no]tts               send the alert with text-to-speech [${tts}]
+# @(-)   telemetry options:
 # @(-) --metric=<name>         the metric to be published [${metric}]
 # @(-) --description=<string>  a one-line help description [${description}]
-# @(-) --type=<type>           the metric type [${type}]
-# @(-) --[no]mqtt              publish the metrics to the (MQTT-based) messaging system [${mqtt}]
+# @(-) --[no]publish-mqtt      publish the metrics to the (MQTT-based) messaging system [${mqtt}]
 # @(-) --mqttPrefix=<prefix>   prefix the metric name when publishing to the (MQTT-based) messaging system [${mqttPrefix}]
-# @(-) --[no]http              publish the metrics to the (HTTP-based) Prometheus PushGateway system [${http}]
+# @(-) --[no]publish-http      publish the metrics to the (HTTP-based) Prometheus PushGateway system [${http}]
 # @(-) --httpPrefix=<prefix>   prefix the metric name when publishing to the (HTTP-based) Prometheus PushGateway system [${httpPrefix}]
-# @(-) --[no]text              publish the metrics to the (text-based) Prometheus TextFile Collector system [${text}]
+# @(-) --[no]publish-text      publish the metrics to the (text-based) Prometheus TextFile Collector system [${text}]
 # @(-) --textPrefix=<prefix>   prefix the metric name when publishing to the (text-based) Prometheus TextFile Collector system [${textPrefix}]
 # @(-) --prepend=<name=value>  label to be prepended to the telemetry metrics, may be specified several times or as a comma-separated list [${prepend}]
 # @(-) --append=<name=value>   label to be appended to the telemetry metrics, may be specified several times or as a comma-separated list [${append}]
@@ -56,7 +63,6 @@ my $defaults = {
 	device => '',
 	metric => '',
 	description => '',
-	type => 'untyped',
 	mqttPrefix => '',
 	httpPrefix => '',
 	textPrefix => '',
@@ -67,24 +73,49 @@ my $defaults = {
 my $opt_device = $defaults->{device};
 my $opt_metric = $defaults->{metric};
 my $opt_description = $defaults->{description};
-my $opt_type = $defaults->{type};
 my $opt_mqttPrefix = $defaults->{mqttPrefix};
 my $opt_httpPrefix = $defaults->{httpPrefix};
 my $opt_textPrefix = $defaults->{textPrefix};
 my @opt_prepends = ();
 my @opt_appends = ();
 
-my $opt_mqtt = TTP::Telemetry::Mqtt::getDefault();
-$defaults->{mqtt} = $opt_mqtt ? 'yes' : 'no';
+# alert options
+my ( $opt_file, $file_enabled ) = TTP::alertsWithFile();
+$defaults->{file} = $opt_file && $file_enabled ? 'yes' : 'no';
+my $opt_file_set = false;
+
+my ( $opt_mms, $mms_enabled ) = TTP::alertsWithMms();
+$defaults->{mms} = $opt_mms && $mms_enabled ? 'yes' : 'no';
+my $opt_mms_set = false;
+
+my ( $opt_mqtt, $mqtt_enabled ) = TTP::alertsWithMms();
+$defaults->{mqtt} = $opt_mqtt && $mqtt_enabled ? 'yes' : 'no';
 my $opt_mqtt_set = false;
 
-my $opt_http = TTP::Telemetry::Http::getDefault();
-$defaults->{http} = $opt_http ? 'yes' : 'no';
-my $opt_http_set = false;
+my ( $opt_sms, $sms_enabled ) = TTP::alertsWithSms();
+$defaults->{sms} = $opt_sms && $sms_enabled ? 'yes' : 'no';
+my $opt_sms_set = false;
 
-my $opt_text = TTP::Telemetry::Text::getDefault();
-$defaults->{text} = $opt_text ? 'yes' : 'no';
-my $opt_text_set = false;
+my ( $opt_smtp, $smtp_enabled ) = TTP::alertsWithSmtp();
+$defaults->{smtp} = $opt_smtp && $smtp_enabled ? 'yes' : 'no';
+my $opt_smtp_set = false;
+
+my ( $opt_tts, $tts_enabled ) = TTP::alertsWithTts();
+$defaults->{tts} = $opt_tts && $tts_enabled ? 'yes' : 'no';
+my $opt_tts_set = false;
+
+# telemetry options
+my $opt_publish_mqtt = TTP::Telemetry::Mqtt::getDefault();
+$defaults->{publish_mqtt} = $opt_publish_mqtt ? 'yes' : 'no';
+my $opt_publish_mqtt_set = false;
+
+my $opt_publish_http = TTP::Telemetry::Http::getDefault();
+$defaults->{publish_http} = $opt_publish_http ? 'yes' : 'no';
+my $opt_publish_http_set = false;
+
+my $opt_publish_text = TTP::Telemetry::Text::getDefault();
+$defaults->{publish_text} = $opt_publish_text ? 'yes' : 'no';
+my $opt_publish_text_set = false;
 
 # some default constants
 my $Const = {
@@ -107,16 +138,15 @@ sub alert {
 	my $enabled = TTP::Telemetry::var([ 'ping', $which, 'alert', 'enabled' ]) // true;
 	if( $enabled ){
 		my $threshold = TTP::Telemetry::var([ 'ping', $which, 'alert', 'threshold' ]) // $Const->{$which}{threshold};
-		if( $res->{value} > $threshold ){
-			my $media = TTP::Telemetry::var([ 'ping', $which, 'alert', 'media' ]) // 'all';
-			$media = [ $media ] if ref( $media ) ne 'ARRAY';
-			my $mms = grep( /mms|all/i, @{$media} ) ? "--mms" : "";
-			my $mqtt = grep( /mqtt|all/i, @{$media} ) ? "--mqtt" : "";
-			my $sms = grep( /sms|all/i, @{$media} ) ? "--sms" : "";
-			my $smtp = grep( /smtp|all/i, @{$media} ) ? "--smtp" : "";
-			my $tts = grep( /tts|all/i, @{$media} ) ? "--tts" : "";
+		if( $res->{value} >= $threshold ){
+			my $file = $opt_file_set && $opt_file ? "--file" : "";
+			my $mms = $opt_mms_set && $opt_mms ? "--mms" : "";
+			my $mqtt = $opt_mqtt_set && $opt_mqtt ? "--mqtt" : "";
+			my $sms = $opt_sms_set && $opt_sms ? "--sms" : "";
+			my $smtp = $opt_smtp_set && $opt_smtp ? "--smtp" : "";
+			my $tts = $opt_tts_set && $opt_tts ? "--tts" : "";
 			my $title = $which eq "errors" ? "$opt_device doesn't answer to ping (errors count=$res->{value})" : "$opt_device exhibits high $res->{value} ms latency";
-			my $command = "ttp.pl alert -title $title $mms $mqtt $sms $smtp $tts";
+			my $command = "ttp.pl alert -title $title $file $mms $mqtt $sms $smtp $tts";
 			TTP::commandExec( $command );
 		} else {
 			msgVerbose( "value='$res->{value}' less than threshold='$threshold', do not alert" );
@@ -176,9 +206,9 @@ sub errors_publish {
 	};
 
 	# first get the previous errors count
-	my $qualifiers = $ep->runner()->runnableQualifiers();
-	shift @{$qualifiers};
-	my $fname = File::Spec->catfile( $out->{dropDir}, sprintf( "%s_%s_%s.errors_count", $ep->runner()->runnableBNameShort(), join( '_', @{$qualifiers} ), $opt_device ));
+	my @qualifiers = @{ $ep->runner()->runnableQualifiers() };
+	shift @qualifiers;
+	my $fname = File::Spec->catfile( $out->{dropDir}, sprintf( "%s_%s_%s.errors_count", $ep->runner()->runnableBNameShort(), join( '_', @qualifiers ), $opt_device ));
 	if( -r $fname ){
 		$out->{value} = path( $fname )->slurp_utf8 || 0;
 	} else {
@@ -239,10 +269,7 @@ sub publish_metric {
 
 	my $enabled = TTP::Telemetry::var([ 'ping', $which, 'publish', 'enabled' ]) // true;
 	if( $enabled ){
-		my $media = TTP::Telemetry::var([ 'ping', $which, 'publish', 'media' ]) // 'all';
-		$media = [ $media ] if ref( $media ) ne 'ARRAY';
 		my $suffix = TTP::Telemetry::var([ 'ping', $which, 'publish', 'suffix' ]) // $which;
-
 		my $metric_name = $opt_metric || TTP::Telemetry::var([ 'ping', $which, 'publish', 'name' ]) || "ttp_ping_<DEVICE>_<SUFFIX>";
 		my $metric_description = $opt_description || TTP::Telemetry::var([ 'ping', $which, 'publish', 'description' ]) || "ttp_ping_<DEVICE>_<SUFFIX>";
 
@@ -259,13 +286,10 @@ sub publish_metric {
 		my @labels = ( @opt_prepends, @opt_appends );
 		$metric->{labels} = \@labels if scalar @labels;
 
-		# default is to publish to all media
-		my $to_http = true if grep( /all|http/i, @{$media} );
-		my $to_mqtt = true if grep( /all|mqtt/i, @{$media} );
-		my $to_text = true if grep( /all|text/i, @{$media} );
-		$to_http = $opt_http if $opt_http_set;
-		$to_mqtt = $opt_mqtt if $opt_mqtt_set;
-		$to_text = $opt_text if $opt_text_set;
+		# default is to publish to all default media
+		my $to_http = $opt_publish_http_set ? $opt_publish_http : undef;
+		my $to_mqtt = $opt_publish_mqtt_set ? $opt_publish_mqtt : undef;
+		my $to_text = $opt_publish_text_set ? $opt_publish_text : undef;
 
 		TTP::Metric->new( $ep, $metric )->publish({
 			mqtt => $to_mqtt,
@@ -292,23 +316,54 @@ if( !GetOptions(
 	"device=s"			=> \$opt_device,
 	"metric=s"			=> \$opt_metric,
 	"description=s"		=> \$opt_description,
-	"type=s"			=> \$opt_type,
+	# alert options
+	"file!"				=> sub {
+		my( $name, $value ) = @_;
+		$opt_file = $value;
+		$opt_file_set = true;
+	},
+	"mms!"				=> sub {
+		my( $name, $value ) = @_;
+		$opt_mms = $value;
+		$opt_mms_set = true;
+	},
 	"mqtt!"				=> sub {
-		my ( $name, $value ) = @_;
+		my( $name, $value ) = @_;
 		$opt_mqtt = $value;
 		$opt_mqtt_set = true;
 	},
-	"mqttPrefix=s"		=> \$opt_mqttPrefix,
-	"http!"				=> sub {
+	"sms!"				=> sub {
+		my( $name, $value ) = @_;
+		$opt_sms = $value;
+		$opt_sms_set = true;
+	},
+	"smtp!"				=> sub {
+		my( $name, $value ) = @_;
+		$opt_smtp = $value;
+		$opt_smtp_set = true;
+	},
+	"tts!"				=> sub {
+		my( $name, $value ) = @_;
+		$opt_tts = $value;
+		$opt_tts_set = true;
+	},
+	# telemetry options
+	"publish-mqtt!"		=> sub {
 		my ( $name, $value ) = @_;
-		$opt_http = $value;
-		$opt_http_set = true;
+		$opt_publish_mqtt = $value;
+		$opt_publish_mqtt_set = true;
+	},
+	"mqttPrefix=s"		=> \$opt_mqttPrefix,
+	"publish-http!"		=> sub {
+		my ( $name, $value ) = @_;
+		$opt_publish_http = $value;
+		$opt_publish_http_set = true;
 	},
 	"httpPrefix=s"		=> \$opt_httpPrefix,
-	"text!"				=> sub {
+	"publish-text!"		=> sub {
 		my ( $name, $value ) = @_;
-		$opt_text = $value;
-		$opt_text_set = true;
+		$opt_publish_text = $value;
+		$opt_publish_text_set = true;
 	},
 	"textPrefix=s"		=> \$opt_textPrefix,
 	"prepend=s@"		=> \@opt_prepends,
@@ -327,14 +382,21 @@ msgVerbose( "got colored='".( $ep->runner()->colored() ? 'true':'false' )."'" );
 msgVerbose( "got dummy='".( $ep->runner()->dummy() ? 'true':'false' )."'" );
 msgVerbose( "got verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got device='$opt_device'" );
+# alert options
+msgVerbose( "got file='".( $opt_file ? 'true':'false' )."'" );
+msgVerbose( "got mms='".( $opt_mms ? 'true':'false' )."'" );
+msgVerbose( "got mqtt='".( $opt_mqtt ? 'true':'false' )."'" );
+msgVerbose( "got sms='".( $opt_sms ? 'true':'false' )."'" );
+msgVerbose( "got smtp='".( $opt_smtp ? 'true':'false' )."'" );
+msgVerbose( "got tts='".( $opt_tts ? 'true':'false' )."'" );
+# telemetry options
 msgVerbose( "got metric='$opt_metric'" );
 msgVerbose( "got description='$opt_description'" );
-msgVerbose( "got type='$opt_type'" );
-msgVerbose( "got mqtt='".( $opt_mqtt ? 'true':'false' )."'" );
+msgVerbose( "got publish-mqtt='".( $opt_publish_mqtt ? 'true':'false' )."'" );
 msgVerbose( "got mqttPrefix='$opt_mqttPrefix'" );
-msgVerbose( "got http='".( $opt_http ? 'true':'false' )."'" );
+msgVerbose( "got publish-http='".( $opt_publish_http ? 'true':'false' )."'" );
 msgVerbose( "got httpPrefix='$opt_httpPrefix'" );
-msgVerbose( "got text='".( $opt_text ? 'true':'false' )."'" );
+msgVerbose( "got publish-text='".( $opt_publish_text ? 'true':'false' )."'" );
 msgVerbose( "got textPrefix='$opt_textPrefix'" );
 @opt_prepends = split( /,/, join( ',', @opt_prepends ));
 msgVerbose( "got prepends=[".join( ',', @opt_prepends )."]" );
@@ -344,42 +406,106 @@ msgVerbose( "got appends=[".join( ',', @opt_appends )."]" );
 # device is mandatory
 msgErr( "'--device' option is required, but is not specified" ) if !$opt_device;
 
+# alert options
 # disabled media are just ignored (or refused if option was explicit)
-if( $opt_mqtt ){
-	my $enabled = TTP::Telemetry::Mqtt::isEnabled();
-	if( !$enabled ){
-		if( $opt_mqtt_set ){
-			msgErr( "MQTT telemetry is disabled, --mqtt option is not valid" );
+if( $opt_file ){
+	if( !$file_enabled ){
+		if( $opt_file_set ){
+			msgErr( "File medium is disabled, --file option is not valid" );
 		} else {
-			msgWarn( "MQTT telemetry is disabled and thus ignored" );
+			msgWarn( "File medium is disabled and thus ignored" );
+			$opt_file = false;
+		}
+	}
+}
+if( $opt_mms ){
+	if( !$mms_enabled ){
+		if( $opt_mms_set ){
+			msgErr( "MMS medium is disabled, --mms option is not valid" );
+		} else {
+			msgWarn( "MMS medium is disabled and thus ignored" );
+			$opt_mms = false;
+		}
+	}
+}
+if( $opt_mqtt ){
+	if( !$mqtt_enabled ){
+		if( $opt_mqtt_set ){
+			msgErr( "MQTT medium is disabled, --mqtt option is not valid" );
+		} else {
+			msgWarn( "MQTT medium is disabled and thus ignored" );
 			$opt_mqtt = false;
 		}
 	}
 }
-if( $opt_http ){
-	my $enabled = TTP::Telemetry::Http::isEnabled();
-	if( !$enabled ){
-		if( $opt_http_set ){
-			msgErr( "HTTP PushGateway telemetry is disabled, --http option is not valid" );
+if( $opt_sms ){
+	if( !$sms_enabled ){
+		if( $opt_sms_set ){
+			msgErr( "SMS medium is disabled, --sms option is not valid" );
 		} else {
-			msgWarn( "HTTP PushGateway telemetry is disabled and thus ignored" );
-			$opt_http = false;
+			msgWarn( "SMS medium is disabled and thus ignored" );
+			$opt_sms = false;
 		}
 	}
 }
-if( $opt_text ){
-	my $enabled = TTP::Telemetry::Text::isEnabled();
-	if( !$enabled ){
-		if( $opt_text_set ){
-			msgErr( "TextFile Collector telemetry is disabled, --text option is not valid" );
+if( $opt_smtp ){
+	if( !$smtp_enabled ){
+		if( $opt_smtp_set ){
+			msgErr( "SMTP medium is disabled, --smtp option is not valid" );
 		} else {
-			msgWarn( "TextFile Collector telemetry is disabled and thus ignored" );
-			$opt_text = false;
+			msgWarn( "SMTP medium is disabled and thus ignored" );
+			$opt_smtp = false;
+		}
+	}
+}
+if( $opt_tts ){
+	if( !$tts_enabled ){
+		if( $opt_tts_set ){
+			msgErr( "Text-To-Speech medium is disabled, --tts option is not valid" );
+		} else {
+			msgWarn( "Text-To-Speech medium is disabled and thus ignored" );
+			$opt_tts = false;
 		}
 	}
 }
 
-# if labels are specified, check that each one is of the 'name=value' form
+# telemetry options
+# disabled media are just ignored (or refused if option was explicit)
+if( $opt_publish_mqtt ){
+	my $enabled = TTP::Telemetry::Mqtt::isEnabled();
+	if( !$enabled ){
+		if( $opt_publish_mqtt_set ){
+			msgErr( "MQTT telemetry is disabled, --mqtt option is not valid" );
+		} else {
+			msgWarn( "MQTT telemetry is disabled and thus ignored" );
+			$opt_publish_mqtt = false;
+		}
+	}
+}
+if( $opt_publish_http ){
+	my $enabled = TTP::Telemetry::Http::isEnabled();
+	if( !$enabled ){
+		if( $opt_publish_http_set ){
+			msgErr( "HTTP PushGateway telemetry is disabled, --http option is not valid" );
+		} else {
+			msgWarn( "HTTP PushGateway telemetry is disabled and thus ignored" );
+			$opt_publish_http = false;
+		}
+	}
+}
+if( $opt_publish_text ){
+	my $enabled = TTP::Telemetry::Text::isEnabled();
+	if( !$enabled ){
+		if( $opt_publish_text_set ){
+			msgErr( "TextFile Collector telemetry is disabled, --text option is not valid" );
+		} else {
+			msgWarn( "TextFile Collector telemetry is disabled and thus ignored" );
+			$opt_publish_text = false;
+		}
+	}
+}
+
+# if labels are specified, check that they are all of the 'name=value' form
 foreach my $label ( @opt_prepends ){
 	my @words = split( /=/, $label );
 	if( scalar @words != 2 || !$words[0] || !$words[1] ){

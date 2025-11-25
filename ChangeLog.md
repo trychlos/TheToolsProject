@@ -10,6 +10,7 @@
     - ttp.pl alert takes advantage of these new functions
     - TTP::Metric->publish() now honors default telemetry configuration
     - Improve TTP::Metric->publish() verbosity
+    - Review telemetry.pl ping configuration to be consistent with other features
 
 ### 4.25.0
 
