@@ -2,6 +2,12 @@
 
 ## ChangeLog
 
+### 4.25.4-rc.0
+
+    Release date: 
+
+    - 
+
 ### 4.25.3
 
     Release date: 2025-11-25
