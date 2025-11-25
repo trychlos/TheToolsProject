@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.25.2-rc.0
+### 4.25.2
 
-    Release date: 
+    Release date: 2025-11-25
 
     - telemetry.pl ping: fix alert title quotation
     - telemetry.pl ping: command-line arguments are all prefixed, either 'alert-' or 'publish-'
