@@ -70,51 +70,27 @@ my $opt_listLevels = false;
 my $opt_options = $defaults->{options};
 my $opt_attach = $defaults->{attach};
 
-my $opt_file = TTP::var([ 'alerts', 'withFile', 'default' ]);
-$opt_file = false if !defined $opt_file;
-my $file_enabled = $ep->var([ 'alerts', 'withFile', 'enabled' ]);
-$file_enabled = true if !defined $file_enabled;
-msgErr( "alerts.withFile.default=true while alerts.withFile.enabled=false which is not consistent" ) if $opt_file && !$file_enabled;
+my ( $opt_file, $file_enabled ) = TTP::alertsWithFile();
 $defaults->{file} = $opt_file && $file_enabled ? 'yes' : 'no';
 my $opt_file_set = false;
 
-my $opt_mms = TTP::var([ 'alerts', 'withMms', 'default' ]);
-$opt_mms = false if !defined $opt_mms;
-my $mms_enabled = $ep->var([ 'alerts', 'withMms', 'enabled' ]);
-$mms_enabled = true if !defined $mms_enabled;
-msgErr( "alerts.withMms.default=true while alerts.withMms.enabled=false which is not consistent" ) if $opt_mms && !$mms_enabled;
+my ( $opt_mms, $mms_enabled ) = TTP::alertsWithMms();
 $defaults->{mms} = $opt_mms && $mms_enabled ? 'yes' : 'no';
 my $opt_mms_set = false;
 
-my $opt_mqtt = TTP::var([ 'alerts', 'withMqtt', 'default' ]);
-$opt_mqtt = false if !defined $opt_mqtt;
-my $mqtt_enabled = $ep->var([ 'alerts', 'withMqtt', 'enabled' ]);
-$mqtt_enabled = true if !defined $mqtt_enabled;
-msgErr( "alerts.withMqtt.default=true while alerts.withMqtt.enabled=false which is not consistent" ) if $opt_mqtt && !$mqtt_enabled;
+my ( $opt_mqtt, $mqtt_enabled ) = TTP::alertsWithMms();
 $defaults->{mqtt} = $opt_mqtt && $mqtt_enabled ? 'yes' : 'no';
 my $opt_mqtt_set = false;
 
-my $opt_sms = TTP::var([ 'alerts', 'withSms', 'default' ]);
-$opt_sms = false if !defined $opt_sms;
-my $sms_enabled = $ep->var([ 'alerts', 'withSms', 'enabled' ]);
-$sms_enabled = true if !defined $sms_enabled;
-msgErr( "alerts.withSms.default=true while alerts.withSms.enabled=false which is not consistent" ) if $opt_sms && !$sms_enabled;
+my ( $opt_sms, $sms_enabled ) = TTP::alertsWithSms();
 $defaults->{sms} = $opt_sms && $sms_enabled ? 'yes' : 'no';
 my $opt_sms_set = false;
 
-my $opt_smtp = TTP::var([ 'alerts', 'withSmtp', 'default' ]);
-$opt_smtp = false if !defined $opt_smtp;
-my $smtp_enabled = $ep->var([ 'alerts', 'withSmtp', 'enabled' ]);
-$smtp_enabled = true if !defined $smtp_enabled;
-msgErr( "alerts.withSmtp.default=true while alerts.withSmtp.enabled=false which is not consistent" ) if $opt_smtp && !$smtp_enabled;
+my ( $opt_smtp, $smtp_enabled ) = TTP::alertsWithSmtp();
 $defaults->{smtp} = $opt_smtp && $smtp_enabled ? 'yes' : 'no';
 my $opt_smtp_set = false;
 
-my $opt_tts = TTP::var([ 'alerts', 'withTextToSpeech', 'default' ]);
-$opt_tts = false if !defined $opt_tts;
-my $tts_enabled = $ep->var([ 'alerts', 'withTextToSpeech', 'enabled' ]);
-$tts_enabled = true if !defined $tts_enabled;
-msgErr( "alerts.withTextToSpeech.default=true while alerts.withTextToSpeech.enabled=false which is not consistent" ) if $opt_tts && !$tts_enabled;
+my ( $opt_tts, $tts_enabled ) = TTP::alertsWithTts();
 $defaults->{tts} = $opt_tts && $tts_enabled ? 'yes' : 'no';
 my $opt_tts_set = false;
 
