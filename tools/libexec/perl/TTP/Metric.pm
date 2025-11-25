@@ -329,11 +329,11 @@ sub name_check {
 # Publish the metric to the specified media
 # (I):
 # - an arguments hash ref with following keys:
-#   > mqtt, whether to publish to (MQTT-based) messaging system, defaulting to false
+#   > mqtt, whether to publish to (MQTT-based) messaging system, defaulting to the configured default
 #   > mqttPrefix, a prefix to the metric name on MQTT publication
-#   > http, whether to publish to (HTTP-based) Prometheus PushGateway, defaulting to false
+#   > http, whether to publish to (HTTP-based) Prometheus PushGateway, defaulting to the configured default
 #   > httpPrefix, a prefix to the metric name on HTTP publication
-#   > text, whether to publish to (text-based) Prometheus TextFile Collector, defaulting to false
+#   > text, whether to publish to (text-based) Prometheus TextFile Collector, defaulting to the configured default
 #   > textPrefix, a prefix to the metric name on text publication
 # (O):
 # - a result hash ref, which may be empty, or with a key foreach 'truethy' medium specified on entering:
@@ -344,24 +344,21 @@ sub publish {
 	$args //= {};
 	my $result = {};
 
-	my $mqtt = false;
-	$mqtt = $args->{mqtt} if defined $args->{mqtt};
+	my $mqtt = $args->{mqtt} // TTP::Telemetry::Mqtt::getDefault();
 	if( $mqtt ){
 		$result->{mqtt} = TTP::Telemetry::Mqtt::publish( $self, {
 			prefix => $args->{mqttPrefix}
 		});
 	}
 
-	my $http = false;
-	$http = $args->{http} if defined $args->{http};
+	my $http = $args->{http} // TTP::Telemetry::Http::getDefault();
 	if( $http ){
 		$result->{http} = TTP::Telemetry::Http::publish( $self, {
 			prefix => $args->{httpPrefix}
 		});
 	}
 
-	my $text = false;
-	$text = $args->{text} if defined $args->{text};
+	my $text = $args->{text} // TTP::Telemetry::Text::getDefault();
 	if( $text ){
 		$result->{text} = TTP::Telemetry::Text::publish( $self, {
 			prefix => $args->{textPrefix}
