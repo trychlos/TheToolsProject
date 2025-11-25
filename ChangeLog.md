@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - telemetry.pl ping: fix published telemetry so that the device is a label and not part of the metric name
 
 ### 4.25.3
 

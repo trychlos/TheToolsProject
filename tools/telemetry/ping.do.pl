@@ -270,7 +270,7 @@ sub publish_metric {
 	my $enabled = TTP::Telemetry::var([ 'ping', $which, 'publish', 'enabled' ]) // true;
 	if( $enabled ){
 		my $suffix = TTP::Telemetry::var([ 'ping', $which, 'publish', 'suffix' ]) // $which;
-		my $metric_name = $opt_metric || TTP::Telemetry::var([ 'ping', $which, 'publish', 'name' ]) || "ttp_ping_<DEVICE>_<SUFFIX>";
+		my $metric_name = $opt_metric || TTP::Telemetry::var([ 'ping', $which, 'publish', 'name' ]) || "ttp_ping_<SUFFIX>";
 		my $metric_description = $opt_description || TTP::Telemetry::var([ 'ping', $which, 'publish', 'description' ]) || "ttp_ping_<DEVICE>_<SUFFIX>";
 
 		my $metric = {
@@ -283,7 +283,7 @@ sub publish_metric {
 				SUFFIX => $suffix
 			}
 		};
-		my @labels = ( @opt_prepends, @opt_appends );
+		my @labels = ( @opt_prepends, "device=$opt_device", @opt_appends );
 		$metric->{labels} = \@labels if scalar @labels;
 
 		# default is to publish to all default media

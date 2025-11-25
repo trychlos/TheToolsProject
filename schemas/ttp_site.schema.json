@@ -1706,7 +1706,7 @@
                                                 "name": {
                                                     "description": "The name of the metric.",
                                                     "type": "string",
-                                                    "default": "ttp_ping_<DEVICE>_<SUFFIX>"
+                                                    "default": "ttp_ping_<SUFFIX>"
                                                 },
                                                 "suffix": {
                                                     "description": "The suffix of the metric name.",
@@ -1754,7 +1754,7 @@
                                                 "name": {
                                                     "description": "The name of the metric.",
                                                     "type": "string",
-                                                    "default": "ttp_ping_<DEVICE>_<SUFFIX>"
+                                                    "default": "ttp_ping_<SUFFIX>"
                                                 },
                                                 "suffix": {
                                                     "description": "The suffix of the metric name.",
