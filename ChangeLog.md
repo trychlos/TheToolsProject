@@ -2,6 +2,12 @@
 
 ## ChangeLog
 
+### 4.25.6-rc.0
+
+    Release date: 
+
+    - 
+
 ### 4.25.5
 
     Release date: 2025-11-25
