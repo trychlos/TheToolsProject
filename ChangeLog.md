@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - http.pl compare: exit the role after count of successive unable to restore chain
 
 ### 4.25.5
 

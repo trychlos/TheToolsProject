@@ -232,6 +232,11 @@
                             "type": "boolean",
                             "default": false
                         },
+                        "restore_chain_last": {
+                            "description": "Count of successive errors which cancel the role comparison.",
+                            "type": "integer",
+                            "default": 10
+                        },
                         "text_deny_paterns": {
                             "description": "The list of text patterns to exclude. Empty means none.",
                             "type": "array",

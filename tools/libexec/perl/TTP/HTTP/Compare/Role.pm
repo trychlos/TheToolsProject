@@ -66,6 +66,8 @@ my $Const = {
 # go on until having reached first of max_depth, or max_links, or max_pages
 # (I):
 # - the current queue_item
+# (O):
+# - false if cannot continue with this role
 
 sub _do_crawl {
     my ( $self, $queue_item, $args ) = @_;
@@ -109,6 +111,7 @@ sub _do_crawl {
 	my $captureRef = undef;
 	my $captureNew = undef;
 	my $reason = undef;
+	my $continue = true;
 
 	( $captureRef, $captureNew, $path, $reason ) = @{ $self->_do_crawl_by_click( $queue_item ) } if $from eq 'click';
 	( $captureRef, $captureNew, $path, $reason ) = @{ $self->_do_crawl_by_link( $queue_item ) } if $from eq 'link';
@@ -152,11 +155,15 @@ sub _do_crawl {
 		# do we have forms to be handled ?
 		$self->_handle_forms( $self->conf()->confForms());
 
+		# reset count of successive errors
+		$self->{_result}{restore_chain} = 0;
+
 	} elsif( !defined( $captureRef ) && !defined( $captureNew ) && !defined( $path )){
 		msgVerbose( "do_crawl() all values are undef, just skip" );
 		if( $reason ){
 			$self->{_result}{cancelled}{$reason} //= [];
 			push( @{$self->{_result}{cancelled}{$reason}}, $queue_item );
+			$continue = $self->_inc_error( $reason );
 		} else {
 			# a reason is mandatory, so this is unexpected
 			msgWarn( "do_crawl() reason is not defined, this is NOT expected" );
@@ -172,6 +179,8 @@ sub _do_crawl {
 
 	# try to print an intermediate result each 100 visits
 	$self->_try_to_print_intermediate_results();
+
+	return $continue;
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -428,6 +437,25 @@ sub _hash {
     my ( $self ) = @_;
 
 	return $self->{conf}->var([ 'roles', $self->name() ]);
+}
+
+# -------------------------------------------------------------------------------------------------
+# (I):
+# - the error reason when a queue item cannot be treated
+# (O):
+# - whether we can continue with this role: true|false
+
+sub _inc_error {
+    my ( $self, $reason ) = @_;
+
+	my $continue = true;
+
+	if( $reason eq "restore_chain" ){
+		$self->{_result}{restore_chain} += 1;
+		$continue = false if $self->{_result}{restore_chain} >= $self->conf()->confCrawlByClickRestoreChainLast();
+	}
+
+	return $continue;
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -828,6 +856,7 @@ sub doCompare {
 	$self->{_result}{cancelled} = {};		# list of cancelled queue items
 	$self->{_result}{unexpected} = {};		# list of unexpected errors
 	$self->{_result}{clicked} = [];			# the list of clicked events for the current url
+	$self->{_result}{restore_chain} = 0;	# the count of successive restore_chain errors
 
 	# instanciates our internal browsers
 	# errors here end the program (most often a chromedrive version issue or a path mismatch)
@@ -871,8 +900,8 @@ sub doCompare {
 
 		# and crawl until the queue is empty
 		while ( @{$self->{_queue}} ){
-			$self->_do_crawl( shift @{$self->{_queue}} );
-			last if $self->_max_reached();
+			my $continue = $self->_do_crawl( shift @{$self->{_queue}} );
+			last if $self->_max_reached() || !$continue;
 		}
 	}
 
