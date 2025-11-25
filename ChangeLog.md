@@ -9,6 +9,7 @@
     - Define new TTP alertsWithFile(), alertsWithMms(), alertsWithMqtt(), alertsWithSms(), alertsWithSmtp(), alertsWithTts() functions
     - ttp.pl alert takes advantage of these new functions
     - TTP::Metric->publish() now honors default telemetry configuration
+    - Improve TTP::Metric->publish() verbosity
 
 ### 4.25.0
 

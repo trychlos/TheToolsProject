@@ -346,23 +346,32 @@ sub publish {
 
 	my $mqtt = $args->{mqtt} // TTP::Telemetry::Mqtt::getDefault();
 	if( $mqtt ){
+		msgVerbose( "publishing metric to MQTT" );
 		$result->{mqtt} = TTP::Telemetry::Mqtt::publish( $self, {
 			prefix => $args->{mqttPrefix}
 		});
+	} else {
+		msgVerbose( "do not publish to MQTT as disabled by configuration" );
 	}
 
 	my $http = $args->{http} // TTP::Telemetry::Http::getDefault();
 	if( $http ){
+		msgVerbose( "publishing metric to HTTP" );
 		$result->{http} = TTP::Telemetry::Http::publish( $self, {
 			prefix => $args->{httpPrefix}
 		});
+	} else {
+		msgVerbose( "do not publish to HTTP as disabled by configuration" );
 	}
 
 	my $text = $args->{text} // TTP::Telemetry::Text::getDefault();
 	if( $text ){
+		msgVerbose( "publishing metric to text collector" );
 		$result->{text} = TTP::Telemetry::Text::publish( $self, {
 			prefix => $args->{textPrefix}
 		});
+	} else {
+		msgVerbose( "do not publish to Text as disabled by configuration" );
 	}
 
 	return $result;
