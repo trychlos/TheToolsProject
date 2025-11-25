@@ -92,6 +92,90 @@ sub alertsFileDropdir {
 }
 
 # -------------------------------------------------------------------------------------------------
+# Returns whether the 'withFile' alert is a default and whether it is enabled
+# (I):
+# - none
+# (O):
+# - returns an array ( default, enabled )
+
+sub alertsWithFile {
+	my $default = TTP::var([ 'alerts', 'withFile', 'default' ]) // false;
+	my $enabled = TTP::var([ 'alerts', 'withFile', 'enabled' ]) // true;
+	msgWarn( "alerts.withFile.default=true while alerts.withFile.enabled=false which is not consistent" ) if $default && !$enabled;
+	return ( $default, $enabled );
+}
+
+# -------------------------------------------------------------------------------------------------
+# Returns whether the 'withMms' alert is a default and whether it is enabled
+# (I):
+# - none
+# (O):
+# - returns an array ( default, enabled )
+
+sub alertsWithMms {
+	my $default = TTP::var([ 'alerts', 'withMms', 'default' ]) // false;
+	my $enabled = TTP::var([ 'alerts', 'withMms', 'enabled' ]) // true;
+	msgWarn( "alerts.withMms.default=true while alerts.withMms.enabled=false which is not consistent" ) if $default && !$enabled;
+	return ( $default, $enabled );
+}
+
+# -------------------------------------------------------------------------------------------------
+# Returns whether the 'withMmqtt' alert is a default and whether it is enabled
+# (I):
+# - none
+# (O):
+# - returns an array ( default, enabled )
+
+sub alertsWithMqtt {
+	my $default = TTP::var([ 'alerts', 'withMmqtt', 'default' ]) // false;
+	my $enabled = TTP::var([ 'alerts', 'withMmqtt', 'enabled' ]) // true;
+	msgWarn( "alerts.withMmqtt.default=true while alerts.withMmqtt.enabled=false which is not consistent" ) if $default && !$enabled;
+	return ( $default, $enabled );
+}
+
+# -------------------------------------------------------------------------------------------------
+# Returns whether the 'withSms' alert is a default and whether it is enabled
+# (I):
+# - none
+# (O):
+# - returns an array ( default, enabled )
+
+sub alertsWithSms {
+	my $default = TTP::var([ 'alerts', 'withSms', 'default' ]) // false;
+	my $enabled = TTP::var([ 'alerts', 'withSms', 'enabled' ]) // true;
+	msgWarn( "alerts.withSms.default=true while alerts.withSms.enabled=false which is not consistent" ) if $default && !$enabled;
+	return ( $default, $enabled );
+}
+
+# -------------------------------------------------------------------------------------------------
+# Returns whether the 'withSmtp' alert is a default and whether it is enabled
+# (I):
+# - none
+# (O):
+# - returns an array ( default, enabled )
+
+sub alertsWithSmtp {
+	my $default = TTP::var([ 'alerts', 'withSmtp', 'default' ]) // false;
+	my $enabled = TTP::var([ 'alerts', 'withSmtp', 'enabled' ]) // true;
+	msgWarn( "alerts.withSmtp.default=true while alerts.withSmtp.enabled=false which is not consistent" ) if $default && !$enabled;
+	return ( $default, $enabled );
+}
+
+# -------------------------------------------------------------------------------------------------
+# Returns whether the 'withTextToSpeech' alert is a default and whether it is enabled
+# (I):
+# - none
+# (O):
+# - returns an array ( default, enabled )
+
+sub alertsWithTts {
+	my $default = TTP::var([ 'alerts', 'withTextToSpeech', 'default' ]) // false;
+	my $enabled = TTP::var([ 'alerts', 'withTextToSpeech', 'enabled' ]) // true;
+	msgWarn( "alerts.withTextToSpeech.default=true while alerts.withTextToSpeech.enabled=false which is not consistent" ) if $default && !$enabled;
+	return ( $default, $enabled );
+}
+
+# -------------------------------------------------------------------------------------------------
 # returns a Dumper of the data, without terminating end-of-line
 # (I):
 # - the data to be dumped

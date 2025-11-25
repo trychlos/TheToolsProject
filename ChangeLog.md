@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - Define new TTP alertsWithFile(), alertsWithMms(), alertsWithMqtt(), alertsWithSms(), alertsWithSmtp(), alertsWithTts() functions
 
 ### 4.25.0
 
