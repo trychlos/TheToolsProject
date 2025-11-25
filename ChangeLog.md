@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.25.4-rc.0
+### 4.25.4
 
-    Release date: 
+    Release date: 2025-11-25
 
     - telemetry.pl ping: fix published telemetry so that the device is a label and not part of the metric name
 
