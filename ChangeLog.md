@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.25.1-rc.0
+### 4.25.1
 
-    Release date: 
+    Release date: 2025-11-25
 
     - Define new TTP alertsWithFile(), alertsWithMms(), alertsWithMqtt(), alertsWithSms(), alertsWithSmtp(), alertsWithTts() functions
     - ttp.pl alert takes advantage of these new functions
@@ -738,4 +738,4 @@
 
 ---
 P. Wieser
-- Last updated on 2025, Nov. 24th
+- Last updated on 2025, Nov. 25th
