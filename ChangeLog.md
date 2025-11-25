@@ -2,9 +2,15 @@
 
 ## ChangeLog
 
-### 4.25.4
+### 4.25.5
 
     Release date: 2025-11-25
+
+    - telemetry.pl ping: fix display of default values
+
+### 4.25.4
+
+    Not released
 
     - telemetry.pl ping: fix published telemetry so that the device is a label and not part of the metric name
 
@@ -17,7 +23,7 @@
 
 ### 4.25.2
 
-    Release date: 2025-11-25
+    Not released
 
 ### 4.25.1
 
