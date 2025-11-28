@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.25.6-rc.0
+### 4.25.6
 
-    Release date: 
+    Release date: 2025-11-28
 
     - http.pl compare: exit the role after count of successive unable to restore chain
     - telemetry.pl ping: accept -latency and -errors command-line arguments to override the configured thresholds
@@ -768,4 +768,4 @@
 
 ---
 P. Wieser
-- Last updated on 2025, Nov. 25th
+- Last updated on 2025, Nov. 28th
