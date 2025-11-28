@@ -512,11 +512,15 @@ sub click_by_xpath {
         return false;
       })(arguments[0]);
     };
+
 	$self->_performance_logs_drain();
     if( $self->exec_js_w3c_sync( $js, [ $xpath ] )){
         $self->_signature_clear();
+        msgVerbose( "click_by_xpath() success" );
         return true;
     }
+
+    msgWarn( "click_by_xpath() returning false" );
     return false;
 }
 
@@ -708,6 +712,7 @@ sub clickable_discover_targets_xpath {
 
 sub clickable_find_equivalent_xpath {
     my ( $self, $queue_item ) = @_;
+
     my $js = q{
       return (function(meta){
         function canon(s){
@@ -795,7 +800,14 @@ sub clickable_find_equivalent_xpath {
         return best.el ? xpathFor(best.el) : null;
       })(arguments[0]);
     };
-    return $self->exec_js_w3c_sync( $js, [ $queue_item->hash() ] );
+
+    my $ok = $self->exec_js_w3c_sync( $js, [ $queue_item->hash() ] );
+    if( $ok ){
+        msgVerbose( "clickable_find_equivalent_xpath() success" );
+    } else {
+        msgWarn( "clickable_find_equivalent_xpath() error" );
+    }
+    return $ok;
 }
 
 # -------------------------------------------------------------------------------------------------

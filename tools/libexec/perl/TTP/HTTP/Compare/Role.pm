@@ -214,23 +214,30 @@ sub _do_crawl_by_click {
 
 	# and try to restore the origin clicks chain if we do not have the same frames
 	if( $self->_restore_chain( $queue_item )){
-		$captureRef = $self->{_browsers}{ref}->wait_and_capture();
-		# re-discover a clickable with same visible text (best effort) and click there too
-		if( !$self->{_browsers}{new}->click_by_xpath( $queue_item->xpath())){
-			msgVerbose( "xpath='".$queue_item->xpath()."' not available on new site" );
-			my $match_new = $self->{_browsers}{new}->clickable_find_equivalent_xpath( $queue_item );
-			if( $match_new ){
-				if( $self->{_browsers}{new}->click_by_xpath( $match_new )){
-					msgVerbose( "match found '$match_new' on new site" );
+		if( $self->{_browsers}{ref}->click_by_xpath( $queue_item->xpath())){
+			# re-discover a clickable with same visible text (best effort) and click there too
+			if( $self->{_browsers}{new}->click_by_xpath( $queue_item->xpath())){
+				$captureRef = $self->{_browsers}{ref}->wait_and_capture();
+				$captureNew = $self->{_browsers}{new}->wait_and_capture();
+			} else {
+				msgVerbose( "xpath='".$queue_item->xpath()."' not available on new site" );
+				my $match_new = $self->{_browsers}{new}->clickable_find_equivalent_xpath( $queue_item );
+				if( $match_new ){
+					if( $self->{_browsers}{new}->click_by_xpath( $match_new )){
+						msgVerbose( "match found '$match_new' on new site" );
+						$captureRef = $self->{_browsers}{ref}->wait_and_capture();
+						$captureNew = $self->{_browsers}{new}->wait_and_capture();
+					} else {
+						return [ undef, undef, undef, "new_click_by_xpath" ];
+					}
 				} else {
-					msgVerbose( "unable to find a equivalent match for '".$queue_item->xpath()."', cancelling" );
-					return [ undef, undef, undef, "no new xpath" ];
+					return [ undef, undef, undef, "new_clickable_equivalent" ];
 				}
 			}
+		} else {
+			return [ undef, undef, undef, "ref_click_by_xpath" ];
 		}
-		$captureNew = $self->{_browsers}{new}->wait_and_capture();
 	} else {
-		msgWarn( "unable to restore the clicks chain" );
 		return [ undef, undef, undef, "restore_chain" ];
 	}
 
@@ -561,7 +568,7 @@ sub _record_result {
 # - an optional options hash with following keys:
 #   > relogin: true when run for the second time, so do not try to re-login another time, defaulting to false
 # (O):
-# - whether we have successively restored the clicks chain, and clicked on this ref site target, so true|false
+# - whether we have successively restored the clicks chain, so true|false
 
 sub _restore_chain {
 	my ( $self, $queue_item, $args ) = @_;
@@ -569,36 +576,44 @@ sub _restore_chain {
 	msgVerbose( "restore_chain()" );
 
 	# make sure we have the same origin frames signature
+	# origin signature is the ref page signature when we enqueued this item:
+	# we so have to restore this same page signature in order to be able to apply and click the queue xpath
 	my $origin_signature = $queue_item->origin() || $queue_item->dest();
-	my $current_signature = $self->{_browsers}{ref}->signature({ label => 'current' });
+	my $origin_signature_wo_url = TTP::HTTP::Compare::Utils::page_signature_wo_url( $origin_signature );
+	my $ref_signature = $self->{_browsers}{ref}->signature({ label => 'current ref' });
+	my $ref_signature_wo_url = TTP::HTTP::Compare::Utils::page_signature_wo_url( $ref_signature );
+	my $new_signature = $self->{_browsers}{new}->signature({ label => 'current new' });
+	my $new_signature_wo_url = TTP::HTTP::Compare::Utils::page_signature_wo_url( $new_signature );
 
 	# reapply each and every queued item from the saved chain on both ref and new sites
-	if( $current_signature ne $origin_signature ){
+	if( $ref_signature_wo_url ne $origin_signature_wo_url || $new_signature_wo_url ne $origin_signature_wo_url ){
 		msgVerbose( "expected signature='$origin_signature'" );
 		foreach my $qi ( @{ $queue_item->chain() }){
 			msgVerbose( "restore_chain() restoring qi='".$qi->signature()."'" );
-			my $current_path = TTP::HTTP::Compare::Utils::page_signature_to_path( $current_signature );
-			my $origin_path = TTP::HTTP::Compare::Utils::page_signature_to_path( $queue_item->origin() || $queue_item->dest());
+			my $ref_path = TTP::HTTP::Compare::Utils::page_signature_to_path( $ref_signature );
+			my $new_path = TTP::HTTP::Compare::Utils::page_signature_to_path( $new_signature );
+			my $origin_path = TTP::HTTP::Compare::Utils::page_signature_to_path( $origin_signature );
 			# navigate by link
-			if( $qi->isLink() || $current_path ne $origin_path ){
-				if( $current_path ne $origin_path ){
+			if( $qi->isLink() || $ref_path ne $origin_path || $new_path ne $origin_path ){
+				if( $qi->isLink()){
+					$self->{_browsers}{ref}->navigate( $origin_path );
+					$self->{_browsers}{new}->navigate( $origin_path );
+				} else {
 					$self->{_browsers}{ref}->reset_spa({ path => $origin_path });
 					$self->{_browsers}{new}->reset_spa({ path => $origin_path });
 				}
-				$self->{_browsers}{ref}->navigate( $origin_path );
-				$self->{_browsers}{new}->navigate( $origin_path );
 			# navigate by click
 			} elsif( $qi->isClick()){
 				if( !$self->{_browsers}{ref}->click_by_xpath( $qi->xpath() )){
-					msgVerbose( "restore_chain() unable to click on ref for '".$qi->xpath()."'" );
+					msgWarn( "restore_chain() res.error unable to click on ref for '".$qi->xpath()."'" );
 					return false;
 				}
 				if( !$self->{_browsers}{new}->click_by_xpath( $qi->xpath() )){
-					msgVerbose( "restore_chain() unable to click on new for '".$qi->xpath()."'" );
+					msgWarn( "restore_chain() res.error unable to click on new for '".$qi->xpath()."'" );
 					return false;
 				}
 			} else {
-				msgWarn( "unexpected from='".$qi->from()."'" );
+				msgWarn( "restore_chain() res.error unexpected from='".$qi->from()."'" );
 				return false;
 			}
 			# wait for page ready
@@ -614,23 +629,23 @@ sub _restore_chain {
 				$cap = $self->{_browsers}{new}->wait_and_capture({ wait => false });
 				$cap->writeScreenshot( $queue_item, { dir => $self->{_roledir}, suffix => $label, subdir => 'restored' });
 			}
-			# check the new signature exiting this restore loop as soon as we have got the right signature on the both sites
-			$current_signature = $self->{_browsers}{ref}->signature({ label => 'current' });
-			my $new_signature = $self->{_browsers}{new}->signature({ label => 'new' });
-			if( $current_signature eq $origin_signature && TTP::HTTP::Compare::Utils::page_signature_are_same( $current_signature, $new_signature )){
-				msgVerbose( "restore_chain() got same signature '$origin_signature': fine" );
+			# check the got signature exiting this restore loop as soon as we have got the right signature on the both sites
+			$ref_signature = $self->{_browsers}{ref}->signature({ label => 'got ref' });
+			$new_signature = $self->{_browsers}{new}->signature({ label => 'got new' });
+			if( $ref_signature eq $origin_signature && TTP::HTTP::Compare::Utils::page_signature_are_same( $ref_signature, $new_signature )){
+				msgVerbose( "restore_chain() got expected signature '$origin_signature' and same on the two sites: fine" );
 				last;
 			}
 			# if we have landed on a signin page, what to do ?
 			# at least dump the performance logs ring
-			my $ref_signin = $self->_should_signin( $current_signature );
+			my $ref_signin = $self->_should_signin( $ref_signature );
 			my $new_signin = $self->_should_signin( $new_signature );
 			if( $ref_signin || $new_signin ){
 				my $relogin = $args->{relogin} // false;
 				if( $relogin ){
 					$self->{_browsers}{ref}->dump_performance_ring( $queue_item ) if $ref_signin;
 					$self->{_browsers}{new}->dump_performance_ring( $queue_item ) if $new_signin;
-					msgVerbose( "restore_chain() signin loop" );
+					msgWarn( "restore_chain() res.error signin loop" );
 					return false;
 				} else {
 					$self->_try_to_relogin( 'ref' ) if $ref_signin;
@@ -642,14 +657,14 @@ sub _restore_chain {
 	}
 
 	# check the result
-	if( $current_signature ne $origin_signature ){
-		msgVerbose( "restore_chain() unsuccessful (got signature='$current_signature')" );
+	if( $ref_signature ne $origin_signature ){
+		msgWarn( "restore_chain() res.error (got signature='$ref_signature')" );
 		return false;
 	} else {
-		msgVerbose( "restore_chain() success" );
+		msgVerbose( "restore_chain() res.success" );
 	}
 
-	return $self->{_browsers}{ref}->click_by_xpath( $queue_item->xpath());
+	return true;
 }
 
 # -------------------------------------------------------------------------------------------------
