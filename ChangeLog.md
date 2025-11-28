@@ -2,11 +2,11 @@
 
 ## ChangeLog
 
-### 4.25.7-rc.0
+### 4.25.7-rc.1
 
     Release date: 
 
-    - 
+    - http.pl compare: review Role->restore_chain() to make it clearer
 
 ### 4.25.6
 
