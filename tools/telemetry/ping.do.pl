@@ -12,6 +12,7 @@
 # @(-) --[no]alert-sms         send the alert by SMS [${alert_sms}]
 # @(-) --[no]alert-smtp        send the alert by SMTP [${alert_smtp}]
 # @(-) --[no]alert-tts         send the alert with text-to-speech [${alert_tts}]
+# @(-) --errors=<count>        override the configured errors count threshold [${errors}]
 # @(-)   telemetry options:
 # @(-) --metric=<name>         the metric to be published [${metric}]
 # @(-) --description=<string>  a one-line help description [${description}]
@@ -23,6 +24,7 @@
 # @(-) --textPrefix=<prefix>   prefix the metric name when publishing to the (text-based) Prometheus TextFile Collector system [${textPrefix}]
 # @(-) --prepend=<name=value>  label to be prepended to the telemetry metrics, may be specified several times or as a comma-separated list [${prepend}]
 # @(-) --append=<name=value>   label to be appended to the telemetry metrics, may be specified several times or as a comma-separated list [${append}]
+# @(-) --latency=<latency>     override the configured latency threshold [${latency}]
 #
 # TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
@@ -79,6 +81,16 @@ my $opt_textPrefix = $defaults->{textPrefix};
 my @opt_prepends = ();
 my @opt_appends = ();
 
+# some default constants
+my $Const = {
+	errors => {
+		threshold => 2
+	},
+	latency => {
+		threshold => 1000
+	}
+};
+
 # alert options
 my ( $opt_alert_file, $file_enabled ) = TTP::alertsWithFile();
 $defaults->{alert_file} = $opt_alert_file && $file_enabled ? 'yes' : 'no';
@@ -104,6 +116,9 @@ my ( $opt_alert_tts, $tts_enabled ) = TTP::alertsWithTts();
 $defaults->{alert_tts} = $opt_alert_tts && $tts_enabled ? 'yes' : 'no';
 my $opt_alert_tts_set = false;
 
+my $opt_errors = TTP::Telemetry::var([ 'ping', 'errors', 'alert', 'threshold' ]) // $Const->{errors}{threshold};
+$defaults->{errors} = $opt_errors;
+
 # telemetry options
 my $opt_publish_mqtt = TTP::Telemetry::Mqtt::getDefault();
 $defaults->{publish_mqtt} = $opt_publish_mqtt ? 'yes' : 'no';
@@ -117,15 +132,8 @@ my $opt_publish_text = TTP::Telemetry::Text::getDefault();
 $defaults->{publish_text} = $opt_publish_text ? 'yes' : 'no';
 my $opt_publish_text_set = false;
 
-# some default constants
-my $Const = {
-	errors => {
-		threshold => 2
-	},
-	latency => {
-		threshold => 1000
-	}
-};
+my $opt_latency = TTP::Telemetry::var([ 'ping', 'latency', 'alert', 'threshold' ]) // $Const->{latency}{threshold};
+$defaults->{latency} = $opt_latency;
 
 # -------------------------------------------------------------------------------------------------
 # Giving the output of the publication, manage the alert
@@ -137,8 +145,10 @@ sub alert {
 	# do we have alerts ?
 	my $enabled = TTP::Telemetry::var([ 'ping', $which, 'alert', 'enabled' ]) // true;
 	if( $enabled ){
-		my $threshold = TTP::Telemetry::var([ 'ping', $which, 'alert', 'threshold' ]) // $Const->{$which}{threshold};
-		if( $res->{value} >= $threshold ){
+		my $threshold = $which eq 'errors' ? $opt_errors : ( $which eq 'latency' ? $opt_latency : 'UNEXPECTED' );
+		if( $threshold eq 'UNEXPECTED' ){
+			msgWarn( "unexpected which='$which', giving up" );
+		} elsif( $res->{value} >= $threshold ){
 			my $file = $opt_alert_file_set && $opt_alert_file ? "--file" : "";
 			my $mms = $opt_alert_mms_set && $opt_alert_mms ? "--mms" : "";
 			my $mqtt = $opt_alert_mqtt_set && $opt_alert_mqtt ? "--mqtt" : "";
@@ -347,6 +357,7 @@ if( !GetOptions(
 		$opt_alert_tts = $value;
 		$opt_alert_tts_set = true;
 	},
+	"errors=i"			=> \$opt_errors,
 	# telemetry options
 	"publish-mqtt!"		=> sub {
 		my ( $name, $value ) = @_;
@@ -367,7 +378,8 @@ if( !GetOptions(
 	},
 	"textPrefix=s"		=> \$opt_textPrefix,
 	"prepend=s@"		=> \@opt_prepends,
-	"append=s@"			=> \@opt_appends )){
+	"append=s@"			=> \@opt_appends,
+	"latency=i"			=> \$opt_latency )){
 
 		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
@@ -389,6 +401,7 @@ msgVerbose( "got alert-mqtt='".( $opt_alert_mqtt ? 'true':'false' )."'" );
 msgVerbose( "got alert-sms='".( $opt_alert_sms ? 'true':'false' )."'" );
 msgVerbose( "got alert-smtp='".( $opt_alert_smtp ? 'true':'false' )."'" );
 msgVerbose( "got alert-tts='".( $opt_alert_tts ? 'true':'false' )."'" );
+msgVerbose( "got errors='$opt_errors'" );
 # telemetry options
 msgVerbose( "got metric='$opt_metric'" );
 msgVerbose( "got description='$opt_description'" );
@@ -402,6 +415,7 @@ msgVerbose( "got textPrefix='$opt_textPrefix'" );
 msgVerbose( "got prepends=[".join( ',', @opt_prepends )."]" );
 @opt_appends = split( /,/, join( ',', @opt_appends ));
 msgVerbose( "got appends=[".join( ',', @opt_appends )."]" );
+msgVerbose( "got latency='$opt_latency'" );
 
 # device is mandatory
 msgErr( "'--device' option is required, but is not specified" ) if !$opt_device;

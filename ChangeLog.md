@@ -7,6 +7,7 @@
     Release date: 
 
     - http.pl compare: exit the role after count of successive unable to restore chain
+    - telemetry.pl ping: accept -latency and -errors command-line arguments to override the configured thresholds
 
 ### 4.25.5
 
