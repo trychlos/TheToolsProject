@@ -8,6 +8,7 @@
 
     - http.pl compare: review Role->restore_chain() to make it clearer
     - http.pl compare: let the comparison continue when the page has been already seen
+    - http.pl compare: Browser->click_by_xpath() decrease the count of log lines while keeping the same detail level
 
 ### 4.25.6
 

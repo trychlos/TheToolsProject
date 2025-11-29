@@ -461,7 +461,7 @@ sub _url_ssid {
 sub click_by_xpath {
     my ( $self, $xpath ) = @_;
     TTP::stackTrace() if !$xpath;
-	msgVerbose( "click_by_xpath() which='".$self->which()."' xpath='$xpath'" );
+
     my $js = q{
       return (function(xp){
         function allDocs(rootDoc){
@@ -516,11 +516,11 @@ sub click_by_xpath {
 	$self->_performance_logs_drain();
     if( $self->exec_js_w3c_sync( $js, [ $xpath ] )){
         $self->_signature_clear();
-        msgVerbose( "click_by_xpath() success" );
+    	msgVerbose( "click_by_xpath() which='".$self->which()."' xpath='$xpath' success" );
         return true;
     }
 
-    msgWarn( "click_by_xpath() returning false" );
+    msgWarn( "click_by_xpath() which='".$self->which()."' xpath='$xpath' error" );
     return false;
 }
 
