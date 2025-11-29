@@ -80,7 +80,7 @@ sub _do_crawl {
 	# if already seen, go next
 	if( $self->{_result}{seen}{$key} ){
 		msgVerbose( "do_crawl() already seen, returning" );
-		return;
+		return true;
 	}
 
 	# increments before visiting so that all the dumped files are numbered correctly
@@ -128,7 +128,7 @@ sub _do_crawl {
 		if( $status_ref >= 400 && $status_ref == $status_new ){
 			msgVerbose( "same error code, so just cancel this path" );
 			$self->_record_result( $queue_item, $captureRef, $captureNew );
-			return;
+			return $continue;
 		}
 
 		# write HTML and screenshots if that must be handled

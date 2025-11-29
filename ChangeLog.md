@@ -7,6 +7,7 @@
     Release date: 
 
     - http.pl compare: review Role->restore_chain() to make it clearer
+    - http.pl compare: let the comparison continue when the page has been already seen
 
 ### 4.25.6
 
