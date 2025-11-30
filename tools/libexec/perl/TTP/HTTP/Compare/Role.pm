@@ -605,15 +605,15 @@ sub _restore_chain {
 			# navigate by click
 			} elsif( $qi->isClick()){
 				if( !$self->{_browsers}{ref}->click_by_xpath( $qi->xpath() )){
-					msgWarn( "restore_chain() res.error unable to click on ref for '".$qi->xpath()."'" );
+					msgWarn( "restore_chain() result=error: unable to click on ref for '".$qi->xpath()."'" );
 					return false;
 				}
 				if( !$self->{_browsers}{new}->click_by_xpath( $qi->xpath() )){
-					msgWarn( "restore_chain() res.error unable to click on new for '".$qi->xpath()."'" );
+					msgWarn( "restore_chain() result=error: unable to click on new for '".$qi->xpath()."'" );
 					return false;
 				}
 			} else {
-				msgWarn( "restore_chain() res.error unexpected from='".$qi->from()."'" );
+				msgWarn( "restore_chain() result=error: unexpected from='".$qi->from()."'" );
 				return false;
 			}
 			# wait for page ready
@@ -645,7 +645,7 @@ sub _restore_chain {
 				if( $relogin ){
 					$self->{_browsers}{ref}->dump_performance_ring( $queue_item ) if $ref_signin;
 					$self->{_browsers}{new}->dump_performance_ring( $queue_item ) if $new_signin;
-					msgWarn( "restore_chain() res.error signin loop" );
+					msgWarn( "restore_chain() result=error: signin loop" );
 					return false;
 				} else {
 					$self->_try_to_relogin( 'ref' ) if $ref_signin;
@@ -658,10 +658,10 @@ sub _restore_chain {
 
 	# check the result
 	if( $ref_signature ne $origin_signature ){
-		msgWarn( "restore_chain() res.error (got signature='$ref_signature')" );
+		msgWarn( "restore_chain() result=error: got signature='$ref_signature'" );
 		return false;
 	} else {
-		msgVerbose( "restore_chain() res.success" );
+		msgVerbose( "restore_chain() success" );
 	}
 
 	return true;
