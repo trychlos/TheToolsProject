@@ -10,6 +10,7 @@
     - http.pl compare: let the comparison continue when the page has been already seen
     - http.pl compare: Browser->click_by_xpath() decrease the count of log lines while keeping the same detail level
     - http.pl compare: review role->restore_chain() verbose messages
+    - Fix http_compare JSON schema
 
 ### 4.25.6
 
