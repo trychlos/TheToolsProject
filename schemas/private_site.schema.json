@@ -59,6 +59,20 @@
                     }
                 }
             }
+        },
+        "telemetry": {
+            "description_array": [
+                "The credentials to be used to access the telemetry server when an authorization is required."
+            ],
+            "type": "object",
+            "properties": {
+                "patternProperties": {
+                    "^.*$": {
+                        "description": "The account, the value being the corresponding password.",
+                        "type": "string"
+                    }
+                }
+            }
         }
     }
 }

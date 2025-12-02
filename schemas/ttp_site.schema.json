@@ -1648,16 +1648,6 @@
                     ],
                     "type": "object",
                     "properties": {
-                        "server": {
-                            "description": "The configuration of the telemetry server.",
-                            "type": "object",
-                            "properties": {
-                                "url": {
-                                    "description": "The URL of the Prometheus server",
-                                    "type": "string"
-                                }
-                            }
-                        },
                         "ping": {
                             "description_array": [
                                 "The 'telemetry.pl ping' verb let us ping any device, providing an errors count and a latency.",
@@ -1764,6 +1754,16 @@
                                             }
                                         }
                                     }
+                                }
+                            }
+                        },
+                        "server": {
+                            "description": "The configuration of the telemetry server.",
+                            "type": "object",
+                            "properties": {
+                                "url": {
+                                    "description": "The URL of the Prometheus serveri API.",
+                                    "type": "string"
                                 }
                             }
                         },

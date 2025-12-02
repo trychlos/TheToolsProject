@@ -29,7 +29,32 @@ use Data::Dumper;
 
 use TTP;
 use TTP::Constants qw( :all );
+use TTP::Credentials;
 use TTP::Message qw( :all );
+
+# -------------------------------------------------------------------------------------------------
+# get the configured password associated to the provided account
+# (I):
+# - the required account
+#   if let undefined, then returns the first found
+# (O):
+# - an array ( username, password )
+#   the username (resp. the password) can be undef if:
+#   > the provided account has not been found
+#   > no account has been provided, and no account has been configured.
+
+sub getCredentials {
+	my ( $account ) = @_;
+	my $password = undef;
+	my $credentials = TTP::Credentials::get([ 'telemetry' ]);
+	if( $credentials ){
+		$account = ( sort keys %{$credentials} )[0] if !$account;
+		$password = $credentials->{$account} if $account;
+	} else {
+		msgWarn( "telemetry credentials are not configured" );
+	}
+	return ( $account, $password );
+}
 
 # -------------------------------------------------------------------------------------------------
 # get a configuration value

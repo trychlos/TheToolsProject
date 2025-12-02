@@ -41,8 +41,10 @@ use File::Basename;
 use File::Spec;
 use HTML::Parser;
 use HTTP::Request;
+use JSON;
 use LWP::UserAgent;
 use Path::Tiny;
+use URI;
 use URI::Split qw( uri_split uri_join );
 
 use TTP::Telemetry;
@@ -435,6 +437,73 @@ sub _http_parse_metrics {
 
 sub doListServer {
 	msgOut( "listing metrics published on the Prometheus server..." );
+	my $metrics_count = 0;
+	my $metrics = {};
+	my ( $account, $password ) = TTP::Telemetry::getCredentials();
+	if( $account && $password ){
+		msgVerbose( "account='$account' password is set" );
+		my $url = TTP::Telemetry::var([ 'server', 'url' ]);
+		if( $url ){
+			# get the host and path parts, adding the query part
+			my ( $scheme, $auth, $path, $query, $frag ) = uri_split( $url );
+			$url = uri_join( $scheme, $auth, "$path/query" );
+			my $uri = URI->new( $url );
+			$uri->query_form( query => '{__name__=~".+"}' );
+			my $ua = LWP::UserAgent->new();
+			my $request = HTTP::Request->new( GET => $uri );
+			$request->authorization_basic( $account, $password );
+			msgVerbose( "requesting '$url'" );
+			my $answer = $ua->request( $request );
+			if( $answer->is_success ){
+				$metrics = _server_parse( $answer->decoded_content );
+				#print STDERR "metrics ".Dumper( $metrics );
+				foreach my $name ( sort keys %{$metrics} ){
+					$metrics_count += 1;
+					print " m=$metrics_count: $name last_pushed=$metrics->{$name}{stamp}, last_value=$metrics->{$name}{value}".EOL;
+				}
+			} else {
+				msgVerbose( TTP::chompDumper( $answer ));
+				msgErr( "Code: ".$answer->code." MSG: ".$answer->decoded_content );
+			}
+		} else {
+			msgErr( "telemetry server URL is not configured" );
+		}
+	} else {
+		msgWarn( "unable to get suitable account and password to access the telemetry server" );
+	}
+	if( TTP::errs()){
+		msgErr( "NOT OK" );
+	} else {
+		msgOut( "$metrics_count metric(s) found" );
+	}
+}
+
+# decode the JSON answer from the server
+# returns a hash:
+#   <metric_name> => {
+#      labels => [ name=value ],
+#      value => <value>
+#   }
+
+sub _server_parse {
+	my ( $answer ) = @_;
+	my $json = decode_json( $answer );
+	my $metrics = {};
+	foreach my $it ( @{$json->{data}{result}} ){
+		my $name;
+		my $labels = [];
+		foreach my $key ( sort keys %{$it->{metric}} ){
+			if( $key eq "__name__" ){
+				$name = $it->{metric}{$key};
+			} else {
+				my $v = $it->{metric}{$key};
+				push( @{$labels}, "$key=\"$v\"" ) if $v;
+			}
+		}
+		my $metric = $name."{".join( ",", @{$labels} )."}";
+		$metrics->{$metric} = { value => $it->{value}->[1], stamp => $it->{value}->[0] };
+	}
+	return $metrics;
 }
 
 # -------------------------------------------------------------------------------------------------

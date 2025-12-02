@@ -11,6 +11,9 @@
     - http.pl compare: Browser->click_by_xpath() decrease the count of log lines while keeping the same detail level
     - http.pl compare: review role->restore_chain() verbose messages
     - Fix http_compare JSON schema
+    - telemetry.pl list: improve HTTP parsing, remove MQTT option
+    - telemetry.pl list: implement (local) text-based telemetry list
+    - telemetry.pl list: implement server telemetry list, updating site and private schemas accordingly
 
 ### 4.25.6
 
