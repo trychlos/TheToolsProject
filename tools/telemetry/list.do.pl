@@ -7,9 +7,11 @@
 # @(-) --[no]http              limit to metrics published on the PushGateway [${http}]
 # @(-) --[no]http-groups       group the PushGateway metrics [${httpGroups}]
 # @(-) --[no]http-compare      compare the grouped and ungrouped results from the PushGateway [${httpCompare}]
-# @(-) --[no]text              limit to metrics published on the TextFile collector [${text}]
+# @(-) --[no]text              limit to metrics published on the local TextFile collector [${text}]
 # @(-) --[no]server            get available metrics from the server [${server}]
 # @(-) --limit=<limit>         only list first <limit> metric [${limit}]
+#
+# @(@) Note 1: Grouped PushGateway metrics exhibit the last pushed timestamp, while ungrouped don't. Both display the last pushed value.
 #
 # TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
@@ -35,9 +37,12 @@ use warnings;
 
 use Array::Utils qw( :all );
 use Data::Dumper;
+use File::Basename;
+use File::Spec;
 use HTML::Parser;
 use HTTP::Request;
 use LWP::UserAgent;
+use Path::Tiny;
 use URI::Split qw( uri_split uri_join );
 
 use TTP::Telemetry;
@@ -173,14 +178,14 @@ sub doListHttp {
 			msgErr( "PushGateway HTTP URL is not configured" );
 		}
 	} else {
-		msgErr( "HTTP-based PushGateway is disabled by configuration" );
+		msgWarn( "HTTP-based PushGateway is disabled by configuration" );
 	}
 	if( TTP::errs()){
 		msgErr( "NOT OK" );
 	} elsif( $opt_http_groups ){
-		msgOut( "$metrics_count metrics found (in $groups_count groups)" );
+		msgOut( "$metrics_count metric(s) found (in $groups_count group(s))" );
 	} else {
-		msgOut( "$metrics_count metrics found" );
+		msgOut( "$metrics_count metric(s) found" );
 	}
 }
 
@@ -426,16 +431,51 @@ sub _http_parse_metrics {
 
 # -------------------------------------------------------------------------------------------------
 # get metrics from the server
+# getting metrics from the server requires an authorized account
 
 sub doListServer {
 	msgOut( "listing metrics published on the Prometheus server..." );
 }
 
 # -------------------------------------------------------------------------------------------------
-# list metrics published through the TextFile Collector
+# list metrics published through the local TextFile Collector
 
 sub doListText {
-	msgOut( "listing metrics published on the MQTT bus..." );
+	msgOut( "listing metrics published on the local TextFile collector..." );
+	my $metrics_count = 0;
+	my $enabled = TTP::Telemetry::Text::isEnabled();
+	if( $enabled ){
+		my $dir = TTP::Telemetry::Text::dropDir();
+		if( $dir ){
+			msgVerbose( "got Text-based telemetry publication drop directory '$dir'" );
+			my $spec = File::Spec->catfile( $dir, "*.prom" );
+			my @files = glob( $spec );
+			foreach my $it ( @files ){
+				my $name = basename( $it );
+				$name =~ s/\.prom$//;
+				my @lines = path( $it )->lines_utf8;
+				# after having removed comment and empty lines, all remainings are published metrics
+				foreach my $line ( grep { !/^#/ }  @lines ){
+					$line =~ s/^\s*//;
+					$line =~ s/\s*$//;
+					if( $line ){
+						$metrics_count += 1;
+						my @w = split( /\s+/, $line );
+						print " m=$metrics_count $w[0] last_value=$w[1]".EOL;
+					}
+				}
+			}
+		} else {
+			msgErr( "unable to get the Text-based publication drop directory" );
+		}
+	} else {
+		msgWarn( "Text-based telemetry publication is disabled by configuration" );
+	}
+	if( TTP::errs()){
+		msgErr( "NOT OK" );
+	} else {
+		msgOut( "$metrics_count metric(s) found" );
+	}
 }
 
 # =================================================================================================
@@ -473,7 +513,7 @@ msgVerbose( "got text='".( $opt_text ? 'true':'false' )."'" );
 msgVerbose( "got server='".( $opt_server ? 'true':'false' )."'" );
 msgVerbose( "got limit='$opt_limit'" );
 
-msgWarn( "at least one of '--http', '--http-compare', '--text' or '--server' options should be specified" ) if !$opt_mqtt && !$opt_http && !$opt_text && !$opt_server;
+msgWarn( "at least one of '--http', '--http-compare', '--text' or '--server' options should be specified" ) if !$opt_http && !$opt_http_compare && !$opt_text && !$opt_server;
 
 if( !TTP::errs()){
 	doCompareHttp() if $opt_http_compare;
