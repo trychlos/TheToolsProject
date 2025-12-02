@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.25.7-rc.2
+### 4.25.7
 
-    Release date: 
+    Release date: 2025-12- 2
 
     - http.pl compare: review Role->restore_chain() to make it clearer
     - http.pl compare: let the comparison continue when the page has been already seen
@@ -781,4 +781,4 @@
 
 ---
 P. Wieser
-- Last updated on 2025, Nov. 28th
+- Last updated on 2025, Dec. 2nd
