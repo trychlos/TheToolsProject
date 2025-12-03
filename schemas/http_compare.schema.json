@@ -244,8 +244,8 @@
                             "type": "boolean",
                             "default": false
                         },
-                        "restore_chain_last": {
-                            "description": "Count of successive errors which cancel the role comparison.",
+                        "successive_last": {
+                            "description": "Count of successive same errors which cancel the role comparison.",
                             "type": "integer",
                             "default": 10
                         },

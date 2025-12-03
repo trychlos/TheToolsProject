@@ -83,7 +83,7 @@ use constant {
 		"\.xls\$"
 	],
 	DEFAULT_CRAWL_BY_CLICK_INTERMEDIATE_SCREENSHOTS => false,
-	DEFAULT_CRAWL_BY_CLICK_RESTORE_CHAIN_LAST => 10,
+	DEFAULT_CRAWL_BY_CLICK_SUCCESSIVE_LAST => 10,
 	DEFAULT_CRAWL_BY_CLICK_TEXT_DENY_PATTERNS => [
 	],
 	DEFAULT_CRAWL_BY_CLICK_XPATH_DENY_PATTERNS => [
@@ -778,17 +778,17 @@ sub confCrawlByClickIntermediateScreenshots {
 }
 
 # ------------------------------------------------------------------------------------------------
-# Returns the configured count of falsy restore chain which cancel the role
+# Returns the configured count of successive errors which cancel the role
 # (I):
 # - none
 # (O):
-# - returns the configured count of falsy restore chain
+# - returns the configured count of falsy successive errors
 
-sub confCrawlByClickRestoreChainLast {
+sub confCrawlByClickSuccessiveLast {
 	my ( $self ) = @_;
 
-	my $count = $self->var([ 'crawl', 'by_click', 'restore_chain_last' ]);
-	$count = DEFAULT_CRAWL_BY_CLICK_RESTORE_CHAIN_LAST if !defined $count;
+	my $count = $self->var([ 'crawl', 'by_click', 'successive_last' ]);
+	$count = DEFAULT_CRAWL_BY_CLICK_SUCCESSIVE_LAST if !defined $count;
 
 	return $count;
 }

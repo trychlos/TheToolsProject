@@ -7,6 +7,7 @@
     Release date: 
 
     - http.pl compare: improve enqueing logging, adding item text
+    - http.pl compare: extend cancel of a role on successive errors to all errors
 
 ### 4.25.7
 

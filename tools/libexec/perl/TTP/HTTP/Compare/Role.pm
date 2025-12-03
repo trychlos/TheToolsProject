@@ -156,25 +156,27 @@ sub _do_crawl {
 		$self->_handle_forms( $self->conf()->confForms());
 
 		# reset count of successive errors
-		$self->{_result}{restore_chain} = 0;
+		$self->successive_errors_reset();
 
 	} elsif( !defined( $captureRef ) && !defined( $captureNew ) && !defined( $path )){
 		msgVerbose( "do_crawl() all values are undef, just skip" );
 		if( $reason ){
 			$self->{_result}{cancelled}{$reason} //= [];
 			push( @{$self->{_result}{cancelled}{$reason}}, $queue_item );
-			$continue = $self->_inc_error( $reason );
+			$continue = $self->successive_errors_inc( $reason );
 		} else {
 			# a reason is mandatory, so this is unexpected
 			msgWarn( "do_crawl() reason is not defined, this is NOT expected" );
 			$self->{_result}{unexpected}{no_reason} //= [];
 			push( @{$self->{_result}{unexpected}{no_reason}}, $queue_item );
+			$continue = $self->successive_errors_inc( "unexpected_no_reason" );
 		}
 
 	} else {
 		msgWarn( "do_crawl() at least one of captureRef, captureNew or path is not defined, this is NOT expected" );
 		$self->{_result}{unexpected}{not_all_undef} //= [];
 		push( @{$self->{_result}{unexpected}{not_all_undef}}, $queue_item );
+			$continue = $self->successive_errors_inc( "unexpected_not_all_undef" );
 	}
 
 	# try to print an intermediate result each 100 visits
@@ -457,25 +459,6 @@ sub _hash {
 }
 
 # -------------------------------------------------------------------------------------------------
-# (I):
-# - the error reason when a queue item cannot be treated
-# (O):
-# - whether we can continue with this role: true|false
-
-sub _inc_error {
-    my ( $self, $reason ) = @_;
-
-	my $continue = true;
-
-	if( $reason eq "restore_chain" ){
-		$self->{_result}{restore_chain} += 1;
-		$continue = false if $self->{_result}{restore_chain} >= $self->conf()->confCrawlByClickRestoreChainLast();
-	}
-
-	return $continue;
-}
-
-# -------------------------------------------------------------------------------------------------
 # Initialize the queue items by queue signatures, or by the routes
 # - routes is a list of initial routes as strings
 # - signatures is a list of initial queue chains, as an array of objects
@@ -742,6 +725,40 @@ sub _should_signin {
 }
 
 # -------------------------------------------------------------------------------------------------
+# (I):
+# - the error reason when a queue item cannot be treated
+# (O):
+# - whether we can continue with this role: true|false
+
+sub successive_errors_inc {
+    my ( $self, $reason ) = @_;
+
+	my $continue = true;
+
+	$self->{_result}{successive}{$reason} //= 0;
+	$self->{_result}{successive}{$reason} += 1;
+	$continue = false if $self->{_result}{successive}{$reason} >= $self->conf()->confCrawlByClickSuccessiveLast();
+
+	return $continue;
+}
+
+# -------------------------------------------------------------------------------------------------
+# Reset the count of successive errors each time a queue item is successfullly dealt with
+# (I):
+# - nothing
+# (O):
+# - nothing
+
+sub successive_errors_reset {
+    my ( $self ) = @_;
+
+	# delete the whole key
+	delete $self->{_result}{successive};
+	# and recreate it
+	$self->{_result}{successive} = {};
+}
+
+# -------------------------------------------------------------------------------------------------
 # try to print an intermediate result for the role
 # each 100 visits
 # (I):
@@ -881,7 +898,7 @@ sub doCompare {
 	$self->{_result}{cancelled} = {};		# list of cancelled queue items
 	$self->{_result}{unexpected} = {};		# list of unexpected errors
 	$self->{_result}{clicked} = [];			# the list of clicked events for the current url
-	$self->{_result}{restore_chain} = 0;	# the count of successive restore_chain errors
+	$self->{_result}{successive} = {};		# count of successive errors
 
 	# instanciates our internal browsers
 	# errors here end the program (most often a chromedrive version issue or a path mismatch)
@@ -926,7 +943,15 @@ sub doCompare {
 		# and crawl until the queue is empty
 		while ( @{$self->{_queue}} ){
 			my $continue = $self->_do_crawl( shift @{$self->{_queue}} );
-			last if $self->_max_reached() || !$continue;
+			if( $continue ){
+				if( $self->_max_reached()){
+					msgVerboset( "cancelling '".$self->name()."' role crawl as due to max limit reached" );
+					last;
+				}
+			} else {
+				msgWarn( "cancelling '".$self->name()."' role crawl as due to max successive errors reached" );
+				last;
+			}
 		}
 	}
 
