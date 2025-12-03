@@ -135,8 +135,8 @@ sub printSummary {
 			WORKLOAD => $opt_workload
 		}
 	});
-	# and to stdout (at last) which sends the summary to the enclosing log
-	print $stdout;
+	# and to stdout (at last) which sends the summary to the daily log
+	msgOut( $stdout );
 }
 
 # =================================================================================================
