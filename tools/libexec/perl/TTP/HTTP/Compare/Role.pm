@@ -156,27 +156,27 @@ sub _do_crawl {
 		$self->_handle_forms( $self->conf()->confForms());
 
 		# reset count of successive errors
-		$self->successive_errors_reset();
+		$self->_successive_errors_reset();
 
 	} elsif( !defined( $captureRef ) && !defined( $captureNew ) && !defined( $path )){
 		msgVerbose( "do_crawl() all values are undef, just skip" );
 		if( $reason ){
 			$self->{_result}{cancelled}{$reason} //= [];
 			push( @{$self->{_result}{cancelled}{$reason}}, $queue_item );
-			$continue = $self->successive_errors_inc( $reason );
+			$continue = $self->_successive_errors_inc( $reason );
 		} else {
 			# a reason is mandatory, so this is unexpected
 			msgWarn( "do_crawl() reason is not defined, this is NOT expected" );
 			$self->{_result}{unexpected}{no_reason} //= [];
 			push( @{$self->{_result}{unexpected}{no_reason}}, $queue_item );
-			$continue = $self->successive_errors_inc( "unexpected_no_reason" );
+			$continue = $self->_successive_errors_inc( "unexpected_no_reason" );
 		}
 
 	} else {
 		msgWarn( "do_crawl() at least one of captureRef, captureNew or path is not defined, this is NOT expected" );
 		$self->{_result}{unexpected}{not_all_undef} //= [];
 		push( @{$self->{_result}{unexpected}{not_all_undef}}, $queue_item );
-			$continue = $self->successive_errors_inc( "unexpected_not_all_undef" );
+			$continue = $self->_successive_errors_inc( "unexpected_not_all_undef" );
 	}
 
 	# try to print an intermediate result each 100 visits
@@ -706,6 +706,26 @@ sub _restore_path {
 }
 
 # -------------------------------------------------------------------------------------------------
+# setup a new browser at role initialisation, and when a site needs to relogin
+# (I):
+# - the which site 'ref'|'new'
+# (O):
+# - nothing
+
+sub _setup_browser {
+	my ( $self, $which ) = @_;
+
+	my $browser = TTP::HTTP::Compare::Browser->new( $self->ep(), $self, $which, $self->{_args}{args} );
+	if( !$browser ){
+		msgErr( "unable to instanciate a browser driver on '$which' site" );
+	} else {
+		msgVerbose( "browser '$which' successfully instanciated" );
+	}
+
+	return $browser;
+}
+
+# -------------------------------------------------------------------------------------------------
 # whether we have (unexpectedly) landed on a signin page
 # (I):
 # - the page signature
@@ -730,7 +750,7 @@ sub _should_signin {
 # (O):
 # - whether we can continue with this role: true|false
 
-sub successive_errors_inc {
+sub _successive_errors_inc {
     my ( $self, $reason ) = @_;
 
 	my $continue = true;
@@ -749,7 +769,7 @@ sub successive_errors_inc {
 # (O):
 # - nothing
 
-sub successive_errors_reset {
+sub _successive_errors_reset {
     my ( $self ) = @_;
 
 	# delete the whole key
@@ -776,6 +796,7 @@ sub _try_to_print_intermediate_results {
 
 # -------------------------------------------------------------------------------------------------
 # try to relogin on the site if we have got the signin page
+# when relogging in, also reinstanciate the browser
 # (I):
 # - the which site 'ref'|'new'
 # - the current queue item
@@ -787,6 +808,11 @@ sub _try_to_relogin {
 	my ( $self, $which, $queue_item ) = @_;
 
 	msgVerbose( "trying to re-login" );
+	# first re-instanciate the attached browser
+	msgVerbose( "undefining '$which' browser" );
+	$self->{_browsers}{$which} = undef;
+	$self->{_browsers}{$which} = $self->_setup_browser( $which );
+	# and re log-in, trying to keep the requested path
 	my $loginObj = TTP::HTTP::Compare::Login->new( $self->ep(), $self->conf());
 	if( !TTP::errs() && $loginObj->isDefined() && $self->_wants_login()){
 		$self->{_logins}{$which} = $loginObj->logIn( $self->{_browsers}{$which}, $self->_username(), $self->_password());
@@ -884,6 +910,9 @@ sub doCompare {
 	my ( $self, $rootdir, $args ) = @_;
 	$args //= {};
 
+	# initial parameters
+	$self->{_args} = {};
+	$self->{_args}{args} = $args;
 	# the output result
 	$self->{_roledir} = File::Spec->catdir( $rootdir, "byRole", $self->name());
 	$self->{_result} = {};
@@ -906,15 +935,9 @@ sub doCompare {
 	# errors here end the program (most often a chromedrive version issue or a path mismatch)
 	if( !TTP::errs()){
 		$self->{_browsers} = {
-			ref => TTP::HTTP::Compare::Browser->new( $self->ep(), $self, 'ref', $args ),
-			new => TTP::HTTP::Compare::Browser->new( $self->ep(), $self, 'new', $args )
+			ref => $self->_setup_browser( 'ref' ),
+			new => $self->_setup_browser( 'new' )
 		};
-		if( !$self->{_browsers}{ref} ){
-			msgErr( "unable to instanciate a browser driver on 'ref' site" );
-		}
-		if( !$self->{_browsers}{new} ){
-			msgErr( "unable to instanciate a browser driver on 'new' site" );
-		}
 	}
 
 	# do we must log-in the sites ?
