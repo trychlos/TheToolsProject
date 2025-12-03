@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - http.pl compare: improve enqueing logging, adding item text
 
 ### 4.25.7
 

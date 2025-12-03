@@ -297,6 +297,16 @@ sub _enqueue_clickables {
 	my $targets = $capture->browser()->clickable_discover_targets_xpath();
 	my $count = 0;
 	#print STDERR "targets: ".Dumper( $targets );
+	# - targets are like:
+	#   {
+	#     "xpath": "//*[@id=\"menu\"]//a[3]",
+	#     "text": "Mes rapports et attestations :",
+	#     "href": "/bo/44375/14450",
+	#     "kind": "a",
+	#     "onclick": "",
+	#     "docKey": "top" | "iframe[1]:/path",
+	#     "frameSrc": "/path/of/iframe"
+	#   }
     for my $a ( @{$targets} ){
 		next if !$self->_enqueue_clickables_href_allowed( $a->{href} );
 		next if !$self->_enqueue_clickables_text_allowed( $a->{text} );
@@ -307,7 +317,7 @@ sub _enqueue_clickables {
 		#print STDERR "a ".Dumper( $a->{chain} );
 		my $item = TTP::HTTP::Compare::QueueItem->new( $self->ep(), $self->conf(), $a );
 		push( @{$self->{_queue}}, $item );
-		msgVerbose( "enqueue_clickables() enqueuing '".$item->signature()."'" );
+		msgVerbose( "enqueue_clickables() enqueuing '".$item->signature()."' (text='$a->{text}')" );
 		msgVerbose( "enqueue_clickables()   with chain [ '".join( "', '", @{$item->chain_signatures()} )."' ]" );
 		#$item->dump({ prefix => "enqueuing" });
 		$count += 1;
