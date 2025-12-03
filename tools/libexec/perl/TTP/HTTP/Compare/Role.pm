@@ -641,8 +641,8 @@ sub _restore_chain {
 					msgWarn( "restore_chain() result=error: signin loop" );
 					return false;
 				} else {
-					$self->_try_to_relogin( 'ref' ) if $ref_signin;
-					$self->_try_to_relogin( 'new' ) if $new_signin;
+					$self->_try_to_relogin( 'ref', $qi ) if $ref_signin;
+					$self->_try_to_relogin( 'new', $qi ) if $new_signin;
 					return $self->_restore_chain( $queue_item, { relogin => true });
 				}
 			}
@@ -778,19 +778,21 @@ sub _try_to_print_intermediate_results {
 # try to relogin on the site if we have got the signin page
 # (I):
 # - the which site 'ref'|'new'
+# - the current queue item
 # (O):
 # - true if this re-login has been successful (so wants to re-run the restore chain)
 # - false else (just continue as we can)
 
 sub _try_to_relogin {
-	my ( $self, $which ) = @_;
+	my ( $self, $which, $queue_item ) = @_;
 
 	msgVerbose( "trying to re-login" );
 	my $loginObj = TTP::HTTP::Compare::Login->new( $self->ep(), $self->conf());
 	if( !TTP::errs() && $loginObj->isDefined() && $self->_wants_login()){
 		$self->{_logins}{$which} = $loginObj->logIn( $self->{_browsers}{$which}, $self->_username(), $self->_password());
 		if( $self->{_logins}{$which} ){
-			$self->{_browsers}{$which}->reset_spa();
+			my $path = $queue_item->path();
+			$self->{_browsers}{$which}->reset_spa({ path => $path });
 			msgVerbose( "successful re-login" );
 		} else {
 			msgErr( "unable to log-in/authenticate on '$which' site" );

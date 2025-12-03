@@ -283,7 +283,16 @@ sub path {
 
 	my $path = undef;
 
-	if( $self->isLink()){
+	if( $self->isClick()){
+		my $origin = $self->origin();
+		my @parts = split( /\|/, $origin );
+		if( $parts[0] =~ m/^top:/ ){
+			my $top = substr( $parts[0], 4 );
+			my $uri = URI->new( $top );
+			$path = $uri->path;
+		}
+
+	} elsif( $self->isLink()){
 		$path = $self->{_hash}{path} // '/';
 	}
 

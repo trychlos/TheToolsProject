@@ -192,7 +192,7 @@ sub isDefined {
 # - returns the session cookie
 
 sub logIn {
-	my ( $self, $browser, $username, $password  ) = @_;
+	my ( $self, $browser, $username, $password ) = @_;
 
 	my $url = $browser->urlBase();
 	my $session_cookie = undef;
