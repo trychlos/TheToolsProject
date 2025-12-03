@@ -9,6 +9,7 @@
     - http.pl compare: improve enqueing logging, adding item text
     - http.pl compare: extend cancel of a role on successive errors to all errors
     - http.pl compare: try to keep on the requested path when trying to re-login
+    - http.pl compare: re-instanciate a new browser on re-login
 
 ### 4.25.7
 
