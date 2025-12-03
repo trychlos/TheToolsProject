@@ -2,7 +2,7 @@
 
 ## ChangeLog
 
-### 4.25.8-rc.0
+### 4.25.8-rc.1
 
     Release date: 
 
