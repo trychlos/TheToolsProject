@@ -2,7 +2,7 @@
 
 ## ChangeLog
 
-### 4.25.8-rc.1
+### 4.26.0-rc.0
 
     Release date: 
 
@@ -11,6 +11,7 @@
     - http.pl compare: try to keep on the requested path when trying to re-login
     - http.pl compare: re-instanciate a new browser on re-login
     - services.pl workload-summary: make sure the summary is outputed to stdout *and* logged
+    - services.pl workload-summary: extend to manage each execution report individually, thus bumping minor candidate release number
 
 ### 4.25.7
 

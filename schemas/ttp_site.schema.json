@@ -1897,10 +1897,25 @@
                         "- <RECIPIENTS> a comma-separated list of email recipients,",
                         "- <SUBJECT> a label title,",
                         "- <TEXTFNAME> the path to a temporary file which contains the workload summary,",
-                        "- <WORKLOAD> the workload name."
+                        "- <WORKLOAD> the workload name.",
+                        "The default command (smtp.pl send) considers the summary as a single piece of output, and sends it to the specified recipients.",
+                        "It is nonetheless possible to consider instead the summary as an array of separate items, each of them being considered separatly.",
+                        "When considered as separate items, command(s) MUST be specified and cannot rely on the default.",
+                        "They will be applied to each and every received workload execution.",
+                        "They will have access to additional macros:",
+                        "- <COMMAND> the item's command,",
+                        "- <STARTED> the item's start date and time as 'YYYY-MM-DD HH:MI:SS.CC',",
+                        "- <ENDED> the item's end date and time as 'YYYY-MM-DD HH:MI:SS.CC',",
+                        "- <RC> the item's return code.",
+                        "If no command is provided, the default 'smtp.pl send' applies and IGNORES the 'asSeparateItems' indication."
                     ],
                     "type": "object",
                     "properties": {
+                        "asSeparateItems": {
+                            "description": "Whether to consider the summary as a single piece of output (when true), or as separate items (when false).",
+                            "type": "boolean",
+                            "default": "false"
+                        },
                         "command": {
                             "description": "The command to be run to publish a workload summary. Freely intercheangeable with 'commands'."
                         },
