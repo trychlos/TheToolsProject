@@ -31,7 +31,9 @@ use warnings;
 use Data::Dumper;
 use File::Path qw( make_path );
 use File::Spec;
+use JSON;
 use List::Util qw( any );
+use Path::Tiny qw( path );
 use POSIX qw( strftime );
 use Scalar::Util qw( blessed );
 use Test::More;
@@ -706,23 +708,44 @@ sub _restore_path {
 }
 
 # -------------------------------------------------------------------------------------------------
-# setup a new browser at role initialisation, and when a site needs to relogin
+# setup and starts a new daemon to manage a browser, its driver, the login operation, and all interactions
 # (I):
 # - the which site 'ref'|'new'
 # (O):
-# - the newly instanciated TTP::HTTP::Compare::Browser object
+# - the result of start execution, including some 'setup' data
 
-sub _setup_browser {
-	my ( $self, $which ) = @_;
+sub _setup_daemon {
+	my ( $self, $which, $port ) = @_;
 
-	my $browser = TTP::HTTP::Compare::Browser->new( $self->ep(), $self, $which, $self->{_args}{args} );
-	if( !$browser ){
-		msgErr( "unable to instanciate a browser driver on '$which' site" );
+	# build a temporary json file which acts as the daemon configuration
+	my $json = TTP::getTempFileName({ suffix => "_$which" });
+	my $content = {
+		enabled => true,
+		execPath => $self->{_args}{worker},
+		listeningPort => $port,
+		listeningInterval => 500,
+		messagingInterval => -1,
+		httpingInterval => -1,
+		textingInterval => -1
+	};
+	path( $json )->spew_utf8( encode_json( $content ));
+
+	# build and execute the command to start the daemon
+	my $command = "daemon.pl start --json $json --role ".$self->name()." --which $which --verbose";
+	my $res = TTP::commandExec( $command );
+
+	# gather some useful properties (or advertise of an error)
+	if( $res->{success} ){
+		$res->{setup} = {
+			json => $json,
+			port => $port,
+			which => $which
+		};
 	} else {
-		msgVerbose( "browser '$which' successfully instanciated" );
+		msgErr( "unable to start daemon (json='$json' port='$port' which='$which')" );
 	}
 
-	return $browser;
+	return $res;
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -888,6 +911,7 @@ sub conf {
 # -------------------------------------------------------------------------------------------------
 # Seems that the DESTRUCT Perl phase, which should run the DESTROY sub of the classes, doesn't work
 # very well - just call it before while still in RUN phase
+# Must make sure that all threads are terminated.
 
 sub destroy {
     my ( $self ) = @_;
@@ -898,20 +922,25 @@ sub destroy {
 
 # -------------------------------------------------------------------------------------------------
 # Compare the provided URLs for the role.
+# Starting with v4.26.0, role comparison between 'ref' and 'new' sites relies on a multi-threads code.
+# A thread is created for each of 'ref' and 'new' browser when starting the role comparison, and
+# terminated at the end of the comparison.
 # (I):
 # - the output root directory
+# - the worker path
 # - an optional options hash with following keys:
 #   > debug: whether we want run thr browser drivers in debug mode, defaulting to false
-#   > signatures: a TTP::HTTP::Compare::Signatures object or undef
 # (O):
 # - the comparison result as a ref to a hash
 
 sub doCompare {
-	my ( $self, $rootdir, $args ) = @_;
+	my ( $self, $rootdir, $worker, $args ) = @_;
 	$args //= {};
 
 	# initial parameters
 	$self->{_args} = {};
+	$self->{_args}{rootdir} = $rootdir;
+	$self->{_args}{worker} = $worker;
 	$self->{_args}{args} = $args;
 	# the output result
 	$self->{_roledir} = File::Spec->catdir( $rootdir, "byRole", $self->name());
@@ -931,13 +960,15 @@ sub doCompare {
 	$self->{_result}{clicked} = [];			# the list of clicked events for the current url
 	$self->{_result}{successive} = {};		# count of successive errors
 
-	# instanciates our internal browsers
-	# errors here end the program (most often a chromedrive version issue or a path mismatch)
-	if( !TTP::errs()){
-		$self->{_browsers} = {
-			ref => $self->_setup_browser( 'ref' ),
-			new => $self->_setup_browser( 'new' )
-		};
+	# start one daemon for each of 'ref' and 'new' sites
+	# each process manages its own browser/driver, and the login cookies
+	$self->{_daemons} = {
+		ref => $self->_setup_daemon( 'ref', $self->conf()->confBasesRefPort()),
+		new => $self->_setup_daemon( 'new', $self->conf()->confBasesNewPort())
+	};
+	if( TTP::errs()){
+		$self->destroy();
+		return;
 	}
 
 	# do we must log-in the sites ?
@@ -980,7 +1011,7 @@ sub doCompare {
 		}
 	}
 
-	return $self->{_result};
+	# nothing to return: all results have been gathered and stored during the crawl execution
 }
 
 # -------------------------------------------------------------------------------------------------

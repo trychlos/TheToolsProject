@@ -3,11 +3,12 @@
     "$id": "org.trychlos.TheToolsProject/schemas/http_compare.schema.json",
     "title": "Site",
     "description_array": [
-        "The http.pl compare verb relies on:",
+        "The 'http.pl compare' verb relies on:",
         "- a JSON configuration file addressed by the '--json' command-line option,",
         "- a chromedriver server to talk to the Selenium::Remote::Driver package; runs it with '~/data/chromedriver-linux64/chromedriver --port=9515'.",
         "NB:",
-        "1. The chromedriver version MUST match the currently running Chromium version."
+        "1. The chromedriver version MUST match the currently running Chromium version.",
+        "2. The verb runs an external daemon for each one of 'ref' and 'new' sites, and so must be configured accordingly."
     ],
     "type": "object",
     "properties": {
@@ -15,13 +16,38 @@
             "description": "The base URLs to be compared.",
             "type": "object",
             "properties": {
-                "ref": {
-                    "description": "The (mandatory) reference base URL.",
-                    "type": "string"
-                },
                 "new": {
                     "description": "The (mandatory) base URL to be compared against the above reference.",
-                    "type": "string"
+                    "type": "object",
+                    "properties": {
+                        "url": {
+                            "description": "The (mandatory) new base URL to be compared against the 'ref.url' reference.",
+                            "type": "string"
+                        },
+                        "port": {
+                            "description": "The listening port number of 'new' site child process, defaulting to the 'ref' child process listening port plus 1.",
+                            "type": "integer"
+                        }
+                    }
+                },
+                "ref": {
+                    "description": "The reference site characteristics.",
+                    "type": "object",
+                    "properties": {
+                        "url": {
+                            "description": "The (mandatory) reference base URL.",
+                            "type": "string"
+                        },
+                        "port": {
+                            "description": "The listening port number of 'ref' site child process, defaulting to the chromedriver listening port plus 1.",
+                            "type": "integer"
+                        }
+                    }
+                },
+                "worker": {
+                    "description": "The full path to the executable daemon.",
+                    "type": "string",
+                    "default": "TOOLS/libexec/daemons/http-compare-daemon.pl"
                 }
             }
         },
@@ -402,7 +428,7 @@
             "description_array": [
                 "The subdirectory parts of output directories.",
                 "They are all subdirectories of the per-role log directory.",
-                "We have eight potential output directories which are 'ref', 'new', 'restored' and 'diffs' crossed with 'htmls' and 'screenshots', but we only manage five as we do not try to keep htmls restored not diffs.",
+                "We have eight potential output directories which are 'ref', 'new', 'restored' and 'diffs' crossed with 'htmls' and 'screenshots', but we only manage five as we do not try to keep htmls restored or diffs.",
                 "This object says how they are organized.",
                 "An empty string means that the files must not be kept."
             ],

@@ -1189,9 +1189,9 @@ sub urlBase {
     my $which = $self->which();
     my $url = undef;
     if( $which eq 'ref' ){
-        $url = $self->role()->conf()->confBasesRef();
+        $url = $self->role()->conf()->confBasesRefUrl();
     } elsif( $which eq 'new' ){
-        $url = $self->role()->conf()->confBasesNew();
+        $url = $self->role()->conf()->confBasesNewUrl();
     } else {
         msgErr( "urlBase() which='$which' is not handled" );
     }

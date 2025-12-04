@@ -13,6 +13,7 @@
     - services.pl workload-summary: make sure the summary is outputed to stdout *and* logged
     - services.pl workload-summary: extend to manage each execution report individually, thus bumping minor candidate release number
     - http.pl compare: extends 'compare.screenshots.enabled' description to have a three-way alternative
+    - http.pl compare: define two daemons to handle 'ref' and 'new' sites interactions
 
 ### 4.25.7
 

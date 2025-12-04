@@ -44,6 +44,7 @@ use Test::More;
 use TTP::HTTP::Compare::Config;
 use TTP::HTTP::Compare::Role;
 use TTP::HTTP::Compare::WebDriver;
+use TTP::Finder;
 
 my $defaults = {
 	help => 'no',
@@ -73,8 +74,11 @@ my $conf = undef;
 # the root directory of all the log files
 my $rundir = undef;
 
-# a global hashref which handles the results of the compare
-my $hashref = {};
+# the worker daemon which handles all site interactions
+my $worker = undef;
+
+# a global hash which gathers the TTP::HTTP::Compare::Role objects
+my $rolesHash = {};
 
 # the webdriver
 my $driver = undef;
@@ -87,22 +91,29 @@ my $opt_workdir_set = false;
 
 # some constants
 my $Const = {
+	# default subpaths to find the executable daemon
+	finder => {
+		dirs => [
+			'libexec/daemons/http-compare-daemon.pl'
+		]
+	}
 };
 
 # -------------------------------------------------------------------------------------------------
 # Compare two websites
 
 sub doCompare {
-	msgOut( "comparing '".$conf->confBasesNew()."' against ref '".$conf->confBasesRef()."' URLs..." );
-	$hashref->{run} //= {};
+	msgOut( "comparing '".$conf->confBasesNewUrl()."' against ref '".$conf->confBasesRefUrl()."' URLs..." );
 	# iter on roles
-	$hashref->{byRole} //= {};
 	foreach my $role ( $conf->roles()){
 		doCompareByRole( $role );
 	}
-	#print "hashref: ".Dumper( $hashref );
 	done_testing();
 	print_results_summary();
+	# and delete the objects *after* having printed out the result summary
+	foreach my $role ( $conf->roles()){
+		$rolesHash->{$role}->destroy();
+	}
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -126,25 +137,21 @@ sub doCompareByRole {
 		return;
 	}
 	# ask the role to do the actual comparison
+	# each role object takes itself care of storing its own results
 	msgOut( "comparing for role '$role'..." );
-	$hashref->{byRole}{$role} = $roleObj;
-	my $result = $roleObj->doCompare( $rundir, { debug => $opt_debug });
-	#print STDERR "result: ".Dumper( $result );
-	# cleanup the object and all its dependencies *before* DESTRUCT phase
-	$roleObj->destroy();
+	$rolesHash->{$role} = $roleObj;
+	$roleObj->doCompare( $rundir, $worker, { debug => $opt_debug });
 }
 
 # -------------------------------------------------------------------------------------------------
 # at end, print a results summary
 
 sub print_results_summary {
-	#print STDERR "byRole: ".Dumper( $hashref->{byRole} );
-	#print STDERR "keys: ".Dumper( keys %{$hashref->{byRole}} );
-	if( scalar( keys %{$hashref->{byRole}} )){
+	if( scalar( keys %{$rolesHash} )){
 		msgOut( "results summary by role:" );
-		foreach my $role ( sort keys %{$hashref->{byRole}} ){
+		foreach my $role ( sort keys %{$rolesHash} ){
 			msgOut( "- $role:" );
-			$hashref->{byRole}{$role}->print_results_summary();
+			$rolesHash->{$role}->print_results_summary();
 		}
 	}
 	msgOut( "logs root directory: '$rundir'" );
@@ -209,6 +216,7 @@ if( $opt_maxvisited_set ){
 }
 
 # JSON configuration file is mandatory
+# must have ref and new base urls
 if( $opt_jsonfile ){
 	my $args = {};
 	$args->{max_visited} = $opt_maxvisited if $opt_maxvisited_set && !TTP::errs();
@@ -218,6 +226,14 @@ if( $opt_jsonfile ){
 	$conf = TTP::HTTP::Compare::Config->new( $ep, $opt_jsonfile, $args );
 	if( !$conf->jsonLoaded()){
 		msgErr( "JSON not loaded" );
+	} else {
+		$worker = $conf->confBasesWorker();
+		if( !$worker ){
+			my $finder = TTP::Finder->new( $ep );
+			$worker = $finder->find({ dirs => [ $Const->{finder}{dirs} ], wantsAll => false });
+			msgErr( "unable to find a suitable executable daemon" ) if !$worker;
+		}
+		msgVerbose( "got worker='".( $worker // "(undef)" )."'" );
 	}
 } else {
 	msgErr( "'--jsonfile' is required, but is not specified" );

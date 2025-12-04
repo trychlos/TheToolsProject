@@ -313,11 +313,11 @@ sub _loadConfig {
 		my $msgRef = $self->ep()->runner()->dummy() ? \&msgWarn : \&msgErr;
 
 		# must have ref and new URLs
-		my $bases_ref = $self->confBasesRef();
+		my $bases_ref = $self->confBasesRefUrl();
 		if( !$bases_ref ){
 			$msgRef->( "$path: bases.ref URL is not specified" );
 		}
-		my $bases_new = $self->confBasesNew();
+		my $bases_new = $self->confBasesNewUrl();
 		if( !$bases_new ){
 			$msgRef->( "$path: bases.new URL is not specified" );
 		}
@@ -375,18 +375,55 @@ sub _loadConfig {
 ### Public methods
 
 # ------------------------------------------------------------------------------------------------
+# (I):
+# - none
+# (O):
+# - returns the listening TCP port number of the daemon which manages the 'new' site
+
+sub confBasesNewPort {
+	my ( $self ) = @_;
+
+	my $port = $self->var([ 'bases', 'new', 'port' ]);
+	if( !$port ){
+		$port = $self->confBasesRefPort();
+		$port += 1;
+	}
+
+	return $port;
+}
+
+# ------------------------------------------------------------------------------------------------
 # Returns the base new URL.
 # (I):
 # - none
 # (O):
 # - returns the configured base new URL
 
-sub confBasesNew {
+sub confBasesNewUrl {
 	my ( $self ) = @_;
 
-	my $url = $self->var([ 'bases', 'new' ]);
+	my $url = $self->var([ 'bases', 'new', 'url' ]);
 
 	return $url;
+}
+
+# ------------------------------------------------------------------------------------------------
+# (I):
+# - none
+# (O):
+# - returns the listening TCP port number of the daemon which manages the 'ref' site
+#   defaulting to the chromedriver listening port number plus 1
+
+sub confBasesRefPort {
+	my ( $self ) = @_;
+
+	my $port = $self->var([ 'bases', 'ref', 'port' ]);
+	if( !$port ){
+		$port = $self->confBrowserDriverPort();
+		$port += 1;
+	}
+
+	return $port;
 }
 
 # ------------------------------------------------------------------------------------------------
@@ -396,12 +433,27 @@ sub confBasesNew {
 # (O):
 # - returns the configured base reference URL
 
-sub confBasesRef {
+sub confBasesRefUrl {
 	my ( $self ) = @_;
 
-	my $url = $self->var([ 'bases', 'ref' ]);
+	my $url = $self->var([ 'bases', 'ref', 'url' ]);
 
 	return $url;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Returns the worker daemon path.
+# (I):
+# - none
+# (O):
+# - returns the worker daemon path, may be undef
+
+sub confBasesWorker {
+	my ( $self ) = @_;
+
+	my $path = $self->var([ 'bases', 'worker' ]);
+
+	return $path;
 }
 
 # ------------------------------------------------------------------------------------------------
