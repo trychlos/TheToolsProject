@@ -37,6 +37,7 @@ use warnings;
 use File::Spec;
 
 use TTP::DaemonConfig;
+use TTP::Finder;
 use TTP::RunnerDaemon;
 
 my $defaults = {
