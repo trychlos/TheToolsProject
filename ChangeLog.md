@@ -12,6 +12,7 @@
     - http.pl compare: re-instanciate a new browser on re-login
     - services.pl workload-summary: make sure the summary is outputed to stdout *and* logged
     - services.pl workload-summary: extend to manage each execution report individually, thus bumping minor candidate release number
+    - http.pl compare: extends 'compare.screenshots.enabled' description to have a three-way alternative
 
 ### 4.25.7
 

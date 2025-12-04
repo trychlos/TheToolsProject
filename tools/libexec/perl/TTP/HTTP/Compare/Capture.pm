@@ -44,6 +44,7 @@ use TTP;
 use vars::global qw( $ep );
 
 use TTP::Constants qw( :all );
+use TTP::HTTP::Compare::Config; # qw( :all );
 use TTP::HTTP::Compare::Utils;
 use TTP::Message qw( :all );
 use TTP::Path;
@@ -403,7 +404,11 @@ sub compare {
 		|| push( @errs, "new alerts: ".join( ' | ', @{$other->alerts() }));
 
 	# optional visual diff
-	if( $self->browser()->conf()->confCompareScreenshotsEnabled()){
+	my $enabledScreenshots = $self->browser()->conf()->confCompareScreenshotsEnabled();
+	my $doCompareScreenshots = ( $enabledScreenshots == TTP::HTTP::Compare::Config::COMPARE_SCREENSHOTS_ENABLED_ALWAYS )
+		|| ( $enabledScreenshots == TTP::HTTP::Compare::Config::COMPARE_SCREENSHOTS_ENABLED_ONERROR && scalar( @errs ) > 0 );
+	msgVerbose( "compare() compareScreenshotsEnabled='$enabledScreenshots' errsCount=".( scalar( @errs ))." doCompareScreenshots='".( $doCompareScreenshots ? "true" : "false" )."'" );
+	if( $doCompareScreenshots ){
 
 		# Which align should you use?
 		# 	crop (default): safest with your stitched full-page shots (they should be same width and very close in height; compares the overlapping area only).

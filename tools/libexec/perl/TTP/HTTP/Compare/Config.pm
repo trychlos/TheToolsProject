@@ -39,9 +39,16 @@ use TTP;
 use vars::global qw( $ep );
 
 use TTP::Constants qw( :all );
-use TTP::HTTP::Compare::Role;
 use TTP::Message qw( :all );
 
+# first define the constants which are re-used later
+use constant {
+	COMPARE_SCREENSHOTS_ENABLED_ALWAYS => "always",
+	COMPARE_SCREENSHOTS_ENABLED_NEVER => "never",
+	COMPARE_SCREENSHOTS_ENABLED_ONERROR => "on_error"
+};
+
+# and now other constants (can use already defined constants)
 use constant {
 	DEFAULT_BROWSER_COMMAND => "chromedriver --port=9515 --url-base=/wd/hub --verbose",
 	DEFAULT_BROWSER_HEIGHT => 768,
@@ -63,9 +70,9 @@ use constant {
 		"style"
 	],
 	DEFAULT_COMPARE_HTML_IGNORE_TEXT_PATTERNS => [],
-	DEFAULT_COMPARE_SCREENSHOT_ENABLED => false,
-	DEFAULT_COMPARE_SCREENSHOT_RMSE => 0.01,
-	DEFAULT_COMPARE_SCREENSHOT_THRESHOLD_COUNT => 150,
+	DEFAULT_COMPARE_SCREENSHOTS_ENABLED => COMPARE_SCREENSHOTS_ENABLED_ONERROR,
+	DEFAULT_COMPARE_SCREENSHOTS_RMSE => 0.01,
+	DEFAULT_COMPARE_SCREENSHOTS_THRESHOLD_COUNT => 150,
 	DEFAULT_CRAWL_BY_CLICK_CSS_EXCLUDES => [
 		"th > a"
 	],
@@ -142,6 +149,11 @@ use constant {
 };
 
 my $Const = {
+	CompareScreenshotsEnabled => [
+		COMPARE_SCREENSHOTS_ENABLED_ALWAYS,
+		COMPARE_SCREENSHOTS_ENABLED_NEVER,
+		COMPARE_SCREENSHOTS_ENABLED_ONERROR
+	]
 };
 
 ### Private methods
@@ -648,17 +660,21 @@ sub confCompareHtmlsIgnoreTextPatterns {
 }
 
 # ------------------------------------------------------------------------------------------------
-# Returns the whether comparison of screenshots is enabled.
+# Returns whether comparison of screenshots is enabled.
 # (I):
 # - none
 # (O):
 # - returns whether comparison of screenshots is enabled
+#   as a validated value which can be 'always', 'never' or 'on_error'
 
 sub confCompareScreenshotsEnabled {
 	my ( $self ) = @_;
 
 	my $enabled = $self->var([ 'compare', 'screenshots', 'enabled' ]);
-	$enabled = DEFAULT_COMPARE_SCREENSHOT_ENABLED if !defined $enabled;
+	$enabled = DEFAULT_COMPARE_SCREENSHOTS_ENABLED if !defined $enabled;
+	if( !grep( /$enabled/, @{$Const->{CompareScreenshotsEnabled}} )){
+		$enabled = DEFAULT_COMPARE_SCREENSHOTS_ENABLED
+	}
 
 	return $enabled;
 }
@@ -675,7 +691,7 @@ sub confCompareScreenshotsRmse {
 	my ( $self ) = @_;
 
 	my $rmse = $self->var([ 'compare', 'screenshots', 'rmse_threshold' ]);
-	$rmse = DEFAULT_COMPARE_SCREENSHOT_RMSE if !defined $rmse;
+	$rmse = DEFAULT_COMPARE_SCREENSHOTS_RMSE if !defined $rmse;
 
 	return $rmse;
 }
@@ -693,7 +709,7 @@ sub confCompareScreenshotsThresholdCount {
 	my ( $self ) = @_;
 
 	my $count = $self->var([ 'compare', 'screenshots', 'threshold_count' ]);
-	$count = DEFAULT_COMPARE_SCREENSHOT_THRESHOLD_COUNT if !defined $count;
+	$count = DEFAULT_COMPARE_SCREENSHOTS_THRESHOLD_COUNT if !defined $count;
 
 	return $count;
 }
