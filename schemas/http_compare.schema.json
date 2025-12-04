@@ -170,8 +170,9 @@
                     "properties": {
                         "enabled": {
                             "description": "Whether the screenshots comparison is enabled.",
-                            "type": "boolean",
-                            "default": false
+                            "type": "string",
+                            "enum": [ "never", "on_error", "always" ],
+                            "default": "on_error"
                         },
                         "rmse_threshold": {
                             "description": "Accepted pixel error rate (defaulting to 1 %).",

@@ -710,7 +710,7 @@ sub _restore_path {
 # (I):
 # - the which site 'ref'|'new'
 # (O):
-# - nothing
+# - the newly instanciated TTP::HTTP::Compare::Browser object
 
 sub _setup_browser {
 	my ( $self, $which ) = @_;
