@@ -405,8 +405,8 @@ sub compare {
 
 	# optional visual diff
 	my $enabledScreenshots = $self->browser()->conf()->confCompareScreenshotsEnabled();
-	my $doCompareScreenshots = ( $enabledScreenshots == TTP::HTTP::Compare::Config::COMPARE_SCREENSHOTS_ENABLED_ALWAYS )
-		|| ( $enabledScreenshots == TTP::HTTP::Compare::Config::COMPARE_SCREENSHOTS_ENABLED_ONERROR && scalar( @errs ) > 0 );
+	my $doCompareScreenshots = ( $enabledScreenshots eq TTP::HTTP::Compare::Config::COMPARE_SCREENSHOTS_ENABLED_ALWAYS )
+		|| ( $enabledScreenshots eq TTP::HTTP::Compare::Config::COMPARE_SCREENSHOTS_ENABLED_ONERROR && scalar( @errs ) > 0 );
 	msgVerbose( "compare() compareScreenshotsEnabled='$enabledScreenshots' errsCount=".( scalar( @errs ))." doCompareScreenshots='".( $doCompareScreenshots ? "true" : "false" )."'" );
 	if( $doCompareScreenshots ){
 

@@ -45,7 +45,7 @@ use TTP::Message qw( :all );
 use constant {
 	COMPARE_SCREENSHOTS_ENABLED_ALWAYS => "always",
 	COMPARE_SCREENSHOTS_ENABLED_NEVER => "never",
-	COMPARE_SCREENSHOTS_ENABLED_ONERROR => "on_error"
+	COMPARE_SCREENSHOTS_ENABLED_ONERROR => "onerror"
 };
 
 # and now other constants (can use already defined constants)
@@ -665,7 +665,7 @@ sub confCompareHtmlsIgnoreTextPatterns {
 # - none
 # (O):
 # - returns whether comparison of screenshots is enabled
-#   as a validated value which can be 'always', 'never' or 'on_error'
+#   as a validated value which can be 'always', 'never' or 'onerror'
 
 sub confCompareScreenshotsEnabled {
 	my ( $self ) = @_;
