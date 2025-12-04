@@ -2,7 +2,7 @@
 
 ## ChangeLog
 
-### 4.26.0-rc.1
+### 4.26.0-rc.2
 
     Release date: 
 
