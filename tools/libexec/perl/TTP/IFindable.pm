@@ -53,7 +53,7 @@ requires qw( _newBase );
 #   > suffix: an optional suffix to add to the files
 #   > wantsAll: whether we want a full list of just the first found
 #     defaulting to true (wants the full list)
-# - an optional options hash which will be passed to Acceptable role if the object implements it
+# - an optional options hash which will be passed to IAcceptable role if the object implements it
 # (O):
 # - if 'wantsAll' is true, returns a ref to an array of (accepted) found files, which may be empty
 # - if 'wantsAll' is false, returns a single scalar string which is the first (accepted) found file, which may be undef
