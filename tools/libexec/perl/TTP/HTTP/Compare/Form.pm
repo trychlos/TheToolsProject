@@ -29,6 +29,7 @@ use utf8;
 use warnings;
 
 use Data::Dumper;
+use Scalar::Util qw( blessed );
 
 use TTP;
 use vars::global qw( $ep );
@@ -156,39 +157,35 @@ sub handle {
 # Constructor
 # (I):
 # - the TTP::EP entry point
-# - the TTP::HTTP::Compare::Browser object
+# - the TTP::HTTP::Compare::DaemonInterface object
 # - the form CSS selector as configured
 # - the form description as configured
-# - the form Selenium::Remote::WebElement object
+# - the form Selenium::Remote::WebElement object - or maybe something else
 # - an optional options hash with following keys:
 #   >
 # (O):
 # - this object
 
 sub new {
-	my ( $class, $ep, $browser, $selector, $description, $form, $args ) = @_;
+	my ( $class, $ep, $daemon, $selector, $description, $form, $args ) = @_;
 	$class = ref( $class ) || $class;
 	$args //= {};
 
-	if( !$ep || !blessed( $ep ) || !$ep->isa( 'TTP::EP' )){
-		msgErr( "unexpected ep: ".TTP::chompDumper( $ep ));
+	if( !$daemon || !blessed( $daemon ) || !$daemon->isa( 'TTP::HTTP::Compare::DaemonInterface' )){
+		msgErr( "unexpected daemon: ".TTP::chompDumper( $daemon ));
 		TTP::stackTrace();
 	}
-	if( !$browser || !blessed( $browser ) || !$browser->isa( 'TTP::HTTP::Compare::Browser' )){
-		msgErr( "unexpected browser: ".TTP::chompDumper( $browser ));
-		TTP::stackTrace();
-	}
-	if( !$form || !blessed( $form ) || !$form->isa( 'Selenium::Remote::WebElement' )){
-		msgErr( "unexpected form: ".TTP::chompDumper( $form ));
-		TTP::stackTrace();
-	}
+	#if( !$form || !blessed( $form ) || !$form->isa( 'Selenium::Remote::WebElement' )){
+	#	msgErr( "unexpected form: ".TTP::chompDumper( $form ));
+	#	TTP::stackTrace();
+	#}
 
 	my $self = $class->SUPER::new( $ep, $args );
 	bless $self, $class;
 	#msgDebug( __PACKAGE__."::new() selector='$selector'" );
-	msgVerbose( __PACKAGE__."::new() selector='$selector'" );
+	#msgVerbose( __PACKAGE__."::new() selector='$selector'" );
 
-	$self->{_browser} = $browser;
+	$self->{_daemon} = $daemon;
 	$self->{_selector} = $selector;
 	$self->{_description} = $description;
 	$self->{_form} = $form;

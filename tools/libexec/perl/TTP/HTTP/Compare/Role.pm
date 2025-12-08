@@ -33,21 +33,26 @@ use File::Path qw( make_path );
 use File::Spec;
 use JSON;
 use List::Util qw( any );
+use MIME::Base64 qw( encode_base64 );
 use Path::Tiny qw( path );
 use POSIX qw( strftime );
 use Scalar::Util qw( blessed );
 use Test::More;
+use Time::Moment;
 use URI;
 
 use TTP;
 use vars::global qw( $ep );
 
 use TTP::Constants qw( :all );
-use TTP::HTTP::Compare::Browser;
-use TTP::HTTP::Compare::Login;
+use TTP::HTTP::Compare::Capture;
+use TTP::HTTP::Compare::DaemonInterface;
+use TTP::HTTP::Compare::Facer;
+use TTP::HTTP::Compare::Form;
 use TTP::HTTP::Compare::QueueItem;
 use TTP::HTTP::Compare::Utils;
 use TTP::Message qw( :all );
+#use TTP::Test qw( :all );
 
 use constant {
 	DEFAULT_ROLE_ENABLED => true
@@ -57,7 +62,8 @@ my $Const = {
 	crawlModes => [
 		'click',
 		'link'
-	]
+	],
+	intermediateResults => 100
 };
 
 ### Private methods
@@ -74,21 +80,22 @@ my $Const = {
 sub _do_crawl {
     my ( $self, $queue_item, $args ) = @_;
 	$args //= {};
-	msgVerbose( "do_crawl() role='".$self->name()."' (now is ".strftime( '%Y%m%d-%H%M%S', localtime()).")" );
+	my $role = $self->name();
+	msgVerbose( "by '$role' Role::do_crawl() now is ".Time::Moment->now->strftime( '%Y-%m-%d %H:%M:%S.%6N %:z' ));
 
 	# test the key signature before incrementing the visited count
 	my $key = $queue_item->signature();
-	msgVerbose( "do_crawl() queue signature='$key'" );
+	msgVerbose( "by '$role' Role::do_crawl() queue signature='$key'" );
 	# if already seen, go next
 	if( $self->{_result}{seen}{$key} ){
-		msgVerbose( "do_crawl() already seen, returning" );
+		msgVerbose( "by '$role' Role::do_crawl() already seen, returning" );
 		return true;
 	}
 
 	# increments before visiting so that all the dumped files are numbered correctly
 	$self->{_result}{count}{visited} += 1;
 	$queue_item->visited( $self->{_result}{count}{visited} );
-	msgVerbose( "do_crawl() visiting=".$queue_item->visited(). " (queue size=".scalar( @{ $self->{_queue} } ).")" );
+	msgVerbose( "by '$role' Role::do_crawl() visiting=".$queue_item->visited(). " (queue size=".scalar( @{ $self->{_queue} } ).")" );
 
 	# items in queue are hashes with following keys:
 	# - from: whether the item comes by 'link' or by 'click', defaulting to 'link'
@@ -109,29 +116,34 @@ sub _do_crawl {
 	# what sort of loop item do we have ?
 	my $from = $queue_item->from();
 
-	my $path = undef;
 	my $captureRef = undef;
 	my $captureNew = undef;
 	my $reason = undef;
 	my $continue = true;
 
-	( $captureRef, $captureNew, $path, $reason ) = @{ $self->_do_crawl_by_click( $queue_item ) } if $from eq 'click';
-	( $captureRef, $captureNew, $path, $reason ) = @{ $self->_do_crawl_by_link( $queue_item ) } if $from eq 'link';
+	# we get both a capture on both the websites, or a reason for not having them
+	( $captureRef, $captureNew, $reason ) = @{ $self->_do_crawl_by_click( $queue_item ) } if $from eq 'click';
+	( $captureRef, $captureNew, $reason ) = @{ $self->_do_crawl_by_link( $queue_item ) } if $from eq 'link';
 
-	if( $captureRef && $captureNew && $path ){
+	if( $captureRef && $captureNew ){
 
-		# check that status is OK and same for the two sites
+		my $path = $captureRef->path();
+
+		# check HTTP status
 		my $status_ref = $captureRef->status();
-		is( $status_ref, 200, "[".$self->name()." ($path)] ref website returns '200' status code" );
 		my $status_new = $captureNew->status();
-		is( $status_new, $status_ref, "[".$self->name()." ($path)] new website got same status code ($status_ref)" );
 
 		# if we get the same error both on ref and new, then just cancel this one path, and go to next
 		if( $status_ref >= 400 && $status_ref == $status_new ){
-			msgVerbose( "same error code, so just cancel this path" );
+			msgVerbose( "[".$self->name()." ($path)] same error code, so just cancel this path" );
 			$self->_record_result( $queue_item, $captureRef, $captureNew );
 			return $continue;
 		}
+
+		# check that status is OK and same for the two sites
+
+		is( $status_ref, 200, "[".$self->name()." ($path)] ref website returns '200' status code" );
+		is( $status_new, $status_ref, "[".$self->name()." ($path)] new website got same status code ($status_ref)" );
 
 		# write HTML and screenshots if that must be handled
 		# to be done before the comparison in order to re-use the screenshots if possible
@@ -160,22 +172,22 @@ sub _do_crawl {
 		# reset count of successive errors
 		$self->_successive_errors_reset();
 
-	} elsif( !defined( $captureRef ) && !defined( $captureNew ) && !defined( $path )){
-		msgVerbose( "do_crawl() all values are undef, just skip" );
+	} elsif( !defined( $captureRef ) && !defined( $captureNew )){
+		msgVerbose( "by '$role' Role::do_crawl() all values are undef, just skip" );
 		if( $reason ){
 			$self->{_result}{cancelled}{$reason} //= [];
 			push( @{$self->{_result}{cancelled}{$reason}}, $queue_item );
 			$continue = $self->_successive_errors_inc( $reason );
 		} else {
 			# a reason is mandatory, so this is unexpected
-			msgWarn( "do_crawl() reason is not defined, this is NOT expected" );
+			msgWarn( "by '$role' Role::do_crawl() reason is not defined, this is NOT expected" );
 			$self->{_result}{unexpected}{no_reason} //= [];
 			push( @{$self->{_result}{unexpected}{no_reason}}, $queue_item );
 			$continue = $self->_successive_errors_inc( "unexpected_no_reason" );
 		}
 
 	} else {
-		msgWarn( "do_crawl() at least one of captureRef, captureNew or path is not defined, this is NOT expected" );
+		msgWarn( "by '$role' Role::do_crawl() at least one of captureRef or captureNew is not defined, this is NOT expected" );
 		$self->{_result}{unexpected}{not_all_undef} //= [];
 		push( @{$self->{_result}{unexpected}{not_all_undef}}, $queue_item );
 			$continue = $self->_successive_errors_inc( "unexpected_not_all_undef" );
@@ -196,62 +208,46 @@ sub _do_crawl {
 
 sub _do_crawl_by_click {
     my ( $self, $queue_item ) = @_;
-	msgVerbose( "do_crawl_by_click()" );
+	my $role = $self->name();
+	msgVerbose( "by '$role' Role::do_crawl_by_click()" );
 
 	# must have an origin and a xpath
 	my $origin = $queue_item->origin();
 	if( !$origin ){
-		msgErr( "do_crawl() click loop item without origin" );
-		return [ undef, undef, undef, "no origin" ];
+		msgErr( "by '$role' Role::do_crawl_by_click() queue item without origin" );
+		return [ undef, undef, "no origin" ];
 	}
 	my $xpath = $queue_item->xpath();
 	if( !$xpath ){
 		if( !$queue_item->{xpath} ){
-			msgErr( "do_crawl() click loop item without xpath" );
+			msgErr( "by '$role' Role::do_crawl_by_click() queue item without xpath" );
 		}
-		return [ undef, undef, undef, "no xpath" ];
+		return [ undef, undef, "no xpath" ];
 	}
 
-	my $path = undef;
 	my $captureRef = undef;
 	my $captureNew = undef;
 
-	# and try to restore the origin clicks chain if we do not have the same frames
-	if( $self->_restore_chain( $queue_item )){
-		if( $self->{_browsers}{ref}->click_by_xpath( $queue_item->xpath())){
-			# re-discover a clickable with same visible text (best effort) and click there too
-			if( $self->{_browsers}{new}->click_by_xpath( $queue_item->xpath())){
-				$captureRef = $self->{_browsers}{ref}->wait_and_capture();
-				$captureNew = $self->{_browsers}{new}->wait_and_capture();
-			} else {
-				msgVerbose( "xpath='".$queue_item->xpath()."' not available on new site" );
-				my $match_new = $self->{_browsers}{new}->clickable_find_equivalent_xpath( $queue_item );
-				if( $match_new ){
-					if( $self->{_browsers}{new}->click_by_xpath( $match_new )){
-						msgVerbose( "match found '$match_new' on new site" );
-						$captureRef = $self->{_browsers}{ref}->wait_and_capture();
-						$captureNew = $self->{_browsers}{new}->wait_and_capture();
-					} else {
-						return [ undef, undef, undef, "new_click_by_xpath" ];
-					}
-				} else {
-					return [ undef, undef, undef, "new_clickable_equivalent" ];
-				}
-			}
-		} else {
-			return [ undef, undef, undef, "ref_click_by_xpath" ];
-		}
+	# ask the browsers to do the job
+	# maybe one of them will have to re-login: handle that here
+	# as this may arrive once a day, optimisation is not an issue
+	my $results = TTP::HTTP::Compare::DaemonInterface::execute( $self, 'click_and_capture',
+		{ queue_item => encode_base64( $queue_item->snapshot()), args => {} },
+		{ ref => $self->{_daemons}{ref}, new => $self->{_daemons}{new} },
+		{ relogin => \&try_to_relogin }
+	);
+	if( $results->{ref}{result}{success} && $results->{new}{result}{success} ){
+		$captureRef = TTP::HTTP::Compare::Capture->new( $ep, $self->{_facers}{ref}, $results->{ref}{result}{answer} );
+		$captureNew = TTP::HTTP::Compare::Capture->new( $ep, $self->{_facers}{new}, $results->{new}{result}{answer} );
 	} else {
-		return [ undef, undef, undef, "restore_chain" ];
+		return [ undef, undef, "crawl_by_click ref $results->{ref}{result}{reason}" ] if !$results->{ref}{result}{success};
+		return [ undef, undef, "crawl_by_click new $results->{new}{result}{reason}" ] if !$results->{new}{result}{success};
 	}
-
-	# manage the display
-	$path = $self->{_browsers}{ref}->current_path();
 
 	# manage counters
 	$self->{_result}{count}{clicks} += 1;
 
-	return [ $captureRef, $captureNew, $path, undef ];
+	return [ $captureRef, $captureNew, undef ];
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -259,31 +255,41 @@ sub _do_crawl_by_click {
 # (O):
 # - TTP::HTTP::Compare::Capture object of reference site
 # - TTP::HTTP::Compare::Capture object of new site
-# - current path
-# - the reason when the three previous are undef
+# - the reason when the two previous are undef
 
 sub _do_crawl_by_link {
     my ( $self, $queue_item ) = @_;
-	msgVerbose( "do_crawl_by_link()" );
+	my $role = $self->name();
+	msgVerbose( "by '$role' Role::do_crawl_by_link()" );
 
 	# do we have a path to navigate to ?
 	my $path = $queue_item->path();
 	if( !$path ){
-		msgErr( "do_crawl() link queued item without path" );
-		return [ undef, undef, undef, "no path" ];
+		msgErr( "by '$role' Role::do_crawl_by_link() queue item without path" );
+		return [ undef, undef, "no path" ];
 	}
 
+	my $captureRef = undef;
+	my $captureNew = undef;
+
 	# navigate and capture
-	my $captureRef = $self->{_browsers}{ref}->navigate_and_capture( $path );
-	my $captureNew = $self->{_browsers}{new}->navigate_and_capture( $path );
+	my $results = TTP::HTTP::Compare::DaemonInterface::execute( $self, 'navigate_and_capture',
+		{ path => $path },
+		{ ref => $self->{_daemons}{ref}, new => $self->{_daemons}{new} }
+	);
+	if( $results->{ref}{result}{success} && $results->{new}{result}{success} ){
+		$captureRef = TTP::HTTP::Compare::Capture->new( $ep, $self->{_facers}{ref}, $results->{ref}{result}{answer} );
+		$captureNew = TTP::HTTP::Compare::Capture->new( $ep, $self->{_facers}{new}, $results->{new}{result}{answer} );
+	} else {
+		return [ undef, undef, "crawl_by_link $results->{ref}{result}{reason}" ] if !$results->{ref}{result}{success};
+		return [ undef, undef, "crawl_by_link $results->{new}{result}{reason}" ] if !$results->{new}{result}{success};
+	}
 
-	# make sure we have a valid dest as initial routes (which are always by 'link' per definition) do not have origin
-	my $page_signature = $self->{_browsers}{ref}->signature();
-	$queue_item->dest( $page_signature ) if !$queue_item->origin();
-
+	# make sure we have a valid dest as initial routes (which are always by 'link' by definition) do not have origin
+	$queue_item->dest( $captureRef->signature()) if !$queue_item->origin();
 	$self->{_result}{count}{links} += 1;
 
-	return [ $captureRef, $captureNew, $path, undef ];
+	return [ $captureRef, $captureNew, undef ];
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -296,9 +302,10 @@ sub _do_crawl_by_link {
 sub _enqueue_clickables {
     my ( $self, $capture, $queue_item ) = @_;
 
-	my $page_signature = $capture->browser()->signature();
-	msgVerbose( "enqueue_clickables() got page_signature='$page_signature'" );
-	my $targets = $capture->browser()->clickable_discover_targets_xpath();
+	my $role = $self->name();
+	my $page_signature = $capture->signature();
+	msgVerbose( "by '$role' Role::enqueue_clickables() got page_signature='$page_signature'" );
+	my $targets = $capture->facer()->daemon()->send_and_get( 'clickable_discover_targets_xpath' );
 	my $count = 0;
 	#print STDERR "targets: ".Dumper( $targets );
 	# - targets are like:
@@ -321,12 +328,12 @@ sub _enqueue_clickables {
 		#print STDERR "a ".Dumper( $a->{chain} );
 		my $item = TTP::HTTP::Compare::QueueItem->new( $self->ep(), $self->conf(), $a );
 		push( @{$self->{_queue}}, $item );
-		msgVerbose( "enqueue_clickables() enqueuing '".$item->signature()."' (text='$a->{text}')" );
-		msgVerbose( "enqueue_clickables()   with chain [ '".join( "', '", @{$item->chain_signatures()} )."' ]" );
+		msgVerbose( "by '$role' Role::enqueue_clickables() enqueuing '".$item->signature()."' (text='$a->{text}')" );
+		msgVerbose( "by '$role' Role::enqueue_clickables() -> with chain [ '".join( "', '", @{$item->chain_signatures()} )."' ]" );
 		#$item->dump({ prefix => "enqueuing" });
 		$count += 1;
     }
-	msgVerbose( "enqueue_clickables() got $count targets" );
+	msgVerbose( "by '$role' Role::enqueue_clickables() got $count target(s)" );
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -337,11 +344,13 @@ sub _enqueue_clickables {
 sub _enqueue_clickables_href_allowed {
     my ( $self, $href ) = @_;
 
+	my $role = $self->name();
+
 	if( $href ){
 		my $denied = $self->conf()->runCrawlByClickHrefDenyPatterns() || [];
 		if( scalar( @{$denied} )){
 			if( any { $href =~ $_ } @{ $denied } ){
-				msgVerbose( "_enqueue_clickables_href_allowed() '$href' denied by regex" );
+				msgVerbose( "by '$role' Role::enqueue_clickables_href_allowed() '$href' denied by regex" );
 				return false;
 			}
 		}
@@ -358,11 +367,13 @@ sub _enqueue_clickables_href_allowed {
 sub _enqueue_clickables_text_allowed {
     my ( $self, $text ) = @_;
 
+	my $role = $self->name();
+
 	if( $text ){
 		my $denied = $self->conf()->runCrawlByClickTextDenyPatterns() || [];
 		if( scalar( @{$denied} )){
 			if( any { $text =~ $_ } @{ $denied } ){
-				msgVerbose( "_enqueue_clickables_text_allowed() '$text' denied by regex" );
+				msgVerbose( "by '$role' Role::enqueue_clickables_text_allowed() '$text' denied by regex" );
 				return false;
 			}
 		}
@@ -379,11 +390,13 @@ sub _enqueue_clickables_text_allowed {
 sub _enqueue_clickables_xpath_allowed {
     my ( $self, $xpath ) = @_;
 
+	my $role = $self->name();
+
 	if( $xpath ){
 		my $denied = $self->conf()->runCrawlByClickXpathDenyPatterns() || [];
 		if( scalar( @{$denied} )){
 			if( any { $xpath =~ $_ } @{ $denied } ){
-				msgVerbose( "_enqueue_clickables_xpath_allowed() '$xpath' denied by regex" );
+				msgVerbose( "by '$role' Role::enqueue_clickables_xpath_allowed() '$xpath' denied by regex" );
 				return false;
 			}
 		}
@@ -402,11 +415,14 @@ sub _enqueue_clickables_xpath_allowed {
 sub _enqueue_links {
     my ( $self, $capture, $queue_item ) = @_;
 
+	my $role = $self->name();
+
 	# collect links from the capture
 	my $links = $capture->extract_links();
+	my $count = 0;
 
 	# queue next layer
-	my $page_signature = $capture->browser()->signature();
+	my $page_signature = $capture->signature();
 	if( scalar( @{$links} )){
 		$self->{_result}{count}{depth} += 1;
 		foreach my $p ( @{$links} ){
@@ -417,9 +433,12 @@ sub _enqueue_links {
 					$self->conf(),
 					{ path => $u->path_query || '/', depth => $self->{_result}{count}{depth}, from => 'link', origin => $page_signature, chain => $queue_item->chain_plus() }
 			));
-			msgVerbose( "enqueuing '$p'" );
+			msgVerbose( "by '$role' Role::enqueue_links() enqueuing '$p'" );
+			$count += 1;
 		}
 	}
+
+	msgVerbose( "by '$role' Role::enqueue_links() got $count target(s)" );
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -431,8 +450,20 @@ sub _enqueue_links {
 sub _handle_form {
     my ( $self, $selector, $description ) = @_;
 
-	my $formRef = $self->{_browsers}{ref}->handleForm( $selector, $description );
-	my $formNew = $formRef ? $self->{_browsers}{new}->handleForm( $selector, $description ) : undef;
+	my $formRef = undef;
+	my $formNew = undef;
+
+	my $results = TTP::HTTP::Compare::DaemonInterface::execute( $self, 'handle_form',
+		{ selector => $selector, description => $description },
+		{ ref => $self->{_daemons}{ref}, new => $self->{_daemons}{new} }
+	);
+	if( $results->{ref}{result}{success} && $results->{new}{result}{success} ){
+		$formRef = TTP::HTTP::Compare::Form->new( $ep, $self->{_daemons}{ref}, $results->{ref}{result}{answer} );
+		$formNew = TTP::HTTP::Compare::Form->new( $ep, $self->{_daemons}{new}, $results->{new}{result}{answer} );
+	#} else {
+	#	return [ undef, undef, undef, "crawl_by_link $results->{ref}{result}{reason}" ] if !$results->{ref}{result}{success};
+	#	return [ undef, undef, undef, "crawl_by_link $results->{new}{result}{reason}" ] if !$results->{new}{result}{success};
+	}
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -505,21 +536,6 @@ sub _max_reached {
 }
 
 # -------------------------------------------------------------------------------------------------
-# (I):
-# - nothing
-# (O):
-# - the password of account
-
-sub _password {
-	my ( $self ) = @_;
-
-	my $hash = $self->_hash();
-	$hash->{credentials} //= {};
-
-	return $hash->{credentials}{password};
-}
-
-# -------------------------------------------------------------------------------------------------
 # record a result step:
 # (I):
 # - the current queue item
@@ -532,18 +548,22 @@ sub _record_result {
     my ( $self, $queue_item, $ref, $new, $args ) = @_;
 	$args //= {};
 
+	my $role = $self->name();
+
 	# build the pushed object
 	my $data = {
 		place    => $queue_item,
-		ref	     => $ref,
-		new      => $new
+		# capture has grown to about 150k when splitting the work in per-website daemons
+		# so do not keep them as a role full work is more than 15000 iterations
+		#ref	     => $ref,
+		#new      => $new
 	};
 	$data->{compare} = $args->{compare} if defined $args->{compare};
 
 	# record all results in a single array
 	my $key = $queue_item->signature();
 	$self->{_result}{seen}{$key} = $data;
-	msgVerbose( "record_result() queue_signature='$key'" );
+	msgVerbose( "by '$role' Role::record_result() queue_signature='$key'" );
 
 	# have an array per reference status
 	my $status_ref = $ref->status();
@@ -552,219 +572,6 @@ sub _record_result {
 
 	# record pages with a full entry and at least an error
 	push( @{$self->{_result}{errors}}, $data ) if defined $args->{compare} && scalar( @{$args->{compare}} );
-}
-
-# -------------------------------------------------------------------------------------------------
-# To be sure the shifted queue item is applyable, try to restore the origin clicks chain.
-# The site is expected to already have been navigated to so do not look at the path but only consider frames
-# We loop into the chain until getting the same page signature than the origin one.
-# (I):
-# - the current queue item
-# - an optional options hash with following keys:
-#   > relogin: true when run for the second time, so do not try to re-login another time, defaulting to false
-# (O):
-# - whether we have successively restored the clicks chain, so true|false
-
-sub _restore_chain {
-	my ( $self, $queue_item, $args ) = @_;
-	$args //= {};
-	msgVerbose( "restore_chain()" );
-
-	# make sure we have the same origin frames signature
-	# origin signature is the ref page signature when we enqueued this item:
-	# we so have to restore this same page signature in order to be able to apply and click the queue xpath
-	my $origin_signature = $queue_item->origin() || $queue_item->dest();
-	my $origin_signature_wo_url = TTP::HTTP::Compare::Utils::page_signature_wo_url( $origin_signature );
-	my $ref_signature = $self->{_browsers}{ref}->signature({ label => 'current ref' });
-	my $ref_signature_wo_url = TTP::HTTP::Compare::Utils::page_signature_wo_url( $ref_signature );
-	my $new_signature = $self->{_browsers}{new}->signature({ label => 'current new' });
-	my $new_signature_wo_url = TTP::HTTP::Compare::Utils::page_signature_wo_url( $new_signature );
-
-	# reapply each and every queued item from the saved chain on both ref and new sites
-	if( $ref_signature_wo_url ne $origin_signature_wo_url || $new_signature_wo_url ne $origin_signature_wo_url ){
-		msgVerbose( "expected signature='$origin_signature'" );
-		foreach my $qi ( @{ $queue_item->chain() }){
-			msgVerbose( "restore_chain() restoring qi='".$qi->signature()."'" );
-			my $ref_path = TTP::HTTP::Compare::Utils::page_signature_to_path( $ref_signature );
-			my $new_path = TTP::HTTP::Compare::Utils::page_signature_to_path( $new_signature );
-			my $origin_path = TTP::HTTP::Compare::Utils::page_signature_to_path( $origin_signature );
-			# navigate by link
-			if( $qi->isLink() || $ref_path ne $origin_path || $new_path ne $origin_path ){
-				if( $qi->isLink()){
-					$self->{_browsers}{ref}->navigate( $origin_path );
-					$self->{_browsers}{new}->navigate( $origin_path );
-				} else {
-					$self->{_browsers}{ref}->reset_spa({ path => $origin_path });
-					$self->{_browsers}{new}->reset_spa({ path => $origin_path });
-				}
-			# navigate by click
-			} elsif( $qi->isClick()){
-				if( !$self->{_browsers}{ref}->click_by_xpath( $qi->xpath() )){
-					msgWarn( "restore_chain() result=error: unable to click on ref for '".$qi->xpath()."'" );
-					return false;
-				}
-				if( !$self->{_browsers}{new}->click_by_xpath( $qi->xpath() )){
-					msgWarn( "restore_chain() result=error: unable to click on new for '".$qi->xpath()."'" );
-					return false;
-				}
-			} else {
-				msgWarn( "restore_chain() result=error: unexpected from='".$qi->from()."'" );
-				return false;
-			}
-			# wait for page ready
-			$self->{_browsers}{ref}->wait_for_page_ready();
-			$self->{_browsers}{new}->wait_for_page_ready();
-			# take a screenshot post-navigate
-			if( $self->conf()->confCrawlByClickIntermediateScreenshots()){
-				# prepare the post-navigation label
-				my $label = sprintf( "restored_%06d", $qi->visited());
-				my $cap = $self->{_browsers}{ref}->wait_and_capture({ wait => false });
-				$cap->writeScreenshot( $queue_item, { dir => $self->{_roledir}, suffix => $label, subdir => 'restored' });
-				# and same on new site
-				$cap = $self->{_browsers}{new}->wait_and_capture({ wait => false });
-				$cap->writeScreenshot( $queue_item, { dir => $self->{_roledir}, suffix => $label, subdir => 'restored' });
-			}
-			# check the got signature exiting this restore loop as soon as we have got the right signature on the both sites
-			$ref_signature = $self->{_browsers}{ref}->signature({ label => 'got ref' });
-			$new_signature = $self->{_browsers}{new}->signature({ label => 'got new' });
-			if( $ref_signature eq $origin_signature && TTP::HTTP::Compare::Utils::page_signature_are_same( $ref_signature, $new_signature )){
-				msgVerbose( "restore_chain() got expected signature '$origin_signature' and same on the two sites: fine" );
-				last;
-			}
-			# if we have landed on a signin page, what to do ?
-			# at least dump the performance logs ring
-			my $ref_signin = $self->_should_signin( $ref_signature );
-			my $new_signin = $self->_should_signin( $new_signature );
-			if( $ref_signin || $new_signin ){
-				my $relogin = $args->{relogin} // false;
-				if( $relogin ){
-					$self->{_browsers}{ref}->dump_performance_ring( $queue_item ) if $ref_signin;
-					$self->{_browsers}{new}->dump_performance_ring( $queue_item ) if $new_signin;
-					msgWarn( "restore_chain() result=error: signin loop" );
-					return false;
-				} else {
-					$self->_try_to_relogin( 'ref', $qi ) if $ref_signin;
-					$self->_try_to_relogin( 'new', $qi ) if $new_signin;
-					return $self->_restore_chain( $queue_item, { relogin => true });
-				}
-			}
-		}
-	}
-
-	# check the result
-	if( $ref_signature ne $origin_signature ){
-		msgWarn( "restore_chain() result=error: got signature='$ref_signature'" );
-		return false;
-	} else {
-		msgVerbose( "restore_chain() success" );
-	}
-
-	return true;
-}
-
-# -------------------------------------------------------------------------------------------------
-# When about to click somewhere, we have to verify that the click will be applyable.
-# In other terms, restore the context where the click was valid.
-# (I):
-# - the current queue item
-# - an optional options hash with following keys:
-#   > force: whether we force the nvagation, defaulting to false
-#   > signature: the current page signature, defaulting to none
-# (O):
-# - whether we have successively restored the origin path
-
-sub _restore_path {
-	my ( $self, $queue_item, $args ) = @_;
-	$args //= {};
-
-	my $force = false;
-	$force = $args->{force} if defined $args->{force};
-
-	# make sure we have the origin top path
-	my $current_signature = $args->{signature} // $self->{_browsers}{ref}->signature();
-	my $current_p = TTP::HTTP::Compare::Utils::page_signature_to_path( $current_signature );
-	my $origin_p = TTP::HTTP::Compare::Utils::page_signature_to_path( $queue_item->origin() || $queue_item->dest());
-
-	if( $force || $current_p ne $origin_p ){
-		msgVerbose( "restore_path() ref path has changed to '$current_p' (or force=$force), try to re-navigate to '$origin_p'" );
-		# navigate on ref
-		$self->{_browsers}{ref}->navigate( $origin_p );
-		$self->{_browsers}{ref}->wait_for_page_ready();
-		# navigate on new
-		$self->{_browsers}{new}->navigate( $origin_p );
-		$self->{_browsers}{new}->wait_for_page_ready();
-		# check the navigation result
-		$current_signature = $self->{_browsers}{ref}->signature();
-		$current_p = TTP::HTTP::Compare::Utils::page_signature_to_path( $current_signature );
-		if( $current_p ne $origin_p ){
-			msgVerbose( "restore_path() unsuccessful (got path='$current_p')" );
-			return false;
-		}
-	} else {
-		msgVerbose( "restore_path() origin='$origin_p' current='$current_p': fine" );
-	}
-
-	return true;
-}
-
-# -------------------------------------------------------------------------------------------------
-# setup and starts a new daemon to manage a browser, its driver, the login operation, and all interactions
-# (I):
-# - the which site 'ref'|'new'
-# (O):
-# - the result of start execution, including some 'setup' data
-
-sub _setup_daemon {
-	my ( $self, $which, $port ) = @_;
-
-	# build a temporary json file which acts as the daemon configuration
-	my $json = TTP::getTempFileName({ suffix => "_$which" });
-	my $content = {
-		enabled => true,
-		execPath => $self->{_args}{worker},
-		listeningPort => $port,
-		listeningInterval => 500,
-		messagingInterval => -1,
-		httpingInterval => -1,
-		textingInterval => -1
-	};
-	path( $json )->spew_utf8( encode_json( $content ));
-
-	# build and execute the command to start the daemon
-	my $command = "daemon.pl start --json $json --role ".$self->name()." --which $which --verbose";
-	my $res = TTP::commandExec( $command );
-
-	# gather some useful properties (or advertise of an error)
-	if( $res->{success} ){
-		$res->{setup} = {
-			json => $json,
-			port => $port,
-			which => $which
-		};
-	} else {
-		msgErr( "unable to start daemon (json='$json' port='$port' which='$which')" );
-	}
-
-	return $res;
-}
-
-# -------------------------------------------------------------------------------------------------
-# whether we have (unexpectedly) landed on a signin page
-# (I):
-# - the page signature
-# (O):
-# - true if we had to re-login and this re-login has been successful, so wants to re-run the restore chain
-# - false else (just continue as we can)
-
-sub _should_signin {
-	my ( $self, $page_signature ) = @_;
-
-	my $page_path = TTP::HTTP::Compare::Utils::page_signature_to_path( $page_signature );
-	my $frames_paths = TTP::HTTP::Compare::Utils::page_signature_to_frames_path( $page_signature );
-	my $loginConf = $self->conf()->var( 'login' ) // {};
-	my $loginPath = $loginConf->{path} // '';
-
-	return $page_path eq $loginPath || grep( /$loginPath/, @{ $frames_paths });
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -812,89 +619,24 @@ sub _try_to_print_intermediate_results {
 
 	my $visits = $self->{_result}{count}{visited};
 
-	if( $visits % 100 == 0 ){
+	if( $visits % $Const->{intermediateResults} == 0 ){
 		$self->print_results_summary();
 	}
 }
 
-# -------------------------------------------------------------------------------------------------
-# try to relogin on the site if we have got the signin page
-# when relogging in, also reinstanciate the browser
-# (I):
-# - the which site 'ref'|'new'
-# - the current queue item
-# (O):
-# - true if this re-login has been successful (so wants to re-run the restore chain)
-# - false else (just continue as we can)
-
-sub _try_to_relogin {
-	my ( $self, $which, $queue_item ) = @_;
-
-	msgVerbose( "trying to re-login" );
-	# first re-instanciate the attached browser
-	msgVerbose( "undefining '$which' browser" );
-	$self->{_browsers}{$which} = undef;
-	$self->{_browsers}{$which} = $self->_setup_browser( $which );
-	# and re log-in, trying to keep the requested path
-	my $loginObj = TTP::HTTP::Compare::Login->new( $self->ep(), $self->conf());
-	if( !TTP::errs() && $loginObj->isDefined() && $self->_wants_login()){
-		$self->{_logins}{$which} = $loginObj->logIn( $self->{_browsers}{$which}, $self->_username(), $self->_password());
-		if( $self->{_logins}{$which} ){
-			my $path = $queue_item->path();
-			$self->{_browsers}{$which}->reset_spa({ path => $path });
-			msgVerbose( "successful re-login" );
-		} else {
-			msgErr( "unable to log-in/authenticate on '$which' site" );
-			# login unsuccessful: just continue as we can
-			return false;
-		}
-	}
-
-	return true;
-}
-
-# -------------------------------------------------------------------------------------------------
-# (I):
-# - nothing
-# (O):
-# - the name of account
-
-sub _username {
-	my ( $self ) = @_;
-
-	my $hash = $self->_hash();
-	$hash->{credentials} //= {};
-
-	return $hash->{credentials}{username};
-}
-
-# -------------------------------------------------------------------------------------------------
-# Determines if this role can log-in to the sites.
-# True if we have both a login and a password.
-# (I):
-# - nothing
-# (O):
-# - whether the role must log-in
-
-sub _wants_login {
-	my ( $self ) = @_;
-
-	my $can = false;
-
-	if( $self->_username()){
-		if( $self->_password()){
-			$can = true;
-		} else {
-			msgVerbose( "password is not set" );
-		}
-	} else {
-		msgVerbose( "username is not set")
-	}
-
-	return $can;
-}
-
 ### Public methods
+
+# -------------------------------------------------------------------------------------------------
+# (I):
+# - nothing
+# (O):
+# - the args passed to doCompare() method
+
+sub compareArgs {
+    my ( $self ) = @_;
+
+	return $self->{_args};
+}
 
 # -------------------------------------------------------------------------------------------------
 # (I):
@@ -909,18 +651,6 @@ sub conf {
 }
 
 # -------------------------------------------------------------------------------------------------
-# Seems that the DESTRUCT Perl phase, which should run the DESTROY sub of the classes, doesn't work
-# very well - just call it before while still in RUN phase
-# Must make sure that all threads are terminated.
-
-sub destroy {
-    my ( $self ) = @_;
-
-	$self->{_browsers}{ref}->destroy();
-	$self->{_browsers}{new}->destroy();
-}
-
-# -------------------------------------------------------------------------------------------------
 # Compare the provided URLs for the role.
 # Starting with v4.26.0, role comparison between 'ref' and 'new' sites relies on a multi-threads code.
 # A thread is created for each of 'ref' and 'new' browser when starting the role comparison, and
@@ -931,7 +661,7 @@ sub destroy {
 # - an optional options hash with following keys:
 #   > debug: whether we want run thr browser drivers in debug mode, defaulting to false
 # (O):
-# - the comparison result as a ref to a hash
+# - nothing
 
 sub doCompare {
 	my ( $self, $rootdir, $worker, $args ) = @_;
@@ -960,31 +690,36 @@ sub doCompare {
 	$self->{_result}{clicked} = [];			# the list of clicked events for the current url
 	$self->{_result}{successive} = {};		# count of successive errors
 
+	# allocate a Facer for each the two sites
+	# the Facer handles for each site the main properties of the role/which run
+	$self->{_facers} = {
+		ref => TTP::HTTP::Compare::Facer->new( $ep, $self->conf(), $self, { which => 'ref', port => $self->conf()->confBasesRefPort(), baseUrl => $self->conf()->confBasesRefUrl() }),
+		new => TTP::HTTP::Compare::Facer->new( $ep, $self->conf(), $self, { which => 'new', port => $self->conf()->confBasesNewPort(), baseUrl => $self->conf()->confBasesNewUrl() })
+	};
+
 	# start one daemon for each of 'ref' and 'new' sites
 	# each process manages its own browser/driver, and the login cookies
 	$self->{_daemons} = {
-		ref => $self->_setup_daemon( 'ref', $self->conf()->confBasesRefPort()),
-		new => $self->_setup_daemon( 'new', $self->conf()->confBasesNewPort())
+		ref => TTP::HTTP::Compare::DaemonInterface->new( $ep, $self->{_facers}{ref} ),
+		new => TTP::HTTP::Compare::DaemonInterface->new( $ep, $self->{_facers}{new} )
 	};
 	if( TTP::errs()){
-		$self->destroy();
+		$self->terminate();
 		return;
 	}
-
-	# do we must log-in the sites ?
-	# yes if we have both a login, a password and a login object which provides the needed selectors
-	my $loginObj = TTP::HTTP::Compare::Login->new( $self->ep(), $self->conf());
-	if( !TTP::errs() && $loginObj->isDefined() && $self->_wants_login()){
-		$self->{_logins} = {
-			ref => $loginObj->logIn( $self->{_browsers}{ref}, $self->_username(), $self->_password()),
-			new => $loginObj->logIn( $self->{_browsers}{new}, $self->_username(), $self->_password())
-		};
-		if( !$self->{_logins}{ref} ){
-			msgErr( "unable to log-in/authenticate on 'ref' site" );
-		}
-		if( !$self->{_logins}{new} ){
-			msgErr( "unable to log-in/authenticate on 'new' site" );
-		}
+	my $results = TTP::HTTP::Compare::DaemonInterface::execute( $self, 'internal_status',
+		undef,
+		{ ref => $self->{_daemons}{ref}, new => $self->{_daemons}{new} }
+	);
+	if( !$results->{ref}{result}{success} ){
+		msgErr( "by '".$self->name().":ref' Role::doCompare() daemon didn't start on time" );
+		$self->terminate();
+		return;
+	}
+	if( !$results->{ref}{result}{success} ){
+		msgErr( "by '".$self->name().":new' Role::doCompare() daemon didn't start on time" );
+		$self->terminate();
+		return;
 	}
 
 	# continue if we are logged-in on each site (or login is not required)
@@ -1001,7 +736,7 @@ sub doCompare {
 			my $continue = $self->_do_crawl( shift @{$self->{_queue}} );
 			if( $continue ){
 				if( $self->_max_reached()){
-					msgVerboset( "cancelling '".$self->name()."' role crawl as due to max limit reached" );
+					msgVerbose( "cancelling '".$self->name()."' role crawl as due to max limit reached" );
 					last;
 				}
 			} else {
@@ -1012,6 +747,8 @@ sub doCompare {
 	}
 
 	# nothing to return: all results have been gathered and stored during the crawl execution
+	msgOut( "ending with '".$self->name()."' role crawl" );
+	$self->terminate();
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -1110,6 +847,7 @@ sub print_results_summary {
 			msgOut( "    [".join( ", ", sort { $a <=> $b } @c )."]");
 		}
 	}
+	msgOut( "  total count of unrecoverable erros: $self->{_errs}" );
 	#print STDERR "seen: ".Dumper( $self->{_result}{seen} );
 }
 
@@ -1137,6 +875,28 @@ sub resultsDir {
 	return File::Spec->catdir( $self->roleDir(), "results" );
 }
 
+# -------------------------------------------------------------------------------------------------
+# Seems that the DESTRUCT Perl phase, which should run the DESTROY sub of the classes, doesn't work
+# very well - just call it before while still in RUN phase
+# Must make sure that all threads are terminated.
+
+sub terminate {
+    my ( $self ) = @_;
+
+	my $role = $self->name();
+
+	if( $self->{_daemons}{ref} ){
+		msgVerbose( "by '$role:ref' Role::terminate() terminating..." );
+		$self->{_daemons}{ref}->terminate();
+		delete $self->{_daemons}{ref};
+	}
+	if( $self->{_daemons}{new} ){
+		msgVerbose( "by '$role:new' Role::terminate() terminating..." );
+		$self->{_daemons}{new}->terminate();
+		delete $self->{_daemons}{new};
+	}
+}
+
 ### Class methods
 
 # -------------------------------------------------------------------------------------------------
@@ -1152,10 +912,6 @@ sub new {
 	my ( $class, $ep, $role, $conf ) = @_;
 	$class = ref( $class ) || $class;
 
-	if( !$ep || !blessed( $ep ) || !$ep->isa( 'TTP::EP' )){
-		msgErr( "unexpected ep: ".TTP::chompDumper( $ep ));
-		TTP::stackTrace();
-	}
 	if( !$conf || !blessed( $conf ) || !$conf->isa( 'TTP::HTTP::Compare::Config' )){
 		msgErr( "unexpected conf: ".TTP::chompDumper( $conf ));
 		TTP::stackTrace();
@@ -1176,5 +932,52 @@ sub new {
 ### as a class method 'TTP::Package->method()' or as a global function 'TTP::Package::method()',
 ### the former being preferred (hence the writing inside of the 'Class methods' block which brings
 ### the class as first argument).
+
+# -------------------------------------------------------------------------------------------------
+# try to relogin on the site if we have got the signin page
+# when relogging in, stop the current daemon and restart a new one
+# NB: this is a global function as provided to the daemon as a code ref
+# (I):
+# - the current TTP::HTTP::Compare::Role instance
+# - the command
+# - the arguments
+# - the hash on involved interfaces
+# - the results
+# - the involved key name
+# (O):
+# - true|false
+
+sub try_to_relogin {
+	my ( $roleObj, $command, $args, $interfaces, $results, $name ) = @_;
+
+	my $role = $interfaces->{$name}->facer()->roleName();
+	my $which = $interfaces->{$name}->facer()->which();
+
+	msgVerbose( "by '$role:$which' Role::try_to_relogin()" );
+
+	# terminate the current daemon
+	$interfaces->{$name}->terminate();
+	delete $interfaces->{$name};
+	# re-allocate a new daemon - will connect to the browser and log-in
+	my $interface = TTP::HTTP::Compare::DaemonInterface->new( $ep, $roleObj->{_facers}{$which} );
+	$interfaces->{$name} = $interface;
+	$roleObj->{_daemons}{$name} = $interface;
+	if( !$interface->wait_ready()){
+		msgErr( "by '".$role->name().":$name' Role::try_to_relogin() daemon not ready" );
+		return false;
+	}
+	# update the corresponding results part
+	$args //= {};
+	$args->{relogin} = true;
+	my $socket = $interface->send_command( $command, $args );
+	if( $socket ){
+		$results->{$name}{'TTP::HTTP::Compare::DaemonInterface'}{socket} = $socket;
+	} else {
+		msgErr( "by '$role:$name' Role::try_to_relogin() unable to send command" );
+		return false;
+	}
+
+	return true;
+}
 
 1;

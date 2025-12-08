@@ -80,6 +80,9 @@ my $worker = undef;
 # a global hash which gathers the TTP::HTTP::Compare::Role objects
 my $rolesHash = {};
 
+# total count of roles with at least one error
+my $errors = 0;
+
 # the webdriver
 my $driver = undef;
 
@@ -110,10 +113,8 @@ sub doCompare {
 	}
 	done_testing();
 	print_results_summary();
-	# and delete the objects *after* having printed out the result summary
-	foreach my $role ( $conf->roles()){
-		$rolesHash->{$role}->destroy();
-	}
+	# set the verb exit code to the count of roles with errors
+	$ep->runner()->runnableErrs( $errors );
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -130,17 +131,24 @@ sub doCompareByRole {
 		msgErr( "role='$role' is not defined, skipping" );
 		return;
 	}
+
 	# make sure the role is enabled
 	my $enabled = $roleObj->isEnabled();
 	if( !$enabled ){
 		msgVerbose( "role='$role' is disabled by configuration, skipping" );
 		return;
 	}
+
 	# ask the role to do the actual comparison
 	# each role object takes itself care of storing its own results
 	msgOut( "comparing for role '$role'..." );
 	$rolesHash->{$role} = $roleObj;
 	$roleObj->doCompare( $rundir, $worker, { debug => $opt_debug });
+
+	# get the count of errs, and re-init it before going to next role
+	$roleObj->{_errs} = TTP::errs();
+	$errors += 1 if TTP::errs();
+	$ep->runner()->runnableErrs( 0 );
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -254,3 +262,9 @@ if( !TTP::errs()){
 }
 
 TTP::exit();
+
+END {
+	foreach my $role ( sort keys %{$rolesHash} ){
+		$rolesHash->{$role}->terminate();
+	}
+}

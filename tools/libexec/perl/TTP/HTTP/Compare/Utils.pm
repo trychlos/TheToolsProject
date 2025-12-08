@@ -41,15 +41,6 @@ my $Const = {
 };
 
 # -------------------------------------------------------------------------------------------------
-# whether the two provided URLs address the same host
-
-sub same_host {
-    my ( $abs, $host ) = @_;
-    my $u = URI->new( $abs );
-    return ( $u->scheme =~ /^https?$/ ) && ( lc( $u->host // '' ) eq lc( $host ));
-}
-
-# -------------------------------------------------------------------------------------------------
 # (I):
 # - the page signature on a site
 # - the page signature on another site
@@ -127,6 +118,15 @@ sub page_signature_wo_url {
 
     my $reduced = join( '|', "top:$path", @w );
     return $reduced;
+}
+
+# -------------------------------------------------------------------------------------------------
+# whether the two provided URLs address the same host
+
+sub same_host {
+    my ( $abs, $host ) = @_;
+    my $u = URI->new( $abs );
+    return ( $u->scheme =~ /^https?$/ ) && ( lc( $u->host // '' ) eq lc( $host ));
 }
 
 1;

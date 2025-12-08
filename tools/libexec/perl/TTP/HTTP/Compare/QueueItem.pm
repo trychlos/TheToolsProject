@@ -49,6 +49,7 @@ use warnings;
 
 use Data::Dumper;
 use Scalar::Util qw( blessed );
+use Sereal::Decoder;
 use URI;
 
 use TTP;
@@ -276,7 +277,7 @@ sub origin {
 # (I):
 # - nothing
 # (O):
-# - returns the path, only available if from is link
+# - returns the path
 
 sub path {
 	my ( $self ) = @_;
@@ -457,10 +458,6 @@ sub new_by_signature {
 	my ( $class, $ep, $conf, $signature ) = @_;
 	$class = ref( $class ) || $class;
 
-	if( !$ep || !blessed( $ep ) || !$ep->isa( 'TTP::EP' )){
-		msgErr( "unexpected ep: ".TTP::chompDumper( $ep ));
-		TTP::stackTrace();
-	}
 	if( !$conf || !blessed( $conf ) || !$conf->isa( 'TTP::HTTP::Compare::Config' )){
 		msgErr( "unexpected conf: ".TTP::chompDumper( $conf ));
 		TTP::stackTrace();
@@ -491,6 +488,30 @@ sub new_by_signature {
 	}
 
 	$self->{_hash} = $hash;
+
+	return $self;
+}
+
+# -------------------------------------------------------------------------------------------------
+# Constructor
+# (I):
+# - the TTP::EP entry point
+# - a serialized snapshot
+# - an optional options hash
+# (O):
+# - this object
+
+sub new_by_snapshot {
+	my ( $class, $ep, $snap, $args ) = @_;
+	$class = ref( $class ) || $class;
+	$args //= {};
+
+	my $self = $class->SUPER::new( $ep, $args );
+	bless $self, $class;
+	msgDebug( __PACKAGE__."::new_by_snapshot()" );
+
+	my $decoder = Sereal::Decoder->new();
+	$decoder->decode( $snap, $self );
 
 	return $self;
 }

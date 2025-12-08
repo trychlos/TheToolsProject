@@ -37,7 +37,6 @@ use File::Temp qw( tempdir );
 use HTTP::Tiny;
 use JSON;
 use List::Util qw( any );
-use MIME::Base64 qw( decode_base64 );
 use Mojo::DOM;
 use Scalar::Util qw( blessed );
 use Selenium::Chrome;
@@ -52,11 +51,12 @@ use vars::global qw( $ep );
 
 use TTP::Constants qw( :all );
 use TTP::HTTP::Compare::Capture;
+use TTP::HTTP::Compare::Facer;
 use TTP::HTTP::Compare::Form;
+use TTP::HTTP::Compare::Utils;
 use TTP::Message qw( :all );
 
 use constant {
-	DEFAULT_DEBUG => false
 };
 
 my $Const = {
@@ -150,58 +150,68 @@ sub _decode_msg {
 # because the Perl driver cannot initiate the session, we do that through HTTP::Tiny
 # (I):
 # - the URL to be addressed
-#
+#   may msgErr(), so increment TTP::errs()
 
 sub _driver_start {
 	my ( $self ) = @_;
 
-    my $which = $self->which();
+    my $role = $self->facer()->roleName();
+    my $which = $self->facer()->which();
+    my $conf = $self->facer()->conf();
 
 	my $caps = $Const->{caps};
-	my $width = $self->conf()->confBrowserWidth();
-	my $height = $self->conf()->confBrowserHeight();
+	my $width = $conf->confBrowserWidth();
+	my $height = $conf->confBrowserHeight();
 	push( @{$caps->{capabilities}{alwaysMatch}{'goog:chromeOptions'}{args}}, "--window-size=$width,$height" );
 
     # have a user-data-dir per site
-    my $workdir = $self->conf()->runBrowserWorkdir();
+    my $workdir = $conf->runBrowserWorkdir();
     if( $workdir ){
         my $userdir = tempdir( "profile-$which.XXXXXXXX", DIR => $workdir );
         make_path( $userdir );
-        msgVerbose( "driver_start() which='$which' userdir='$userdir'" );
+        msgVerbose( "by '$role:$which' Browser::driver_start() userdir='$userdir'" );
         $self->{_userdir} = $userdir;
         push( @{$caps->{capabilities}{alwaysMatch}{'goog:chromeOptions'}{args}}, "--user-data-dir=$userdir" );
     }
 	#print "caps: ".Dumper( $caps );
 
     my $url = $self->_url_driver();
-	msgVerbose( "driver_start() which='$which' creating session with url_driver='$url'" );
+	msgVerbose( "by '$role:$which' Browser::driver_start() url_driver='$url'" );
 	my $res = $self->_http()->post( $url, {
 		headers => { 'Content-Type' => 'application/json' },
 		content => encode_json( $caps )
 	});
-	die "session create failed: $res->{status} $res->{reason}\n$res->{content}\n" unless $res->{success};
 
-	my $payload = decode_json( $res->{content} );
-	my $session_id = $payload->{sessionId} // $payload->{value}{sessionId} or die "no sessionId in response";
-	msgVerbose( "driver_start() which='$which' got sessionId='$session_id' for ".$self->urlBase());
-  
-	my $driver = Selenium::Remote::Driver->new(
-		session_id => $session_id,
-		remote_server_addr => $self->conf()->confBrowserDriverServer(),
-		port => $self->conf()->confBrowserDriverPort(),
-		path => $Const->{path},
-		is_w3c => true,
-		debug => $self->isDebug()
-	);
+    my $driver = undef;
 
-    # Can't use string ("timeout") as a HASH ref while "strict refs" in use at /usr/local/share/perl5/5.40/Selenium/Remote/Commands.pm line 497
-    #$driver->set_timeout( "script", 5000 );  # ms
-    #$driver->set_timeout( "implicit", 5000 );  # ms
-    #$driver->set_timeout( "page load", 5000 );  # ms
-    # Server returned error message read timeout at /usr/share/perl5/vendor_perl/Net/HTTP/Methods.pm line 274.
-    $driver->ua->timeout( $self->conf()->confBrowserUaTimeout());
+    if( $res->{success} ){
+        my $payload = decode_json( $res->{content} );
+        my $session_id = $payload->{sessionId} // $payload->{value}{sessionId};
+        if( $session_id ){
+            msgVerbose( "by '$role:$which' Browser::driver_start() got sessionId='$session_id' for ".$self->facer()->baseUrl());
+            $driver = Selenium::Remote::Driver->new(
+                session_id => $session_id,
+                remote_server_addr => $conf->confBrowserDriverServer(),
+                port => $conf->confBrowserDriverPort(),
+                path => $Const->{path},
+                is_w3c => true,
+                debug => $self->facer()->isDebug()
+            );
+            # Can't use string ("timeout") as a HASH ref while "strict refs" in use at /usr/local/share/perl5/5.40/Selenium/Remote/Commands.pm line 497
+            #$driver->set_timeout( "script", 5000 );  # ms
+            #$driver->set_timeout( "implicit", 5000 );  # ms
+            #$driver->set_timeout( "page load", 5000 );  # ms
+            # Server returned error message read timeout at /usr/share/perl5/vendor_perl/Net/HTTP/Methods.pm line 274.
+            $driver->ua->timeout( $conf->confBrowserUaTimeout());
+        } else {
+            msgErr( "by '$role:$which' Browser::driver_start() no sessionId in response" );
+        }
+    } else {
+    	msgErr( "session create failed: $res->{status} $res->{reason}\n$res->{content}" );
+    }
 
 	#print STDERR "driver ".Dumper( $driver );
+    # may return undef (in which case it will not be considered alive)
 	return $driver;
 }
 
@@ -290,23 +300,16 @@ sub _fetch_status {
 
 sub _handle_alert_if_present {
     my ( $self, $action ) = @_;          # $action: 'accept' | 'dismiss'
+
+    my $role = $self->facer()->roleName();
+    my $which = $self->facer()->which();
+
     my $txt = $self->_alert_text_w3c();
 	return undef if !$txt;
-    msgWarn( "got Alert '$txt'" );
+    msgWarn( "by '$role:$which' Browser::handle_alert() got Alert '$txt'" );
+
     $action && $action eq 'dismiss' ? $self->_alert_dismiss_w3c() : $self->_alert_accept_w3c();
     return $txt;
-}
-
-# -------------------------------------------------------------------------------------------------
-# (I):
-# - nothing
-# (O):
-# - a ref to the configuration hash
-
-sub _hash {
-    my ( $self ) = @_;
-
-	return $self->{conf}->var([ 'browser' ]);
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -314,7 +317,7 @@ sub _hash {
 sub _http {
     my ( $self ) = @_;
 
-	return HTTP::Tiny->new( timeout => $self->conf()->confBrowserTimeout());
+	return HTTP::Tiny->new( timeout => $self->facer()->conf()->confBrowserTimeout());
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -342,6 +345,104 @@ sub _performance_logs_get {
 }
 
 # -------------------------------------------------------------------------------------------------
+# To be sure the shifted queue item is applyable, try to restore the origin clicks chain.
+# The site is expected to already have been navigated to so do not look at the path but only consider frames
+# We loop into the chain until getting the same page signature than the origin one.
+# (I):
+# - the current queue item
+# - an optional options hash with following keys:
+#   > relogin: true when run for the second time, so do not try to re-login another time, defaulting to false
+# (O):
+# - an array with items like:
+#   > true|false: whether to continue or to return
+#   > reason: if false, then the reason to
+
+sub _restore_chain {
+	my ( $self, $queue_item, $args ) = @_;
+	$args //= {};
+
+    my $role = $self->facer()->roleName();
+    my $roleDir = $self->facer()->roleDir();
+    my $which = $self->facer()->which();
+    my $conf = $self->facer()->conf();
+
+	msgVerbose( "by '$role:$which' Browser::restore_chain()" );
+
+	# make sure we have the same origin frames signature
+	# origin signature is the ref page signature when we enqueued this item:
+	# we so have to restore this same page signature in order to be able to apply and click the queue xpath
+	my $origin_signature = $queue_item->origin() || $queue_item->dest();
+	my $origin_signature_wo_url = TTP::HTTP::Compare::Utils::page_signature_wo_url( $origin_signature );
+	my $current_signature = $self->signature({ label => "current $which" });
+	my $current_signature_wo_url = TTP::HTTP::Compare::Utils::page_signature_wo_url( $current_signature );
+
+	# reapply each and every queued item from the saved chain on both ref and new sites
+	if( $current_signature_wo_url ne $origin_signature_wo_url ){
+		msgVerbose( "by '$role:$which' Browser::restore_chain() expected signature='$origin_signature'" );
+		foreach my $qi ( @{ $queue_item->chain() }){
+			msgVerbose( "by '$role:$which' Browser::restore_chain() restoring qi='".$qi->signature()."'" );
+			my $current_path = TTP::HTTP::Compare::Utils::page_signature_to_path( $current_signature );
+			my $origin_path = TTP::HTTP::Compare::Utils::page_signature_to_path( $origin_signature );
+			# navigate by link
+			if( $qi->isLink() || $current_path ne $origin_path ){
+				if( $qi->isLink()){
+					$self->navigate( $origin_path );
+				} else {
+					$self->reset_spa({ path => $origin_path });
+				}
+			# navigate by click
+			} elsif( $qi->isClick()){
+				if( !$self->click_by_xpath( $qi->xpath() )){
+					msgWarn( "by '$role:$which' Browser::restore_chain() result=error: unable to click in '".$qi->xpath()."'" );
+					return [ false, "unable to click in '".$qi->xpath()."'" ];
+				}
+			} else {
+				msgWarn( "by '$role:$which' Browser::restore_chain() result=error: unexpected from='".$qi->from()."'" );
+                return [ false, "unexpected from='".$qi->from()."'" ];
+			}
+			# wait for page ready
+			$self->wait_for_page_ready();
+			# take a screenshot post-navigate
+			if( $conf->confCrawlByClickIntermediateScreenshots()){
+				# prepare the post-navigation label
+				my $label = sprintf( "restored_%06d", $qi->visited());
+                my $hash = $self->wait_and_capture({ wait => false });
+                my $cap = TTP::HTTP::Compare::Capture->new( $ep, $self->facer(), $hash );
+				$cap->writeScreenshot( $queue_item, { dir => $roleDir, suffix => $label, subdir => 'restored' });
+			}
+			# check the got signature exiting this restore loop as soon as we have got the right signature on the both sites
+			$current_signature = $self->signature({ label => "got $which" });
+			if( $current_signature eq $origin_signature ){
+				msgVerbose( "by '$role:$which' Browser::restore_chain() got expected signature '$origin_signature': fine" );
+				last;
+			}
+			# if we have landed on a signin page, what to do ?
+			# at least dump the performance logs ring
+			my $should_signin = $self->_should_signin( $current_signature );
+			if( $should_signin ){
+				my $relogin = $args->{relogin} // false;
+				if( $relogin ){
+					$self->dump_performance_ring( $queue_item );
+					msgWarn( "by '$role:$which' Browser::restore_chain() result=error: signin loop" );
+                    return [ false, "relogin loop" ];
+				} else {
+                    return [ false, "relogin" ];
+				}
+			}
+		}
+	}
+
+	# check the result
+	if( $current_signature ne $origin_signature ){
+		msgWarn( "by '$role:$which' Browser::restore_chain() result=error: got signature='$current_signature'" );
+		return [ false, "signature error" ];
+	}
+
+    msgVerbose( "by '$role:$which' Browser::restore_chain() success" );
+	return [ true, undef ];
+}
+
+# -------------------------------------------------------------------------------------------------
 # Sanitizing the rendered html let us compute an idempotent md5 hash for this page
 # This md5 hash will be later used to compare the ref and new html pages
 # We honor here the configuration for 'compare.htmls.ignore'
@@ -350,18 +451,20 @@ sub _performance_logs_get {
 sub _sanitize_and_hash_html {
     my ( $self ) = @_;
 
+    my $conf = $self->facer()->conf();
+
     # 1) grab rendered markup
     my $html = $self->driver()->get_page_source();
     my $dom = Mojo::DOM->new( $html );
     my $out = $dom->to_string;
 
     # 2) drop nodes by CSS selector
-    for my $sel ( @{ $self->conf()->confCompareHtmlsIgnoreDOMSelectors() }){
+    for my $sel ( @{ $conf->confCompareHtmlsIgnoreDOMSelectors() }){
         $dom->find( $sel )->each( sub { $_->remove } );
     }
 
     # 3) strip/normalize attributes
-    my @attr_rx = map { qr/$_/ } @{ $self->conf()->confCompareHtmlsIgnoreDOMAttributes() };
+    my @attr_rx = map { qr/$_/ } @{ $conf->confCompareHtmlsIgnoreDOMAttributes() };
     $dom->find( '*' )->each( sub {
         my $el = $_;
         my $attrs = $el->attr // {};
@@ -398,12 +501,31 @@ sub _sanitize_and_hash_html {
 
     # 4) text normalization (regexes that cause noise)
     $out = $dom->to_string;
-    for my $pat ( @{ $self->conf()->confCompareHtmlsIgnoreTextPatterns() }){
+    for my $pat ( @{ $conf->confCompareHtmlsIgnoreTextPatterns() }){
         $out =~ s/$pat/<var>/g;
     }
     $out =~ s/\s+/ /g;
 
     return ( $out, md5_hex( encode_utf8( NFC( $out // '' ))));
+}
+
+# -------------------------------------------------------------------------------------------------
+# whether we have (unexpectedly) landed on a signin page
+# (I):
+# - the page signature
+# (O):
+# - true if we had to re-login and this re-login has been successful, so wants to re-run the restore chain
+# - false else (just continue as we can)
+
+sub _should_signin {
+	my ( $self, $page_signature ) = @_;
+
+	my $page_path = TTP::HTTP::Compare::Utils::page_signature_to_path( $page_signature );
+	my $frames_paths = TTP::HTTP::Compare::Utils::page_signature_to_frames_path( $page_signature );
+	my $loginConf = $self->facer()->conf()->var( 'login' ) // {};
+	my $loginPath = $loginConf->{path} // '';
+
+	return $page_path eq $loginPath || grep( /$loginPath/, @{ $frames_paths });
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -426,7 +548,9 @@ sub _signature_clear {
 sub _url_driver {
     my ( $self ) = @_;
 
-	return "http://".$self->conf()->confBrowserDriverServer().":".$self->conf()->confBrowserDriverPort()."$Const->{path}/session";
+    my $conf = $self->facer()->conf();
+
+	return "http://".$conf->confBrowserDriverServer().":".$conf->confBrowserDriverPort()."$Const->{path}/session";
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -451,7 +575,188 @@ sub _url_ssid {
 	return $self->_url_driver()."/".$self->driver()->{session_id};
 }
 
+# -------------------------------------------------------------------------------------------------
+# Wait for the body is ready
+# returns an array:
+# - true|false whether the body is found (the page has at least began to load)
+# - alerts array ref, maybe empty
+
+sub _wait_for_body {
+    my ( $self ) = @_;
+
+    my $role = $self->facer()->roleName();
+    my $which = $self->facer()->which();
+    my $conf = $self->facer()->conf();
+
+    my $t0 = time;
+	my @alerts = ();
+	my $timeout = $conf->confBrowserTimeout();
+    while ( time - $t0 < $timeout ){
+        my $el = eval { $self->driver()->find_element_by_css( 'body' ) };
+		msgVerbose( "by '$role:$which' Browser::wait_for_body() got el=$el" );
+		if( $el ){
+	        return ( true, \@alerts );
+		} else {
+    		my $alert = $self->_handle_alert_if_present( 'accept' );
+			push( @alerts, $alert ) if $alert;
+		}
+        select undef, undef, undef, 0.1;	# wait 0.1 sec before retry
+    }
+    return ( false, \@alerts );
+}
+
+# -------------------------------------------------------------------------------------------------
+# DOM becomes "stable" when text length + element count stop changing for quiet_ms
+
+sub _wait_for_dom_stable {
+    my ( $self ) = @_;
+    my $quiet_ms  //= 500;
+
+    my $last_sig;
+    my $last_change_t = Time::HiRes::time;
+    my $t0 = Time::HiRes::time;
+	my $timeout = $self->facer()->conf()->confBrowserTimeout();
+
+    while( Time::HiRes::time - $t0 < $timeout ){
+        my $sig = $self->exec_js_w3c_sync( q{
+            const root = document.body;
+            if( !root ) return [0,0,0];
+            const textLen = ( root.innerText || '' ).length;
+            const elCount = document.querySelectorAll( '*' ).length;
+            const hashish = textLen ^ elCount; // cheap fingerprint
+            return [textLen, elCount, hashish];
+        }, [] );
+        if( defined $last_sig && join( ',', @$sig ) ne join( ',', @$last_sig )){
+            $last_sig = $sig;
+            $last_change_t = Time::HiRes::time;
+        } else {
+            $last_sig //= $sig;
+        }
+        if(( Time::HiRes::time - $last_change_t ) * 1000 >= $quiet_ms ){
+            return true;
+        }
+        select undef, undef, undef, 0.1;	# wait 0.1 sec before retry
+    }
+    return false;
+}
+
+# -------------------------------------------------------------------------------------------------
+# This waits until the DevTools performance log has been quiet for N ms.
+# It’s a good proxy for “page finished loading extra XHRs”.
+# Collect performance logs
+# Returns [ \@logs, $had_doc_response ]
+
+sub _wait_for_network_idle {
+    my ( $self ) = @_;
+    my $quiet_ms  //= 500;
+
+    my $t0 = Time::HiRes::time;
+    my $last_event_t = $t0;
+	my $timeout = $self->facer()->conf()->confBrowserTimeout();
+
+    my @all;                 # we keep EVERYTHING we read
+    my $had_doc_response = 0;
+
+    while( Time::HiRes::time - $t0 < $timeout ){
+        my $logs = eval { $self->_performance_logs_get(); };
+        if( scalar( @{$logs} )){
+            push @all, @{$logs};
+            for my $e ( @{$logs} ){
+                my $msg = $self->_decode_msg( $e ) || next;
+                my $m = $msg->{method} // next;
+                if( $m =~ /^Network\./ ){
+                    $last_event_t = Time::HiRes::time;
+                    $had_doc_response ||= ( $m eq 'Network.responseReceived' && (( $msg->{params}{type} // '') eq 'Document' ));
+                }
+            }
+        }
+        # quiet window?
+        if ($had_doc_response && (Time::HiRes::time - $last_event_t) * 1000 >= $quiet_ms) {
+            last;
+        }
+        select undef, undef, undef, 0.1;
+    }
+    return (\@all, $had_doc_response);
+}
+
+# -------------------------------------------------------------------------------------------------
+# Generic waiter: runs $cond->() repeatedly until it returns a truthy value.
+# Returns that value, or undef on timeout.
+
+sub _wait_until {
+    my ( $self, %opt ) = @_;
+    TTP::stackTrace() if !$opt{cond} || ref( $opt{cond} ) ne 'CODE';
+
+    my $role = $self->facer()->roleName();
+    my $which = $self->facer()->which();
+    my $conf = $self->facer()->conf();
+
+    my $cond = $opt{cond};
+    my $interval = $opt{interval} // 0.1;   # seconds
+    my $start = time;
+	my $timeout = $conf->confBrowserTimeout();
+
+    while( time - $start < $timeout ){
+        my $val = eval { $cond->() };
+        return $val if $val;
+        select undef, undef, undef, $interval;   # << precise sleep in (maybe fractional) seconds
+    }
+
+    return;
+}
+
 ### Public methods
+
+# -------------------------------------------------------------------------------------------------
+# This is the main routine of the 'by-click' crawl
+# - have to restore the chain
+# - click by xpath
+# - wait and capture
+# (I):
+# - the current queue item
+# - an optional options hash with following keys:
+#   > relogin: true when run for the second time, so do not try to re-login another time, defaulting to false
+# (O):
+# - the final captured page as a hash, or a scalar which indicates either a replay request, or a reason error
+
+sub click_and_capture {
+    my ( $self, $queue_item, $args ) = @_;
+    TTP::stackTrace() if !$queue_item || !blessed( $queue_item ) || !$queue_item->isa( 'TTP::HTTP::Compare::QueueItem' );
+
+    my $role = $self->facer()->roleName();
+    my $which = $self->facer()->which();
+    msgVerbose( "by '$role:$which' Browser::click_and_capture() xpath='".$queue_item->xpath()."'" );
+
+    # if we have to re-login, returns to the parent program which will terminate this daemon and start another one
+	my ( $ok, $res ) = $self->_restore_chain( $queue_item, $args );
+    return $res if !$ok;
+
+    $ok = false;
+    if( $self->click_by_xpath( $queue_item->xpath())){
+        $ok = true;
+    } else {
+        msgVerbose( "by '$role:$which' Browser::click_and_capture() xpath not available" );
+        my $match_new = $self->clickable_find_equivalent_xpath( $queue_item );
+        if( $match_new ){
+            msgVerbose( "by '$role:$which' Browser::click_and_capture() found match '$match_new'" );
+            if( $self->click_by_xpath( $match_new )){
+                $ok = true;
+            } else {
+                msgErr( "by '$role:$which' Browser::click_and_capture() unable to click on new matched xpath" );
+                return "$role:$which:unable_to_click_on_found_new_match"
+            }
+        } else {
+            msgErr( "by '$role:$which' Browser::click_and_capture() no new match found" );
+            return "$role:$which:no_new_match_found"
+        }
+    }
+
+    # if xpath click was successful then wait and return the capture
+    return $self->wait_and_capture() if $ok;
+    
+    # should never come here
+    return "unexpected error";
+}
 
 # -------------------------------------------------------------------------------------------------
 # JS: find element by xpath across top + same-origin iframe docs; click it.
@@ -461,6 +766,9 @@ sub _url_ssid {
 sub click_by_xpath {
     my ( $self, $xpath ) = @_;
     TTP::stackTrace() if !$xpath;
+
+    my $role = $self->facer()->roleName();
+    my $which = $self->facer()->which();
 
     my $js = q{
       return (function(xp){
@@ -516,11 +824,11 @@ sub click_by_xpath {
 	$self->_performance_logs_drain();
     if( $self->exec_js_w3c_sync( $js, [ $xpath ] )){
         $self->_signature_clear();
-    	msgVerbose( "click_by_xpath() which='".$self->which()."' xpath='$xpath' success" );
+    	msgVerbose( "by '$role:$which' Browser::click_by_xpath() xpath='$xpath' success" );
         return true;
     }
 
-    msgWarn( "click_by_xpath() which='".$self->which()."' xpath='$xpath' error" );
+    msgWarn( "by '$role:$which' Browser::click_by_xpath() xpath='$xpath' error" );
     return false;
 }
 
@@ -695,7 +1003,8 @@ sub clickable_discover_targets_xpath {
         return out;
       })( arguments[0], arguments[1] );
     };
-    my $list = $self->exec_js_w3c_sync( $js, [ $self->conf()->confCrawlByClickFinders(), $self->conf()->confCrawlByClickCssExcludes() ]);
+    my $conf = $self->facer()->conf();
+    my $list = $self->exec_js_w3c_sync( $js, [ $conf->confCrawlByClickFinders(), $conf->confCrawlByClickCssExcludes() ]);
     #print STDERR "clickables: ".Dumper( $list );
     return $list // [];
 }
@@ -811,44 +1120,20 @@ sub clickable_find_equivalent_xpath {
 }
 
 # -------------------------------------------------------------------------------------------------
-# (I):
-# - nothing
-# (O):
-# - a ref to the TTP::HTTP::Compare::Config configuration object as provided by the Role object
-
-sub conf {
-    my ( $self ) = @_;
-
-	return $self->role()->conf();
-}
-
-# -------------------------------------------------------------------------------------------------
-# (I):
-# - nothing
-# (O):
-# - the path of the current URL
-
-sub current_path {
-    my ( $self ) = @_;
-
-	my $url = $self->driver()->get_current_url();
-    my $u = URI->new( $url );
-
-    return $u->path;
-}
-
-# -------------------------------------------------------------------------------------------------
 # close all the objects just before running the DESTRUCT phase
 
 sub destroy {
 	my ( $self ) = @_;
 
+    my $role = $self->facer()->roleName();
+    my $which = $self->facer()->which();
+
 	my $driver = $self->driver();
     if( $driver ){
     	$driver->quit();
-        msgVerbose( "'".$self->which()."' driver quitting" );
+        msgVerbose( "by '$role:$which' Browser::destroy() terminating driver" );
     } else {
-        msgVerbose( "'".$self->which()."' driver is not defined" );
+        msgVerbose( "by '$role:$which' Browser::destroy() driver is not defined" );
     }
 
     # should be automatic, but isn't
@@ -856,12 +1141,12 @@ sub destroy {
     if( $userdir ){
         rmtree( $userdir );
         if( -d $userdir ){
-            msgVerbose( "unable to rmtree '$userdir'" );
+            msgVerbose( "by '$role:$which' Browser::destroy() unable to rmtree '$userdir'" );
         } else {
-            msgVerbose( "successfully removed '$userdir' tree" );
+            msgVerbose( "by '$role:$which' Browser::destroy() successfully removed '$userdir' tree" );
         }
     } else {
-        msgVerbose( "'".$self->which()."' userdir is not defined" );
+        msgVerbose( "by '$role:$which' Browser::destroy() userdir is not defined" );
     }
 }
 
@@ -893,11 +1178,15 @@ sub dump_performance_ring {
 		TTP::stackTrace();
 	}
 
-    my $which = $self->which();
-    my $fdir = File::Spec->catdir( $args->{dir} || $self->role()->roleDir() || File::Temp->tempdir(), "perf_logs" );
+    my $role = $self->facer()->roleName();
+    my $which = $self->facer()->which();
+
+    my $fname = sprintf( "%06d_%s_%s", $queue_item->visited(), $which, "".time().".log" );
+    my $splitdir = substr( $fname, 0, 3 );
+    my $fdir = File::Spec->catdir( $args->{dir} || $self->facer()->roleDir() || File::Temp->tempdir(), "perf_logs", $splitdir );
     make_path( $fdir );
-    my $path = File::Spec->catfile( $fdir, sprintf( "%06d_%s_%s", $queue_item->visited(), $which, "".time().".log" ));
-    msgVerbose( "writing '$which' perf logs to $path" );
+    my $path = File::Spec->catfile( $fdir, $fname );
+    msgVerbose( "by '$role:$which' Browser::dump_performance_ring() writing perf logs to $path" );
     open my $fh, '>:utf8', $path or die "open $path: $!";
     print $fh $_->{message}, "\n" for @{$self->{_perf_logs}};   # raw DevTools JSON per line
     close $fh;
@@ -905,12 +1194,18 @@ sub dump_performance_ring {
 
 # -------------------------------------------------------------------------------------------------
 # Execute JS (sync) via W3C endpoint (no SRD quirks)
+# returns undef in case of an error
 
 sub exec_js_w3c_sync {
     my ( $self, $script, $args ) = @_;
+
+    my $role = $self->facer()->roleName();
+    my $which = $self->facer()->which();
+    my $conf = $self->facer()->conf();
+
     my $url = $self->_url_ssid()."/execute/sync";
     my $res;
-    my $tries = $self->conf()->confBrowserExecjsRetries();
+    my $tries = $conf->confBrowserExecjsRetries();
     while ( $tries-- ){
 		try {
 			$res = $self->_http()->post( $url, {
@@ -928,11 +1223,26 @@ sub exec_js_w3c_sync {
 			TTP::stackTrace();
 		};
 		last if $res->{success};
-		die( "exec_js_w3c_sync() status=$res->{status} reason='$res->{reason}' content='$res->{content}'" ) unless $res->{content} =~ /Timed out/i && $tries;
-        msgVerbose( "exec_js_w3c_sync() sleeping for $Const->{exec_js}{sleep}s (tries=$tries)" );
-        sleep $self->conf()->confBrowserExecjsSleep();
+        if( $res->{content} =~ /Timed out/i && $tries ){
+            msgVerbose( "by '$role:$which' Browser::exec_js_w3c_sync() sleeping for $Const->{exec_js}{sleep}s (tries=$tries)" );
+            sleep $conf->confBrowserExecjsSleep();
+        } else {
+    		msgErr( "by '$role:$which' Browser::exec_js_w3c_sync() status=$res->{status} reason='$res->{reason}' content='$res->{content}'" );
+            last;
+        }
 	}
-    return decode_json( $res->{content} )->{value};
+    return $res->{success} ? decode_json( $res->{content} )->{value} : undef;
+}
+
+# -------------------------------------------------------------------------------------------------
+# (I):
+# - nothing
+# (O):
+# - returns the TTP::HTTP::Compare::Facer provided at instanciation time
+
+sub facer {
+	my ( $self ) = @_;
+	return $self->{_facer}
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -942,7 +1252,7 @@ sub exec_js_w3c_sync {
 # (O):
 # - 
 
-sub handleForm {
+sub handle_form {
 	my ( $self, $selector, $description ) = @_;
 
     my $element = eval { $self->driver()->find_element( $selector, 'css' ) };
@@ -953,37 +1263,20 @@ sub handleForm {
         $form->handle();
     }
 
-    return $form;
+    # doesn't do not return anything at the moment (remind that the return value must be json-serializable)
+    #return $form;
 }
 
 # -------------------------------------------------------------------------------------------------
 # (I):
 # - nothing
 # (O):
-# - whether this browser driver must be run in debug mode
+# - whether this browser driver has been correctly started
 
-sub isDebug {
+sub isAlive {
 	my ( $self ) = @_;
 
-	my $args = $self->{_args};
-	my $debug = $args->{debug};
-	$debug = DEFAULT_DEBUG if !defined $debug;
-
-	return $debug;
-}
-
-# -------------------------------------------------------------------------------------------------
-# (I):
-# - nothing
-# (O):
-# - whether this browser driver is correctly defined
-
-sub isDefined {
-	my ( $self ) = @_;
-
-	my $ref = $self->_hash();
-
-	return defined $ref;
+	return $self->{_driver} // false;
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -994,20 +1287,25 @@ sub isDefined {
 sub navigate {
 	my ( $self, $path ) = @_;
 
-    my $url = $self->urlBase().$path;
-    msgVerbose( "navigate() which='".$self->which()."' url='$url'" );
+    my $role = $self->facer()->roleName();
+    my $which = $self->facer()->which();
+    my $conf = $self->facer()->conf();
+
+    my $url = $self->facer()->baseUrl().$path;
+    msgVerbose( "by '$role:$which' Browser::navigate() url='$url'" );
 
     # Drain logs so we only parse events for THIS navigation
     # Retry on timed out
     $self->_performance_logs_drain();
-    my $tries = $self->conf()->confBrowserNavigateRetries();
+    my $tries = $conf->confBrowserNavigateRetries();
+    my $sleep = $conf->confBrowserNavigateSleep();
     while ( $tries-- ){
         my $ok = eval { $self->driver()->get( $url ); 1 };
         last if $ok;
         my $e = "$@";
         die $e unless $e =~ /read timeout/i && $tries;
-        msgVerbose( "navigate() sleeping for $Const->{navigate}{sleep}s (tries=$tries)" );
-        sleep $self->conf()->confBrowserNavigateSleep();
+        msgVerbose( "by '$role:$which' Browser::navigate() sleeping for ${sleep}s (tries=$tries)" );
+        sleep( $sleep );
     }
     $self->_signature_clear();
 }
@@ -1038,8 +1336,10 @@ sub reset_spa {
 	my ( $self, $args ) = @_;
     $args //= {};
 
+    my $role = $self->facer()->roleName();
+    my $which = $self->facer()->which();
     my $path = $args->{path} // '/';
-    msgVerbose( "reset_spa() which='".$self->which()."' path='$path'" );
+    msgVerbose( "by '$role:$which' Browser::reset_spa() path='$path'" );
 
     # clean SPA state:
     $self->exec_js_w3c_sync( q{
@@ -1050,33 +1350,6 @@ sub reset_spa {
     # hard reload the root SPA entry (fresh bootstrap)
     $self->navigate( "$path?__ttprand=".int( rand( 1_000_000 )));
     $self->wait_for_page_ready();
-}
-
-# -------------------------------------------------------------------------------------------------
-# (I):
-# - nothing
-# (O):
-# - the role as a TTP::HTTP::Compare::Role object
-
-sub role {
-	my ( $self ) = @_;
-
-    return $self->{_role};
-}
-
-# -------------------------------------------------------------------------------------------------
-# (I):
-# - nothing
-# (O):
-# - the screenshot as a png bytes array
-
-sub screenshot {
-	my ( $self ) = @_;
-
-    my $b64 = $self->driver()->screenshot();    # base64
-    my $png = decode_base64( $b64 );
-
-    return $png;
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -1097,12 +1370,16 @@ sub signature {
     my ( $self, $args ) = @_;
     $args //= {};
 
+    my $role = $self->facer()->roleName();
+    my $which = $self->facer()->which();
+    my $conf = $self->facer()->conf();
+
     my $label = $args->{label} // '';
     $label .= ' ' if $label && $label !~ /\s$/;
 
     my $signature = $self->{_signature};
     if( $signature ){
-        msgVerbose( "${label}signature() cached='$signature'" );
+        msgVerbose( "by '$role:$which' ${label}Browser::signature() cached='$signature'" );
         return $signature;
     }
 
@@ -1165,46 +1442,16 @@ sub signature {
             $path = $path->path;
         }
         push( @{$parts}, "if:$f->{index}#$f->{id}#$f->{src}#$path" );
-        if (!$f->{sameOrigin} && $self->conf()->confCrawlSameHost()){
-            msgWarn( "found cross origin $f->{href}" );
+        if (!$f->{sameOrigin} && $conf->confCrawlSameHost()){
+            msgWarn( "by '$role:$which' ${label}Browser::signature() found cross origin $f->{href}" );
         }
     }
 
     $signature = join( '|', @$parts );
     $self->{_signature} = $signature;
-    msgVerbose( "${label}signature() computed='$signature'" );
+    msgVerbose( "by '$role:$which' ${label}Browser::signature() computed='$signature'" );
 
     return $signature;
-}
-
-# -------------------------------------------------------------------------------------------------
-# (I):
-# - nothing
-# (O):
-# - the base URL as defined at instanciation time
-
-sub urlBase {
-	my ( $self ) = @_;
-
-    my $which = $self->which();
-    my $url = undef;
-    if( $which eq 'ref' ){
-        $url = $self->role()->conf()->confBasesRefUrl();
-    } elsif( $which eq 'new' ){
-        $url = $self->role()->conf()->confBasesNewUrl();
-    } else {
-        msgErr( "urlBase() which='$which' is not handled" );
-    }
-	return $url;
-}
-
-# -------------------------------------------------------------------------------------------------
-# returns the path extracted from the current URL
-
-sub urlPath {
-    my ( $self ) = @_;
-    my $u = URI->new( $self->driver()->get_current_url());
-    return $u->path || '/';
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -1215,7 +1462,7 @@ sub urlPath {
 #   > wait: whether we want to wait before capturing, defaulting to true
 # 	> logs: an array ref, may be empty
 # (O):
-# -the captured document as a TTP::HTTP::Compare::Capture object
+# - the captured document as a hash
 
 sub wait_and_capture {
     my ( $self, $args ) = @_;
@@ -1223,6 +1470,9 @@ sub wait_and_capture {
 
 	my $wait = true;
 	$wait = $args->{wait} if defined $args->{wait};
+
+    my $role = $self->facer()->roleName();
+    my $which = $self->facer()->which();
 
 	my $driver = $self->driver();
 	my $ready;
@@ -1232,10 +1482,10 @@ sub wait_and_capture {
 	if( $wait ){
 		( $ready, $alerts, $logs ) = $self->wait_for_page_ready();
 		if( !$ready ){
-			msgWarn( "Timeout waiting for page ready for ".$driver->get_current_url());
+			msgWarn( "by '$role:$which' Browser::wait_and_capture() timeout waiting for page ready for ".$driver->get_current_url());
 			return undef;
 		}
-		msgVerbose( "page ready, got alerts=[".join( '|', @{$alerts} )."]" );
+		msgVerbose( "by '$role:$which' Browser::wait_and_capture() page ready, got alerts=[".join( '|', @{$alerts} )."]" );
 	}
 
     # Grab performance log entries and find the main Document response
@@ -1244,7 +1494,14 @@ sub wait_and_capture {
 		$logs = eval { $self->_performance_logs_get() };
 	}
 
-	my $doc = $self->_extract_main_doc_from_perf_logs( $logs, $driver->get_current_url());
+    # current url after end of wait
+    # compute the current path
+    my $current_url = $driver->get_current_url();
+    my $u = URI->new( $current_url );
+    my $current_path = $u->path // '/';
+    msgLog( "current_path='$current_path'" );
+
+	my $doc = $self->_extract_main_doc_from_perf_logs( $logs, $current_url );
 	#print STDERR "wait_and_capture() $args->{label} doc ".Dumper( $doc );
 	my ( $status, $mime, $resp_url, $headers ) = $doc ? @$doc{qw/status ct url headers/} : (undef, undef, undef, {});
 
@@ -1252,7 +1509,7 @@ sub wait_and_capture {
 	if( !$status ){
 		my $r = $self->_fetch_status();
 		if ($r && $r->{status}) {
-			( $status, $mime, $resp_url ) = ( $r->{status}, lc($r->{ct} // '' ), $driver->get_current_url );
+			( $status, $mime, $resp_url ) = ( $r->{status}, lc($r->{ct} // '' ), $current_url );
 			$mime =~ s/;.*$//;
 		} else {
 			# last-resort heuristic: if body exists, treat as 200-ish
@@ -1267,7 +1524,8 @@ sub wait_and_capture {
     # Sanitize + hash the rendered DOM
 	my ( $html, $dom_hash ) = $self->_sanitize_and_hash_html();
 
-    return TTP::HTTP::Compare::Capture->new( $self->ep(), $self, {
+    # return most of we can as informations about current page (about 160 kB)
+    return {
 		html         => $html,
         dom_hash     => $dom_hash,
         status       => $status,                                   # e.g., 200
@@ -1275,107 +1533,11 @@ sub wait_and_capture {
         content_type => $mime || (( $headers || {} )->{'content-type'} // '' ),
         final_url    => $driver->get_current_url(),                # landed URL
         response_url => $resp_url,                                 # URL from response event
-		alerts       => $alerts || []
-    });
-}
-
-# -------------------------------------------------------------------------------------------------
-# Wait for the body is ready
-# returns an array:
-# - true|false whether the body is found (the page is ready)
-# - alerts array ref, maybe empty
-
-sub wait_for_body {
-    my ( $self ) = @_;
-    my $t0 = time;
-	my @alerts = ();
-	my $timeout = $self->conf()->confBrowserTimeout();
-    while ( time - $t0 < $timeout ){
-        my $el = eval { $self->driver()->find_element_by_css( 'body' ) };
-		msgVerbose( "wait_for_body() got el=$el" );
-		if( $el ){
-	        return ( true, \@alerts );
-		} else {
-    		my $alert = $self->_handle_alert_if_present( 'accept' );
-			push( @alerts, $alert ) if $alert;
-		}
-        select undef, undef, undef, 0.1;	# wait 0.1 sec before retry
-    }
-    return ( false, \@alerts );
-}
-
-# -------------------------------------------------------------------------------------------------
-# DOM becomes "stable" when text length + element count stop changing for quiet_ms
-
-sub wait_for_dom_stable {
-    my ( $self ) = @_;
-    my $quiet_ms  //= 500;
-
-    my $last_sig;
-    my $last_change_t = Time::HiRes::time;
-    my $t0 = Time::HiRes::time;
-	my $timeout = $self->conf()->confBrowserTimeout();
-
-    while( Time::HiRes::time - $t0 < $timeout ){
-        my $sig = $self->exec_js_w3c_sync( q{
-            const root = document.body;
-            if( !root ) return [0,0,0];
-            const textLen = ( root.innerText || '' ).length;
-            const elCount = document.querySelectorAll( '*' ).length;
-            const hashish = textLen ^ elCount; // cheap fingerprint
-            return [textLen, elCount, hashish];
-        }, [] );
-        if( defined $last_sig && join( ',', @$sig ) ne join( ',', @$last_sig )){
-            $last_sig = $sig;
-            $last_change_t = Time::HiRes::time;
-        } else {
-            $last_sig //= $sig;
-        }
-        if(( Time::HiRes::time - $last_change_t ) * 1000 >= $quiet_ms ){
-            return true;
-        }
-        select undef, undef, undef, 0.1;	# wait 0.1 sec before retry
-    }
-    return false;
-}
-
-# -------------------------------------------------------------------------------------------------
-# This waits until the DevTools performance log has been quiet for N ms.
-# It’s a good proxy for “page finished loading extra XHRs”.
-# Collect performance logs
-# Returns [ \@logs, $had_doc_response ]
-
-sub wait_for_network_idle {
-    my ( $self ) = @_;
-    my $quiet_ms  //= 500;
-
-    my $t0 = Time::HiRes::time;
-    my $last_event_t = $t0;
-	my $timeout = $self->conf()->confBrowserTimeout();
-
-    my @all;                 # we keep EVERYTHING we read
-    my $had_doc_response = 0;
-
-    while( Time::HiRes::time - $t0 < $timeout ){
-        my $logs = eval { $self->_performance_logs_get(); };
-        if( scalar( @{$logs} )){
-            push @all, @{$logs};
-            for my $e ( @{$logs} ){
-                my $msg = $self->_decode_msg( $e ) || next;
-                my $m = $msg->{method} // next;
-                if( $m =~ /^Network\./ ){
-                    $last_event_t = Time::HiRes::time;
-                    $had_doc_response ||= ( $m eq 'Network.responseReceived' && (( $msg->{params}{type} // '') eq 'Document' ));
-                }
-            }
-        }
-        # quiet window?
-        if ($had_doc_response && (Time::HiRes::time - $last_event_t) * 1000 >= $quiet_ms) {
-            last;
-        }
-        select undef, undef, undef, 0.1;
-    }
-    return (\@all, $had_doc_response);
+		alerts       => $alerts || [],
+        path         => $current_path,
+        signature    => $self->signature(),
+        screenshot   => $driver->screenshot()
+    };
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -1387,10 +1549,15 @@ sub wait_for_network_idle {
 
 sub wait_for_page_ready {
     my ( $self ) = @_;
-    my ( $ok, $alerts ) = $self->wait_for_body();
+
+    my $role = $self->facer()->roleName();
+    my $which = $self->facer()->which();
+
+    my ( $ok, $alerts ) = $self->_wait_for_body();
     return ( false, [], [] ) unless $ok;
-    my ( $logs, $had_doc ) = $self->wait_for_network_idle();  # quiet network ~600ms
-    $self->wait_for_dom_stable() or msgWarn( "DOM not fully stable after timeout" );
+    my ( $logs, $had_doc ) = $self->_wait_for_network_idle();  # quiet network ~600ms
+    $self->_wait_for_dom_stable() or msgWarn( "by '$role:$which' DOM not fully stable after timeout" );
+
     return ( $ok, $alerts, $logs );
 }
 
@@ -1399,38 +1566,10 @@ sub wait_for_page_ready {
 
 sub wait_for_url_change {
     my ( $self, $old_url ) = @_;
-    return $self->wait_until(
+    return $self->_wait_until(
         interval => 0.1,
         cond     => sub { my $u = $self->driver()->get_current_url; ($u ne $old_url) ? $u : undef }
     );
-}
-
-# -------------------------------------------------------------------------------------------------
-# Generic waiter: runs $cond->() repeatedly until it returns a truthy value.
-# Returns that value, or undef on timeout.
-
-sub wait_until {
-    my ( $self, %opt ) = @_;
-    my $cond = $opt{cond} or die "wait_until: missing cond";
-    my $interval = $opt{interval} // 0.1;   # seconds
-    my $start = time;
-	my $timeout = $self->conf()->confBrowserTimeout();
-    while( time - $start < $timeout ){
-        my $val = eval { $cond->() };
-        return $val if $val;
-        select undef, undef, undef, $interval;   # << precise sleep in (maybe fractional) seconds
-    }
-    return;
-}
-
-# -------------------------------------------------------------------------------------------------
-# Returns whether we address the 'ref' or the 'new' site
-# This relies on the instanciation args
-
-sub which {
-    my ( $self ) = @_;
-
-	return $self->{_which};
 }
 
 ### Class methods
@@ -1439,39 +1578,26 @@ sub which {
 # Constructor
 # (I):
 # - the TTP::EP entry point
-# - the TTP::HTTP::Compare::Role object
-# - whether we address the new or the reference site ('ref'|'new')
-# - an optional options hash with following keys:
-#   > debug: whether to run the browser driver in debug mode
+# - the TTP::HTTP::Compare::Facer instance
 # (O):
 # - this object
 
 sub new {
-	my ( $class, $ep, $role, $which, $args ) = @_;
+	my ( $class, $ep, $facer ) = @_;
 	$class = ref( $class ) || $class;
-	$args //= {};
 
-	if( !$ep || !blessed( $ep ) || !$ep->isa( 'TTP::EP' )){
-		msgErr( "unexpected ep: ".TTP::chompDumper( $ep ));
-		TTP::stackTrace();
-	}
-	if( !$role || !blessed( $role ) || !$role->isa( 'TTP::HTTP::Compare::Role' )){
-		msgErr( "unexpected role: ".TTP::chompDumper( $role ));
-		TTP::stackTrace();
-	}
-	if( $which ne 'ref' && $which ne 'new' ){
-		msgErr( "unexpected which='$which'" );
+	if( !$facer || !blessed( $facer ) || !$facer->isa( 'TTP::HTTP::Compare::Facer' )){
+		msgErr( "unexpected facer: ".TTP::chompDumper( $facer ));
 		TTP::stackTrace();
 	}
 
-	my $self = $class->SUPER::new( $ep, $args );
+	my $self = $class->SUPER::new( $ep );
 	bless $self, $class;
-	msgDebug( __PACKAGE__."::new() role='".$role->name()."' which='$which'" );
+	msgDebug( __PACKAGE__."::new()" );
 
-	$self->{_role} = $role;
-	$self->{_which} = $which;
-	$self->{_args} = $args;
+	$self->{_facer} = $facer;
 
+    # can be undef
 	$self->{_driver} = $self->_driver_start();
 
 	return $self;

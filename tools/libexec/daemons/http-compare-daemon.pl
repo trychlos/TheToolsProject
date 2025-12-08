@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# @(#) Manage accesses to a websote for the sake of 'http.pl compare' verb.
+# @(#) Manage accesses to a website for the sake of 'http.pl compare' verb.
 #
 # @(-) --[no]help              print this message, and exit [${help}]
 # @(-) --[no]colored           color the output depending of the message level [${colored}]
@@ -7,8 +7,6 @@
 # @(-) --[no]verbose           run verbosely [${verbose}]
 # @(-) --json=<filename>       the name of the JSON configuration file [${json}]
 # @(-) --[no]ignoreInt         ignore the (Ctrl+C) INT signal [${ignoreInt}]
-# @(-) --role=<role>           the name of the role we deal with [${role}]
-# @(-) --which=<which>         whether we deal with 'ref' or 'new' site [${which}]
 #
 # TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
@@ -40,6 +38,8 @@ use warnings;
 use Data::Dumper;
 use File::Spec;
 use Getopt::Long;
+use JSON;
+use MIME::Base64 qw( decode_base64 );
 use Path::Tiny qw( path );
 use Time::Moment;
 
@@ -48,6 +48,9 @@ use vars::global qw( $ep );
 
 use TTP::Constants qw( :all );
 use TTP::HTTP::Compare::Browser;
+use TTP::HTTP::Compare::Facer;
+use TTP::HTTP::Compare::Login;
+use TTP::HTTP::Compare::QueueItem;
 use TTP::JSONable;
 use TTP::Message qw( :all );
 use TTP::RunnerDaemon;
@@ -67,18 +70,20 @@ my $defaults = {
 	dummy => 'no',
 	verbose => 'no',
 	json => '',
-	ignoreInt => 'no',
-	role => '',
-	which => ''
+	ignoreInt => 'no'
 };
 
 my $opt_json = $defaults->{json};
 my $opt_ignoreInt = false;
-my $opt_role = $defaults->{role};
-my $opt_which = $defaults->{which};
 
 # the commands this daemon answers to
 $daemon->{this}{commands} = {
+	click_and_capture => \&answerClickAndCapture,
+	clickable_discover_targets_xpath => \&answerClickableDiscoverTargetsXpath,
+	handle_form => \&answerHandleForm,
+	internal_status => \&answerInternalStatus,
+	navigate_and_capture => \&answerNavigateAndCapture,
+	signature => \&answerSignature,
 	stats => \&answerStats,
 	status => \&answerStatus,
 };
@@ -87,9 +92,123 @@ $daemon->{this}{commands} = {
 my $Const = {
 };
 
+# the Facer object which handles the current run comparison data
+# instanciated in getCompareConfig() function which must be the first one run
+my $facer = undef;
+
+# -------------------------------------------------------------------------------------------------
+# (I):
+# - a serialized queue item
+# - an arguments hash
+
+sub answerClickAndCapture {
+	my ( $self, $req ) = @_;
+	# start
+	my $start = Time::Moment->now;
+	# execute
+	my $snap = decode_base64( decode_json( $req->{args}->[0] )->{queue_item} );
+	my $args = decode_json( $req->{args}->[0] )->{args};
+	my $ret = $daemon->{this}{browser}->click_and_capture( TTP::HTTP::Compare::QueueItem->new_by_snapshot( $ep, $snap ), $args );
+	msgLog( "received answer='$ret'" );
+	my $answer = encode_json({ answer => $ret });
+	$req->{logAnswer} = false if $ret && !ref( $ret );
+	# get stats
+	$daemon->{this}{stats}{click_and_capture} //= [];
+	push( @{$daemon->{this}{stats}{click_and_capture}}, { start => $start, end => Time::Moment->now, answer => $answer });
+	# return
+	return $answer;
+}
+
+# -------------------------------------------------------------------------------------------------
+# (I):
+# - nothing
+
+sub answerClickableDiscoverTargetsXpath {
+	my ( $self, $req ) = @_;
+	# start
+	my $start = Time::Moment->now;
+	# execute
+	my $answer = encode_json({ answer => $daemon->{this}{browser}->clickable_discover_targets_xpath() });
+	$req->{logAnswer} = false;
+	# get stats
+	$daemon->{this}{stats}{clickable_discover_targets_xpath} //= [];
+	push( @{$daemon->{this}{stats}{clickable_discover_targets_xpath}}, { start => $start, end => Time::Moment->now, answer => $answer });
+	# return
+	return $answer;
+}
+
+# -------------------------------------------------------------------------------------------------
+# (I):
+# - selector
+# - description
+
+sub answerHandleForm {
+	my ( $self, $req ) = @_;
+	# start
+	my $start = Time::Moment->now;
+	# execute
+	my $selector = decode_json( $req->{args}->[0] )->{selector};
+	my $description = decode_json( $req->{args}->[0] )->{description};
+	my $answer = encode_json({ answer => $daemon->{this}{browser}->handle_form( $selector, $description ) });
+	#$req->{logAnswer} = false;
+	# get stats
+	$daemon->{this}{stats}{clickable_discover_targets_xpath} //= [];
+	push( @{$daemon->{this}{stats}{clickable_discover_targets_xpath}}, { start => $start, end => Time::Moment->now, answer => $answer });
+	# return
+	return $answer;
+}
+
+# -------------------------------------------------------------------------------------------------
+# "internal_status" command is used by the daemon interface to wait for ready
+
+sub answerInternalStatus {
+	my ( $self, $req ) = @_;
+	my $answer = "";
+	return $answer;
+}
+
+# -------------------------------------------------------------------------------------------------
+# (I):
+# - the RunnerDaemon object
+# - the request as a hash:
+#   > command: the first word
+#   > args: an array ref to other provided arguments
+# Here, Browser::navigate_and_capture() expects a single argument as 'path'
+
+sub answerNavigateAndCapture {
+	my ( $self, $req ) = @_;
+	# start
+	my $start = Time::Moment->now;
+	# execute
+	my $path = decode_json( $req->{args}->[0] )->{path};
+	my $answer = encode_json({ answer => $daemon->{this}{browser}->navigate_and_capture( $path ) });
+	$req->{logAnswer} = false;
+	# get stats
+	$daemon->{this}{stats}{navigate_and_capture} //= [];
+	push( @{$daemon->{this}{stats}{navigate_and_capture}}, { start => $start, end => Time::Moment->now, answer => $answer });
+	# return
+	return $answer;
+}
+
+# -------------------------------------------------------------------------------------------------
+# no expected arg
+
+sub answerSignature {
+	my ( $self, $req ) = @_;
+	# start
+	my $start = Time::Moment->now;
+	# execute
+	my $answer = encode_json({ answer => $daemon->{this}{browser}->signature() });
+	# get stats
+	$daemon->{this}{stats}{signature} //= [];
+	push( @{$daemon->{this}{stats}{signature}}, { start => $start, end => Time::Moment->now, answer => $answer });
+	# return
+	return $answer;
+}
+
 # -------------------------------------------------------------------------------------------------
 sub answerStats {
-	my ( $req ) = @_;
+	my ( $self, $req ) = @_;
 	my $answer = "";
 	foreach my $key ( sort keys %{$daemon->{this}{stats}} ){
 	}
@@ -100,174 +219,121 @@ sub answerStats {
 # add to the standard 'status' answer our own data
 
 sub answerStatus {
-	my ( $req ) = @_;
-	my $answer = TTP::RunnerDaemon->commonCommands()->{status}( $req, $daemon->{this}{commands} );
-	$answer .= "role: ".$opt_role.EOL;
-	$answer .= "which: ".$opt_which.EOL;
+	my ( $self, $req ) = @_;
+	my $answer = TTP::RunnerDaemon->commonCommands()->{status}( $self, $req, $daemon->{this}{commands} );
+	$answer .= "role: ".$facer->roleName().EOL;
+	$answer .= "which: ".$facer->which().EOL;
 	return $answer;
 }
 
 # -------------------------------------------------------------------------------------------------
-# Returns the configured 'workerInterval' (in sec.) defaulting to DEFAULT_WORKER_INTERVAL
+# loads the serialized TTP::HTTP::Compare::Config and setup a new object instance
+# instanciates a Facer instance which will handle this configuration
 
-=pod
-sub configWorkerInterval {
+sub getCompareConfig {
 	my $config = $daemon->config()->jsonData();
-	my $interval = $config->{workerInterval};
-	$interval = DEFAULT_WORKER_INTERVAL if !defined $interval;
-	if( $interval < MIN_WORKER_INTERVAL ){
-		msgVerbose( "defined workerInterval=$interval less than minimum accepted ".MIN_WORKER_INTERVAL.", ignored" );
-		$interval = DEFAULT_WORKER_INTERVAL;
-	}
-
-	return $interval;
+	my $role = $config->{compare}{roleName};
+	my $which = $config->{compare}{which};
+	my $bin = $config->{compare}{binConf};
+	msgVerbose( "by '$role:$which' getCompareConfig() found binConf='$bin'" );
+	open my $fh, '<:raw', $bin or msgErr( "$bin: $!" );
+	local $/;
+	my $blob = <$fh>;
+	close $fh;
+	my $conf = TTP::HTTP::Compare::Config->new_by_snapshot( $ep, $blob );
+	$facer = TTP::HTTP::Compare::Facer->new( $ep, $conf, $daemon );
+	msgVerbose( "by '$role:$which' getCompareConfig() built facer=$facer" );
 }
-=cut
 
 # -------------------------------------------------------------------------------------------------
-# the received topic match a daemon configuration item
-# (I):
-# - the received topic
-# - the corresponding payload
-# - the definition key (the matching topic regular expression)
-# - the corresponding object which defines the actions to be done
+# log-in into the site if configured for
 
-sub doMatched {
-	my ( $topic, $payload, $key, $config ) = @_;
-
-	# increment the counter
-	$stats->{$key}{count} += 1;
-
-	# whether to log the message to an appended file
-	my $toLog = false;
-	$toLog = $config->{toLog}{enabled} if defined $config->{toLog} && defined $config->{toLog}{enabled};
-	if( $toLog ){
-		my $logFile = File::Spec->catfile( TTP::logsCommands(), $daemon->name().'.log' );
-		$logFile = $config->{toLog}{filename} if defined $config->{toLog} && defined $config->{toLog}{filename};
-		$logFile = replaceMacros( $logFile, {
-			TOPIC => $topic,
-			PAYLOAD => $payload
-		});
-		msgLog( "$topic [$payload]", { logFile => $logFile });
-		$stats->{$key}{toLog} += 1;
-	} else {
-		msgVerbose( "$topic: toLog is not enabled" );
-	}
-
-	# whether to print to stdout
-	my $toStdout = false;
-	$toStdout = $config->{toStdout}{enabled} if defined $config->{toStdout} && defined $config->{toStdout}{enabled};
-	if( $toStdout ){
-		print STDOUT Time::Moment->now->strftime( '%Y-%m-%d %H:%M:%S.%6N %:z' )." $topic $payload".EOL;
-		$stats->{$key}{toStdout} += 1;
-	} else {
-		msgVerbose( "$topic: toStdout is not enabled" );
-	}
-
-	# whether to print to stderr
-	my $toStderr = false;
-	$toStderr = $config->{toStderr}{enabled} if defined $config->{toStderr} && defined $config->{toStderr}{enabled};
-	if( $toStderr ){
-		print STDERR Time::Moment->now->strftime( '%Y-%m-%d %H:%M:%S.%6N %:z' )." $topic $payload".EOL;
-		$stats->{$key}{toStderr} += 1;
-	} else {
-		msgVerbose( "$topic: toStderr is not enabled" );
-	}
-
-	# whether to create a new file
-	my $toFile = false;
-	$toFile = $config->{toFile}{enabled} if defined $config->{toFile} && defined $config->{toFile}{enabled};
-	if( $toFile ){
-		my $destFile = File::Spec->catfile( File::Spec->catdir( TTP::logsCommands(), $daemon->name()), '<TOPIC>'.Time::Moment->now->strftime( '%y%m%d%H%M%S%6N' ).'.log' );
-		$destFile = $config->{toFile}{filename} if defined $config->{toFile} && defined $config->{toFile}{filename};
-		$destFile = replaceMacros( $destFile, {
-			TOPIC => $topic,
-			PAYLOAD => $payload
-		});
-		path( $destFile )->spew_utf8( Time::Moment->now->strftime( '%Y-%m-%d %H:%M:%S.%6N %:z' )." $topic $payload".EOL );
-		$stats->{$key}{toFile} += 1;
-	} else {
-		msgVerbose( "$topic: toFile is not enabled" );
-	}
-
-	# have other actions ?
-	my $actions = $config->{actions};
-	if( $actions ){
-		if( ref( $actions ) eq 'ARRAY' ){
-			# tries to execute all defined actions
-			my $totalCount = 0;
-			my $enabledCount = 0;
-			my $successCount = 0;
-			my $failedCount = 0;
-			foreach my $do ( @{$actions} ){
-				$totalCount += 1;
-				my $enabled = false;
-				$enabled = $do->{enabled} if defined $do->{enabled};
-				if( $enabled ){
-					$enabledCount += 1;
-					my $jsonable = TTP::JSONable->new( $ep, $do );
-					my $commands = TTP::commandByOS([], { jsonable => $jsonable });
-					if( $commands && scalar( @{$commands} )){
-						my $res = TTP::commandExec( $commands, {
-							macros => {
-								TOPIC => $topic,
-								PAYLOAD => $payload
-							}
-						});
-						if( $res->{success} ){
-							$successCount += 1;
-						} else {
-							$failedCount += 1;
-						}
-					} else {
-						msgVerbose( "$topic: action n° $totalCount doesn't have a command" );
-					}
-				} else {
-					msgVerbose( "$topic: action n° $totalCount is not enabled" );
-				}
-			}
-			$stats->{$key}{actions}{total} = $totalCount;
-			$stats->{$key}{actions}{enabled} = $enabledCount;
-			$stats->{$key}{actions}{success} += $successCount;
-			$stats->{$key}{actions}{failed} += $failedCount;
+sub logIn {
+	my $role = $facer->roleName();
+	my $which = $facer->which();
+	# do we must log-in the sites ?
+	# yes if we have both a login, a password and a login object which provides the needed selectors
+	my $loginObj = TTP::HTTP::Compare::Login->new( $ep, $facer );
+	if( !TTP::errs() && $loginObj->isDefined() && wants_login()){
+		my $login = $loginObj->logIn( $daemon->{this}{browser}, username(), password());
+		if( $login ){
+			$daemon->{this}{login} = $login;
+			msgVerbose( "by '$role:$which' logIn() login successful" );
 		} else {
-			msgErr( "$topic: unexpected object found for 'actions', expected 'ARRAY', got '".ref( $actions )."'" );
+			msgErr( "by '$role:$which' logIn() unable to login/authenticate on the site" );
 		}
-	} else {
-		msgVerbose( "$topic: no actions found" );
 	}
 }
 
 # -------------------------------------------------------------------------------------------------
-# connect to and start the chromedriver browser
+# (I):
+# - nothing
+# (O):
+# - the password of account
+
+sub password {
+
+	my $hash = $facer->conf()->var([ 'roles', $facer->roleName() ]);
+	$hash->{credentials} //= {};
+
+	return $hash->{credentials}{password};
+}
+
+# -------------------------------------------------------------------------------------------------
+# instanciates the chromedriver browser and connect
 
 sub startBrowser {
-
-	$daemon->{this}{browser} = TTP::HTTP::Compare::Browser->new( $self->ep(), $self, $which, $self->{_args}{args} );
-
-	if( !$browser ){
-		msgErr( "unable to instanciate a browser driver on '$which' site" );
+	my $role = $facer->roleName();
+	my $which = $facer->which();
+	my $browser = TTP::HTTP::Compare::Browser->new( $ep, $facer );
+	if( $browser->isAlive()){
+		$daemon->{this}{browser} = $browser;
+		msgVerbose( "by '$role:$which' startBrowser() successful" );
 	} else {
-		msgVerbose( "browser '$which' successfully instanciated" );
+		msgErr( "by '$role:$which' startBrowser() unable to instanciate a browser driver" );
 	}
 }
 
 # -------------------------------------------------------------------------------------------------
-# do its work, examining the MQTT queue
 # (I):
-# - the topic
-# - the payload
+# - nothing
+# (O):
+# - the name of account
 
-sub worker {
-	my ( $topic, $payload ) = @_;
-	msgVerbose( "receiving $topic" );
-	my $topics = $daemon->config()->jsonData()->{topics};
-	foreach my $key ( sort keys %{$topics} ){
-		if( $topic =~ m/$key/ ){
-			msgVerbose( "$topic is matched" );
-			doMatched( $topic, $payload, $key, $topics->{$key} );
+sub username {
+	my ( $self ) = @_;
+
+	my $hash = $facer->conf()->var([ 'roles', $facer->roleName() ]);
+	$hash->{credentials} //= {};
+
+	return $hash->{credentials}{username};
+}
+
+# -------------------------------------------------------------------------------------------------
+# Determines if this role can log-in to the sites.
+# True if we have both a login and a password.
+# (I):
+# - nothing
+# (O):
+# - whether the role must log-in
+
+sub wants_login {
+	my $can = false;
+
+	my $role = $facer->roleName();
+	my $which = $facer->which();
+
+	if( username()){
+		if( password()){
+			$can = true;
+		} else {
+			msgVerbose( "by '$role:$which' wants_login() password is not set" );
 		}
+	} else {
+		msgVerbose( "by '$role:$which' wants_login() username is not set")
 	}
+
+	return $can;
 }
 
 # =================================================================================================
@@ -280,9 +346,7 @@ if( !GetOptions(
 	"dummy!"			=> sub { $ep->runner()->dummy( @_ ); },
 	"verbose!"			=> sub { $ep->runner()->verbose( @_ ); },
 	"json=s"			=> \$opt_json,
-	"ignoreInt!"		=> \$opt_ignoreInt,
-	"role=s"			=> \$opt_role,
-	"which=s"			=> \$opt_which )){
+	"ignoreInt!"		=> \$opt_ignoreInt )){
 
 		msgOut( "try '".$daemon->command()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
@@ -298,8 +362,6 @@ msgVerbose( "got dummy='".( $daemon->dummy() ? 'true':'false' )."'" );
 msgVerbose( "got verbose='".( $daemon->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got json='$opt_json'" );
 msgVerbose( "got ignoreInt='".( $opt_ignoreInt ? 'true':'false' )."'" );
-msgVerbose( "got role='$opt_role'" );
-msgVerbose( "got which='$opt_which'" );
 
 msgErr( "'--json' option is mandatory, not specified" ) if !$opt_json;
 
@@ -308,6 +370,13 @@ if( !TTP::errs()){
 }
 
 if( TTP::errs()){
+	TTP::exit();
+}
+
+# we instanciate here the Facer object - this must be the first action
+getCompareConfig();
+if( TTP::errs()){
+	$daemon->terminate();
 	TTP::exit();
 }
 

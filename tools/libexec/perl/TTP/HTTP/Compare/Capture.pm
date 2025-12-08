@@ -35,6 +35,7 @@ use File::Spec;
 use File::Temp;
 use Image::Compare;
 use List::Util qw( any );
+use MIME::Base64 qw( decode_base64 );
 use Mojo::DOM;
 use Scalar::Util qw( blessed );
 use Test::More;
@@ -45,6 +46,7 @@ use vars::global qw( $ep );
 
 use TTP::Constants qw( :all );
 use TTP::HTTP::Compare::Config; # qw( :all );
+use TTP::HTTP::Compare::Facer;
 use TTP::HTTP::Compare::Utils;
 use TTP::Message qw( :all );
 use TTP::Path;
@@ -76,9 +78,9 @@ sub _fname {
 	my $counter = $args->{counter} // $queue_item->visited() // 0;
 	# 2. the which part, as-is
 	# 3. a path part
-	my $path = $self->browser()->current_path();
+	my $path = $self->path();
 	# 4. the page signature without the URL
-	my $signature = $self->browser()->signature();
+	my $signature = $self->signature();
 	my @w = split( /\|/, $signature );
 	shift( @w );	# remove the topHref part
 	# 5. the current xpath
@@ -94,170 +96,6 @@ sub _fname {
 	return $fname;
 }
 
-=pod
-# -------------------------------------------------------------------------------------------------
-# Compare two screenshots visually using RMSE.
-# (I):
-# - the other TTP::HTTP::Compare::Capture object
-# Options:
-#   diff_out     => '/path/to/diff.png'   # optional: write a heatmap-ish diff
-#   fuzz         => '5%'                  # optional: color tolerance (default 5%)
-#   align        => 'crop'|'pad'|'resize' # default 'crop'
-#       crop   -> compare overlapping area only (no distortion)
-#       pad    -> pad smaller image with white to match the bigger (no crop)
-#       resize -> scale both to the same width (keeps aspect ratio; may blur)
-#   resize_width => 1366                  # only used when align => 'resize'
-#   threshold
-#
-# Returns a hashref:
-#  { rmse => <number>, compared_w => <int>, compared_h => <int>, wrote_diff => 0|1 }
-
-sub _screenshots_compare_rmse {
-    my ( $self, $other, $args ) = @_;
-
-    my ($file_a, $file_b) = @o{qw/a b/};
-    my $align   = $o{align} // 'crop';
-    my $fuzz    = $o{fuzz}  // '5%';
-    my $diffout = $o{diff_out};
-
-    die "screenshots_compare_rmse: need a and b" unless $file_a && $file_b;
-
-    my $A = Image::Magick->new; my $x = $A->Read($file_a); die $x if $x;
-    my $B = Image::Magick->new; my $y = $B->Read($file_b); die $y if $y;
-
-    my $aw = $A->Get('columns'); my $ah = $A->Get('rows');
-    my $bw = $B->Get('columns'); my $bh = $B->Get('rows');
-
-    my ($cw, $ch);
-
-    if( $align eq 'resize' ){
-        my $target_w = $o{resize_width} // ($aw < $bw ? $aw : $bw);
-        my $r1 = $A->Resize(width => $target_w); die $r1 if $r1;
-        my $r2 = $B->Resize(width => $target_w); die $r2 if $r2;
-        $aw = $bw = $target_w;
-        $ah = $A->Get('rows'); $bh = $B->Get('rows');
-        # Compare only overlapping height to avoid tiny rounding diffs
-        $ch = $ah < $bh ? $ah : $bh;
-        $cw = $target_w;
-        $A->Crop(geometry => "${cw}x${ch}+0+0"); $A->Set(page => '0x0');
-        $B->Crop(geometry => "${cw}x${ch}+0+0"); $B->Set(page => '0x0');
-    }
-    elsif( $align eq 'pad' ){
-        # Pad smaller image with white to match the larger dimensions
-        $cw = ($aw > $bw) ? $aw : $bw;
-        $ch = ($ah > $bh) ? $ah : $bh;
-
-        for my $img ([$A,$aw,$ah], [$B,$bw,$bh]) {
-            my ($I,$w,$h) = @$img;
-            if ($w != $cw || $h != $ch) {
-                my $bg = Image::Magick->new;
-                my $r  = $bg->Set(size => $cw . 'x' . $ch); die $r if $r;
-                $r = $bg->ReadImage('xc:white'); die $r if $r;
-                # top-left align; switch to center by adjusting x/y
-                $r = $bg->Composite(image => $I, compose => 'Over', x => 0, y => 0); die $r if $r;
-                $I->ReadImage('null:');  # clear
-                @$I = @$bg;              # replace content
-            }
-        }
-    }
-    else { # 'crop' (default): compare overlapping rectangle only
-        $cw = $aw < $bw ? $aw : $bw;
-        $ch = $ah < $bh ? $ah : $bh;
-        $A->Crop(geometry => "${cw}x${ch}+0+0"); $A->Set(page => '0x0');
-        $B->Crop(geometry => "${cw}x${ch}+0+0"); $B->Set(page => '0x0');
-    }
-
-    # Compute RMSE; optionally write a diff image if rmse > threshold (and threshold is set)
-    my ($diff, $metric) = $A->Compare(image => $B, metric => 'RMSE', fuzz => $fuzz);
-	$metric //= 0;
-    my $wrote = 0;
-    if( $diffout && $o{threshold} && $metric > $o{threshold} ){
-        my $z = $diff->Write($diffout); die $z if $z;
-        $wrote = 1;
-    }
-
-    return {
-        rmse        => $metric,
-        compared_w  => $cw,
-        compared_h  => $ch,
-        wrote_diff  => $wrote,
-    };
-}
-
-# -------------------------------------------------------------------------------------------------
-# make a full page (not viewport) screenshot whatever be the running browser type
-
-sub _screenshot_fullpage_scroll_stitch {
-    my ( $self, $outfile ) = @_;
-    my $overlap  = 80;
-    my $pause_ms = 150;
-    my $max_seg  = 200;
-
-	my $browser = $self->browser();
-
-    # 1) Measure
-    my $vh = $browser->exec_js_w3c_sync( 'return window.innerHeight;', [] );
-    my $vw = $browser->exec_js_w3c_sync( 'return window.innerWidth;',  [] );
-    my $doc_h = $browser->exec_js_w3c_sync( q{
-        return Math.max(
-          document.documentElement.scrollHeight,
-          document.body ? document.body.scrollHeight : 0,
-          document.documentElement.offsetHeight,
-          document.documentElement.clientHeight
-        );
-    }, []);
-    $vh ||= 800;
-	$vw ||= 1366;
-	$doc_h ||= $vh;
-
-    # 2) Positions
-    my @ys = (0);
-    my $step = $vh - $overlap; $step = 1 if $step < 1;
-    while ($ys[-1] + $vh < $doc_h && @ys < $max_seg) {
-        my $next = $ys[-1] + $step;
-        my $last_start = $doc_h - $vh;
-        $next = $last_start if $next > $last_start;
-        last if $next == $ys[-1];
-        push @ys, $next;
-    }
-
-    # 3) Scroll + capture
-    my @tiles;
-    my $first_cols;
-    for my $i ( 0..$#ys ){
-        my $y = $ys[$i];
-        $browser->exec_js_w3c_sync( 'window.scrollTo(0, arguments[0]); return true;', [$y] );
-        usleep( $pause_ms*1000 );
-        my $png = $browser->viewport_png_bytes();
-		my $img = Image::Magick->new;
-		$img->BlobToImage( $png );
-        my $cols = $img->Get( 'columns' );
-		my $rows = $img->Get( 'rows' );
-        $first_cols ||= $cols;
-        if( $i > 0 ){
-            my $crop_top = $overlap < $rows ? $overlap : $rows-1;
-            my $keep_h = $rows - $crop_top;
-            $img->Crop( geometry => "${cols}x${keep_h}+0+$crop_top" );
-			$img->Set( page => '0x0' );
-            $rows = $keep_h;
-        }
-        push( @tiles, { img => $img, h => $rows });
-    }
-
-    # 4) Stitch
-    my $total_h = 0; $total_h += $_->{h} for @tiles;
-    my $out = Image::Magick->new;
-    $out->Set(size => $first_cols . 'x' . $total_h);
-    $out->ReadImage('xc:white');
-    my $yoff = 0;
-    for my $t ( @tiles ){
-        $out->Composite(image=>$t->{img}, compose=>'Over', x=>0, y=>$yoff);
-        $yoff += $t->{h};
-    }
-    $out->Write( $outfile );
-}
-=cut
-
 # -------------------------------------------------------------------------------------------------
 # Screenshot in a temporary file
 # Re-use the already saved screenshots if ant
@@ -268,23 +106,26 @@ sub _screenshot_fullpage_scroll_stitch {
 sub _temp_screenshot {
     my ( $self ) = @_;
 
+	my $role = $self->facer()->roleName();
+	my $which = $self->facer()->which();
+
 	my $fname = undef;
 	my $tmp = true;
 	
 	if( $self->{_hash}{screendump} ){
 		$fname = $self->{_hash}{screendump};
 		$tmp = false;
-		msgVerbose( "reusing existing screeshot $fname" );
+		msgVerbose( "by '$role:$which' Capture::temp_screenshot() reusing existing screeshot $fname" );
 
 	} else {
-		my $png = $self->browser()->screenshot();
+		my $png = $self->screenshot();
 		my $fh = File::Temp->new( UNLINK => false, SUFFIX => '.png' );
 		binmode( $fh, ':raw' );
 		print {$fh} $png;
 		close $fh;
 		$fname = $fh->filename();
 		my $exists = ( -r $fname );
-		msgVerbose( "creating temp screenshot '$fname' (exists=$exists)" );
+		msgVerbose( "by '$role:$which' Capture::temp_screenshot() creating temp screenshot '$fname' (exists=$exists)" );
 	}
 
 	return [ $fname, $tmp ];
@@ -296,8 +137,8 @@ sub _temp_screenshot {
 # - we want keep original screenshots in their respective directories
 # - eventual temmp files will be deleted later
 # (I):
-# - the ref screenshot
-# - the new screenshot
+# - the ref screenshot filename (maybe temp)
+# - the new screenshot filename (maybe temp)
 # - an optional options hash with following keys:
 #   > dir: the root output directory for the role, defaulting to standard temp dir
 #   > item: the current queue item
@@ -306,7 +147,7 @@ sub _write_diffs {
     my ( $self, $ref, $new, $args ) = @_;
 	$args //= {};
 
-	my $subdirs = $self->browser()->conf()->confDirsScreenshots( 'diffs' );
+	my $subdirs = $self->facer()->conf()->confDirsScreenshots( 'diffs' );
 	if( $subdirs ){
 		my @dirs = File::Spec->splitdir( $subdirs );
 		my $fdir = File::Spec->catdir( $args->{dir} || File::Temp->tempdir(), @dirs );
@@ -327,11 +168,16 @@ sub _write_diffs {
 sub _write_diffs_which {
     my ( $self, $fref, $dir, $queue_item, $which ) = @_;
 
-	my $fname = TTP::Path::checkLength( File::Spec->catfile( $dir, $self->_fname( $which, $queue_item, '.png' )));
+	my $role = $self->facer()->roleName();
+	my $fname = $self->_fname( $which, $queue_item, '.png' );
+	my $splitdir = substr( $fname, 0, 3 );
+	my $resdir = File::Spec->catdir( $dir, $splitdir );
+	make_path( $resdir );
+	$fname = TTP::Path::checkLength( File::Spec->catfile( $resdir, $fname ));
 	if( $fref eq $fname ){
-		msgWarn( "cannot save '$fref' to same '$fname': you should review 'dirs.diffs' configuration" );
+		msgWarn( "by '$role:$which' Capture::write_diffs_which() cannot save '$fref' to same '$fname': you should review 'dirs.diffs' configuration" );
 	} else {
-		msgVerbose( "write_diffs() saving '$fref' to '$fname'" );
+		msgVerbose( "by '$role:$which' Capture::write_diffs_which() saving '$fref' to '$fname'" );
 		copy( $fref, $fname );
 	}
 }
@@ -345,15 +191,6 @@ sub alerts {
     my ( $self ) = @_;
 
 	return $self->{_hash}{alerts} || [];
-}
-
-# -------------------------------------------------------------------------------------------------
-# Returns the initiating browser
-
-sub browser {
-    my ( $self ) = @_;
-
-	return $self->{_browser};
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -382,12 +219,14 @@ sub compare {
 
 	my $result = {};
 
-	my $path = $self->browser()->urlPath();
-	my $role = $self->browser()->role()->name();
+	my $path = $self->path();
+	my $conf = $self->facer()->conf();
+	my $role = $self->facer()->roleName();
+	my $which = $self->facer()->which();
 	my @errs = ();
 
 	# compare rendered HTMLs if configured
-	if( $self->browser()->conf()->confCompareHtmlsEnabled()){
+	if( $conf->confCompareHtmlsEnabled()){
 		# must have same content-type
 		is( lc( $self->content_type() // ''), lc( $other->content_type() // ''), "[$role ($path)] got same content-type (".lc( $self->content_type() // '').")" )
 			|| push( @errs, "content-type" );
@@ -404,7 +243,7 @@ sub compare {
 		|| push( @errs, "new alerts: ".join( ' | ', @{$other->alerts() }));
 
 	# optional visual diff
-	my $enabledScreenshots = $self->browser()->conf()->confCompareScreenshotsEnabled();
+	my $enabledScreenshots = $conf->confCompareScreenshotsEnabled();
 	my $doCompareScreenshots = ( $enabledScreenshots eq TTP::HTTP::Compare::Config::COMPARE_SCREENSHOTS_ENABLED_ALWAYS )
 		|| ( $enabledScreenshots eq TTP::HTTP::Compare::Config::COMPARE_SCREENSHOTS_ENABLED_ONERROR && scalar( @errs ) > 0 );
 	msgVerbose( "compare() compareScreenshotsEnabled='$enabledScreenshots' errsCount=".( scalar( @errs ))." doCompareScreenshots='".( $doCompareScreenshots ? "true" : "false" )."'" );
@@ -415,8 +254,8 @@ sub compare {
 		#	pad: if one page is slightly taller (e.g., a banner present on one env), pad the shorter one with white for a full-height comparison.
 		#	resize: if widths differ due to different breakpoints (less common in your setup). It scales both to a common width first, then compares.
 		#my $ref = 
-		#my $new = $new->browser()->screenshot();
-		#my $threshold = $self->browser()->conf()->confCompareScreenshotsRmse();
+		#my $new = $new->daemon()->screenshot();
+		#my $threshold = $self->daemon()->conf()->confCompareScreenshotsRmse();
 		#my $res = $self->_compare_screenshots( $other, 
 		#	a         => $capture_ref->{shotdump},
 		#	b         => $capture_new->{shotdump},
@@ -438,8 +277,8 @@ sub compare {
 		my $cmp = Image::Compare->new();
 		$cmp->set_image1( img => $dumpref, type => 'png' );
 		$cmp->set_image2( img => $dumpnew, type => 'png' );
-		my $threshold = $self->browser()->conf()->confCompareScreenshotsRmse() * 441.67;
-		my $maxcount = $self->browser()->conf()->confCompareScreenshotsThresholdCount();
+		my $threshold = $conf->confCompareScreenshotsRmse() * 441.67;
+		my $maxcount = $conf->confCompareScreenshotsThresholdCount();
 
 		# try some methods
 		# threshold seems to be a bit too exact - even 5% reports non-visible differences
@@ -489,12 +328,12 @@ sub extract_links {
     my ( $self ) = @_;
 
     my $dom = Mojo::DOM->new( $self->html());
-	my $conf = $self->browser()->conf();
+	my $conf = $self->facer()->conf();
 
     my %uniq;
 	my $finders = $conf->confCrawlByLinkFinders();
 	my $wants_same_host = $conf->confCrawlSameHost();
-	my $url_base = $self->browser()->urlBase();
+	my $url_base = $self->facer()->baseUrl();
 	my $host_ref = URI->new( $url_base )->host;
 	my $honor_query = $conf->confCrawlByLinkHonorQuery();
 
@@ -539,13 +378,15 @@ sub extract_links {
 sub _extract_links_href_allowed {
 	my ( $self, $finder, $href ) = @_;
 
-	my $conf = $self->browser()->conf();
+	my $conf = $self->facer()->conf();
+	my $role = $self->facer()->roleName();
+	my $which = $self->facer()->which();
 
     # Deny first
 	my $denied = $conf->runCrawlByLinkHrefDenyPatterns() || [];
     if( scalar( @{$denied} )){
         if( any { $href =~ $_ } @{ $denied } ){
-			msgVerbose( "extract_links_allowed() '$href' denied by regex" );
+			msgVerbose( "by '$role:$which' Capture::extract_links_href_allowed() '$href' denied by regex" );
 			return false;
 		}
     }
@@ -567,13 +408,15 @@ sub _extract_links_href_allowed {
 sub _extract_links_text_allowed {
 	my ( $self, $finder, $text ) = @_;
 
-	my $conf = $self->browser()->conf();
+	my $conf = $self->facer()->conf();
+	my $role = $self->facer()->roleName();
+	my $which = $self->facer()->which();
 
 	if( $text ){
 		my $denied = $conf->runCrawlByLinkTextDenyPatterns() || [];
 		if( scalar( @{$denied} )){
 			if( any { $text =~ $_ } @{ $denied } ){
-				msgVerbose( "extract_links_allowed() '$text' denied by regex" );
+				msgVerbose( "by '$role:$which' Capture::extract_links_text_allowed() '$text' denied by regex" );
 				return false;
 			}
 		}
@@ -592,13 +435,15 @@ sub _extract_links_text_allowed {
 sub _extract_links_url_allowed {
 	my ( $self, $finder, $url ) = @_;
 
-	my $conf = $self->browser()->conf();
+	my $conf = $self->facer()->conf();
+	my $role = $self->facer()->roleName();
+	my $which = $self->facer()->which();
 
     # Deny first
 	my $denied = $conf->runCrawlByLinkUrlDenyPatterns() || [];
     if( scalar( @{$denied} )){
         if( any { $url =~ $_ } @{ $denied } ){
-			msgVerbose( "extract_links_allowed() '$url' denied by regex" );
+			msgVerbose( "by '$role:$which' Capture::extract_links_url_allowed() '$url' denied by regex" );
 			return false;
 		}
     }
@@ -611,33 +456,12 @@ sub _extract_links_url_allowed {
 }
 
 # -------------------------------------------------------------------------------------------------
-# Check that the actual document dimensions are inside the browser viewport height
+# Returns the initiating facer interface
 
-sub get_height {
+sub facer {
     my ( $self ) = @_;
 
-	my $browser = $self->browser();
-
-    my $vh = $browser->exec_js_w3c_sync( 'return window.innerHeight;', [] );
-    my $doc_h = $browser->exec_js_w3c_sync( q{
-        return Math.max(
-          document.documentElement.scrollHeight,
-          document.body ? document.body.scrollHeight : 0,
-          document.documentElement.offsetHeight,
-          document.documentElement.clientHeight
-        );
-    }, []);
-
-	msgVerbose( "get_height() height viewport=$vh document=$doc_h" );
-}
-
-# -------------------------------------------------------------------------------------------------
-# Returns the HTTP status
-
-sub status {
-    my ( $self ) = @_;
-
-	return $self->{_hash}{status};
+	return $self->{_facer};
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -647,6 +471,42 @@ sub html {
     my ( $self ) = @_;
 
 	return $self->{_hash}{html};
+}
+
+# -------------------------------------------------------------------------------------------------
+# Returns the path of the captured url
+
+sub path {
+    my ( $self ) = @_;
+
+	return $self->{_hash}{path};
+}
+
+# -------------------------------------------------------------------------------------------------
+# Returns the screenshot of the captured page as a bytes array
+
+sub screenshot {
+    my ( $self ) = @_;
+
+	return decode_base64( $self->{_hash}{screenshot} );
+}
+
+# -------------------------------------------------------------------------------------------------
+# Returns the signature of the captured page
+
+sub signature {
+    my ( $self ) = @_;
+
+	return $self->{_hash}{signature};
+}
+
+# -------------------------------------------------------------------------------------------------
+# Returns the HTTP status
+
+sub status {
+    my ( $self ) = @_;
+
+	return $self->{_hash}{status};
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -661,26 +521,33 @@ sub html {
 sub writeHtml {
     my ( $self, $queue_item, $args ) = @_;
 
+	my $conf = $self->facer()->conf();
+	my $role = $self->facer()->roleName();
+	my $which = $self->facer()->which();
+
 	if( !$queue_item || !blessed( $queue_item ) || !$queue_item->isa( 'TTP::HTTP::Compare::QueueItem' )){
-		msgErr( "unexpected queue item: ".TTP::chompDumper( $queue_item ));
+		msgErr( "by '$role:$which' Capture::writeHtml() unexpected queue item: ".TTP::chompDumper( $queue_item ));
 		TTP::stackTrace();
 	}
 
-	my $which = $self->browser()->which();
-	my $whichdir = $args->{subdir} // $self->browser()->which();
-	my $subdirs = $self->browser()->conf()->confDirsHtmls( $whichdir );
+	my $whichdir = $args->{subdir} // $which;
+	my $subdirs = $conf->confDirsHtmls( $whichdir );
 	if( $subdirs ){
+		# we split the output directory based on the first three digits of the fname
+		my $fname = $self->_fname( $which, $queue_item, '.html', $args );
+		my $splitdir = substr( $fname, 0, 3 );
 		my @dirs = File::Spec->splitdir( $subdirs );
+		push( @dirs, $splitdir );
 		my $fdir = File::Spec->catdir( $args->{dir} || File::Temp->tempdir(), @dirs );
 		make_path( $fdir );
-		my $fname = TTP::Path::checkLength( File::Spec->catfile( $fdir, $self->_fname( $which, $queue_item, '.html', $args )));
-		msgVerbose( "dumping '$which' HTML to $fname" );
+		$fname = TTP::Path::checkLength( File::Spec->catfile( $fdir, $fname ));
+		msgVerbose( "by '$role:$which' Capture::writeHtml() dumping HTML to $fname" );
 		open my $fh, '>:utf8', $fname or die "open $fname: $!";
-		print {$fh} $self->{_hash}{html};
+		print {$fh} $self->html();
 		close $fh;
 		$self->{_hash}{htmldump} = $fname;
 	} else {
-		msgVerbose( "not writing '$which' HTML file as disabled by configuration" )
+		msgVerbose( "by '$role:$which' Capture::writeHtml() not writing HTML file as disabled by configuration" )
 	}
 }
 
@@ -698,27 +565,34 @@ sub writeScreenshot {
     my ( $self, $queue_item, $args ) = @_;
 	$args //= {};
 
+	my $conf = $self->facer()->conf();
+	my $role = $self->facer()->roleName();
+	my $which = $self->facer()->which();
+
 	if( !$queue_item || !blessed( $queue_item ) || !$queue_item->isa( 'TTP::HTTP::Compare::QueueItem' )){
-		msgErr( "unexpected queue item: ".TTP::chompDumper( $queue_item ));
+		msgErr( "by '$role:$which' Capture::writeScreenshot() unexpected queue item: ".TTP::chompDumper( $queue_item ));
 		TTP::stackTrace();
 	}
 
-	my $which = $self->browser()->which();
-	my $whichdir = $args->{subdir} // $self->browser()->which();
-	my $subdirs = $self->browser()->conf()->confDirsScreenshots( $whichdir );
+	my $whichdir = $args->{subdir} // $which;
+	my $subdirs = $conf->confDirsScreenshots( $whichdir );
 	if( $subdirs ){
+		# we split the output directory based on the first three digits of the fname
+		my $fname = $self->_fname( $which, $queue_item, '.png', $args );
+		my $splitdir = substr( $fname, 0, 3 );
 		my @dirs = File::Spec->splitdir( $subdirs );
+		push( @dirs, $splitdir );
 		my $fdir = File::Spec->catdir( $args->{dir} || File::Temp->tempdir(), @dirs );
 		make_path( $fdir );
-		my $fname = TTP::Path::checkLength( File::Spec->catfile( $fdir, $self->_fname( $which, $queue_item, '.png', $args )));
-		msgVerbose( "writing '$which' page screenshot to $fname" );
-		my $png = $self->browser()->screenshot();
+		$fname = TTP::Path::checkLength( File::Spec->catfile( $fdir, $fname ));
+		msgVerbose( "by '$role:$which' Capture::writeScreenshot() writing screenshot to $fname" );
+		my $png = $self->screenshot();
 		open my $fh, '>:raw', $fname or die "open $fname: $!";
 		print {$fh} $png;
 		close $fh;
 		$self->{_hash}{screendump} = $fname;
 	} else {
-		msgVerbose( "not writing '$which' screenshot file as disabled by configuration" )
+		msgVerbose( "by '$role:$which' Capture::writeScreenshot() not writing screenshot file as disabled by configuration" )
 	}
 }
 
@@ -728,7 +602,7 @@ sub writeScreenshot {
 # Constructor
 # (I):
 # - the TTP::EP entry point
-# - the initiating browser as a TTP::HTTP::Compare::Browser object
+# - the TTP::HTTP::Compare::Facer object
 # - the data hash ref, with following keys:
 #   > html: the captured (sanitized) HTML document
 #   > dom_hash: the corresponding MD5 hash
@@ -742,15 +616,11 @@ sub writeScreenshot {
 # - this object
 
 sub new {
-	my ( $class, $ep, $browser, $hash ) = @_;
+	my ( $class, $ep, $facer, $hash ) = @_;
 	$class = ref( $class ) || $class;
 
-	if( !$ep || !blessed( $ep ) || !$ep->isa( 'TTP::EP' )){
-		msgErr( "unexpected ep: ".TTP::chompDumper( $ep ));
-		TTP::stackTrace();
-	}
-	if( !$browser || !blessed( $browser ) || !$browser->isa( 'TTP::HTTP::Compare::Browser' )){
-		msgErr( "unexpected browser: ".TTP::chompDumper( $browser ));
+	if( !$facer || !blessed( $facer ) || !$facer->isa( 'TTP::HTTP::Compare::Facer' )){
+		msgErr( "unexpected facer: ".TTP::chompDumper( $facer ));
 		TTP::stackTrace();
 	}
 	if( !$hash || ref( $hash ) ne 'HASH' ){
@@ -762,7 +632,7 @@ sub new {
 	bless $self, $class;
 	msgDebug( __PACKAGE__."::new()" );
 
-	$self->{_browser} = $browser;
+	$self->{_facer} = $facer;
 	$self->{_hash} = $hash;
 
 	return $self;

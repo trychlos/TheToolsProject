@@ -36,6 +36,7 @@ use TTP;
 use vars::global qw( $ep );
 
 use TTP::Constants qw( :all );
+use TTP::HTTP::Compare::Facer;
 use TTP::Message qw( :all );
 
 use constant {
@@ -90,7 +91,7 @@ sub _fmt_ttl {
 sub _hash {
     my ( $self ) = @_;
 
-	return $self->{_conf}->var([ 'login' ]);
+	return $self->facer()->conf()->var([ 'login' ]);
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -169,6 +170,17 @@ sub _username_selector {
 # (I):
 # - nothing
 # (O):
+# - returns the TTP::HTTP::Compare::Facer provided at instanciation time
+
+sub facer {
+	my ( $self ) = @_;
+	return $self->{_facer}
+}
+
+# -------------------------------------------------------------------------------------------------
+# (I):
+# - nothing
+# (O):
 # - whether this role is defined
 
 sub isDefined {
@@ -194,9 +206,12 @@ sub isDefined {
 sub logIn {
 	my ( $self, $browser, $username, $password ) = @_;
 
-	my $url = $browser->urlBase();
+	my $role = $self->facer()->roleName();
+	my $which = $self->facer()->which();
+	my $url = $self->facer()->baseUrl();
+
 	my $session_cookie = undef;
-	msgVerbose( "logging-in '$username' user to $url..." );
+	msgVerbose( "by '$role:$which' Login::logIn() logging-in '$username' user to $url..." );
 
 	my $path = $self->_path();
 	if( $path ){
@@ -205,14 +220,14 @@ sub logIn {
 		my $login_selector = $self->_username_selector();
 		my $element = $driver->find_element_by_css( $login_selector );
 		if( !$element ){
-			msgWarn( "unable to find '$login_selector' element, cancelling" );
+			msgWarn( "by '$role:$which' Login::logIn() unable to find '$login_selector' element, cancelling" );
 		} else {
 			$element->clear();
 			$element->send_keys( $username );
 			my $password_selector = $self->_password_selector();
 			$element = $driver->find_element_by_css( $password_selector );
 			if( !$element ){
-				msgWarn( "unable to find '$password_selector' element, cancelling" );
+				msgWarn( "by '$role:$which' Login::logIn() unable to find '$password_selector' element, cancelling" );
 			} else {
 				$element->clear();
 				$element->send_keys( $password );
@@ -220,7 +235,7 @@ sub logIn {
 				my $submit_selector = $self->_submit_selector();
 				$element = $driver->find_element_by_css( $submit_selector );
 				if( !$element ){
-					msgWarn( "unable to find '$submit_selector' element, cancelling" );
+					msgWarn( "by '$role:$which' Login::logIn() unable to find '$submit_selector' element, cancelling" );
 				} else {
 					$element->click();
 					$browser->wait_for_url_change( $before );
@@ -230,7 +245,7 @@ sub logIn {
 					if( $re ){
 						foreach my $cookie ( @{$cookies} ){
 							if( $cookie->{name} =~ m/$re/i ){
-								msgVerbose( "got '$cookie->{name}' session cookie by configured regex for $username\@$url" );
+								msgVerbose( "by '$role:$which' Login::logIn() got '$cookie->{name}' session cookie by configured regex for $username\@$url" );
 								$session_cookie = $cookie;
 								last;
 							}
@@ -247,9 +262,9 @@ sub logIn {
 								}
 							}
 							if( $excluded ){
-								msgVerbose( "$cookie->{name} cookie is excluded by code" );
+								msgVerbose( "by '$role:$which' Login::logIn() $cookie->{name} cookie is excluded by code" );
 							} else {
-								msgVerbose( "keeping first found '$cookie->{name}' session cookie for $username\@$url");
+								msgVerbose( "by '$role:$which' Login::logIn() keeping first found '$cookie->{name}' session cookie for $username\@$url");
 								$session_cookie = $cookie;
 								last;
 							}
@@ -260,11 +275,11 @@ sub logIn {
 		}
 	}
 	if( $session_cookie ){
-		msgVerbose( "session_cookie ".TTP::chompDumper( $session_cookie ));
+		msgVerbose( "by '$role:$which' Login::logIn() session_cookie ".TTP::chompDumper( $session_cookie ));
 		my $now = time();
 		my $ttl = $session_cookie->{expiry} - $now;
-		msgVerbose( "cookie validity: ".$self->_fmt_ttl( $ttl ));
-		msgVerbose( "cookie expiration: ". strftime( "%Y-%m-%d %H:%M:%S %Z", localtime( $session_cookie->{expiry} )));
+		msgVerbose( "by '$role:$which' Login::logIn() cookie validity: ".$self->_fmt_ttl( $ttl ));
+		msgVerbose( "by '$role:$which' Login::logIn() cookie expiration: ". strftime( "%Y-%m-%d %H:%M:%S %Z", localtime( $session_cookie->{expiry} )));
 	}
 	return $session_cookie;
 }
@@ -275,20 +290,16 @@ sub logIn {
 # Constructor
 # (I):
 # - the TTP::EP entry point
-# - the TTP::HTTP::Compare::Config configuration object
+# - the TTP::HTTP::Compare::Facer instance
 # (O):
 # - this object
 
 sub new {
-	my ( $class, $ep, $conf ) = @_;
+	my ( $class, $ep, $facer ) = @_;
 	$class = ref( $class ) || $class;
 
-	if( !$ep || !blessed( $ep ) || !$ep->isa( 'TTP::EP' )){
-		msgErr( "unexpected ep: ".TTP::chompDumper( $ep ));
-		TTP::stackTrace();
-	}
-	if( !$conf || !blessed( $conf ) || !$conf->isa( 'TTP::HTTP::Compare::Config' )){
-		msgErr( "unexpected conf: ".TTP::chompDumper( $conf ));
+	if( !$facer || !blessed( $facer ) || !$facer->isa( 'TTP::HTTP::Compare::Facer' )){
+		msgErr( "unexpected facer: ".TTP::chompDumper( $facer ));
 		TTP::stackTrace();
 	}
 
@@ -296,7 +307,7 @@ sub new {
 	bless $self, $class;
 	msgDebug( __PACKAGE__."::new()" );
 
-	$self->{_conf} = $conf;
+	$self->{_facer} = $facer;
 
 	return $self;
 }

@@ -23,6 +23,7 @@ use strict;
 use utf8;
 use warnings;
 
+use B qw( svref_2object );
 use Capture::Tiny qw( capture );
 use Config;
 use Data::Dumper;
@@ -35,6 +36,7 @@ use open qw( :std :encoding(UTF-8));
 use Path::Tiny qw( path );
 use Scalar::Util qw( looks_like_number );
 use SemVer;
+use String::Random;
 use Test::Deep;
 use Time::Moment;
 use vars::global create => qw( $ep );
@@ -189,6 +191,62 @@ sub chompDumper {
 	$str =~ s/;$//;
 	chomp $str;
 	return $str;
+}
+
+# -------------------------------------------------------------------------------------------------
+# find coderefs inside of an object
+# usage:
+#   my @where = coderefs_find( $object );
+#   for my $hit (@where) {
+#       warn "CODE at $hit->{path}", ($hit->{name} ? " ($hit->{name})" : ""), "\n";
+#   }
+
+sub coderefs_find {
+    my ($root) = @_;
+    my %seen;
+    my @hits;
+    coderef_walk($root, '$conf', \%seen, \@hits);
+    return @hits;
+}
+
+# -------------------------------------------------------------------------------------------------
+
+sub coderef_name {
+    my ($code) = @_;
+    my $cv = svref_2object($code);
+    my $gv = $cv->GV or return undef;
+    my $pkg = $gv->STASH->NAME;
+    my $name = $gv->NAME;
+    return "${pkg}::${name}";
+}
+
+# -------------------------------------------------------------------------------------------------
+
+sub coderef_walk {
+    my ($v, $path, $seen, $hits) = @_;
+    return unless ref $v;
+    return if $seen->{$v}++;
+    my $rt = reftype($v) // '';
+
+    if ($rt eq 'CODE') {
+        push @{$hits}, { path => $path, name => coderef_name($v) // '__ANON__' };
+        return;
+    }
+    if ($rt eq 'ARRAY') {
+        for my $i (0..$#$v) { coderef_walk($v->[$i], "$path\->[$i]", $seen, $hits) }
+        return;
+    }
+    if ($rt eq 'HASH') {
+        for my $k (sort keys %$v) {
+            my $kp = $k =~ /^[A-Za-z_]\w*$/ ? "{$k}" : "{'$k'}";
+            coderef_walk($v->{$k}, "$path\->$kp", $seen, $hits);
+        }
+        return;
+    }
+    # For blessed refs, still descend (most Perl OO are blessed HASH/ARRAY)
+    if( blessed( $v )){
+        coderef_walk( $v, $path, $seen, $hits );  # already handled above by ref type
+    }
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -917,7 +975,13 @@ sub getTempFileName {
 		shift( @qualifiers );
 		$fname .= "-".join( '-', @qualifiers );
 	}
-	my $random = random();
+	
+	# starting with v4.26, use String::Random instead of a UUID
+	#my $random = random();
+	my $sr = String::Random->new();
+	$sr->{'.'} = [ 'a'..'z', '0'..'9' ];
+	my $random = $sr->randpattern( '............' );
+
 	my $suffix = $args->{suffix} // '';
 	my $tempfname = File::Spec->catfile( logsCommands(), "${fname}-${random}${suffix}.tmp" );
 	msgVerbose( "getTempFileName() tempfname='$tempfname'" );

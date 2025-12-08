@@ -80,10 +80,6 @@ sub new {
 	my ( $class, $ep, $conf, $logsdir ) = @_;
 	$class = ref( $class ) || $class;
 
-	if( !$ep || !blessed( $ep ) || !$ep->isa( 'TTP::EP' )){
-		msgErr( "unexpected ep: ".TTP::chompDumper( $ep ));
-		TTP::stackTrace();
-	}
 	if( !$conf || !blessed( $conf ) || !$conf->isa( 'TTP::HTTP::Compare::Config' )){
 		msgErr( "unexpected conf: ".TTP::chompDumper( $conf ));
 		TTP::stackTrace();

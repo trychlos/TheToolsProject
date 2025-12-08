@@ -80,7 +80,7 @@ use TTP::Metric;
 use TTP::MQTT;
 
 use constant {
-	BUFSIZE => 4096,
+	BUFSIZE => 8192,
 	OFFLINE => "offline"
 };
 
@@ -95,6 +95,8 @@ my $Const = {
 		status => \&_do_status,
 		terminate => \&_do_terminate
 	},
+	# do not dump data above this limit
+	length_limit => 255,
 	# the metrics sub by OS
 	metrics => {
 		MSWin32 => [
@@ -480,6 +482,9 @@ sub _mqtt_advertise {
 sub _mqtt_disconnect {
 	my ( $self ) = @_;
 
+	# do not do anything if mqtt is not enabled
+	return if !$self->{_mqtt};
+
 	# have disconnection topics sent before closing the connection
 	if( $self->{_mqtt_disconnect_sub} ){
 		my $array = $self->{_mqtt_disconnect_sub}->( $self );
@@ -669,6 +674,8 @@ sub disconnectSub {
 # we send the answer prefixing each line by the daemon pid
 # (I):
 # - the received request
+#   NB: the daemon code has the ability to set a 'logAnswer=false' inside of the request when it is
+#   answering with big volumes of data to prevent the logs to be far too cluttered ..
 # - the computed answer
 # (O):
 # - this same object
@@ -676,7 +683,12 @@ sub disconnectSub {
 sub doAnswer {
 	my ( $self, $req, $answer ) = @_;
 
-	msgLog( "answering '$answer' and ok-ing" );
+	my $logAnswer = $req->{logAnswer} // true;
+	if( $logAnswer ){
+		msgLog( "answering '$answer' and ok-ing" );
+	} else {
+		msgLog( "answering with ".( length( $answer ))." bytes and ok-ing" );
+	}
 	foreach my $line ( split( /[\r\n]+/, $answer )){
 		$req->{socket}->send( "$$ $line\n" );
 	}
@@ -744,6 +756,8 @@ sub listen {
 	my $client = $self->{_socket}->accept();
 	my $result = undef;
 	my $data = "";
+	my $part = "";
+	my $err = false;
 	if( $client ){
 		$result = {
 			socket => $client,
@@ -751,10 +765,29 @@ sub listen {
 			peeraddr => $client->peeraddr(),
 			peerport => $client->peerport()
 		};
-		$client->recv( $data, BUFSIZE );
+		#$client->recv( $data, BUFSIZE );
+		my $eof = false;
+		while( !$eof && !$err ){
+			#my $ret = $self->{_socket}->sysread( $part, BUFSIZE );
+			my $ret = sysread( $client, $part, BUFSIZE );
+			if( defined( $ret ) && $ret == 0 ){
+				$eof = true;
+			} elsif( !defined( $ret )){
+				#next if $! == EINTR;               # interrupted, retry
+            	#next if $! == EAGAIN || $! == EWOULDBLOCK;  # if non-blocking, retry
+				msgErr( "RunnerDaemon::listen() $!" );
+				$err = true;
+			} else {
+				$data .= $part;
+			}
+		}
 	}
-	if( $result ){
-		msgLog( "received '$data' from '$result->{peerhost}':'$result->{peeraddr}':'$result->{peerport}'" );
+	if( !$err && $result ){
+		if( length( $data ) > $Const->{length_limit} ){
+			msgLog( "received ".length( $data )." data bytes from '$result->{peerhost}':'$result->{peeraddr}':'$result->{peerport}'" );
+		} else {
+			msgLog( "received '$data' from '$result->{peerhost}':'$result->{peeraddr}':'$result->{peerport}'" );
+		}
 		my @words = split( /\s+/, $data );
 		$result->{command} = shift( @words );
 		$result->{args} = \@words;

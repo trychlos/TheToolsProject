@@ -32,6 +32,8 @@ use utf8;
 use warnings;
 
 use Data::Dumper;
+use Scalar::Util qw( blessed );
+use Sereal::Encoder;
 
 use TTP::Constants qw( :all );
 
@@ -65,6 +67,36 @@ sub ep {
 	return $self->{_ep};
 }
 
+# -------------------------------------------------------------------------------------------------
+# (I):
+# - nothing
+# (O):
+# - a serializable snapshot of the data, suitable for new_by_snapshot() alternative constructor
+
+sub snapshot {
+	my ( $self ) = @_;
+
+	#print STDERR "Config ".Dumper( $self );
+	# detect here coderefs in our object, and remove them as not serializable
+	# got:
+	# 	CODE at $conf->{_ep}->{_node}->{_ijsonable}->{args}->{acceptable}->{accept} (TTP::Node::__ANON__)
+	# 	CODE at $conf->{_ep}->{_site}->{_ijsonable}->{args}->{acceptable}->{accept} (TTP::Site::__ANON__)
+	# that Dumper() shows as 'accept' => sub { "DUMMY" }
+=pod
+	my @where = TTP::coderefs_find( $self );
+	for my $hit (@where) {
+		warn "CODE at $hit->{path}", ($hit->{name} ? " ($hit->{name})" : ""), "\n";
+	}
+=cut
+	$self->{_ep}->{_node}->{_ijsonable}->{args}->{acceptable}->{accept} = undef;
+	$self->{_ep}->{_site}->{_ijsonable}->{args}->{acceptable}->{accept} = undef;
+
+	my $encoder = Sereal::Encoder->new();
+	my $snap = $encoder->encode( $self );
+
+	return $snap;
+}
+
 ### Class methods
 
 # -------------------------------------------------------------------------------------------------
@@ -83,12 +115,12 @@ sub new {
 	bless $self, $class;
 
 	# keep the TTP EP ref
-	if( defined( $ep ) && ref( $ep ) eq 'TTP::EP' ){
-		$self->{_ep} = $ep;
-	} else {
-		print STDERR "(ERR) ".__PACKAGE__."::new() 'ep' EntryPoint is not defined but is mandatory".EOL;
+	if( !$ep || !blessed( $ep ) || !$ep->isa( 'TTP::EP' )){
+		msgErr( "unexpected ep: ".TTP::chompDumper( $ep ));
 		TTP::stackTrace();
 	}
+
+	$self->{_ep} = $ep;
 
 	# let the roles insert their own code at that time
 	$self->_newBase( $ep, $args );

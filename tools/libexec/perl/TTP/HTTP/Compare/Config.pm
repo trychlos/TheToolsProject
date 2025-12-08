@@ -29,9 +29,11 @@ use utf8;
 use warnings;
 
 use Data::Dumper;
+use Digest::SHA qw( sha1_hex );
 use File::Spec;
 use Role::Tiny::With;
 use Scalar::Util qw( blessed );
+use Sereal::Decoder;
 
 with 'TTP::IEnableable', 'TTP::IJSONable';
 
@@ -39,6 +41,7 @@ use TTP;
 use vars::global qw( $ep );
 
 use TTP::Constants qw( :all );
+use TTP::HTTP::Compare::Utils;
 use TTP::Message qw( :all );
 
 # first define the constants which are re-used later
@@ -1377,11 +1380,6 @@ sub new {
 	$class = ref( $class ) || $class;
 	$args //= {};
 
-	if( !$ep || !blessed( $ep ) || !$ep->isa( 'TTP::EP' )){
-		msgErr( "unexpected ep: ".TTP::chompDumper( $ep ));
-		TTP::stackTrace();
-	}
-
 	my $self = $class->SUPER::new( $ep, $args );
 	bless $self, $class;
 	msgDebug( __PACKAGE__."::new() jsonPath='$path'" );
@@ -1399,6 +1397,35 @@ sub new {
 		msgErr( __PACKAGE__."::new() expects a 'path' argument, not found" );
 		TTP::stackTrace();
 	}
+
+	return $self;
+}
+
+# -------------------------------------------------------------------------------------------------
+# Constructor
+# (I):
+# - the TTP::EP entry point
+# - a serialized snapshot
+# - an optional options hash
+# (O):
+# - this object
+
+sub new_by_snapshot {
+	my ( $class, $ep, $snap, $args ) = @_;
+	$class = ref( $class ) || $class;
+	$args //= {};
+
+	if( !$ep || !blessed( $ep ) || !$ep->isa( 'TTP::EP' )){
+		msgErr( "unexpected ep: ".TTP::chompDumper( $ep ));
+		TTP::stackTrace();
+	}
+
+	my $self = $class->SUPER::new( $ep, $args );
+	bless $self, $class;
+	msgDebug( __PACKAGE__."::new_by_snapshot()" );
+
+	my $decoder = Sereal::Decoder->new();
+	$decoder->decode( $snap, $self );
 
 	return $self;
 }
