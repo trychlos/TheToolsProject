@@ -685,7 +685,11 @@ sub doAnswer {
 
 	my $logAnswer = $req->{logAnswer} // true;
 	if( $logAnswer ){
-		msgLog( "answering '$answer' and ok-ing" );
+		if( length( $answer ) > $Const->{length_limit} ){
+			msgLog( "answering with ".( length( $answer ))." bytes and ok-ing" );
+		} else {
+			msgLog( "answering '$answer' and ok-ing" );
+		}
 	} else {
 		msgLog( "answering with ".( length( $answer ))." bytes and ok-ing" );
 	}

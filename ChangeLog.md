@@ -14,6 +14,7 @@
     - services.pl workload-summary: extend to manage each execution report individually, thus bumping minor candidate release number
     - http.pl compare: extends 'compare.screenshots.enabled' description to have a three-way alternative
     - http.pl compare: define two daemons to handle 'ref' and 'new' sites interactions
+    - TTP::RunnerDaemon has a 'length_limit' to not clutter the logs with big data commands or answers
 
 ### 4.25.7
 
