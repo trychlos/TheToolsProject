@@ -392,22 +392,19 @@ sub _restore_chain {
 				} else {
 					$self->reset_spa({ path => $origin_path });
 				}
-                # wait for page ready
-                $self->wait_for_page_ready();
-
 			# navigate by click
 			} elsif( $qi->isClick()){
 				if( !$self->click_by_xpath( $qi->xpath() )){
 					msgWarn( "by '$role:$which' Browser::restore_chain() result=error: unable to click in '".$qi->xpath()."'" );
 					return [ false, "unable to click in '".$qi->xpath()."'" ];
 				}
-                # wait for page ready
-                $self->_wait_for_xpath( $qi->xpath());
-
 			} else {
 				msgWarn( "by '$role:$which' Browser::restore_chain() result=error: unexpected from='".$qi->from()."'" );
                 return [ false, "unexpected from='".$qi->from()."'" ];
 			}
+            # wait for page ready
+            $self->wait_for_page_ready();
+            #$self->_wait_for_signature( $qi->origin() || $qi->dest());
 			# take a screenshot post-navigate
 			if( $conf->confCrawlByClickIntermediateScreenshots()){
 				# prepare the post-navigation label
@@ -441,7 +438,7 @@ sub _restore_chain {
 
 	# check the result
 	if( $current_signature_wo_url ne $origin_signature_wo_url ){
-		msgWarn( "by '$role:$which' Browser::restore_chain() result=error: got signature='$current_signature_wo_url'" );
+		msgWarn( "by '$role:$which' Browser::restore_chain() result=error: got signature='$current_signature_wo_url' expecting '$origin_signature_wo_url'" );
 		return [ false, "signature error" ];
 	}
 
@@ -684,6 +681,32 @@ sub _wait_for_network_idle {
         select undef, undef, undef, 0.1;
     }
     return (\@all, $had_doc_response);
+}
+
+# -------------------------------------------------------------------------------------------------
+
+sub _wait_for_signature {
+    my ( $self, $expect ) = @_;
+
+    my $timeout_ms   = 1000;
+    my $role = $self->facer()->roleName();
+    my $which = $self->facer()->which();
+
+    my $deadline = time + $timeout_ms/1000.0;
+    my $last;
+    my $stable = 0;
+
+    while( time < $deadline ){
+        my $sig = $self->signature();    # your existing function
+
+        # 1) If we expect a specific signature, test that first
+        if( $sig =~ $expect ){
+            return $sig;
+        }
+        sleep 0.1;
+    }
+
+    msgErr( "by '$role:$which' Browser::wait_for_signature() timeout" );
 }
 
 # -------------------------------------------------------------------------------------------------
