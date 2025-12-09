@@ -147,6 +147,8 @@ sub get_answer {
 
     my $start = Time::Moment->now;
     my $first = true;
+    my $verboseReceived = $self->facer()->conf()->confVerbosityDaemonReceived();
+    my $verboseSleep = $self->facer()->conf()->confVerbosityDaemonSleep();
     my $answer = {
         response => "",
         ok => false,
@@ -158,7 +160,7 @@ sub get_answer {
         if( $first ){
             $first = false;
         } elsif( !$answer->{received} ){
-            msgVerbose( "by '$role:$which' DaemonInterface::get_answer() sleeping 1 sec" );
+            msgVerbose( "by '$role:$which' DaemonInterface::get_answer() sleeping 1 sec" ) if $verboseSleep;
             sleep( 1 );
         }
         # expect something
@@ -179,15 +181,14 @@ sub get_answer {
 
     #print STDERR "answer ".Dumper( $answer );
 	my $res = $answer->{ok} ? ( $answer->{response} ? decode_json( $answer->{response} )->{answer} : true ) : undef;
-    #msgVerbose( "by '$role:$which' DaemonInterface::get_answer() got ".( $res ? encode_json( $answer ) : '(undef)' ));
     if( $answer->{ok} ){
         if( $answer->{response} ){
-            msgVerbose( "by '$role:$which' DaemonInterface::get_answer() got answer length=".length( $answer->{response} ));
+            msgVerbose( "by '$role:$which' DaemonInterface::get_answer() got answer length=".length( $answer->{response} )) if $verboseReceived;
         } else {
-            msgVerbose( "by '$role:$which' DaemonInterface::get_answer() got answer='true'" );
+            msgVerbose( "by '$role:$which' DaemonInterface::get_answer() got answer='true'" ) if $verboseReceived;
         }
     } else {
-        msgVerbose( "by '$role:$which' DaemonInterface::get_answer() got no answer" );
+        msgVerbose( "by '$role:$which' DaemonInterface::get_answer() got no answer" ) if $verboseReceived;
     }
 
     #print STDERR "result ".Dumper( $res );
@@ -272,13 +273,14 @@ sub send_command {
     my $timedout = false;
     my $first = true;
     my $socket = undef;
+    my $verboseSleep = $self->facer()->conf()->confVerbosityDaemonSleep();
 
     do {
         # sleep if not the first call
         if( $first ){
             $first = false;
         } else {
-            msgVerbose( "by '$role:$which' DaemonInterface::command() sleeping 1 sec" );
+            msgVerbose( "by '$role:$which' DaemonInterface::command() sleeping 1 sec" ) if $verboseSleep;
             sleep( 1 );
         }
         # try to get a socket
@@ -483,9 +485,9 @@ sub execute {
                 if( $results->{$name}{$PACKAGE}{ok} ){
                     # be verbose about the received answer
                     if( length( $results->{$name}{$PACKAGE}{response} ) > $Const->{length_limit} ){
-                        msgVerbose( "by '$id_label' DaemonInterface::execute() received ".length( $results->{$name}{$PACKAGE}{response} )." bytes" );
+                        msgVerbose( "by '$id_label' DaemonInterface::execute() received ".length( $results->{$name}{$PACKAGE}{response} )." bytes" ) if $verboseReceived;
                     } else {
-                        msgVerbose( "by '$id_label' DaemonInterface::execute() received '$results->{$name}{$PACKAGE}{response}'" );
+                        msgVerbose( "by '$id_label' DaemonInterface::execute() received '$results->{$name}{$PACKAGE}{response}'" ) if $verboseReceived;
                     }
                     my $done = false;
                     if( length( $results->{$name}{$PACKAGE}{response} )){

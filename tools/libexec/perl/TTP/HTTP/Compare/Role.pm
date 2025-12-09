@@ -312,6 +312,7 @@ sub _enqueue_clickables {
 	msgVerbose( "by '$role' Role::enqueue_clickables() got page_signature='$page_signature'" );
 	my $targets = $capture->facer()->daemon()->send_and_get( 'clickable_discover_targets_xpath' );
 	my $count = 0;
+	my $verboseEnqueue = $self->conf()->confVerbosityClickablesEnqueue();
 	#print STDERR "targets: ".Dumper( $targets );
 	# - targets are like:
 	#   {
@@ -333,9 +334,11 @@ sub _enqueue_clickables {
 		#print STDERR "a ".Dumper( $a->{chain} );
 		my $item = TTP::HTTP::Compare::QueueItem->new( $self->ep(), $self->conf(), $a );
 		push( @{$self->{_queue}}, $item );
-		msgVerbose( "by '$role' Role::enqueue_clickables() enqueuing '".$item->signature()."' (text='$a->{text}')" );
-		msgVerbose( "by '$role' Role::enqueue_clickables() -> with chain [ '".join( "', '", @{$item->chain_signatures()} )."' ]" );
-		#$item->dump({ prefix => "enqueuing" });
+		if( $verboseEnqueue ){
+			msgVerbose( "by '$role' Role::enqueue_clickables() enqueuing '".$item->signature()."' (text='$a->{text}')" );
+			msgVerbose( "by '$role' Role::enqueue_clickables() -> with chain [ '".join( "', '", @{$item->chain_signatures()} )."' ]" );
+			#$item->dump({ prefix => "enqueuing" });
+		}
 		$count += 1;
     }
 	msgVerbose( "by '$role' Role::enqueue_clickables() got $count target(s)" );
@@ -428,6 +431,7 @@ sub _enqueue_links {
 	# collect links from the capture
 	my $links = $capture->extract_links();
 	my $count = 0;
+	my $verboseEnqueue = $self->conf()->confVerbosityLinksEnqueue();
 
 	# queue next layer
 	my $page_signature = $capture->signature();
@@ -441,7 +445,7 @@ sub _enqueue_links {
 					$self->conf(),
 					{ path => $u->path_query || '/', depth => $self->{_result}{count}{depth}, from => 'link', origin => $page_signature, chain => $queue_item->chain_plus() }
 			));
-			msgVerbose( "by '$role' Role::enqueue_links() enqueuing '$p'" );
+			msgVerbose( "by '$role' Role::enqueue_links() enqueuing '$p'" ) if $verboseEnqueue;
 			$count += 1;
 		}
 	}
