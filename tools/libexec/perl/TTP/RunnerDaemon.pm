@@ -772,7 +772,6 @@ sub listen {
 		#$client->recv( $data, BUFSIZE );
 		my $eof = false;
 		while( !$eof && !$err ){
-			#my $ret = $self->{_socket}->sysread( $part, BUFSIZE );
 			my $ret = sysread( $client, $part, BUFSIZE );
 			if( defined( $ret ) && $ret == 0 ){
 				$eof = true;
