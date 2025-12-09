@@ -373,7 +373,7 @@ sub _restore_chain {
 	# we so have to restore this same page signature in order to be able to apply and click the queue xpath
 	my $origin_signature = $queue_item->origin() || $queue_item->dest();
 	my $origin_signature_wo_url = TTP::HTTP::Compare::Utils::page_signature_wo_url( $origin_signature );
-	my $current_signature = $self->signature({ label => "current $which" });
+	my $current_signature = $self->signature({ label => "current " });
 	my $current_signature_wo_url = TTP::HTTP::Compare::Utils::page_signature_wo_url( $current_signature );
 
 	# reapply each and every queued item from the saved chain on both ref and new sites
@@ -411,9 +411,10 @@ sub _restore_chain {
 				$cap->writeScreenshot( $queue_item, { dir => $roleDir, suffix => $label, subdir => 'restored' });
 			}
 			# check the got signature exiting this restore loop as soon as we have got the right signature on the both sites
-			$current_signature = $self->signature({ label => "got $which" });
-			if( $current_signature eq $origin_signature ){
-				msgVerbose( "by '$role:$which' Browser::restore_chain() got expected signature '$origin_signature': fine" );
+			$current_signature = $self->signature({ label => "got " });
+            $current_signature_wo_url = TTP::HTTP::Compare::Utils::page_signature_wo_url( $current_signature );
+			if( $current_signature_wo_url eq $origin_signature_wo_url ){
+				msgVerbose( "by '$role:$which' Browser::restore_chain() got expected signature (without url) '$origin_signature_wo_url': fine" );
 				last;
 			}
 			# if we have landed on a signin page, what to do ?
@@ -433,8 +434,8 @@ sub _restore_chain {
 	}
 
 	# check the result
-	if( $current_signature ne $origin_signature ){
-		msgWarn( "by '$role:$which' Browser::restore_chain() result=error: got signature='$current_signature'" );
+	if( $current_signature_wo_url ne $origin_signature_wo_url ){
+		msgWarn( "by '$role:$which' Browser::restore_chain() result=error: got signature='$current_signature_wo_url'" );
 		return [ false, "signature error" ];
 	}
 
@@ -728,7 +729,7 @@ sub click_and_capture {
     msgVerbose( "by '$role:$which' Browser::click_and_capture() xpath='".$queue_item->xpath()."'" );
 
     # if we have to re-login, returns to the parent program which will terminate this daemon and start another one
-	my ( $ok, $res ) = $self->_restore_chain( $queue_item, $args );
+	my ( $ok, $res ) = @{ $self->_restore_chain( $queue_item, $args ) };
     return $res if !$ok;
 
     $ok = false;
@@ -1499,7 +1500,6 @@ sub wait_and_capture {
     my $current_url = $driver->get_current_url();
     my $u = URI->new( $current_url );
     my $current_path = $u->path // '/';
-    msgLog( "current_path='$current_path'" );
 
 	my $doc = $self->_extract_main_doc_from_perf_logs( $logs, $current_url );
 	#print STDERR "wait_and_capture() $args->{label} doc ".Dumper( $doc );
