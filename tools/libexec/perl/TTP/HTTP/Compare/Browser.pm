@@ -611,7 +611,7 @@ sub _wait_for_body {
 
 sub _wait_for_dom_stable {
     my ( $self ) = @_;
-    my $quiet_ms  //= 500;
+    my $quiet_ms  //= 100;
 
     my $last_sig;
     my $last_change_t = Time::HiRes::time;
@@ -649,7 +649,7 @@ sub _wait_for_dom_stable {
 
 sub _wait_for_network_idle {
     my ( $self ) = @_;
-    my $quiet_ms  //= 500;
+    my $quiet_ms  //= 100;
 
     my $t0 = Time::HiRes::time;
     my $last_event_t = $t0;
