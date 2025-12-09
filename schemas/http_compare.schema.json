@@ -623,6 +623,60 @@
                     }
                 }
             }
+        },
+        "verbosity": {
+            "description": "Whether to be verbose on actions.",
+            "type": "object",
+            "properties": {
+                "clickables": {
+                    "description": "The verbosity to be applied when enqueing new clickables.",
+                    "type": "object",
+                    "properties": {
+                        "denied": {
+                            "description": "Whether to be verbose about denied clickables.",
+                            "type": "boolean",
+                            "default": false
+                        },
+                        "enqueue": {
+                            "description": "Whether to be verbose when enqueing a new clickable.",
+                            "type": "boolean",
+                            "default": false
+                        }
+                    }
+                },
+                "daemon": {
+                    "description": "The verbosity to be applied on browsers.",
+                    "type": "object",
+                    "properties": {
+                        "received": {
+                            "description": "Whether to be verbose when about the received answer from the daemon.",
+                            "type": "boolean",
+                            "default": false
+                        },
+                        "sleep": {
+                            "description": "Whether to be verbose when sleeping while waiting for an answer of the daemon.",
+                            "type": "boolean",
+                            "default": false
+                        }
+                    }
+                },
+                "links": {
+                    "description": "The verbosity to be applied when enqueing new links.",
+                    "type": "object",
+                    "properties": {
+                        "denied": {
+                            "description": "Whether to be verbose about denied links.",
+                            "type": "boolean",
+                            "default": false
+                        },
+                        "enqueue": {
+                            "description": "Whether to be verbose when enqueing a new link.",
+                            "type": "boolean",
+                            "default": false
+                        }
+                    }
+                }
+            }
         }
     }
 }

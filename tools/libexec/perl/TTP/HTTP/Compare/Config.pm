@@ -147,6 +147,13 @@ use constant {
 		ref => File::Spec->catdir( "ref", "screenshots" ),
 		restored => File::Spec->catdir( "restored", "screenshots" ),
 	},
+	DEFAULT_VERBOSITY_CLICKABLES_DENIED => false,
+	DEFAULT_VERBOSITY_CLICKABLES_ENQUEUE => false,
+	DEFAULT_VERBOSITY_DAEMON_RECEIVED => false,
+	DEFAULT_VERBOSITY_DAEMON_SLEEP => false,
+	DEFAULT_VERBOSITY_LINKS_DENIED => false,
+	DEFAULT_VERBOSITY_LINKS_ENQUEUE => false,
+
 	MIN_BROWSER_HEIGHT => 3,
 	MIN_BROWSER_WIDTH => 4
 };
@@ -1130,6 +1137,90 @@ sub confForms {
 	my $ref = $self->var([ 'forms' ]) // {};
 
 	return $ref;
+}
+
+# ------------------------------------------------------------------------------------------------
+# (I):
+# - none
+# (O):
+# - returns whether to be verbose not accepting a new clickable
+
+sub confVerbosityClickablesDenied {
+	my ( $self ) = @_;
+
+	my $verbose = $self->var([ 'verbosity', 'clickables', 'denied' ]) // DEFAULT_VERBOSITY_CLICKABLES_DENIED;
+
+	return $verbose;
+}
+
+# ------------------------------------------------------------------------------------------------
+# (I):
+# - none
+# (O):
+# - returns whether to be verbose when enqueing a new clickable
+
+sub confVerbosityClickablesEnqueue {
+	my ( $self ) = @_;
+
+	my $verbose = $self->var([ 'verbosity', 'clickables', 'enqueue' ]) // DEFAULT_VERBOSITY_CLICKABLES_ENQUEUE;
+
+	return $verbose;
+}
+
+# ------------------------------------------------------------------------------------------------
+# (I):
+# - none
+# (O):
+# - returns whether to be verbose about received answers, defaulting to false
+
+sub confVerbosityDaemonReceived {
+	my ( $self ) = @_;
+
+	my $verbose = $self->var([ 'verbosity', 'daemon', 'received' ]) // DEFAULT_VERBOSITY_DAEMON_RECEIVED;
+
+	return $verbose;
+}
+
+# ------------------------------------------------------------------------------------------------
+# (I):
+# - none
+# (O):
+# - returns whether to be verbose when sleeping while waiting, defaulting to false
+
+sub confVerbosityDaemonSleep {
+	my ( $self ) = @_;
+
+	my $verbose = $self->var([ 'verbosity', 'daemon', 'sleep' ]) // DEFAULT_VERBOSITY_DAEMON_SLEEP;
+
+	return $verbose;
+}
+
+# ------------------------------------------------------------------------------------------------
+# (I):
+# - none
+# (O):
+# - returns whether to be verbose not accepting a new link
+
+sub confVerbosityLinksDenied {
+	my ( $self ) = @_;
+
+	my $verbose = $self->var([ 'verbosity', 'links', 'denied' ]) // DEFAULT_VERBOSITY_LINKS_DENIED;
+
+	return $verbose;
+}
+
+# ------------------------------------------------------------------------------------------------
+# (I):
+# - none
+# (O):
+# - returns whether to be verbose when enqueing a new link
+
+sub confVerbosityLinksEnqueue {
+	my ( $self ) = @_;
+
+	my $verbose = $self->var([ 'verbosity', 'links', 'enqueue' ]) // DEFAULT_VERBOSITY_LINKS_ENQUEUE;
+
+	return $verbose;
 }
 
 # -------------------------------------------------------------------------------------------------

@@ -350,12 +350,13 @@ sub _enqueue_clickables_href_allowed {
     my ( $self, $href ) = @_;
 
 	my $role = $self->name();
+	my $verboseDenied = $self->conf()->confVerbosityClickablesDenied();
 
 	if( $href ){
 		my $denied = $self->conf()->runCrawlByClickHrefDenyPatterns() || [];
 		if( scalar( @{$denied} )){
 			if( any { $href =~ $_ } @{ $denied } ){
-				msgVerbose( "by '$role' Role::enqueue_clickables_href_allowed() '$href' denied by regex" );
+				msgVerbose( "by '$role' Role::enqueue_clickables_href_allowed() '$href' denied by regex" ) if $verboseDenied;
 				return false;
 			}
 		}
@@ -373,12 +374,13 @@ sub _enqueue_clickables_text_allowed {
     my ( $self, $text ) = @_;
 
 	my $role = $self->name();
+	my $verboseDenied = $self->conf()->confVerbosityClickablesDenied();
 
 	if( $text ){
 		my $denied = $self->conf()->runCrawlByClickTextDenyPatterns() || [];
 		if( scalar( @{$denied} )){
 			if( any { $text =~ $_ } @{ $denied } ){
-				msgVerbose( "by '$role' Role::enqueue_clickables_text_allowed() '$text' denied by regex" );
+				msgVerbose( "by '$role' Role::enqueue_clickables_text_allowed() '$text' denied by regex" ) if $verboseDenied;
 				return false;
 			}
 		}
@@ -396,12 +398,13 @@ sub _enqueue_clickables_xpath_allowed {
     my ( $self, $xpath ) = @_;
 
 	my $role = $self->name();
+	my $verboseDenied = $self->conf()->confVerbosityClickablesDenied();
 
 	if( $xpath ){
 		my $denied = $self->conf()->runCrawlByClickXpathDenyPatterns() || [];
 		if( scalar( @{$denied} )){
 			if( any { $xpath =~ $_ } @{ $denied } ){
-				msgVerbose( "by '$role' Role::enqueue_clickables_xpath_allowed() '$xpath' denied by regex" );
+				msgVerbose( "by '$role' Role::enqueue_clickables_xpath_allowed() '$xpath' denied by regex" ) if $verboseDenied;
 				return false;
 			}
 		}

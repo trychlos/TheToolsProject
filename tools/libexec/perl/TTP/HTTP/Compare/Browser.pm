@@ -404,7 +404,6 @@ sub _restore_chain {
 			}
             # wait for page ready
             $self->wait_for_page_ready();
-            #$self->_wait_for_signature( $qi->origin() || $qi->dest());
 			# take a screenshot post-navigate
 			if( $conf->confCrawlByClickIntermediateScreenshots()){
 				# prepare the post-navigation label

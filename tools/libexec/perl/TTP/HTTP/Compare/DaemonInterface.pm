@@ -459,7 +459,9 @@ sub execute {
     do {
         $not_ended_count = 0;
         foreach my $name ( sort keys %{$interfaces} ){
-           if( !$results->{$name}{$PACKAGE}{ended} ){
+            my $verboseReceived = $interfaces->{$name}->facer()->conf()->confVerbosityDaemonReceived();
+            my $verboseSleep = $interfaces->{$name}->facer()->conf()->confVerbosityDaemonSleep();
+            if( !$results->{$name}{$PACKAGE}{ended} ){
                 $not_ended_count += 1;
                 my $id_label = "$results->{$name}{$PACKAGE}{role}:$results->{$name}{$PACKAGE}{which}";
 
@@ -467,14 +469,14 @@ sub execute {
                 if( $results->{$name}{$PACKAGE}{first} ){
                     $results->{$name}{$PACKAGE}{first} = false;
                 } elsif( !$results->{$name}{$PACKAGE}{received} ){
-                    msgVerbose( "by '$id_label' DaemonInterface::execute() sleeping 1 sec" );
+                    msgVerbose( "by '$id_label' DaemonInterface::execute() sleeping 1 sec" ) if $verboseSleep;
                     sleep( 1 );
                 }
 
                 # expect something
                 # set ok, response, received data
                 _get_answer_part( $results->{$name}{$PACKAGE}{socket}, $results->{$name}{$PACKAGE} );
-                msgVerbose( "by '$id_label' DaemonInterface::execute() received $results->{$name}{$PACKAGE}{received} bytes" );
+                msgVerbose( "by '$id_label' DaemonInterface::execute() received $results->{$name}{$PACKAGE}{received} bytes" ) if $verboseReceived;
 
                 # if we have received the 'OK' line, then answer is terminated
                 # if the received answer is a scalar which is a key of the 'replay' hash, then this is a replay request
