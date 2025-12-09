@@ -79,7 +79,8 @@ my $Const = {
 					]
 				},
 				'goog:loggingPrefs' => { performance => 'ALL', browser => 'ALL' },
-				unhandledPromptBehavior => 'accept and notify'
+				unhandledPromptBehavior => 'accept and notify',
+                pageLoadStrategy => 'none'
 			}
 		}
 	},
@@ -383,6 +384,7 @@ sub _restore_chain {
 			msgVerbose( "by '$role:$which' Browser::restore_chain() restoring qi='".$qi->signature()."'" );
 			my $current_path = TTP::HTTP::Compare::Utils::page_signature_to_path( $current_signature );
 			my $origin_path = TTP::HTTP::Compare::Utils::page_signature_to_path( $origin_signature );
+
 			# navigate by link
 			if( $qi->isLink() || $current_path ne $origin_path ){
 				if( $qi->isLink()){
@@ -390,18 +392,22 @@ sub _restore_chain {
 				} else {
 					$self->reset_spa({ path => $origin_path });
 				}
+                # wait for page ready
+                $self->wait_for_page_ready();
+
 			# navigate by click
 			} elsif( $qi->isClick()){
 				if( !$self->click_by_xpath( $qi->xpath() )){
 					msgWarn( "by '$role:$which' Browser::restore_chain() result=error: unable to click in '".$qi->xpath()."'" );
 					return [ false, "unable to click in '".$qi->xpath()."'" ];
 				}
+                # wait for page ready
+                $self->_wait_for_xpath( $qi->xpath());
+
 			} else {
 				msgWarn( "by '$role:$which' Browser::restore_chain() result=error: unexpected from='".$qi->from()."'" );
                 return [ false, "unexpected from='".$qi->from()."'" ];
 			}
-			# wait for page ready
-			$self->wait_for_page_ready();
 			# take a screenshot post-navigate
 			if( $conf->confCrawlByClickIntermediateScreenshots()){
 				# prepare the post-navigation label
@@ -681,6 +687,27 @@ sub _wait_for_network_idle {
 }
 
 # -------------------------------------------------------------------------------------------------
+
+sub _wait_for_xpath {
+    my ( $self, $xp, $ms ) = @_;
+
+    my $role = $self->facer()->roleName();
+    my $which = $self->facer()->which();
+
+    my $deadline = time + (( $ms // 1000)  / 1000.0 );
+    my $el;
+    while ( time < $deadline ){
+        $el = eval { ($self->driver()->find_elements( $xp, 'xpath' ))[0] };
+        if( $el ){
+            msgVerbose( "by '$role:$which' Browser::wait_for_xpath() el=$el" );
+            return $el;
+        };
+        sleep 0.05;
+    }
+    msgErr( "by '$role:$which' Browser::wait_for_xpath() timeout: $xp" );
+}
+
+# -------------------------------------------------------------------------------------------------
 # Generic waiter: runs $cond->() repeatedly until it returns a truthy value.
 # Returns that value, or undef on timeout.
 
@@ -753,7 +780,9 @@ sub click_and_capture {
     }
 
     # if xpath click was successful then wait and return the capture
-    return $self->wait_and_capture() if $ok;
+    if( $self->_wait_for_xpath( $queue_item->xpath())){
+        return $self->wait_and_capture({ wait => false }) if $ok;
+    }
     
     # should never come here
     return "unexpected error";

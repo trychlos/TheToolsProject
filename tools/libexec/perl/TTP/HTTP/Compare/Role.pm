@@ -237,8 +237,13 @@ sub _do_crawl_by_click {
 		{ relogin => \&try_to_relogin }
 	);
 	if( $results->{ref}{result}{success} && $results->{new}{result}{success} ){
-		$captureRef = TTP::HTTP::Compare::Capture->new( $ep, $self->{_facers}{ref}, $results->{ref}{result}{answer} );
-		$captureNew = TTP::HTTP::Compare::Capture->new( $ep, $self->{_facers}{new}, $results->{new}{result}{answer} );
+		if( ref( $results->{ref}{result}{answer}) eq 'HASH' && ref( $results->{new}{result}{answer}) eq 'HASH' ){
+			$captureRef = TTP::HTTP::Compare::Capture->new( $ep, $self->{_facers}{ref}, $results->{ref}{result}{answer} );
+			$captureNew = TTP::HTTP::Compare::Capture->new( $ep, $self->{_facers}{new}, $results->{new}{result}{answer} );
+		} else {
+			return [ undef, undef, "crawl_by_click ref $results->{ref}{result}{answer}" ] if !ref( $results->{ref}{result}{answer});
+			return [ undef, undef, "crawl_by_click new $results->{new}{result}{answer}" ] if !ref( $results->{new}{result}{answer});
+		}
 	} else {
 		return [ undef, undef, "crawl_by_click ref $results->{ref}{result}{reason}" ] if !$results->{ref}{result}{success};
 		return [ undef, undef, "crawl_by_click new $results->{new}{result}{reason}" ] if !$results->{new}{result}{success};
