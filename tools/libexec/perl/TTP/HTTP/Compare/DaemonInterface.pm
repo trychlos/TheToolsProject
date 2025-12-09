@@ -48,7 +48,7 @@ use constant {
 
 my $Const = {
     length_limit => 255,
-    timeout => 10
+    timeout => 15
 };
 
 ### Private methods
@@ -202,7 +202,7 @@ sub _get_answer_part {
 
     # get something
 	my $buffer = "";
-	$socket->recv( $buffer, 8192 );
+    sysread( $socket, $buffer, 8192 );
     $answer->{received} = length( $buffer );
 
     # check whether last line is single 'OK'
@@ -457,9 +457,9 @@ sub execute {
         $not_ended_count = 0;
         foreach my $name ( sort keys %{$interfaces} ){
            if( !$results->{$name}{$PACKAGE}{ended} ){
-
                 $not_ended_count += 1;
                 my $id_label = "$results->{$name}{$PACKAGE}{role}:$results->{$name}{$PACKAGE}{which}";
+
                 # sleep if not the first call and have not received anything in the last round
                 if( $results->{$name}{$PACKAGE}{first} ){
                     $results->{$name}{$PACKAGE}{first} = false;
