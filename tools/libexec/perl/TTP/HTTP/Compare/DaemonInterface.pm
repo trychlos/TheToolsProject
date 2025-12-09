@@ -207,15 +207,17 @@ sub _get_answer_part {
 
     # check whether last line is single 'OK'
     # else concatenate to global response
-	my @lines = split( /[\r\n]+/, $buffer );
-    for( my $i=0; $i<=$#lines ; ++$i ){
-        my $line = $lines[$i];
-        chomp $line;
-        $line =~ s/^[0-9]+\s+//;
-        if( $i == $#lines && $line eq 'OK' ){
-            $answer->{ok} = true;
-        } else {
-            $answer->{response} .= $line;
+    if( $answer->{received} ){
+        my @lines = split( /[\r\n]+/, $buffer );
+        for( my $i=0; $i<=$#lines ; ++$i ){
+            my $line = $lines[$i];
+            chomp $line;
+            $line =~ s/^[0-9]+\s+//;
+            if( $i == $#lines && $line eq 'OK' ){
+                $answer->{ok} = true;
+            } else {
+                $answer->{response} .= $line;
+            }
         }
     }
 }
@@ -280,7 +282,7 @@ sub send_command {
             sleep( 1 );
         }
         # try to get a socket
-        $socket = new IO::Socket::INET(
+        $socket = IO::Socket::INET->new(
             PeerHost => 'localhost',
             PeerPort => $self->facer()->port(),
             Proto => 'tcp',
@@ -296,6 +298,7 @@ sub send_command {
 
 	# send the command
 	if( $socket ){
+        $socket->blocking( false );
 		my $size = $socket->send( "$command $data" );
 		# notify server that request has been sent
 		$socket->shutdown( SHUT_WR );
@@ -471,7 +474,7 @@ sub execute {
                 # expect something
                 # set ok, response, received data
                 _get_answer_part( $results->{$name}{$PACKAGE}{socket}, $results->{$name}{$PACKAGE} );
-                #msgVerbose( "by '$id_label' DaemonInterface::execute() received $results->{$name}{$PACKAGE}{received} bytes" );
+                msgVerbose( "by '$id_label' DaemonInterface::execute() received $results->{$name}{$PACKAGE}{received} bytes" );
 
                 # if we have received the 'OK' line, then answer is terminated
                 # if the received answer is a scalar which is a key of the 'replay' hash, then this is a replay request
