@@ -38,6 +38,7 @@ use Path::Tiny qw( path );
 use POSIX qw( strftime );
 use Scalar::Util qw( blessed );
 use Test::More;
+use Time::HiRes qw( time );
 use Time::Moment;
 use URI;
 
@@ -92,6 +93,9 @@ sub _do_crawl {
 		return true;
 	}
 
+	# have the start time
+	$queue_item->{start} = time();
+
 	# increments before visiting so that all the dumped files are numbered correctly
 	$self->{_result}{count}{visited} += 1;
 	$queue_item->visited( $self->{_result}{count}{visited} );
@@ -137,6 +141,8 @@ sub _do_crawl {
 		if( $status_ref >= 400 && $status_ref == $status_new ){
 			msgVerbose( "[".$self->name()." ($path)] same error code, so just cancel this path" );
 			$self->_record_result( $queue_item, $captureRef, $captureNew );
+			$queue_item->{end} = time();
+			msgVerbose( "by '$role' Role::do_crawl() elapsed=".( $queue_item->{end} - $queue_item->{start} ));
 			return $continue;
 		}
 
@@ -190,12 +196,14 @@ sub _do_crawl {
 		msgWarn( "by '$role' Role::do_crawl() at least one of captureRef or captureNew is not defined, this is NOT expected" );
 		$self->{_result}{unexpected}{not_all_undef} //= [];
 		push( @{$self->{_result}{unexpected}{not_all_undef}}, $queue_item );
-			$continue = $self->_successive_errors_inc( "unexpected_not_all_undef" );
+		$continue = $self->_successive_errors_inc( "unexpected_not_all_undef" );
 	}
 
 	# try to print an intermediate result each 100 visits
 	$self->_try_to_print_intermediate_results();
 
+	$queue_item->{end} = time();
+	msgVerbose( "by '$role' Role::do_crawl() elapsed=".( $queue_item->{end} - $queue_item->{start} ));
 	return $continue;
 }
 
