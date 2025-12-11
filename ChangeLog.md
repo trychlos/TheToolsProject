@@ -2,7 +2,7 @@
 
 ## ChangeLog
 
-### 4.26.0-rc.5
+### 4.26.0-rc.6
 
     Release date: 
 
@@ -15,6 +15,7 @@
     - http.pl compare: extends 'compare.screenshots.enabled' description to have a three-way alternative
     - http.pl compare: define two daemons to handle 'ref' and 'new' sites interactions
     - TTP::RunnerDaemon has a 'length_limit' to not clutter the logs with big data commands or answers
+    - http.pl compare: configure more delays and timeouts, wait_page_ready() handles its own concurrency
 
 ### 4.25.7
 
