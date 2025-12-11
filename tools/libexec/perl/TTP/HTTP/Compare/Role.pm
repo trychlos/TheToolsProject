@@ -351,7 +351,6 @@ sub _enqueue_clickables {
 		$verboseEnqueue->( "by '$role' Role::enqueue_clickables() enqueuing '".$item->signature()."' (text='$a->{text}')" );
 		$verboseEnqueue->( "by '$role' Role::enqueue_clickables() -> with chain [ '".join( "', '", @{$item->chain_signatures()} )."' ]" );
 		#$item->dump({ prefix => "enqueuing" });
-		}
 		$count += 1;
     }
 	msgVerbose( "by '$role' Role::enqueue_clickables() got $count target(s)" );
