@@ -381,13 +381,13 @@ sub _extract_links_href_allowed {
 	my $conf = $self->facer()->conf();
 	my $role = $self->facer()->roleName();
 	my $which = $self->facer()->which();
-	my $verboseDenied = $conf->confVerbosityLinksDenied();
+	my $verboseDenied = $conf->confVerbosityLinksDenied() ? \&msgVerbose : \&msgLog;
 
     # Deny first
 	my $denied = $conf->runCrawlByLinkHrefDenyPatterns() || [];
     if( scalar( @{$denied} )){
         if( any { $href =~ $_ } @{ $denied } ){
-			msgVerbose( "by '$role:$which' Capture::extract_links_href_allowed() '$href' denied by regex" ) if $verboseDenied;
+			$verboseDenied->( "by '$role:$which' Capture::extract_links_href_allowed() '$href' denied by regex" );
 			return false;
 		}
     }
@@ -412,13 +412,13 @@ sub _extract_links_text_allowed {
 	my $conf = $self->facer()->conf();
 	my $role = $self->facer()->roleName();
 	my $which = $self->facer()->which();
-	my $verboseDenied = $conf->confVerbosityLinksDenied();
+	my $verboseDenied = $conf->confVerbosityLinksDenied() ? \&msgVerbose : \&msgLog;
 
 	if( $text ){
 		my $denied = $conf->runCrawlByLinkTextDenyPatterns() || [];
 		if( scalar( @{$denied} )){
 			if( any { $text =~ $_ } @{ $denied } ){
-				msgVerbose( "by '$role:$which' Capture::extract_links_text_allowed() '$text' denied by regex" ) if $verboseDenied;
+				$verboseDenied->( "by '$role:$which' Capture::extract_links_text_allowed() '$text' denied by regex" );
 				return false;
 			}
 		}
@@ -440,13 +440,13 @@ sub _extract_links_url_allowed {
 	my $conf = $self->facer()->conf();
 	my $role = $self->facer()->roleName();
 	my $which = $self->facer()->which();
-	my $verboseDenied = $conf->confVerbosityLinksDenied();
+	my $verboseDenied = $conf->confVerbosityLinksDenied() ? \&msgVerbose : \&msgLog;
 
     # Deny first
 	my $denied = $conf->runCrawlByLinkUrlDenyPatterns() || [];
     if( scalar( @{$denied} )){
         if( any { $url =~ $_ } @{ $denied } ){
-			msgVerbose( "by '$role:$which' Capture::extract_links_url_allowed() '$url' denied by regex" ) if $verboseDenied;
+			$verboseDenied->( "by '$role:$which' Capture::extract_links_url_allowed() '$url' denied by regex" );
 			return false;
 		}
     }

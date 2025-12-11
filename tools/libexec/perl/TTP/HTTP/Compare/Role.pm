@@ -317,7 +317,7 @@ sub _enqueue_clickables {
 	msgVerbose( "by '$role' Role::enqueue_clickables() got page_signature='$page_signature'" );
 	my $targets = $capture->facer()->daemon()->send_and_get( 'clickable_discover_targets_xpath' );
 	my $count = 0;
-	my $verboseEnqueue = $self->conf()->confVerbosityClickablesEnqueue();
+	my $verboseEnqueue = $self->conf()->confVerbosityClickablesEnqueue() ? \&msgVerbose : \&msgLog;
 	#print STDERR "targets: ".Dumper( $targets );
 	# - targets are like:
 	#   {
@@ -339,10 +339,9 @@ sub _enqueue_clickables {
 		#print STDERR "a ".Dumper( $a->{chain} );
 		my $item = TTP::HTTP::Compare::QueueItem->new( $self->ep(), $self->conf(), $a );
 		push( @{$self->{_queue}}, $item );
-		if( $verboseEnqueue ){
-			msgVerbose( "by '$role' Role::enqueue_clickables() enqueuing '".$item->signature()."' (text='$a->{text}')" );
-			msgVerbose( "by '$role' Role::enqueue_clickables() -> with chain [ '".join( "', '", @{$item->chain_signatures()} )."' ]" );
-			#$item->dump({ prefix => "enqueuing" });
+		$verboseEnqueue->( "by '$role' Role::enqueue_clickables() enqueuing '".$item->signature()."' (text='$a->{text}')" );
+		$verboseEnqueue->( "by '$role' Role::enqueue_clickables() -> with chain [ '".join( "', '", @{$item->chain_signatures()} )."' ]" );
+		#$item->dump({ prefix => "enqueuing" });
 		}
 		$count += 1;
     }
@@ -358,13 +357,13 @@ sub _enqueue_clickables_href_allowed {
     my ( $self, $href ) = @_;
 
 	my $role = $self->name();
-	my $verboseDenied = $self->conf()->confVerbosityClickablesDenied();
+	my $verboseDenied = $self->conf()->confVerbosityClickablesDenied() ? \&msgVerbose : \&msgLog;
 
 	if( $href ){
 		my $denied = $self->conf()->runCrawlByClickHrefDenyPatterns() || [];
 		if( scalar( @{$denied} )){
 			if( any { $href =~ $_ } @{ $denied } ){
-				msgVerbose( "by '$role' Role::enqueue_clickables_href_allowed() '$href' denied by regex" ) if $verboseDenied;
+				$verboseDenied->( "by '$role' Role::enqueue_clickables_href_allowed() '$href' denied by regex" );
 				return false;
 			}
 		}
@@ -382,13 +381,13 @@ sub _enqueue_clickables_text_allowed {
     my ( $self, $text ) = @_;
 
 	my $role = $self->name();
-	my $verboseDenied = $self->conf()->confVerbosityClickablesDenied();
+	my $verboseDenied = $self->conf()->confVerbosityClickablesDenied() ? \&msgVerbose : \&msgLog;
 
 	if( $text ){
 		my $denied = $self->conf()->runCrawlByClickTextDenyPatterns() || [];
 		if( scalar( @{$denied} )){
 			if( any { $text =~ $_ } @{ $denied } ){
-				msgVerbose( "by '$role' Role::enqueue_clickables_text_allowed() '$text' denied by regex" ) if $verboseDenied;
+				$verboseDenied->( "by '$role' Role::enqueue_clickables_text_allowed() '$text' denied by regex" );
 				return false;
 			}
 		}
@@ -406,13 +405,13 @@ sub _enqueue_clickables_xpath_allowed {
     my ( $self, $xpath ) = @_;
 
 	my $role = $self->name();
-	my $verboseDenied = $self->conf()->confVerbosityClickablesDenied();
+	my $verboseDenied = $self->conf()->confVerbosityClickablesDenied() ? \&msgVerbose : \&msgLog;
 
 	if( $xpath ){
 		my $denied = $self->conf()->runCrawlByClickXpathDenyPatterns() || [];
 		if( scalar( @{$denied} )){
 			if( any { $xpath =~ $_ } @{ $denied } ){
-				msgVerbose( "by '$role' Role::enqueue_clickables_xpath_allowed() '$xpath' denied by regex" ) if $verboseDenied;
+				$verboseDenied->( "by '$role' Role::enqueue_clickables_xpath_allowed() '$xpath' denied by regex" );
 				return false;
 			}
 		}
@@ -436,7 +435,7 @@ sub _enqueue_links {
 	# collect links from the capture
 	my $links = $capture->extract_links();
 	my $count = 0;
-	my $verboseEnqueue = $self->conf()->confVerbosityLinksEnqueue();
+	my $verboseEnqueue = $self->conf()->confVerbosityLinksEnqueue() ? \&msgVerbose : \&msgLog;
 
 	# queue next layer
 	my $page_signature = $capture->signature();
@@ -450,7 +449,7 @@ sub _enqueue_links {
 					$self->conf(),
 					{ path => $u->path_query || '/', depth => $self->{_result}{count}{depth}, from => 'link', origin => $page_signature, chain => $queue_item->chain_plus() }
 			));
-			msgVerbose( "by '$role' Role::enqueue_links() enqueuing '$p'" ) if $verboseEnqueue;
+			$verboseEnqueue->( "by '$role' Role::enqueue_links() enqueuing '$p'" );
 			$count += 1;
 		}
 	}

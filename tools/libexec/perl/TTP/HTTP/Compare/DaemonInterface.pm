@@ -146,8 +146,8 @@ sub get_answer {
 
     my $start = Time::Moment->now;
     my $first = true;
-    my $verboseReceived = $self->facer()->conf()->confVerbosityDaemonReceived();
-    my $verboseSleep = $self->facer()->conf()->confVerbosityDaemonSleep();
+    my $verboseReceived = $self->facer()->conf()->confVerbosityDaemonReceived() ? \&msgVerbose : \&msgLog;
+    my $verboseSleep = $self->facer()->conf()->confVerbosityDaemonSleep() ? \&msgVerbose : \&msgLog;
     my $answerTimeout = $self->facer()->conf()->confBrowserTimeoutsGetAnswer();
     my $answer = {
         response => "",
@@ -160,7 +160,7 @@ sub get_answer {
         if( $first ){
             $first = false;
         } elsif( !$answer->{received} ){
-            msgVerbose( "by '$role:$which' DaemonInterface::get_answer() sleeping 1 sec" ) if $verboseSleep;
+            $verboseSleep->( "by '$role:$which' DaemonInterface::get_answer() sleeping 1 sec" );
             sleep( 1 );
         }
         # expect something
@@ -183,12 +183,12 @@ sub get_answer {
 	my $res = $answer->{ok} ? ( $answer->{response} ? decode_json( $answer->{response} )->{answer} : true ) : undef;
     if( $answer->{ok} ){
         if( $answer->{response} ){
-            msgVerbose( "by '$role:$which' DaemonInterface::get_answer() got answer length=".length( $answer->{response} )) if $verboseReceived;
+            $verboseReceived->( "by '$role:$which' DaemonInterface::get_answer() got answer length=".length( $answer->{response} ));
         } else {
-            msgVerbose( "by '$role:$which' DaemonInterface::get_answer() got answer='true'" ) if $verboseReceived;
+            $verboseReceived->( "by '$role:$which' DaemonInterface::get_answer() got answer='true'" );
         }
     } else {
-        msgVerbose( "by '$role:$which' DaemonInterface::get_answer() got no answer" ) if $verboseReceived;
+        $verboseReceived->( "by '$role:$which' DaemonInterface::get_answer() got no answer" );
     }
 
     #print STDERR "result ".Dumper( $res );
@@ -272,7 +272,7 @@ sub send_command {
     my $timedout = false;
     my $first = true;
     my $socket = undef;
-    my $verboseSleep = $self->facer()->conf()->confVerbosityDaemonSleep();
+    my $verboseSleep = $self->facer()->conf()->confVerbosityDaemonSleep() ? \&msgVerbose : \&msgLog;
     my $sendTimeout = $opts->{timeout} // $self->facer()->conf()->confBrowserTimeoutsSendCommand();
 
     do {
@@ -280,7 +280,7 @@ sub send_command {
         if( $first ){
             $first = false;
         } else {
-            msgVerbose( "by '$role:$which' DaemonInterface::command() sleeping 1 sec" ) if $verboseSleep;
+            $verboseSleep->( "by '$role:$which' DaemonInterface::command() sleeping 1 sec" );
             sleep( 1 );
         }
         # try to get a socket
