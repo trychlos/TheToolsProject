@@ -60,6 +60,25 @@
                     "type": "string",
                     "default": "chromedriver --port=9515 --url-base=/wd/hub --verbose"
                 },
+                "delays": {
+                    "description_array": [
+                        "The various delays, exprimed as seconds with possibly a fractional value, while we are waiting for something to happen.",
+                        "These are NOT timeouts: the configured delay is always totally consumed as the waited thing is considered done only after this delay."
+                    ],
+                    "type": "object",
+                    "properties": {
+                        "wait_for_dom_stable": {
+                            "description": "How much time the text length and count of elements must leave unchanged for the DOM be considered as stable.",
+                            "type": "number",
+                            "default": 1.0
+                        },
+                        "wait_for_network_idle": {
+                            "description": "How much time the network must be idle for the page be considered as having terminated its load.",
+                            "type": "number",
+                            "default": 1.0
+                        }
+                    }
+                },
                 "driver_port": {
                     "description": "The port the chromedriver is listening to.",
                     "type": "integer",
@@ -112,14 +131,62 @@
                     "type": "integer",
                     "default": 5
                 },
-                "ua": {
-                    "description": "The underlying HTTP user agent configuration.",
+                "timeouts": {
+                    "description": "The various timeouts, exprimed as seconds with possibly a fractional value, defined when interacting with the internal browser.",
                     "type": "object",
                     "properties": {
-                        "timeout": {
-                            "description": "The user agent timeout in seconds.",
+                        "generic_waiter": {
+                            "description": "The generic waiter timeout.",
+                            "type": "number",
+                            "default": 10.0
+                        },
+                        "get_answer": {
+                            "description": "The timeout when waiting for an answer from the daemon.",
+                            "type": "number",
+                            "default": 10.0
+                        },
+                        "http": {
+                            "description_array": [
+                                "When about to send a HTTP request to the browser, the timeout before returning a 599 status code.",
+                                "Would default to 60 sec. according to https://perldoc.perl.org/HTTP::Tiny#new, set to 10 sec. here."
+                            ],
                             "type": "integer",
                             "default": 10
+                        },
+                        "send_command": {
+                            "description": "When about to send a command to the daemon, the timeout to create the client socket.",
+                            "type": "number",
+                            "default": 10.0
+                        },
+                        "ua": {
+                            "description": "The Selenium::Remote::Driver underlying LWP user agent timeout in seconds.",
+                            "type": "integer",
+                            "default": 10
+                        },
+                        "wait_for_body": {
+                            "description": "After having navigated to an URL or clicked on a xpath, the timeout while waiting for the 'body' tag.",
+                            "type": "number",
+                            "default": 10.0
+                        },
+                        "wait_for_dom_stable": {
+                            "description": "After having navigated to an URL or clicked on a xpath, the timeout while waiting for the DOM be stable.",
+                            "type": "number",
+                            "default": 10.0
+                        },
+                        "wait_for_network_idle": {
+                            "description": "After having navigated to an URL or clicked on a xpath, the timeout while waiting for the network be idle.",
+                            "type": "number",
+                            "default": 10.0
+                        },
+                        "wait_for_page_ready": {
+                            "description": "After having navigated to an URL or clicked on a xpath, the timeout while waiting for the page be globally ready.",
+                            "type": "number",
+                            "default": 10.0
+                        },
+                        "wait_for_url_change": {
+                            "description": "After having navigated to an URL , the timeout while waiting for the URL to change.",
+                            "type": "number",
+                            "default": 10.0
                         }
                     }
                 },

@@ -55,14 +55,24 @@ use constant {
 use constant {
 	DEFAULT_BROWSER_COMMAND => "chromedriver --port=9515 --url-base=/wd/hub --verbose",
 	DEFAULT_BROWSER_HEIGHT => 768,
+	DEFAULT_BROWSER_DELAYS_WAIT_FOR_DOM_STABLE => 1.0,
+	DEFAULT_BROWSER_DELAYS_WAIT_FOR_NETWORK_IDLE => 1.0,
 	DEFAULT_BROWSER_DRIVER_PORT => 9515,
 	DEFAULT_BROWSER_DRIVER_SERVER => '127.0.0.1',
 	DEFAULT_BROWSER_EXECJS_RETRIES => 5,
 	DEFAULT_BROWSER_EXECJS_SLEEP => 5,
 	DEFAULT_BROWSER_NAVIGATE_RETRIES => 5,
 	DEFAULT_BROWSER_NAVIGATE_SLEEP => 5,
-	DEFAULT_BROWSER_TIMEOUT => 5,
-	DEFAULT_BROWSER_UA_TIMEOUT => 10,
+	DEFAULT_BROWSER_TIMEOUTS_GENERIC_WAITER => 10.0,
+	DEFAULT_BROWSER_TIMEOUTS_GET_ANSWER => 10.0,
+	DEFAULT_BROWSER_TIMEOUTS_HTTP => 10,
+	DEFAULT_BROWSER_TIMEOUTS_SEND_COMMAND => 10.0,
+	DEFAULT_BROWSER_TIMEOUTS_UA => 10,
+	DEFAULT_BROWSER_TIMEOUTS_WAIT_FOR_BODY => 10.0,
+	DEFAULT_BROWSER_TIMEOUTS_WAIT_FOR_DOM_STABLE => 10.0,
+	DEFAULT_BROWSER_TIMEOUTS_WAIT_FOR_NETWORK_IDLE => 10.0,
+	DEFAULT_BROWSER_TIMEOUTS_WAIT_FOR_PAGE_READY => 10.0,
+	DEFAULT_BROWSER_TIMEOUTS_WAIT_FOR_URL_CHANGE => 10.0,
 	DEFAULT_BROWSER_WIDTH => 1366,
 	DEFAULT_COMPARE_HTML_ENABLED => false,
 	DEFAULT_COMPARE_HTML_IGNORE_DOM_ATTRIBUTES => [
@@ -483,6 +493,34 @@ sub confBrowserCommand {
 }
 
 # ------------------------------------------------------------------------------------------------
+# (I):
+# - none
+# (O):
+# - returns the configured delay when waiting for a stable DOM, defaulting to 0.5
+
+sub confBrowserDelaysWaitForDomStable {
+	my ( $self ) = @_;
+
+	my $delay = $self->var([ 'browser', 'delays', 'wait_for_dom_stable' ]) // DEFAULT_BROWSER_DELAYS_WAIT_FOR_DOM_STABLE;
+
+	return $delay;
+}
+
+# ------------------------------------------------------------------------------------------------
+# (I):
+# - none
+# (O):
+# - returns the configured delay when waiting for an idle network, defaulting to 0.5
+
+sub confBrowserDelaysWaitForNetworkIdle {
+	my ( $self ) = @_;
+
+	my $delay = $self->var([ 'browser', 'delays', 'wait_for_network_idle' ]) // DEFAULT_BROWSER_DELAYS_WAIT_FOR_NETWORK_IDLE;
+
+	return $delay;
+}
+
+# ------------------------------------------------------------------------------------------------
 # Returns the configured chromedriver listening port, defaulting to 9515.
 # (I):
 # - none
@@ -595,33 +633,141 @@ sub confBrowserNavigateSleep {
 }
 
 # ------------------------------------------------------------------------------------------------
-# Returns the configured browser timeout, defaulting to 5 sec.
 # (I):
 # - none
 # (O):
-# - returns the configured browser timeout
+# - returns the configured generic waiter timeout, defaulting to 5.0 sec.
 
-sub confBrowserTimeout {
+sub confBrowserTimeoutsGenericWaiter {
 	my ( $self ) = @_;
 
-	my $timeout = $self->var([ 'browser', 'timeout' ]);
-	$timeout = DEFAULT_BROWSER_TIMEOUT if !defined $timeout;
+	my $timeout = $self->var([ 'browser', 'timeouts', 'generic_waiter' ]) // DEFAULT_BROWSER_TIMEOUTS_GENERIC_WAITER;
 
 	return $timeout;
 }
 
 # ------------------------------------------------------------------------------------------------
-# Returns the configured browser timeout of underlying HTTP user agent, defaulting to 5 sec.
 # (I):
 # - none
 # (O):
-# - returns the configured browser timeout
+# - returns the configured timeout when waiting for an answer from the daemon, defaulting to 5.0 sec.
 
-sub confBrowserUaTimeout {
+sub confBrowserTimeoutsGetAnswer {
 	my ( $self ) = @_;
 
-	my $timeout = $self->var([ 'browser', 'ua', 'timeout' ]);
-	$timeout = DEFAULT_BROWSER_UA_TIMEOUT if !defined $timeout;
+	my $timeout = $self->var([ 'browser', 'timeouts', 'get_answer' ]) // DEFAULT_BROWSER_TIMEOUTS_GET_ANSWER;
+
+	return $timeout;
+}
+
+# ------------------------------------------------------------------------------------------------
+# (I):
+# - none
+# (O):
+# - returns the configured HTTP request timeout, defaulting to 10 sec.
+
+sub confBrowserTimeoutsHttp {
+	my ( $self ) = @_;
+
+	my $timeout = $self->var([ 'browser', 'timeouts', 'http' ]) // DEFAULT_BROWSER_TIMEOUTS_HTTP;
+
+	return $timeout;
+}
+
+# ------------------------------------------------------------------------------------------------
+# (I):
+# - none
+# (O):
+# - returns the configured timeout when sending a command to the daemon, defaulting to 5.0 sec.
+
+sub confBrowserTimeoutsSendCommand {
+	my ( $self ) = @_;
+
+	my $timeout = $self->var([ 'browser', 'timeouts', 'generic_waiter' ]) // DEFAULT_BROWSER_TIMEOUTS_SEND_COMMAND;
+
+	return $timeout;
+}
+
+# ------------------------------------------------------------------------------------------------
+# (I):
+# - none
+# (O):
+# - returns the configured Selenium::Remote::Driver LWP user agent timeout, defaulting to 10 sec.
+
+sub confBrowserTimeoutsUa {
+	my ( $self ) = @_;
+
+	my $timeout = $self->var([ 'browser', 'timeouts', 'ua' ]) // DEFAULT_BROWSER_TIMEOUTS_UA;
+
+	return $timeout;
+}
+
+# ------------------------------------------------------------------------------------------------
+# (I):
+# - none
+# (O):
+# - returns the configured timeout when waiting for document body, defaulting to 5.0 sec.
+
+sub confBrowserTimeoutsWaitForBody {
+	my ( $self ) = @_;
+
+	my $timeout = $self->var([ 'browser', 'timeouts', 'wait_for_body' ]) // DEFAULT_BROWSER_TIMEOUTS_WAIT_FOR_BODY;
+
+	return $timeout;
+}
+
+# ------------------------------------------------------------------------------------------------
+# (I):
+# - none
+# (O):
+# - returns the configured timeout when waiting for a stable DOM, defaulting to 5.0 sec.
+
+sub confBrowserTimeoutsWaitForDomStable {
+	my ( $self ) = @_;
+
+	my $timeout = $self->var([ 'browser', 'timeouts', 'wait_for_dom_stable' ]) // DEFAULT_BROWSER_TIMEOUTS_WAIT_FOR_DOM_STABLE;
+
+	return $timeout;
+}
+
+# ------------------------------------------------------------------------------------------------
+# (I):
+# - none
+# (O):
+# - returns the configured timeout when waiting for an idle network, defaulting to 5.0 sec.
+
+sub confBrowserTimeoutsWaitForNetworkIdle {
+	my ( $self ) = @_;
+
+	my $timeout = $self->var([ 'browser', 'timeouts', 'wait_for_network_idle' ]) // DEFAULT_BROWSER_TIMEOUTS_WAIT_FOR_NETWORK_IDLE;
+
+	return $timeout;
+}
+
+# ------------------------------------------------------------------------------------------------
+# (I):
+# - none
+# (O):
+# - returns the configured timeout when waiting for the page be ready, defaulting to 5.0 sec.
+
+sub confBrowserTimeoutsWaitForPageReady {
+	my ( $self ) = @_;
+
+	my $timeout = $self->var([ 'browser', 'timeouts', 'wait_for_page_ready' ]) // DEFAULT_BROWSER_TIMEOUTS_WAIT_FOR_PAGE_READY;
+
+	return $timeout;
+}
+
+# ------------------------------------------------------------------------------------------------
+# (I):
+# - none
+# (O):
+# - returns the configured timeout when waiting for an URL change, defaulting to 5.0 sec.
+
+sub confBrowserTimeoutsWaitForUrlChange {
+	my ( $self ) = @_;
+
+	my $timeout = $self->var([ 'browser', 'timeouts', 'wait_for_url_change' ]) // DEFAULT_BROWSER_TIMEOUTS_WAIT_FOR_URL_CHANGE;
 
 	return $timeout;
 }

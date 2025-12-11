@@ -41,7 +41,7 @@ use Mojo::DOM;
 use Scalar::Util qw( blessed );
 use Selenium::Chrome;
 use Selenium::Remote::Driver;
-use Time::HiRes qw( time );
+use Time::HiRes qw( sleep time );
 use Try::Tiny;
 use Unicode::Normalize qw( NFC );
 use URI;
@@ -203,7 +203,7 @@ sub _driver_start {
             #$driver->set_timeout( "implicit", 5000 );  # ms
             #$driver->set_timeout( "page load", 5000 );  # ms
             # Server returned error message read timeout at /usr/share/perl5/vendor_perl/Net/HTTP/Methods.pm line 274.
-            $driver->ua->timeout( $conf->confBrowserUaTimeout());
+            $driver->ua->timeout( $conf->confBrowserTimeoutsUa());
         } else {
             msgErr( "by '$role:$which' Browser::driver_start() no sessionId in response" );
         }
@@ -318,7 +318,7 @@ sub _handle_alert_if_present {
 sub _http {
     my ( $self ) = @_;
 
-	return HTTP::Tiny->new( timeout => $self->facer()->conf()->confBrowserTimeout());
+	return HTTP::Tiny->new( timeout => $self->facer()->conf()->confBrowserTimeoutsHttp());
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -403,7 +403,11 @@ sub _restore_chain {
                 return [ false, "unexpected from='".$qi->from()."'" ];
 			}
             # wait for page ready
-            $self->wait_for_page_ready();
+            my $res = $self->wait_for_page_ready();
+            if( !$res->{success} ){
+                msgWarn( "by '$role:$which' Browser::restore_chain() result=error: page not ready" );
+                return [ false, "page_not_ready" ];
+            }
 			# take a screenshot post-navigate
 			if( $conf->confCrawlByClickIntermediateScreenshots()){
 				# prepare the post-navigation label
@@ -593,7 +597,7 @@ sub _wait_for_body {
 
     my $t0 = time;
 	my @alerts = ();
-	my $timeout = $conf->confBrowserTimeout();
+	my $timeout = $conf->confBrowserTimeoutsWaitForBody();
     while ( time - $t0 < $timeout ){
         my $el = eval { $self->driver()->find_element_by_css( 'body' ) };
 		msgVerbose( "by '$role:$which' Browser::wait_for_body() got el=$el" );
@@ -605,6 +609,8 @@ sub _wait_for_body {
 		}
         select undef, undef, undef, 0.1;	# wait 0.1 sec before retry
     }
+
+    msgErr( "by '$role:$which' Browser::wait_for_body() timeout $timeout sec." );
     return ( false, \@alerts );
 }
 
@@ -618,7 +624,7 @@ sub _wait_for_dom_stable {
     my $last_sig;
     my $last_change_t = Time::HiRes::time;
     my $t0 = Time::HiRes::time;
-	my $timeout = $self->facer()->conf()->confBrowserTimeout();
+	my $timeout = $self->facer()->conf()->confBrowserTimeoutsWaitForDomStable();
 
     while( Time::HiRes::time - $t0 < $timeout ){
         my $sig = $self->exec_js_w3c_sync( q{
@@ -655,7 +661,7 @@ sub _wait_for_network_idle {
 
     my $t0 = Time::HiRes::time;
     my $last_event_t = $t0;
-	my $timeout = $self->facer()->conf()->confBrowserTimeout();
+	my $timeout = $self->facer()->conf()->confBrowserTimeoutsWaitForNetworkIdle();
 
     my @all;                 # we keep EVERYTHING we read
     my $had_doc_response = 0;
@@ -744,7 +750,7 @@ sub _wait_until {
     my $cond = $opt{cond};
     my $interval = $opt{interval} // 0.1;   # seconds
     my $start = time;
-	my $timeout = $conf->confBrowserTimeout();
+	my $timeout = $opt{timeout} // $conf->confBrowserTimeoutsGenericWaiter();
 
     while( time - $start < $timeout ){
         my $val = eval { $cond->() };
@@ -1532,12 +1538,12 @@ sub wait_and_capture {
 	my $alerts = [];
 
 	if( $wait ){
-		( $ready, $alerts, $logs ) = $self->wait_for_page_ready();
-		if( !$ready ){
-			msgWarn( "by '$role:$which' Browser::wait_and_capture() timeout waiting for page ready for ".$driver->get_current_url());
+		my $res = $self->wait_for_page_ready();
+		if( !$res->{success} ){
+			msgWarn( "by '$role:$which' Browser::wait_and_capture() page not ready" );
 			return undef;
 		}
-		msgVerbose( "by '$role:$which' Browser::wait_and_capture() page ready, got alerts=[".join( '|', @{$alerts} )."]" );
+		msgVerbose( "by '$role:$which' Browser::wait_and_capture() page ready" );
 	}
 
     # Grab performance log entries and find the main Document response
@@ -1592,13 +1598,167 @@ sub wait_and_capture {
 }
 
 # -------------------------------------------------------------------------------------------------
+# Combined SPA-ready: body present → network idle → DOM stable by looping simultaneously through
+# these three conditions.
+# Note that, while body present is a single flag, both DOM stable and network idle requires some
+# delay. Hopefully these delays do not add each other here.
+#
+# (O):
+# a hash with following keys:
+# - success: true|false, global success
+# - body: a hash with following keys:
+#   > got: true|false
+#   > after: the delay as a floating point value in sec. to get the body if true, else undef
+#   > timeout: the configured timeout
+# - dom: a hash with following keys:
+#   > stable: true|false
+#   > after: the delay as a floating point value in sec. to get the dom stable if true, else undef
+#   > delay: the configured delay
+#   > timeout: the configured timeout
+# - network: a hash with following keys:
+#   > idle: true|false
+#   > after: the delay as a floating point value in sec. to get the network idle if true, else undef
+#   > delay: the configured delay
+#   > timeout: the configured timeout
+#   > logs: the concatenation of all got performances logs
+
+sub wait_for_page_ready {
+    my ( $self ) = @_;
+
+    my $role = $self->facer()->roleName();
+    my $which = $self->facer()->which();
+    my $start = time();
+    my $body_stop = false;
+    my $body_timeout = $self->facer()->conf()->confBrowserTimeoutsWaitForBody();
+
+    my $dom_sig = undef;
+    my $dom_change = undef;
+    my $dom_delay = $self->facer()->conf()->confBrowserDelaysWaitForDomStable();
+    my $dom_timeout = $self->facer()->conf()->confBrowserTimeoutsWaitForDomStable();
+
+    my $network_stop = false;
+    my $network_change = undef;
+    my $network_response = false;
+    my $network_delay = $self->facer()->conf()->confBrowserDelaysWaitForNetworkIdle();
+    my $network_timeout = $self->facer()->conf()->confBrowserTimeoutsWaitForNetworkIdle();
+
+    my $timeoutPageReady = $self->facer()->conf()->confBrowserTimeoutsWaitForPageReady();
+    my $deadline = time() + $timeoutPageReady;
+
+    my $results = {
+        success => false,
+        timeout => $timeoutPageReady,
+        timedout => false,
+        body => {
+            got => false,
+            after => undef,
+            timeout => $body_timeout,
+            timedout => false
+        },
+        dom => {
+            stable => false,
+            after => undef,
+            delay => $dom_delay,
+            timeout => $dom_timeout,
+            timedout => false
+        },
+        network => {
+            idle => false,
+            after => undef,
+            delay => $network_delay,
+            timeout => $network_timeout,
+            timedout => false,
+            logs => []
+        }
+    };
+
+    $results->{timedout} = ( time() > $deadline );
+    while( !$results->{timedout} && (
+        ( !$results->{body}{got} && !$results->{body}{timedout} ) || ( !$results->{dom}{stable} && !$results->{dom}{timedout} ) || ( !$results->{network}{idle} && !$results->{network}{timedout} ))){
+        # do we have body ?
+        if( !$results->{body}{got} && !$results->{body}{timedout} ){
+            my $el = eval { $self->driver()->find_element_by_css( 'body' ) };
+            if( $el ){
+                msgVerbose( "by '$role:$which' Browser::wait_for_page_ready() got body=$el" );
+                $results->{body}{got} = true;
+                $results->{body}{after} = time() - $start;
+                $body_stop = true;
+            } elsif( time() - $start > $body_timeout ){
+                msgWarn( "by '$role:$which' Browser::wait_for_page_ready() body_timeout=$body_timeout sec." );
+                $results->{body}{timedout} = true;
+            }
+        }
+        # is dom stable ?
+        if( !$results->{dom}{stable} && !$results->{dom}{timedout} ){
+            my $sig_array = $self->exec_js_w3c_sync( q{
+                const root = document.body;
+                if( !root ) return [0,0,0];
+                const textLen = ( root.innerText || '' ).length;
+                const elCount = document.querySelectorAll( '*' ).length;
+                const hashish = textLen ^ elCount; // cheap fingerprint
+                return [textLen, elCount, hashish];
+            }, [] );
+            my $sig = join( ',', @{$sig_array} );
+            if( $dom_sig && $sig eq $dom_sig ){
+                if( !$results->{dom}{after} ){
+                    my $delay = time() - $dom_change;
+                    if( $delay >= $dom_delay ){
+                        $results->{dom}{stable} = true;
+                        $results->{dom}{after} = $delay;
+                    }
+                }
+            } else {
+                $dom_sig = $sig;
+                $dom_change = time();
+            }
+            if( time() - $start > $dom_timeout ){
+                $results->{dom}{timedout} = true;
+                msgWarn( "by '$role:$which' Browser::wait_for_page_ready() dom_timeout=$dom_timeout sec." );
+            }
+        }
+        # is network idle ?
+        if( !$results->{network}{idle} && !$results->{network}{timedout} ){
+            my $logs = eval { $self->_performance_logs_get(); };
+            if( scalar( @{$logs} )){
+                push( @{$results->{network}{logs}}, @{$logs} );
+                for my $e ( @{$logs} ){
+                    my $msg = $self->_decode_msg( $e ) || next;
+                    my $m = $msg->{method} // next;
+                    if( $m =~ /^Network\./ ){
+                        $network_change = time();
+                        $network_response ||= ( $m eq 'Network.responseReceived' && (( $msg->{params}{type} // '') eq 'Document' ));
+                    }
+                }
+            }
+            # quiet window?
+            if ( time() - $network_change >= $network_delay ){
+                $results->{network}{idle} = $network_response;
+                $results->{network}{after} = time() - $start;
+            }
+            if( time() - $start > $network_timeout ){
+                $results->{network}{timedout} = true;
+                msgWarn( "by '$role:$which' Browser::wait_for_page_ready() network_timeout=$network_timeout sec." );
+            }
+        }
+        sleep( 0.1 );
+        $results->{timedout} = ( time() > $deadline );
+    }
+
+    $results->{success} = $results->{body}{got} && $results->{dom}{stable} && $results->{network}{idle};
+    msgVerbose( "by '$role:$which' Browser::wait_for_page_ready() body=".( $results->{body}{got} ? 'true':'false' )." dom=".( $results->{dom}{stable} ? 'true':'false' )." network=".( $results->{network}{idle} ? 'true':'false' ));
+    delete $results->{network}{logs};
+    msgLog( "by '$role:$which' Browser::wait_for_page_ready() results=".TTP::chompDumper( $results ));
+    return $results;
+}
+
+# -------------------------------------------------------------------------------------------------
 # Combined SPA-ready: body present → network idle → DOM stable
 # returns an array:
 # - true|false whether the body is found (the page is ready)
 # - alerts array ref, maybe empty
 # - performance logs array ref, maybe empty
 
-sub wait_for_page_ready {
+sub wait_for_page_ready_successive {
     my ( $self ) = @_;
 
     my $role = $self->facer()->roleName();
@@ -1619,7 +1779,8 @@ sub wait_for_url_change {
     my ( $self, $old_url ) = @_;
     return $self->_wait_until(
         interval => 0.1,
-        cond     => sub { my $u = $self->driver()->get_current_url; ($u ne $old_url) ? $u : undef }
+        cond     => sub { my $u = $self->driver()->get_current_url; ($u ne $old_url) ? $u : undef },
+        timeout  => $self->facer()->conf()->confBrowserTimeoutsWaitForUrlChange()
     );
 }
 

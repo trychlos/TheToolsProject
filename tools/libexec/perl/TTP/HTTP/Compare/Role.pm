@@ -283,8 +283,13 @@ sub _do_crawl_by_link {
 		{ ref => $self->{_daemons}{ref}, new => $self->{_daemons}{new} }
 	);
 	if( $results->{ref}{result}{success} && $results->{new}{result}{success} ){
-		$captureRef = TTP::HTTP::Compare::Capture->new( $ep, $self->{_facers}{ref}, $results->{ref}{result}{answer} );
-		$captureNew = TTP::HTTP::Compare::Capture->new( $ep, $self->{_facers}{new}, $results->{new}{result}{answer} );
+		if( ref( $results->{ref}{result}{answer}) eq 'HASH' && ref( $results->{new}{result}{answer}) eq 'HASH' ){
+			$captureRef = TTP::HTTP::Compare::Capture->new( $ep, $self->{_facers}{ref}, $results->{ref}{result}{answer} );
+			$captureNew = TTP::HTTP::Compare::Capture->new( $ep, $self->{_facers}{new}, $results->{new}{result}{answer} );
+		} else {
+			return [ undef, undef, "crawl_by_link ref $results->{ref}{result}{answer}" ] if !ref( $results->{ref}{result}{answer});
+			return [ undef, undef, "crawl_by_link new $results->{new}{result}{answer}" ] if !ref( $results->{new}{result}{answer});
+		}
 	} else {
 		return [ undef, undef, "crawl_by_link $results->{ref}{result}{reason}" ] if !$results->{ref}{result}{success};
 		return [ undef, undef, "crawl_by_link $results->{new}{result}{reason}" ] if !$results->{new}{result}{success};
@@ -694,6 +699,7 @@ sub doCompare {
 	$self->{_result}{count}{clicks} = 0;	# the count of tried crawl by clicks
 	$self->{_result}{count}{links} = 0;		# the count of tried crawl by links
 	#
+	$self->{_result}{start} = Time::Moment->now;
 	$self->{_result}{seen} = {};		    # the result of each and every seen place a hash of queue_items signature -> result
 	$self->{_result}{status} = {};			# results per http status
 	$self->{_result}{errors} = [];			# list of full results which have at least an error
@@ -721,7 +727,9 @@ sub doCompare {
 	}
 	my $results = TTP::HTTP::Compare::DaemonInterface::execute( $self, 'internal_status',
 		undef,
-		{ ref => $self->{_daemons}{ref}, new => $self->{_daemons}{new} }
+		{ ref => $self->{_daemons}{ref}, new => $self->{_daemons}{new} },
+		undef,
+		{ get_timeout => 10.0, send_timeout => 10.0 } # increase the timeout the first time to let the daemon initialize itself
 	);
 	if( !$results->{ref}{result}{success} ){
 		msgErr( "by '".$self->name().":ref' Role::doCompare() daemon didn't start on time" );
@@ -859,7 +867,9 @@ sub print_results_summary {
 			msgOut( "    [".join( ", ", sort { $a <=> $b } @c )."]");
 		}
 	}
-	msgOut( "  total count of unrecoverable erros: $self->{_errs}" );
+	msgOut( "  total count of unrecoverable errors: $self->{_errs}" );
+	my $now = Time::Moment->now;
+	msgOut( "  average: ".(( $now->epoch - $self->{_result}{start}->epoch ) / $self->{_result}{count}{visited} )." sec./item" );
 	#print STDERR "seen: ".Dumper( $self->{_result}{seen} );
 }
 

@@ -47,8 +47,7 @@ use constant {
 };
 
 my $Const = {
-    length_limit => 255,
-    timeout => 15
+    length_limit => 255
 };
 
 ### Private methods
@@ -149,6 +148,7 @@ sub get_answer {
     my $first = true;
     my $verboseReceived = $self->facer()->conf()->confVerbosityDaemonReceived();
     my $verboseSleep = $self->facer()->conf()->confVerbosityDaemonSleep();
+    my $answerTimeout = $self->facer()->conf()->confBrowserTimeoutsGetAnswer();
     my $answer = {
         response => "",
         ok => false,
@@ -167,12 +167,12 @@ sub get_answer {
         _get_answer_part( $socket, $answer );
         # check not yet timed out
         my $now = Time::Moment->now;
-        $answer->{timedout} = ( $now->epoch - $start->epoch > $Const->{timeout} );
+        $answer->{timedout} = ( $now->epoch - $start->epoch > $answerTimeout );
     }
       while( !$answer->{ok} && !$answer->{timedout} );
 
     if( $answer->{timedout} ){
-        msgErr( "by '$role:$which' DaemonInterface::get_answer() OK answer not received after $Const->{timeout} sec." );
+        msgErr( "by '$role:$which' DaemonInterface::get_answer() OK answer not received after $answerTimeout sec." );
     }
     $socket->close();
     if( !$answer->{timedout} ){
@@ -229,7 +229,7 @@ sub _get_answer_part {
 # - the command
 # - an optional arguments hash to be passed with the command
 # - an optional options hash with following keys:
-#   > wait: whether we wait for the daemon be ready (the first time), defaulting to false
+#   > send_timeout: the timeout to be applied when sending the command
 # (O):
 # - the socket used to send the request
 
@@ -250,7 +250,7 @@ sub send_and_get {
 # - the requested method
 # - an optional arguments hash to be passed with the command
 # - an optional options hash with following keys:
-#   > wait: whether we wait for the daemon be ready (the first time), defaulting to false
+#   > timeout: the timeout to be applied to this operation
 # (O):
 # - the used socket in which we will wait for the answer
 
@@ -258,7 +258,6 @@ sub send_command {
     my ( $self, $command, $args, $opts ) = @_;
     $args //= {};
     $opts //= {};
-    my $wait = $opts->{wait} // false;
 
     my $role = $self->facer()->roleName();
     my $which = $self->facer()->which();
@@ -274,6 +273,7 @@ sub send_command {
     my $first = true;
     my $socket = undef;
     my $verboseSleep = $self->facer()->conf()->confVerbosityDaemonSleep();
+    my $sendTimeout = $opts->{timeout} // $self->facer()->conf()->confBrowserTimeoutsSendCommand();
 
     do {
         # sleep if not the first call
@@ -293,7 +293,8 @@ sub send_command {
         # check not yet timed out
         if( !$socket ){
             my $now = Time::Moment->now;
-            $timedout = ( $now->epoch - $start->epoch > $Const->{timeout} );
+            $timedout = ( $now->epoch - $start->epoch > $sendTimeout );
+            msgWarn( "by '$role:$which' DaemonInterface::command() timed out after $sendTimeout sec." ) if $timedout;
         }
     }
       while( !$socket && !$timedout );
@@ -342,7 +343,7 @@ sub terminate {
 sub wait_ready {
     my ( $self ) = @_;
 
-    my $res = $self->send_and_get( "internal_status", undef, { wait => true });
+    my $res = $self->send_and_get( "internal_status" );
 
     return $res;
 }
@@ -404,6 +405,9 @@ sub new {
 #   > the results
 #   > the involved key name in both interfaces and results
 #   and should return true|false.
+# - an optional options hash with following keys:
+#   > send_timeout: the timeout to be applied when sending the command
+#   > get_timeout: the timeout to be applied when getting the answer
 # (O):
 # - a hash with same keys ('name' above) and following keys:
 #   > __PACKAGE__: an internal hash which in particularly handles the opened socket
@@ -423,10 +427,11 @@ sub new {
 #     returning back any data
 
 sub execute {
-	my ( $role, $command, $args, $interfaces, $replay ) = @_;
+	my ( $role, $command, $args, $interfaces, $replay, $opts ) = @_;
 
     $interfaces //= {};
     $replay //= {};
+    $opts //= {};
     my $results = {};
     my $PACKAGE = __PACKAGE__;
 
@@ -441,10 +446,11 @@ sub execute {
             $results->{$name}{$PACKAGE}{ended} = true;
             $results->{$name}{result}{reason} = 'interface';
         } else {
-            $results->{$name}{$PACKAGE}{socket} = $interfaces->{$name}->send_command( $command, $args );
+            $opts->{timeout} = $opts->{send_timeout} if defined( $opts->{send_timeout} );
+            $results->{$name}{$PACKAGE}{socket} = $interfaces->{$name}->send_command( $command, $args, $opts );
             if( $results->{$name}{$PACKAGE}{socket} ){
                 $results->{$name}{$PACKAGE}{first} = true;
-                $results->{$name}{$PACKAGE}{start} = Time::Moment->now;
+                $results->{$name}{$PACKAGE}{start} = time();
                 $results->{$name}{$PACKAGE}{role} = $role->name();
                 $results->{$name}{$PACKAGE}{which} = $interfaces->{$name}->facer()->which();
                 $results->{$name}{$PACKAGE}{response} = "";
@@ -461,33 +467,35 @@ sub execute {
     do {
         $not_ended_count = 0;
         foreach my $name ( sort keys %{$interfaces} ){
-            my $verboseReceived = $interfaces->{$name}->facer()->conf()->confVerbosityDaemonReceived();
-            my $verboseSleep = $interfaces->{$name}->facer()->conf()->confVerbosityDaemonSleep();
             if( !$results->{$name}{$PACKAGE}{ended} ){
                 $not_ended_count += 1;
+
                 my $id_label = "$results->{$name}{$PACKAGE}{role}:$results->{$name}{$PACKAGE}{which}";
+                my $verboseReceived = $interfaces->{$name}->facer()->conf()->confVerbosityDaemonReceived() ? \&msgVerbose : \&msgLog;
+                my $verboseSleep = $interfaces->{$name}->facer()->conf()->confVerbosityDaemonSleep() ? \&msgVerbose : \&msgLog;
+                my $answerTimeout = $opts->{get_timeout} // $interfaces->{$name}->facer()->conf()->confBrowserTimeoutsGetAnswer();
 
                 # sleep if not the first call and have not received anything in the last round
                 if( $results->{$name}{$PACKAGE}{first} ){
                     $results->{$name}{$PACKAGE}{first} = false;
                 } elsif( !$results->{$name}{$PACKAGE}{received} ){
-                    msgVerbose( "by '$id_label' DaemonInterface::execute() sleeping 1 sec" ) if $verboseSleep;
-                    sleep( 1 );
+                    $verboseSleep->( "by '$id_label' DaemonInterface::execute() sleeping 1.0 sec" );
+                    sleep( 1.0 );
                 }
 
                 # expect something
                 # set ok, response, received data
                 _get_answer_part( $results->{$name}{$PACKAGE}{socket}, $results->{$name}{$PACKAGE} );
-                msgVerbose( "by '$id_label' DaemonInterface::execute() received $results->{$name}{$PACKAGE}{received} bytes" ) if $verboseReceived;
+                $verboseReceived->( "by '$id_label' DaemonInterface::execute() received $results->{$name}{$PACKAGE}{received} bytes" );
 
                 # if we have received the 'OK' line, then answer is terminated
                 # if the received answer is a scalar which is a key of the 'replay' hash, then this is a replay request
                 if( $results->{$name}{$PACKAGE}{ok} ){
                     # be verbose about the received answer
                     if( length( $results->{$name}{$PACKAGE}{response} ) > $Const->{length_limit} ){
-                        msgVerbose( "by '$id_label' DaemonInterface::execute() received ".length( $results->{$name}{$PACKAGE}{response} )." bytes" ) if $verboseReceived;
+                        $verboseReceived->( "by '$id_label' DaemonInterface::execute() received ".length( $results->{$name}{$PACKAGE}{response} )." bytes" );
                     } else {
-                        msgVerbose( "by '$id_label' DaemonInterface::execute() received '$results->{$name}{$PACKAGE}{response}'" ) if $verboseReceived;
+                        $verboseReceived->( "by '$id_label' DaemonInterface::execute() received '$results->{$name}{$PACKAGE}{response}'" );
                     }
                     my $done = false;
                     if( length( $results->{$name}{$PACKAGE}{response} )){
@@ -535,15 +543,15 @@ sub execute {
                         $results->{$name}{$PACKAGE}{ended} = true;
                         $results->{$name}{result}{success} = true;
                         $results->{$name}{$PACKAGE}{socket}->close();
-                        msgVerbose( "by '$id_label' DaemonInterface::execute() success" );
+                        msgVerbose( "by '$id_label' DaemonInterface::execute() success after ".sprintf( "%.6f", time() - $results->{$name}{$PACKAGE}{start} )." sec." );
                     }
                 } else {
-                    my $now = Time::Moment->now;
-                    my $timedout = ( $now->epoch - $results->{$name}{$PACKAGE}{start}->epoch > $Const->{timeout} );
+                    my $now = time();
+                    my $timedout = ( $now - $results->{$name}{$PACKAGE}{start} > $answerTimeout );
                     if( $timedout ){
                         $results->{$name}{$PACKAGE}{ended} = true;
                         $results->{$name}{result}{reason} = 'timeout';
-                        msgErr( "by '$id_label' DaemonInterface::execute() OK answer not received after $Const->{timeout} sec." );
+                        msgErr( "by '$id_label' DaemonInterface::execute() OK answer not received after $answerTimeout sec." );
                     }
                 }
             }
