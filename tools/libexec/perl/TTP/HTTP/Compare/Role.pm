@@ -242,7 +242,8 @@ sub _do_crawl_by_click {
 	my $results = TTP::HTTP::Compare::DaemonInterface::execute( $self, 'click_and_capture',
 		{ queue_item => encode_base64( $queue_item->snapshot()), args => {} },
 		{ ref => $self->{_daemons}{ref}, new => $self->{_daemons}{new} },
-		{ relogin => \&try_to_relogin }
+		{ relogin => \&try_to_relogin },
+		{ get_timeout => 15 }
 	);
 	if( $results->{ref}{result}{success} && $results->{new}{result}{success} ){
 		if( ref( $results->{ref}{result}{answer}) eq 'HASH' && ref( $results->{new}{result}{answer}) eq 'HASH' ){

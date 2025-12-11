@@ -181,7 +181,7 @@
                         "wait_for_page_ready": {
                             "description": "After having navigated to an URL or clicked on a xpath, the timeout while waiting for the page be globally ready.",
                             "type": "number",
-                            "default": 10.0
+                            "default": 15.0
                         },
                         "wait_for_url_change": {
                             "description": "After having navigated to an URL , the timeout while waiting for the URL to change.",
