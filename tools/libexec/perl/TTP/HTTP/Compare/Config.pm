@@ -63,6 +63,7 @@ use constant {
 	DEFAULT_BROWSER_EXECJS_SLEEP => 5,
 	DEFAULT_BROWSER_NAVIGATE_RETRIES => 5,
 	DEFAULT_BROWSER_NAVIGATE_SLEEP => 5,
+	DEFAULT_BROWSER_TIMEOUTS_EXECUTE => 10.0,
 	DEFAULT_BROWSER_TIMEOUTS_GENERIC_WAITER => 10.0,
 	DEFAULT_BROWSER_TIMEOUTS_GET_ANSWER => 10.0,
 	DEFAULT_BROWSER_TIMEOUTS_HTTP => 10,
@@ -630,6 +631,20 @@ sub confBrowserNavigateSleep {
 	$sleep = DEFAULT_BROWSER_NAVIGATE_SLEEP if !defined $sleep;
 
 	return $sleep;
+}
+
+# ------------------------------------------------------------------------------------------------
+# (I):
+# - none
+# (O):
+# - returns the configured execute() timeout, defaulting to 10.0 sec.
+
+sub confBrowserTimeoutsExecute {
+	my ( $self ) = @_;
+
+	my $timeout = $self->var([ 'browser', 'timeouts', 'execute' ]) // DEFAULT_BROWSER_TIMEOUTS_EXECUTE;
+
+	return $timeout;
 }
 
 # ------------------------------------------------------------------------------------------------

@@ -406,6 +406,7 @@ sub new {
 #   > the involved key name in both interfaces and results
 #   and should return true|false.
 # - an optional options hash with following keys:
+#   > execute_timeout: the timeout to be applied to this execute() function
 #   > send_timeout: the timeout to be applied when sending the command
 #   > get_timeout: the timeout to be applied when getting the answer
 # (O):
@@ -474,6 +475,7 @@ sub execute {
                 my $verboseReceived = $interfaces->{$name}->facer()->conf()->confVerbosityDaemonReceived() ? \&msgVerbose : \&msgLog;
                 my $verboseSleep = $interfaces->{$name}->facer()->conf()->confVerbosityDaemonSleep() ? \&msgVerbose : \&msgLog;
                 my $answerTimeout = $opts->{get_timeout} // $interfaces->{$name}->facer()->conf()->confBrowserTimeoutsGetAnswer();
+                my $executeTimeout = $opts->{execute_timeout} // $interfaces->{$name}->facer()->conf()->confBrowserTimeoutsExecute();
 
                 # sleep if not the first call and have not received anything in the last round
                 if( $results->{$name}{$PACKAGE}{first} ){
@@ -547,11 +549,11 @@ sub execute {
                     }
                 } else {
                     my $now = time();
-                    my $timedout = ( $now - $results->{$name}{$PACKAGE}{start} > $answerTimeout );
+                    my $timedout = ( $now - $results->{$name}{$PACKAGE}{start} > $executeTimeout );
                     if( $timedout ){
                         $results->{$name}{$PACKAGE}{ended} = true;
                         $results->{$name}{result}{reason} = 'timeout';
-                        msgErr( "by '$id_label' DaemonInterface::execute() OK answer not received after $answerTimeout sec." );
+                        msgErr( "by '$id_label' DaemonInterface::execute() OK answer not received after $executeTimeout sec." );
                     }
                 }
             }

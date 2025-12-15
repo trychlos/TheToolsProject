@@ -203,7 +203,7 @@ sub _do_crawl {
 	$self->_try_to_print_intermediate_results();
 
 	$queue_item->{end} = time();
-	msgVerbose( "by '$role' Role::do_crawl() elapsed=".( $queue_item->{end} - $queue_item->{start} ));
+	msgVerbose( "by '$role' Role::do_crawl() elapsed=".( sprintf( "%.6f", $queue_item->{end} - $queue_item->{start} )));
 	return $continue;
 }
 
@@ -876,7 +876,7 @@ sub print_results_summary {
 	}
 	msgOut( "  total count of unrecoverable errors: $self->{_errs}" );
 	my $now = Time::Moment->now;
-	msgOut( "  average: ".(( $now->epoch - $self->{_result}{start}->epoch ) / $self->{_result}{count}{visited} )." sec./item" );
+	msgOut( "  average: ".( sprintf( "%.6f", (( $now->epoch - $self->{_result}{start}->epoch ) / $self->{_result}{count}{visited} )))." sec./item" );
 	#print STDERR "seen: ".Dumper( $self->{_result}{seen} );
 }
 

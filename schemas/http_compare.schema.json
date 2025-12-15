@@ -135,6 +135,11 @@
                     "description": "The various timeouts, exprimed as seconds with possibly a fractional value, defined when interacting with the internal browser.",
                     "type": "object",
                     "properties": {
+                        "execute": {
+                            "description": "The timeout when executing a command simultaneously on the two daemons.",
+                            "type": "number",
+                            "default": 10.0
+                        },
                         "generic_waiter": {
                             "description": "The generic waiter timeout.",
                             "type": "number",
