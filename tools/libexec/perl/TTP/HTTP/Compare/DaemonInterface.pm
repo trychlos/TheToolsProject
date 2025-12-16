@@ -556,7 +556,7 @@ sub execute {
                     if( $timedout ){
                         $results->{$name}{$PACKAGE}{ended} = true;
                         $results->{$name}{result}{reason} = 'timeout';
-                        msgErr( "by '$id_label' DaemonInterface::execute() OK answer not received after $executeTimeout sec." );
+                        msgErr( "by '$id_label' DaemonInterface::execute() still not terminated after $executeTimeout sec." );
                     }
                 }
             }

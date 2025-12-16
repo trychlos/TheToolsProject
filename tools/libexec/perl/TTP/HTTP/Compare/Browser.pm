@@ -1652,7 +1652,7 @@ sub wait_for_page_ready {
     my $results = {
         success => false,
         timeout => $timeoutPageReady,
-        timedout => false,
+        timedout => ( time() > $deadline ),
         body => {
             got => false,
             after => undef,
@@ -1676,7 +1676,6 @@ sub wait_for_page_ready {
         }
     };
 
-    $results->{timedout} = ( time() > $deadline );
     while( !$results->{timedout} && (
         ( !$results->{body}{got} && !$results->{body}{timedout} ) || ( !$results->{dom}{stable} && !$results->{dom}{timedout} ) || ( !$results->{network}{idle} && !$results->{network}{timedout} ))){
         # do we have body ?
@@ -1739,8 +1738,12 @@ sub wait_for_page_ready {
                         $network_response ||= ( $m eq 'Network.responseReceived' && (( $msg->{params}{type} // '') eq 'Document' ));
                     }
                 }
+            } elsif( !$network_change ){
+                $verboseReady->( "by '$role:$which' Browser::wait_for_page_ready() network: no performance logs, considering idle" );
+                $network_change = time();
+                $network_response = true;
             } else {
-                $verboseReady->( "by '$role:$which' Browser::wait_for_page_ready() network: no performance logs" );
+                $verboseReady->( "by '$role:$which' Browser::wait_for_page_ready() network: network_change set ($network_change), waiting for idle delay" );
             }
             if( $network_change ){
                 if ( time() - $network_change >= $network_delay ){
