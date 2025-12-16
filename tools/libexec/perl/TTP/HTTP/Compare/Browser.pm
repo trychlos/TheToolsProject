@@ -1730,10 +1730,11 @@ sub wait_for_page_ready {
                     }
                 }
             }
-            # quiet window?
-            if ( time() - $network_change >= $network_delay ){
-                $results->{network}{idle} = $network_response;
-                $results->{network}{after} = time() - $start;
+            if( $network_change ){
+                if ( time() - $network_change >= $network_delay ){
+                    $results->{network}{idle} = $network_response;
+                    $results->{network}{after} = time() - $start;
+                }
             }
             if( time() - $start > $network_timeout ){
                 $results->{network}{timedout} = true;

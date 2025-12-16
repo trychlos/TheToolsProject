@@ -179,7 +179,7 @@ sub _do_crawl {
 		$self->_successive_errors_reset();
 
 	} elsif( !defined( $captureRef ) && !defined( $captureNew )){
-		msgVerbose( "by '$role' Role::do_crawl() all values are undef, just skip" );
+		msgVerbose( "by '$role' Role::do_crawl() all values are undef, skip" );
 		if( $reason ){
 			$self->{_result}{cancelled}{$reason} //= [];
 			push( @{$self->{_result}{cancelled}{$reason}}, $queue_item );
@@ -300,8 +300,8 @@ sub _do_crawl_by_link {
 			return [ undef, undef, "crawl_by_link new $results->{new}{result}{answer}" ] if !ref( $results->{new}{result}{answer});
 		}
 	} else {
-		return [ undef, undef, "crawl_by_link $results->{ref}{result}{reason}" ] if !$results->{ref}{result}{success};
-		return [ undef, undef, "crawl_by_link $results->{new}{result}{reason}" ] if !$results->{new}{result}{success};
+		return [ undef, undef, "crawl_by_link ref $results->{ref}{result}{reason}" ] if !$results->{ref}{result}{success};
+		return [ undef, undef, "crawl_by_link new $results->{new}{result}{reason}" ] if !$results->{new}{result}{success};
 	}
 
 	# make sure we have a valid dest as initial routes (which are always by 'link' by definition) do not have origin
