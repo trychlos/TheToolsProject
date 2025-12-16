@@ -408,7 +408,7 @@ sub _restore_chain {
                 msgWarn( "by '$role:$which' Browser::restore_chain() result=error: page not ready" );
                 return [ false, "page_not_ready" ];
             }
-			# take a screenshot post-navigate
+			# take a screenshot of the transitional state
 			if( $conf->confCrawlByClickIntermediateScreenshots()){
 				# prepare the post-navigation label
 				my $label = sprintf( "restored_%06d", $qi->visited());
@@ -416,7 +416,7 @@ sub _restore_chain {
                 my $cap = TTP::HTTP::Compare::Capture->new( $ep, $self->facer(), $hash );
 				$cap->writeScreenshot( $queue_item, { dir => $roleDir, suffix => $label, subdir => 'restored' });
 			}
-			# check the got signature exiting this restore loop as soon as we have got the right signature on the both sites
+			# check the got signature, exiting this restore loop as soon as we have got the right signature on both sites
 			$current_signature = $self->signature({ label => "got " });
             $current_signature_wo_url = TTP::HTTP::Compare::Utils::page_signature_wo_url( $current_signature );
 			if( $current_signature_wo_url eq $origin_signature_wo_url ){
@@ -1631,6 +1631,8 @@ sub wait_for_page_ready {
     my $body_stop = false;
     my $body_timeout = $self->facer()->conf()->confBrowserTimeoutsWaitForBody();
 
+    msgLog( "by '$role:$which' Browser::wait_for_page_ready() entering" );
+
     my $dom_sig = undef;
     my $dom_change = undef;
     my $dom_delay = $self->facer()->conf()->confBrowserDelaysWaitForDomStable();
@@ -1644,6 +1646,8 @@ sub wait_for_page_ready {
 
     my $timeoutPageReady = $self->facer()->conf()->confBrowserTimeoutsWaitForPageReady();
     my $deadline = time() + $timeoutPageReady;
+
+    my $verboseReady = $self->facer()->conf()->confVerbosityDaemonWaitForPageReady() ? \&msgVerbose : \&msgLog;
 
     my $results = {
         success => false,
@@ -1679,7 +1683,7 @@ sub wait_for_page_ready {
         if( !$results->{body}{got} && !$results->{body}{timedout} ){
             my $el = eval { $self->driver()->find_element_by_css( 'body' ) };
             if( $el ){
-                msgVerbose( "by '$role:$which' Browser::wait_for_page_ready() got body=$el" );
+                $verboseReady->( "by '$role:$which' Browser::wait_for_page_ready() got body=$el" );
                 $results->{body}{got} = true;
                 $results->{body}{after} = time() - $start;
                 $body_stop = true;
@@ -1705,11 +1709,17 @@ sub wait_for_page_ready {
                     if( $delay >= $dom_delay ){
                         $results->{dom}{stable} = true;
                         $results->{dom}{after} = $delay;
+                        $verboseReady->( "by '$role:$which' Browser::wait_for_page_ready() dom: got stable" );
+                    } else {
+                        $verboseReady->( "by '$role:$which' Browser::wait_for_page_ready() dom: same signature, but delay not expired" );
                     }
+                } else {
+                    $verboseReady->( "by '$role:$which' Browser::wait_for_page_ready() dom: already detected stable" );
                 }
             } else {
                 $dom_sig = $sig;
                 $dom_change = time();
+                $verboseReady->( "by '$role:$which' Browser::wait_for_page_ready() dom: not yet stable" );
             }
             if( time() - $start > $dom_timeout ){
                 $results->{dom}{timedout} = true;
@@ -1729,6 +1739,8 @@ sub wait_for_page_ready {
                         $network_response ||= ( $m eq 'Network.responseReceived' && (( $msg->{params}{type} // '') eq 'Document' ));
                     }
                 }
+            } else {
+                $verboseReady->( "by '$role:$which' Browser::wait_for_page_ready() network: no performance logs" );
             }
             if( $network_change ){
                 if ( time() - $network_change >= $network_delay ){
@@ -1746,7 +1758,7 @@ sub wait_for_page_ready {
     }
 
     $results->{success} = $results->{body}{got} && $results->{dom}{stable} && $results->{network}{idle};
-    msgVerbose( "by '$role:$which' Browser::wait_for_page_ready() body=".( $results->{body}{got} ? 'true':'false' )." dom=".( $results->{dom}{stable} ? 'true':'false' )." network=".( $results->{network}{idle} ? 'true':'false' ));
+    $verboseReady->( "by '$role:$which' Browser::wait_for_page_ready() body=".( $results->{body}{got} ? 'true':'false' )." dom=".( $results->{dom}{stable} ? 'true':'false' )." network=".( $results->{network}{idle} ? 'true':'false' ));
     delete $results->{network}{logs};
     msgLog( "by '$role:$which' Browser::wait_for_page_ready() results=".TTP::chompDumper( $results ));
     return $results;

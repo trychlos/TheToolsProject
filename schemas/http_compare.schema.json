@@ -729,6 +729,11 @@
                             "description": "Whether to be verbose when sleeping while waiting for an answer of the daemon.",
                             "type": "boolean",
                             "default": false
+                        },
+                        "wait_for_page_ready": {
+                            "description": "Whether to be verbose when waiting for a page be ready.",
+                            "type": "boolean",
+                            "default": false
                         }
                     }
                 },

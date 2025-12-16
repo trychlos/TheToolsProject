@@ -162,6 +162,7 @@ use constant {
 	DEFAULT_VERBOSITY_CLICKABLES_ENQUEUE => false,
 	DEFAULT_VERBOSITY_DAEMON_RECEIVED => false,
 	DEFAULT_VERBOSITY_DAEMON_SLEEP => false,
+	DEFAULT_VERBOSITY_DAEMON_WAIT_FOR_PAGE_READY => false,
 	DEFAULT_VERBOSITY_LINKS_DENIED => false,
 	DEFAULT_VERBOSITY_LINKS_ENQUEUE => false,
 
@@ -1352,6 +1353,20 @@ sub confVerbosityDaemonSleep {
 	my ( $self ) = @_;
 
 	my $verbose = $self->var([ 'verbosity', 'daemon', 'sleep' ]) // DEFAULT_VERBOSITY_DAEMON_SLEEP;
+
+	return $verbose;
+}
+
+# ------------------------------------------------------------------------------------------------
+# (I):
+# - none
+# (O):
+# - returns whether to be verbose when waiting for a page be ready, defaulting to false
+
+sub confVerbosityDaemonWaitForPageReady {
+	my ( $self ) = @_;
+
+	my $verbose = $self->var([ 'verbosity', 'daemon', 'wait_for_page_ready' ]) // DEFAULT_VERBOSITY_DAEMON_WAIT_FOR_PAGE_READY;
 
 	return $verbose;
 }

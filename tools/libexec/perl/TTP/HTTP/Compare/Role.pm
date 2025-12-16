@@ -876,7 +876,7 @@ sub print_results_summary {
 	}
 	msgOut( "  total count of unrecoverable errors: $self->{_errs}" );
 	my $now = Time::Moment->now;
-	msgOut( "  average: ".( sprintf( "%.6f", (( $now->epoch - $self->{_result}{start}->epoch ) / $self->{_result}{count}{visited} )))." sec./item" );
+	msgOut( "  average: ".( sprintf( "%.6f", (( $now->epoch - $self->{_result}{start}->epoch ) / $self->{_result}{count}{visited} )))." sec./item" ) if $self->{_result}{count}{visited};
 	#print STDERR "seen: ".Dumper( $self->{_result}{seen} );
 }
 

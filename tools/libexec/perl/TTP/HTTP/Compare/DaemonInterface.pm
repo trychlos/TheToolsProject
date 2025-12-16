@@ -133,11 +133,14 @@ sub facer {
 #  previously sent to each site, and both site have to be waited.
 # (I):
 # - the socket allocated when sending the command
+# - an optional options hash with following keys:
+#   > timeout: the timeout while getting the answer
 # (O):
 # - the received (JSON-decoded) answer, or true if the response is empty, or undef for an error
 
 sub get_answer {
-	my ( $self, $socket ) = @_;
+	my ( $self, $socket, $args ) = @_;
+    $args //= {};
 
     my $role = $self->facer()->roleName();
     my $which = $self->facer()->which();
@@ -148,7 +151,7 @@ sub get_answer {
     my $first = true;
     my $verboseReceived = $self->facer()->conf()->confVerbosityDaemonReceived() ? \&msgVerbose : \&msgLog;
     my $verboseSleep = $self->facer()->conf()->confVerbosityDaemonSleep() ? \&msgVerbose : \&msgLog;
-    my $answerTimeout = $self->facer()->conf()->confBrowserTimeoutsGetAnswer();
+    my $answerTimeout = $args->{timeout} // $self->facer()->conf()->confBrowserTimeoutsGetAnswer();
     my $answer = {
         response => "",
         ok => false,
