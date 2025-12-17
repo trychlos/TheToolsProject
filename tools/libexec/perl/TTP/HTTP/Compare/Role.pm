@@ -241,7 +241,7 @@ sub _do_crawl_by_click {
 	# as this may arrive once a day, optimisation is not an issue
 	my $results = TTP::HTTP::Compare::DaemonInterface::execute( $self, 'click_and_capture',
 		{ queue_item => encode_base64( $queue_item->snapshot()), args => {} },
-		{ ref => $self->{_daemons}{ref}, new => $self->{_daemons}{new} },
+		$self->{_daemons},
 		{ relogin => \&try_to_relogin },
 		{ execute_timeout => $self->conf()->confBrowserTimeoutsExecute() + 5.0*( scalar( @{$queue_item->chain()} -1 )),
 		  get_timeout => 15 }
@@ -290,7 +290,7 @@ sub _do_crawl_by_link {
 	# navigate and capture
 	my $results = TTP::HTTP::Compare::DaemonInterface::execute( $self, 'navigate_and_capture',
 		{ path => $path },
-		{ ref => $self->{_daemons}{ref}, new => $self->{_daemons}{new} }
+		$self->{_daemons}
 	);
 	if( $results->{ref}{result}{success} && $results->{new}{result}{success} ){
 		if( ref( $results->{ref}{result}{answer}) eq 'HASH' && ref( $results->{new}{result}{answer}) eq 'HASH' ){
@@ -480,7 +480,7 @@ sub _handle_form {
 
 	my $results = TTP::HTTP::Compare::DaemonInterface::execute( $self, 'handle_form',
 		{ selector => $selector, description => $description },
-		{ ref => $self->{_daemons}{ref}, new => $self->{_daemons}{new} }
+		$self->{_daemons}
 	);
 	if( $results->{ref}{result}{success} && $results->{new}{result}{success} ){
 		$formRef = TTP::HTTP::Compare::Form->new( $ep, $self->{_daemons}{ref}, $results->{ref}{result}{answer} );
@@ -735,7 +735,7 @@ sub doCompare {
 	}
 	my $results = TTP::HTTP::Compare::DaemonInterface::execute( $self, 'internal_status',
 		undef,
-		{ ref => $self->{_daemons}{ref}, new => $self->{_daemons}{new} },
+		$self->{_daemons},
 		undef,
 		{ get_timeout => 10.0, send_timeout => 10.0 } # increase the timeout the first time to let the daemon initialize itself
 	);
@@ -951,6 +951,7 @@ sub new {
 	bless $self, $class;
 	msgDebug( __PACKAGE__."::new() role='$role'" );
 
+	$self->{_errs} = 0;
 	$self->{_role} = $role;
 	$self->{conf} = $conf;
 

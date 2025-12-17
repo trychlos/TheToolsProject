@@ -1730,6 +1730,7 @@ sub wait_for_page_ready {
             my $logs = eval { $self->_performance_logs_get(); };
             if( scalar( @{$logs} )){
                 push( @{$results->{network}{logs}}, @{$logs} );
+                $verboseReady->( "by '$role:$which' Browser::wait_for_page_ready() network: got ".scalar( @{$logs} )." perf logs lines" );
                 for my $e ( @{$logs} ){
                     my $msg = $self->_decode_msg( $e ) || next;
                     my $m = $msg->{method} // next;
@@ -1738,22 +1739,30 @@ sub wait_for_page_ready {
                         $network_response ||= ( $m eq 'Network.responseReceived' && (( $msg->{params}{type} // '') eq 'Document' ));
                     }
                 }
-            } elsif( !$network_change ){
-                $verboseReady->( "by '$role:$which' Browser::wait_for_page_ready() network: no performance logs, considering idle" );
-                $network_change = time();
-                $network_response = true;
             } else {
-                $verboseReady->( "by '$role:$which' Browser::wait_for_page_ready() network: network_change set ($network_change), waiting for idle delay" );
+                $verboseReady->( "by '$role:$which' Browser::wait_for_page_ready() network: no performance logs, considering idle (network_delay=".( sprintf( "%.6f", $network_delay )).")" );
+                if( $network_change ){
+                    $verboseReady->( "by '$role:$which' Browser::wait_for_page_ready() network: network_change set (".( sprintf( "%.6f", $network_change ))."), waiting for idle delay" );
+                } else {
+                    $verboseReady->( "by '$role:$which' Browser::wait_for_page_ready() network: no performance logs, considering idle" );
+                    $network_change = time();
+                    $network_response = true;
+                }
             }
             if( $network_change ){
-                if ( time() - $network_change >= $network_delay ){
+                if( time() - $network_change >= $network_delay ){
                     $results->{network}{idle} = $network_response;
                     $results->{network}{after} = time() - $start;
+                    $verboseReady->( "by '$role:$which' Browser::wait_for_page_ready() network: delay reached" );
+                } else {
+                    $verboseReady->( "by '$role:$which' Browser::wait_for_page_ready() network: delay not reached time=".time()." diff=".( time() - $network_change ));
                 }
             }
             if( time() - $start > $network_timeout ){
                 $results->{network}{timedout} = true;
                 msgWarn( "by '$role:$which' Browser::wait_for_page_ready() network_timeout=$network_timeout sec." );
+            } else {
+                $verboseReady->( "by '$role:$which' Browser::wait_for_page_ready() network: timeout not reached" );
             }
         }
         sleep( 0.1 );
