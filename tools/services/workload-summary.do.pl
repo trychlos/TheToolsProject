@@ -124,15 +124,15 @@ sub printSummary {
 	$fh->spew( $stdout );
 	# The workload summary can be managed either as a single piece of output or as an array of separate items
 	# in this later case, the found command(s) will be applied to each and every item
-	my $asItems = TTP::var([ 'workloadSummary', 'asSeparateItems' ]) // false;
+	my $asSeparate = TTP::var([ 'workloadSummary', 'asSeparateItems' ]) // false;
 	my $commands = TTP::commandByOS([ 'workloadSummary' ]);
 	if( !$commands || !scalar( @{$commands} )){
-		$asItems = false;
+		$asSeparate = false;
 		$commands = [ "smtp.pl send -subject \"<SUBJECT>\" -to <RECIPIENTS> -textfname <TEXTFNAME>" ];
 	}
 	if( !TTP::errs()){
 		my $recipients = TTP::var([ 'workloadSummary', 'recipients' ]) || [ 'root\@localhost' ];
-		if( $asItems ){
+		if( $asSeparate ){
 			foreach my $item ( @results ){
 				TTP::commandExec( $commands, {
 					macros => {
