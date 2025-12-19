@@ -2,6 +2,12 @@
 
 ## ChangeLog
 
+### 4.26.1-rc.0
+
+    Release date: 
+
+    - 
+
 ### 4.26.0
 
     Release date: 2025-12-19
@@ -16,7 +22,7 @@
     - http.pl compare: define two daemons to handle 'ref' and 'new' sites interactions
     - TTP::RunnerDaemon has a 'length_limit' to not clutter the logs with big data commands or answers
     - http.pl compare: configure more delays and timeouts, wait_page_ready() handles its own concurrency
-    - TTP::subsituteMacros() now has a safety guard if the caller doesn't provide any data
+    - TTP::substituteMacros() now has a safety guard if the caller doesn't provide any data
     - services.pl workload-summary: honors convertToSql new configuration
     - Document Monitor service database
 
