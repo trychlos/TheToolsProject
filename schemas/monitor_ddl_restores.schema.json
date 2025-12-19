@@ -1,0 +1,33 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "org.trychlos.TheToolsProject/schemas/monitor_ddl_restores.schema.json",
+    "title": "Monitor Restores",
+    "description_array": [
+		"The automatic DBMS restoration process is able to write its result into a monitoring SQL 'RESTORES' table.",
+        "This has been primarily used to provide the text results (which last restore for which database) to a Grafana dashboard.",
+        "As such, and because we are only interested here in a picture of the last restoration operation, we use the MQTT topic/payload.",
+        "Example:",
+        " TOPIC='WS12PROD2/executionReport/dbms.pl/restore/Canal33/Canal33/diff'",
+        " PAYLOAD='C:\\CUSTOMER\\dailySQLBackups\\251219\\WS12PROD1\\WS12PROD1-Canal33-Canal33-251219-120003-diff.backup'."
+    ],
+    "type": "object",
+    "x-sql-table": "RESTORES",
+    "properties": {
+        "TOPIC": {
+            "description": "The MQTT DBMS restore topic.",
+            "type": "string",
+            "x-sql-type": "nvarchar(max)",
+            "x-nullable": false
+        },
+        "PAYLOAD": {
+            "description": "The MQTT DBMS restore payload.",
+            "type": "string",
+            "x-sql-type": "nvarchar(max)",
+            "x-nullable": false
+        }
+    },
+    "required": [
+        "TOPIC",
+        "PAYLOAD"
+    ]
+}

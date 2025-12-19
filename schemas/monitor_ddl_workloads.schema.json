@@ -1,0 +1,57 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "org.trychlos.TheToolsProject/schemas/monitor_ddl_workloads.schema.json",
+    "title": "Monitor Workloads",
+    "description_array": [
+		"Using the workloads feature in a site defaults to provide an email per node and per execution of a workload.",
+        "As an option, the integrator can write each workload summary in the Monitor (SQL) database, and build a daily synthesis."
+    ],
+    "type": "object",
+    "x-sql-table": "WORKLOADS",
+    "properties": {
+        "NODE": {
+            "description": "The execution node name.",
+            "type": "string",
+            "x-sql-type": "nvarchar(max)",
+            "x-nullable": false
+        },
+        "WORKLOAD": {
+            "description": "The workload name.",
+            "type": "string",
+            "x-sql-type": "nvarchar(max)",
+            "x-nullable": false
+        },
+        "COMMAND": {
+            "description": "The executed command.",
+            "type": "string",
+            "x-sql-type": "nvarchar(max)",
+            "x-nullable": false
+        },
+        "STARTED": {
+            "description": "The date and time of execution start.",
+            "type": "string",
+            "x-sql-type": "datetime2(7)",
+            "x-nullable": false
+        },
+        "ENDED": {
+            "description": "The date and time of execution end.",
+            "type": "string",
+            "x-sql-type": "datetime2(7)",
+            "x-nullable": false
+        },
+        "RC": {
+            "description": "The execution return code.",
+            "type": "integer",
+            "x-sql-type": "smallint",
+            "x-nullable": false
+        }
+    },
+    "required": [
+        "NODE",
+        "WORKLOAD",
+        "COMMAND",
+        "STARTED",
+        "ENDED",
+        "RC"
+    ]
+}

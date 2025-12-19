@@ -18,6 +18,7 @@
     - http.pl compare: configure more delays and timeouts, wait_page_ready() handles its own concurrency
     - TTP::subsituteMacros() now has a safety guard if the caller doesn't provide any data
     - services.pl workload-summary: honors convertToSql new configuration
+    - Document Monitor service database
 
 ### 4.25.7
 
