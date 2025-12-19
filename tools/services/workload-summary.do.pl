@@ -125,7 +125,7 @@ sub printSummary {
 	# The workload summary can be managed either as a single piece of output or as an array of separate items
 	# in this later case, the found command(s) will be applied to each and every item
 	my $asSeparate = TTP::var([ 'workloadSummary', 'asSeparateItems' ]) // false;
-	my $convertToSql = TTP::var([ 'workloadSummary', 'convertDateTimeToSql' ]) // false;
+	my $convertToSql = TTP::var([ 'workloadSummary', 'convertToSql' ]) // false;
 	my $commands = TTP::commandByOS([ 'workloadSummary' ]);
 	if( !$commands || !scalar( @{$commands} )){
 		$asSeparate = false;
@@ -135,11 +135,13 @@ sub printSummary {
 		my $recipients = TTP::var([ 'workloadSummary', 'recipients' ]) || [ 'root\@localhost' ];
 		if( $asSeparate ){
 			foreach my $item ( @results ){
+				my $command = $item->{command};
 				my $started = $item->{start};
 				my $ended = $item->{end};
 				if( $convertToSql ){
-					$started =~ s/,/./;
-					$ended =~ s/,/./;
+					$command =~ s/"/\\"/g;
+					$started =~ s/,/./g;
+					$ended =~ s/,/./g;
 				}
 				TTP::commandExec( $commands, {
 					macros => {
@@ -147,7 +149,7 @@ sub printSummary {
 						SUBJECT => TTP::var([ 'workloadSummary', 'subject' ]) || "[<WORKLOAD>\@<NODE>] Workload summary",
 						TEXTFNAME => $textfname,
 						WORKLOAD => $opt_workload,
-						COMMAND => $item->{command},
+						COMMAND => $command,
 						STARTED => $started,
 						ENDED => $ended,
 						RC => $item->{rc}

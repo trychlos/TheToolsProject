@@ -1946,8 +1946,8 @@
                             },
                             "default": "smtp.pl send -subject \"<SUBJECT>\" -to <RECIPIENTS> -textfname <TEXTFNAME>"
                         },
-                        "convertDateTimeToSql": {
-                            "description": "Whether to to convert the started and ended date time to a SQL format (with a dot instead of a comma).",
+                        "convertToSql": {
+                            "description": "Whether to to convert the data to a SQL format.",
                             "type": "boolean",
                             "default": "false"
                         },
