@@ -1413,6 +1413,9 @@ sub stackTrace {
 sub substituteMacros {
 	my ( $data, $macros ) = @_;
 
+	# safery guard when the caller doesn't provide any data
+	return $data if !$data;
+
 	my $ref = ref( $data );
 	if( $ref ){
 		if( $ref eq 'ARRAY' ){

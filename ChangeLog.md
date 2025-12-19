@@ -16,6 +16,7 @@
     - http.pl compare: define two daemons to handle 'ref' and 'new' sites interactions
     - TTP::RunnerDaemon has a 'length_limit' to not clutter the logs with big data commands or answers
     - http.pl compare: configure more delays and timeouts, wait_page_ready() handles its own concurrency
+    - TTP::subsituteMacros() now has a safety guard if the caller doesn't provide any data
 
 ### 4.25.7
 
