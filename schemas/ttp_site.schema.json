@@ -1946,6 +1946,11 @@
                             },
                             "default": "smtp.pl send -subject \"<SUBJECT>\" -to <RECIPIENTS> -textfname <TEXTFNAME>"
                         },
+                        "convertDateTimeToSql": {
+                            "description": "Whether to to convert the started and ended date time to a SQL format (with a dot instead of a comma).",
+                            "type": "boolean",
+                            "default": "false"
+                        },
                         "recipients": {
                             "description": "The list of the email recipients of the workload summary",
                             "type": "array",
