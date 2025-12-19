@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.26.0-rc.11
+### 4.26.0
 
-    Release date: 
+    Release date: 2025-12-19
 
     - http.pl compare: improve enqueing logging, adding item text
     - http.pl compare: extend cancel of a role on successive errors to all errors
@@ -799,4 +799,4 @@
 
 ---
 P. Wieser
-- Last updated on 2025, Dec. 2nd
+- Last updated on 2025, Dec. 19th
