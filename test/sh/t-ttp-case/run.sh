@@ -30,11 +30,22 @@ thisbase="$(basename "${thisdir}")"
 _toolsdir="$(toolsdir)"
 color_blue "[${thisbase}] checking that TTP Perl modules are rightly use'd or require'd"
 
-for _line in $(grep -RP '^\s*(use|require)\s+TTP' "${_toolsdir}" | sed -e 's|\s|**|g'); do
-    _line="$(echo "${_line}" | sed -e 's|\*\*| |g')"
+_ftmp="$(mktemp)" || {
+    (( _count_total += 1 ))
+    echo -n "  [${thisbase}] creating a temporary file "
+    color_red "NOT OK"
+    echo "[${thisbase}] unable to create a temporary file" >> "${_fic_errors}"
+    (( _count_notok += 1 ))
+    ender
+    exit
+}
+grep -RP '^\s*(use|require)\s+TTP' "${_toolsdir}" > "${_ftmp}"
+
+while IFS= read -r _line; do
+    _line="$(echo "${_line}" | sed -e 's|\s| |g')"
     (( _count_total += 1 ))
     _includer="$(echo "${_line}" | cut -d: -f1)"
-    _rest="$(echo "${_line}" | cut -d: -f2- | sed -e 's|^\s*||' -e 's|;$||')"
+    _rest="$(echo "${_line}" | cut -d: -f2- | sed -e 's|^\s*||' -e 's|#.*$||' -e 's|;\s*$||')"
     _used="$(echo "${_rest}" | awk '{ print $2 }')"
     _used_path="$(echo "${_toolsdir}/libexec/perl/$(echo "${_used}" | sed -e 's|::|/|g')".pm)"
 
@@ -49,6 +60,8 @@ for _line in $(grep -RP '^\s*(use|require)\s+TTP' "${_toolsdir}" | sed -e 's|\s|
         echo "${_used_path} not readable" >> "${_fic_errors}"
         (( _count_notok += 1 ))
     fi
-done
+done < "${_ftmp}"
+
+rm -f "${_ftmp}"
 
 ender
