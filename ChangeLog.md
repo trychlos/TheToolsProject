@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - workload.cmd and workload.sh now provide both same start and end stamps with dot and milliseconds (instead of previous comma and hundredths, in cmd, and none in sh)
 
 ### 4.26.0
 

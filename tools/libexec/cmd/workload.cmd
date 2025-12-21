@@ -44,12 +44,14 @@
 	rem - have a timestamped line before running each command
 	rem - prepare the end summary
 	set "res_command_%i%=%*"
-	set "res_start_%i%=%DATE:~6,4%-%DATE:~3,2%-%DATE:~0,2% %TIME%"
+	call :stamp
+	set "res_start_%i%=%_stamp%"
 	call :logLine %*
 	%*
 	call :logLine RC=%ERRORLEVEL%
 	set "res_rc_%i%=%ERRORLEVEL%"
-	set "res_end_%i%=%DATE:~6,4%-%DATE:~3,2%-%DATE:~0,2% %TIME%"
+	call :stamp
+	set "res_end_%i%=%_stamp%"
 	set /A i=i+1
 	exit /b
 
@@ -62,4 +64,9 @@ rem compute the log pathname as 'C:\myDir\dailyLogs\250521\TTP\WS12DEV1-daily.mo
 	for /f "tokens=2" %%a in ('ttp.pl vars -logsCommands -nocolored') do @set "_logsdir=%%a"
 	set "_time=%TIME: =0%"
 	set "LOGFILE=%_logsdir%\\%COMPUTERNAME%-%1-%DATE:~6,4%%DATE:~3,2%%DATE:~0,2%-%_time:~0,2%%_time:~3,2%%_time:~6,2%.log"
+	exit /b
+
+rem set _stamp = 'YYYY-MM-DD HH:MI:SS.CCC'
+:stamp
+	for /f "tokens=*" %%T in ('powershell -NoProfile -Command "Get-Date -Format 'yyyy-MM-dd HH:mm:ss.fff'"') do set _stamp=%%T
 	exit /b

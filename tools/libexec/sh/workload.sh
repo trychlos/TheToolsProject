@@ -25,6 +25,7 @@
 #
 # pwi 2025- 5-21 creation
 # pwi 2025- 6-16 initialize the TTP environment
+# pwi 2025-12-21 provide timestamps with milliseconds (as in CMD.EXE)
 
 # counters
 let -i i=0
@@ -35,11 +36,11 @@ let -i i=0
 f_command()
 {
 	f_logLine "executing $* ($#)"
-	typeset _start="$(date '+%Y-%m-%d %H:%M:%S')"
+	typeset _start="$(date '+%Y-%m-%d %H:%M:%S.%N' | cut -c1-23)"
 	/bin/bash -c "$*"
 	typeset -i _rc=$?
 	f_logLine "got RC=${_rc}"
-	typeset _end="$(date '+%Y-%m-%d %H:%M:%S')"
+	typeset _end="$(date '+%Y-%m-%d %H:%M:%S.%N' | cut -c1-23)"
 	export res_command_$i="$*"
 	export res_start_$i="${_start}"
 	export res_end_$i="${_end}"
