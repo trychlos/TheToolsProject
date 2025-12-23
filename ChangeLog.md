@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.27.0-rc.0
+### 4.27.0
 
-    Release date: 
+    Release date: 2025-12-23
 
     - workload.cmd and workload.sh now provide both same start and end stamps with dot and milliseconds (instead of previous comma and hundredths, in cmd, and none in sh)
     - Review workloads summary configuration, updating services.pl workload-summary accordingly, thus bumping minor candidate release number
@@ -806,4 +806,4 @@
 
 ---
 P. Wieser
-- Last updated on 2025, Dec. 19th
+- Last updated on 2025, Dec. 23rd
