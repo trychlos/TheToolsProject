@@ -1892,79 +1892,210 @@
                 },
                 "workloadSummary": {
                     "description_array": [
-                        "The configuration of how to publish a workloads summary.",
-                        "The configured command has access to following macros:",
-                        "- <RECIPIENTS> a comma-separated list of email recipients,",
-                        "- <SUBJECT> a label title,",
-                        "- <TEXTFNAME> the path to a temporary file which contains the workload summary,",
-                        "- <WORKLOAD> the workload name.",
-                        "The default command (smtp.pl send) considers the summary as a single piece of output, and sends it to the specified recipients.",
-                        "It is nonetheless possible to consider instead the summary as an array of separate items, each of them being considered separatly.",
-                        "When considered as separate items, command(s) MUST be specified and cannot rely on the default.",
-                        "They will be applied to each and every received workload execution.",
-                        "They will have access to additional macros:",
-                        "- <COMMAND> the item's command,",
-                        "- <STARTED> the item's start date and time as 'YYYY-MM-DD HH:MI:SS.CC',",
-                        "- <ENDED> the item's end date and time as 'YYYY-MM-DD HH:MI:SS.CC',",
-                        "- <RC> the item's return code.",
-                        "If no command is provided, the default 'smtp.pl send' applies and IGNORES the 'asSeparateItems' indication."
+                        "The configuration of how and when publish workloads summaries.",
+                        "Workloads are defined at the service level, and are just a list of commands executed at various times.",
+                        "They provide their results as a list of the executed commands, with a start and end date and time, and a return code.",
+                        "The respective workload.cmd/workload.sh default to try to publish a workload summary per workload (but see below for other options)."
                     ],
                     "type": "object",
                     "properties": {
-                        "asSeparateItems": {
-                            "description": "Whether to consider the summary as a single piece of output (when true), or as separate items (when false).",
-                            "type": "boolean",
-                            "default": "false"
-                        },
-                        "command": {
-                            "description": "The command to be run to publish a workload summary. Freely intercheangeable with 'commands'."
-                        },
-                        "commands": {
-                            "description": "The command(s) to be run to publish a workload summary.",
-                            "type": [
-                                "string",
-                                "array",
-                                "object"
+                        "perPeriod": {
+                            "description_array": [
+                                "Publishing a 'per period' workloads summary means than we publish a summary for all workloads executed (actually started) during a given period.",
+                                "In such a situation, two commands must be specified:",
+                                "- first is how to get the (previously recorded) list of workload summaries,",
+                                "- second is how to publish them."
                             ],
-                            "items": {
-                                "type": [
-                                    "string",
-                                    "object"
-                                ]
-                            },
+                            "type": "object",
                             "properties": {
-                                "byOS": {
-                                    "description": "Let a command be specific to the running OS.",
+                                "get": {
+                                    "description_array": [
+                                        "The command(s) to get the workloads summaries to be dealt with.",
+                                        "It is expected to produce a JSON file which contains an array of the workloads results.",
+                                        "The configured command(s) have access to following macros:",
+                                        "- <JSONFNAME> the path to a temporary file which will eventually contain the JSON data produced by the command(s),",
+                                        "- <SINCE> the date and time of the start of the considered period, as a 'YYYY-MM-DD HH:MI:SS.CC' string,",
+                                        "- <UNTIL> the date and time of the end of the considered period, as a 'YYYY-MM-DD HH:MI:SS.CC' string."
+                                    ],
                                     "type": "object",
-                                    "patternProperties": {
-                                        "^.*$": {
-                                            "description": "The OS name as reported by Perl-Config, the value being the command to be applied for this OS.",
-                                            "type": "string"
+                                    "properties": {
+                                        "command": {
+                                            "description": "The command(s) to get the workloads summaries to be dealt with. Freely intercheangeable with 'commands'."
+                                        },
+                                        "commands": {
+                                            "description": "The command(s) to get the workloads summaries to be dealt with.",
+                                            "type": [
+                                                "string",
+                                                "array",
+                                                "object"
+                                            ],
+                                            "items": {
+                                                "type": [
+                                                    "string",
+                                                    "object"
+                                                ]
+                                            },
+                                            "properties": {
+                                                "byOS": {
+                                                    "description": "Let a command be specific to the running OS.",
+                                                    "type": "object",
+                                                    "patternProperties": {
+                                                        "^.*$": {
+                                                            "description": "The OS name as reported by Perl-Config, the value being the command to be applied for this OS.",
+                                                            "type": "string"
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "publish": {
+                                    "description_array": [
+                                        "The command(s) to publish the summary to the administrator.",
+                                        "The configured command(s) have access to following macros:",
+                                        "- <ENVIRONMENT> the label of the running environment,",
+                                        "- <SINCE> the date and time of the start of the considered period, as a 'YYYY-MM-DD HH:MI:SS.CC' string,",
+                                        "- <UNTIL> the date and time of the end of the considered period, as a 'YYYY-MM-DD HH:MI:SS.CC' string,",
+                                        "- <JSONFNAME> the path to a temporary file which contains the JSON data produced by the 'get' command(s),",
+                                        "- <TEXTFNAME> the path to a temporary file which contains a formatted printable output,"
+                                    ],
+                                    "type": "object",
+                                    "properties": {
+                                        "command": {
+                                            "description": "The command(s) to publish the summary to the administrator. Freely intercheangeable with 'commands'."
+                                        },
+                                        "commands": {
+                                            "description": "The command(s) to publish the summary to the administrator.",
+                                            "type": [
+                                                "string",
+                                                "array",
+                                                "object"
+                                            ],
+                                            "items": {
+                                                "type": [
+                                                    "string",
+                                                    "object"
+                                                ]
+                                            },
+                                            "properties": {
+                                                "byOS": {
+                                                    "description": "Let a command be specific to the running OS.",
+                                                    "type": "object",
+                                                    "patternProperties": {
+                                                        "^.*$": {
+                                                            "description": "The OS name as reported by Perl-Config, the value being the command to be applied for this OS.",
+                                                            "type": "string"
+                                                        }
+                                                    }
+                                                }
+                                            }
                                         }
                                     }
                                 }
-                            },
-                            "default": "smtp.pl send -subject \"<SUBJECT>\" -to <RECIPIENTS> -textfname <TEXTFNAME>"
+                            }
                         },
-                        "convertToSql": {
-                            "description": "Whether to to convert the data to a SQL format.",
-                            "type": "boolean",
-                            "default": "false"
-                        },
-                        "recipients": {
-                            "description": "The list of the email recipients of the workload summary",
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            },
-                            "default": [
-                                "root@localhost"
-                            ]
-                        },
-                        "subject": {
-                            "description": "An arbitrary label which may use when building, for example, an email subject.",
-                            "type": "string",
-                            "default": "[<WORKLOAD>@<NODE>] Workload summary"
+                        "perWorkload": {
+                            "description_array": [
+                                "Publishing a 'per workload' workload summary means than we publish a summary for each executed workload as soon as it is ended.",
+                                "The configured command(s) have access to following macros:",
+                                "- <WORKLOAD> the workload name.",
+                                "- <TEXTFNAME> the path to a temporary file which contains a formatted printable output,"
+                            ],
+                            "type": "object",
+                            "properties": {
+                                "perCommand": {
+                                    "description_array": [
+                                        "Publishing a 'per command' workload summary means than we publish the result for each executed command inside of a workload as soon as this later is ended.",
+                                        "This is defined as a sub-object of the 'perWorkload' as only honored in that later case.",
+                                        "The configured command(s) have access to following macros:",
+                                        "- <TEXTFNAME> the path to a temporary file which contains a formatted printable output,",
+                                        "- <WORKLOAD> the workload name.",
+                                        "- <COMMAND> the item's command,",
+                                        "- <STARTED> the command start date and time as 'YYYY-MM-DD HH:MI:SS.CC',",
+                                        "- <ENDED> the command end date and time as 'YYYY-MM-DD HH:MI:SS.CC',",
+                                        "- <RC> the command return code."
+                                    ],
+                                    "type": "object",
+                                    "properties": {
+                                        "convertToSql": {
+                                            "description": "Whether to to convert the data to a SQL format.",
+                                            "type": "boolean",
+                                            "default": "false"
+                                        },
+                                        "publish": {
+                                            "description": "The command(s) to publish the summary to the administrator.",
+                                            "type": "object",
+                                            "properties": {
+                                                "command": {
+                                                    "description": "The command to publish the summary to the administrator. Freely intercheangeable with 'commands'."
+                                                },
+                                                "commands": {
+                                                    "description": "The command(s) to publish the summary to the administrator.",
+                                                    "type": [
+                                                        "string",
+                                                        "array",
+                                                        "object"
+                                                    ],
+                                                    "items": {
+                                                        "type": [
+                                                            "string",
+                                                            "object"
+                                                        ]
+                                                    },
+                                                    "properties": {
+                                                        "byOS": {
+                                                            "description": "Let a command be specific to the running OS.",
+                                                            "type": "object",
+                                                            "patternProperties": {
+                                                                "^.*$": {
+                                                                    "description": "The OS name as reported by Perl-Config, the value being the command to be applied for this OS.",
+                                                                    "type": "string"
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                "publish": {
+                                    "description": "The command(s) to produce the summary to the administrator.",
+                                    "type": "object",
+                                    "properties": {
+                                        "command": {
+                                            "description": "The command to be run to publish a workload summary. Freely intercheangeable with 'commands'."
+                                        },
+                                        "commands": {
+                                            "description": "The command(s) to produce the summary to the administrator.",
+                                            "type": [
+                                                "string",
+                                                "array",
+                                                "object"
+                                            ],
+                                            "items": {
+                                                "type": [
+                                                    "string",
+                                                    "object"
+                                                ]
+                                            },
+                                            "properties": {
+                                                "byOS": {
+                                                    "description": "Let a command be specific to the running OS.",
+                                                    "type": "object",
+                                                    "patternProperties": {
+                                                        "^.*$": {
+                                                            "description": "The OS name as reported by Perl-Config, the value being the command to be applied for this OS.",
+                                                            "type": "string"
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
