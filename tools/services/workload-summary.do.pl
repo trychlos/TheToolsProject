@@ -15,7 +15,7 @@
 # @(-) --since=<since>         since when getting the summary [${since}]
 # @(-) --until=<until>         until when getting the summary [${until}]
 #
-# @(@) Note 1: When the '--workloiad' argument is specified, then we have a run from workload.cmd (resp. workload.sh) and the option
+# @(@) Note 1: When the '--workload' argument is specified, then we have a run from workload.cmd (resp. workload.sh) and the option
 # @(@)         either publish a summary per workload or per command (or both), depending of the TTP site configuration.
 # @(@)         When the '--since' argument is specified, then we build and publish a summary per period.
 # @(@) Note 2: '--since' and '--until' arguments can be specified as '<n>d' for <n> days, or '<n>h' for <n> hours, or as a mix of these units.
