@@ -158,10 +158,12 @@
                                 "array",
                                 "object"
                             ],
-                            "items": [
-                                "string",
-                                "object"
-                            ],
+                            "items": {
+                                "type": [
+                                    "string",
+                                    "object"
+                                ]
+                            },
                             "properties": {
                                 "byOS": {
                                     "description": "Let a command be specific to the running OS.",
@@ -232,10 +234,12 @@
                                 "array",
                                 "object"
                             ],
-                            "items": [
-                                "string",
-                                "object"
-                            ],
+                            "items": {
+                                "type": [
+                                    "string",
+                                    "object"
+                                ]
+                            },
                             "properties": {
                                 "byOS": {
                                     "description": "Let a command be specific to the running OS.",
@@ -300,10 +304,10 @@
             "description_array": [
                 "The configuration of each workload this service subscribes to.",
                 "A workload can basically be seen as an ordered list of commands to be executed regularily.",
-                "Though this feature has been primarily defined for sites which lack of an advanced-enough task scheduler, it happens usefull on all sites when about to organize and defined services-oriented batches.",
+                "Though this feature has been primarily defined for sites which lack of an advanced-enough task scheduler, it happens useful on all sites when about to organize and defined services-oriented batches.",
                 "Workloads are thought to be externally scheduled, through a cron or a task scheduler as a 'tools/libexec/sh/workload.sh <workload_name>' or 'tools\\libexec\\cmd\\workload.cmd <workload_name>',",
-                "where 'workload_name' is the identifier of the workload.",
-                "When about to be executed, a workload is built by the concatenation of the named parts attached the every service running on the current execution node.",
+                "where '<workload_name>' is the identifier of the workload.",
+                "When about to be executed, a workload is built by the concatenation of the named parts attached to every service running on the current execution node.",
                 "Note too that, as each workload part is attached to a service, it inherits its 'hidden' and 'enabled' properties.",
                 "Example:",
                 " Say you have two services defined on a node, each of them having a 'workload1' defined workload part:",
@@ -347,7 +351,9 @@
             },
             "properties": {
                 "type": "array",
-                "items": "object",
+                "items": {
+                    "type": "object"
+                },
                 "properties": {
                     "label": {
                         "description": "A descriptive label for this list of tasks",
@@ -366,10 +372,12 @@
                             "array",
                             "object"
                         ],
-                        "items": [
-                            "string",
-                            "object"
-                        ],
+                        "items": {
+                            "type": [
+                                "string",
+                                "object"
+                            ]
+                        },
                         "properties": {
                             "byOS": {
                                 "description": "Let a command be specific to the running OS.",
