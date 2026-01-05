@@ -2,6 +2,12 @@
 
 ## ChangeLog
 
+### 4.27.2-rc.0
+
+    Release date: 
+
+    - 
+
 ### 4.27.1
 
     Release date: 2026- 1- 5
