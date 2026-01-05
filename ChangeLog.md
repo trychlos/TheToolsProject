@@ -2,12 +2,12 @@
 
 ## ChangeLog
 
-### 4.27.1-rc.0
+### 4.27.1
 
-    Release date: 
+    Release date: 2026- 1- 5
 
     - Fix the shell workload execution to only filter 'services.pl list' lines, aligning it on the cmd version
 
 ---
 P. Wieser
-- Last updated on 2025, Dec. 23rd
+- Last updated on 2026, Jan. 5th
