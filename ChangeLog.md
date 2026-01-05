@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - Fix the shell workload execution to only filter 'services.pl list' lines, aligning it on the cmd version
 
 ### 4.27.0
 

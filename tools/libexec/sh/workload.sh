@@ -65,7 +65,7 @@ f_execute()
 
 	# first argument is now expected to be the workload name
 	typeset _tmpfile="$(mktemp)"
-	services.pl list -workload "${_workload}" -commands -hidden "$@" -nocolored | grep -vE 'services.pl' > "${_tmpfile}"
+	services.pl list -workload "${_workload}" -commands -hidden "$@" -nocolored | grep -v '\[services.pl list]' > "${_tmpfile}"
 	while read _line; do
 		f_command ${_line} "$@"
 	done < "${_tmpfile}"
