@@ -20,11 +20,11 @@
 # @(@)         When the '--since' argument is specified, then we build and publish a summary per period.
 # @(@) Note 2: '--since' and '--until' arguments can be specified as '<n>d' for <n> days, or '<n>h' for <n> hours, or as a mix of these units.
 #
-# Copyright (©) 2023-2025 PWI Consulting for Inlingua
+# Copyright (©) 2023-2026 PWI Consulting for Inlingua
 #
 # TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
-# Copyright (©) 2023-2025 PWI Consulting
+# Copyright (©) 2023-2026 PWI Consulting
 #
 # TheToolsProject is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as

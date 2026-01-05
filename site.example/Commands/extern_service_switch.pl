@@ -17,7 +17,7 @@
 # @(@) Obviously, all that stuff will work a bit less than optimal, but there will not be any loss of data.
 # @(@) So fine from this script point of view.
 #
-# Copyright (©) 2023-2025 PWI Consulting for Inlingua
+# Copyright (©) 2023-2026 PWI Consulting for Inlingua
 #
 # This script is mostly written like a TTP verb but is not. This is an example of how to take advantage of TTP to write your own (rather pretty and efficient) code.
 # Just to make it sure and obvious: this makes use of TTP, but is not part itself of TTP (though a not so bad example of application).

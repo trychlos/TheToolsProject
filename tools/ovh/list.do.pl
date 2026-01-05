@@ -8,7 +8,7 @@
 #
 # TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
-# Copyright (©) 2023-2025 PWI Consulting
+# Copyright (©) 2023-2026 PWI Consulting
 #
 # TheToolsProject is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as

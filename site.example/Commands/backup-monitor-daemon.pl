@@ -19,7 +19,7 @@
 # @(@)
 # @(@) This script is expected to be run as a daemon, started via a 'daemon.pl start -json <filename.json>' command.
 #
-# Copyright (©) 2023-2025 PWI Consulting for Inlingua
+# Copyright (©) 2023-2026 PWI Consulting for Inlingua
 #
 # This script is mostly written like a TTP verb but is not. This is an example of how to take advantage of TTP
 # to write your own (rather pretty and efficient) daemon.

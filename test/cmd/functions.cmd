@@ -1,7 +1,7 @@
 @echo off
 	rem TheToolsProject - Tools System and Working Paradigm for IT Production
 	rem Copyright (C) 1998-2023 Pierre Wieser (see AUTHORS)
-	rem Copyright (C) 2023-2025 PWI Consulting
+	rem Copyright (C) 2023-2026 PWI Consulting
 	rem
 	rem TheToolsProject is free software; you can redistribute it and/or
 	rem modify it under the terms of the GNU General Public License as
