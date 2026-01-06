@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - Fix Text metric publication when several differents labels are used
 
 ### 4.27.1
 

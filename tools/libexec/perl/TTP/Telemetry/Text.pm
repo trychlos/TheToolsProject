@@ -129,27 +129,42 @@ sub publish {
 			$name = "$Const->{prefix}$name" if $Const->{prefix} && $name !~ m/^$Const->{prefix}/;
 			my $value = $metric->value();
 			if( looks_like_number( $value )){
-				# build the published text
-				my $text = "";
-				my $help = $metric->help();
-				$text .= "# HELP $name $help\n" if $help;
-				my $type = $metric->type();
-				$text .= "# TYPE $name $type\n" if $type;
-				$text .= $name;
+				# build the published text, updating or adding to the existing publication
+				# rationale: the text file is dedicated to a metric, which can have multiple values depending of the defined labels
+				my $line = $name;
 				my $labels = $metric->labels();
 				if( scalar( @{$labels} )){
-					$text .= '{'.join( ',', @{$labels} ).'}';
+					$line .= '{'.join( ',', sort @{$labels} ).'}';
 				}
-				$text .= " $value\n";
-				$text = $metric->apply_macros( $text );
+				$line = $metric->apply_macros( $line );
 				# build the text fname
-				my $fname = File::Spec->catfile( dropDir(), "$name.prom" );
+				my $fname = File::Spec->catfile( $dropdir, "$name.prom" );
+				my $content = undef;
+				# get previous content
+				my $text = path( $fname )->slurp_utf8() // '';
+				if( $text ){
+					$content = $text;
+					if( index( $text, $line ) != -1 ){
+						my $searched = $line;
+						$searched =~ s/\{/\\{/g;
+						$content =~ s/$searched [^\n]*/$line $value/;
+					} else {
+						$content .= "$line $value\n";
+					}
+				} else {
+					$content = "";
+					my $help = $metric->help();
+					$content .= "# HELP $name $help\n" if $help;
+					my $type = $metric->type();
+					$content .= "# TYPE $name $type\n" if $type;
+					$content .= "$line $value\n";
+				}
 				# and try to publish
 				my $dummy = $metric->ep()->runner()->dummy();
 				if( $dummy ){
-					msgDummy( "publishing '$text' to '$fname'" );
+					msgDummy( "publishing '$content' to '$fname'" );
 				} else {
-					path( $fname )->spew_utf8( $text );
+					path( $fname )->spew_utf8( $content );
 				}
 			} else {
 				$res = VALUE_UNSUITED;
