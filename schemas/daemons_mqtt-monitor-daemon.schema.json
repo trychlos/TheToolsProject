@@ -101,105 +101,110 @@
             "patternProperties": {
                 "^.*$": {
                     "description": "A regular expression to be matched against the found topics.",
-                    "type": "string"
-                },
-                "type": "object",
-                "properties": {
-                    "toLog": {
-                        "description": "Whether a line with the topic and its payload must be appended to a log file.",
-                        "type": "object",
-                        "properties": {
-                            "enabled": {
-                                "description": "Whether logging the topic and its payload in a logfile is an enabled feature.",
-                                "type": "boolean",
-                                "default": false
-                            },
-                            "filename": {
-                                "description_array": [
-                                    "The filename where to append a line with the topic and the payload.",
-                                    "The filename can be evaluated at runtime. <TOPIC> and <PAYLOAD> macros are available."
-                                ],
-                                "type": "string",
-                                "default": "[eval:File::Spec->catfile( TTP::logsCommands(), $daemon->name().'.log' )]"
+                    "type": "object",
+                    "properties": {
+                        "toLog": {
+                            "description": "Whether a line with the topic and its payload must be appended to a log file.",
+                            "type": "object",
+                            "properties": {
+                                "enabled": {
+                                    "description": "Whether logging the topic and its payload in a logfile is an enabled feature.",
+                                    "type": "boolean",
+                                    "default": false
+                                },
+                                "filename": {
+                                    "description_array": [
+                                        "The filename where to append a line with the topic and the payload.",
+                                        "The filename can be evaluated at runtime. <TOPIC> and <PAYLOAD> macros are available."
+                                    ],
+                                    "type": "string",
+                                    "default": "[eval:File::Spec->catfile( TTP::logsCommands(), $daemon->name().'.log' )]"
+                                }
                             }
-                        }
-                    },
-                    "toStdout": {
-                        "description": "Whether the topic and its payload must be displayed to stdout.",
-                        "type": "object",
-                        "properties": {
-                            "enabled": {
-                                "description": "Whether logging the topic and its payload to stdout is an enabled feature.",
-                                "type": "boolean",
-                                "default": false
+                        },
+                        "toStdout": {
+                            "description": "Whether the topic and its payload must be displayed to stdout.",
+                            "type": "object",
+                            "properties": {
+                                "enabled": {
+                                    "description": "Whether logging the topic and its payload to stdout is an enabled feature.",
+                                    "type": "boolean",
+                                    "default": false
+                                }
                             }
-                        }
-                    },
-                    "toStderr": {
-                        "description": "Whether the topic and its payload must be displayed to stderr.",
-                        "type": "object",
-                        "properties": {
-                            "enabled": {
-                                "description": "Whether logging the topic and its payload to stderr is an enabled feature.",
-                                "type": "boolean",
-                                "default": false
+                        },
+                        "toStderr": {
+                            "description": "Whether the topic and its payload must be displayed to stderr.",
+                            "type": "object",
+                            "properties": {
+                                "enabled": {
+                                    "description": "Whether logging the topic and its payload to stderr is an enabled feature.",
+                                    "type": "boolean",
+                                    "default": false
+                                }
                             }
-                        }
-                    },
-                    "toFile": {
-                        "description": "Whether the topic and its payload must be written into a new file.",
-                        "type": "object",
-                        "properties": {
-                            "enabled": {
-                                "description": "Whether logging the topic and its payload to a new file is an enabled feature.",
-                                "type": "boolean",
-                                "default": false
-                            },
-                            "filename": {
-                                "description_array": [
-                                    "The full path of the file to be created.",
-                                    "The filename can be evaluated at runtime. <TOPIC> and <PAYLOAD> macros are available."
-                                ],
-                                "type": "string",
-                                "default": "[eval:File::Spec->catfile( File::Spec->catdir( TTP::logsCommands(), $daemon->name()), <TOPIC>.[eval:Time::Moment->now->epoch->strftime( '%y%m%d%H%M%S%6N' )].'.log' )]"
+                        },
+                        "toFile": {
+                            "description": "Whether the topic and its payload must be written into a new file.",
+                            "type": "object",
+                            "properties": {
+                                "enabled": {
+                                    "description": "Whether logging the topic and its payload to a new file is an enabled feature.",
+                                    "type": "boolean",
+                                    "default": false
+                                },
+                                "filename": {
+                                    "description_array": [
+                                        "The full path of the file to be created.",
+                                        "The filename can be evaluated at runtime. <TOPIC> and <PAYLOAD> macros are available."
+                                    ],
+                                    "type": "string",
+                                    "default": "[eval:File::Spec->catfile( File::Spec->catdir( TTP::logsCommands(), $daemon->name()), <TOPIC>.[eval:Time::Moment->now->epoch->strftime( '%y%m%d%H%M%S%6N' )].'.log' )]"
+                                }
                             }
-                        }
-                    },
-                    "actions": {
-                        "description": "Other actions to be done on the topic.",
-                        "type": "array",
-                        "items": "object",
-                        "properties": {
-                            "enabled": {
-                                "description": "Whether this particular action is enabled.",
-                                "type": "boolean",
-                                "default": false
-                            },
-                            "command": {
-                                "description": "The command to be executed when a topic is matched, Freely intercheangeable with 'commands'."
-                            },
-                            "commands": {
-                                "description_array": [
-                                    "The command(s) to be executed when a topic is matched, either as a single string or as a 'byOS' object.",
-                                    "The provided command can take advantage of <TOPIC> and <PAYLOAD> macros."
-                                ],
+                        },
+                        "actions": {
+                            "description": "Other actions to be done on the topic.",
+                            "type": "array",
+                            "items": {
                                 "type": [
-                                    "string",
-                                    "array",
                                     "object"
-                                ],
-                                "items": [
-                                    "string",
-                                    "object"
-                                ],
-                                "properties": {
-                                    "byOS": {
-                                        "description": "Let a command be specific to the running OS.",
-                                        "type": "object",
-                                        "patternProperties": {
-                                            "^.*$": {
-                                                "description": "The OS name as reported by Perl-Config, the value being the command to be applied for this OS.",
-                                                "type": "string"
+                                ]
+                            },
+                            "properties": {
+                                "enabled": {
+                                    "description": "Whether this particular action is enabled.",
+                                    "type": "boolean",
+                                    "default": false
+                                },
+                                "command": {
+                                    "description": "The command to be executed when a topic is matched, Freely intercheangeable with 'commands'."
+                                },
+                                "commands": {
+                                    "description_array": [
+                                        "The command(s) to be executed when a topic is matched, either as a single string or as a 'byOS' object.",
+                                        "The provided command can take advantage of <TOPIC> and <PAYLOAD> macros."
+                                    ],
+                                    "type": [
+                                        "string",
+                                        "array",
+                                        "object"
+                                    ],
+                                    "items": {
+                                        "type": [
+                                            "string",
+                                            "object"
+                                        ]
+                                    },
+                                    "properties": {
+                                        "byOS": {
+                                            "description": "Let a command be specific to the running OS.",
+                                            "type": "object",
+                                            "patternProperties": {
+                                                "^.*$": {
+                                                    "description": "The OS name as reported by Perl-Config, the value being the command to be applied for this OS.",
+                                                    "type": "string"
+                                                }
                                             }
                                         }
                                     }

@@ -42,7 +42,8 @@
 |  163 | 2025- 5-23 | honor MQTTGateway and SMTPGateway wantsAccounts and wantsPassword |
 |  164 | 2025- 5-27 | extend commandBYOS to accept both a node name and a ttp::node |
 |  170 | 2025- 6-27 | meteor.pl create --application should be fully configurable as a TTP schema and/or with command-line options |
-|  171 |  |  |
+|  171 | 2026- 1- 8 | MQTTGateway and SMTPGateway should be managed as standard services |
+|  172 |  |  |
 
 ---
 ## Done

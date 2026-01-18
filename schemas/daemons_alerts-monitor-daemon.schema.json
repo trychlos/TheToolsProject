@@ -96,7 +96,11 @@
         "actions": {
             "description": "The actions to be done when a new file is found.",
             "type": "array",
-            "items": "object",
+            "items": {
+                "type": [
+                    "object"
+                ]
+            },
             "properties": {
                 "command": {
                     "description": "The command to be executed when a new alert has been identified. Freely intercheangeable with 'commands'."
@@ -114,10 +118,12 @@
                         "array",
                         "object"
                     ],
-                    "items": [
-                        "string",
-                        "object"
-                    ],
+                    "items": {
+                        "type": [
+                            "string",
+                            "object"
+                        ]
+                    },
                     "properties": {
                         "byOS": {
                             "description": "Let a command be specific to the running OS.",

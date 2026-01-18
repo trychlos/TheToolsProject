@@ -578,14 +578,14 @@
             "patternProperties": {
                 "^.*$": {
                     "description": "The form CSS selector.",
-                    "type": "string"
-                }
-            },
-            "properties": {
-                "submit_selector": {
-                    "description": "The CSS selector of the submit element.",
-                    "type": "string",
-                    "default": "When not specified, the form is expected to react on 'change' event."
+                    "type": "object",
+                    "properties": {
+                        "submit_selector": {
+                            "description": "The CSS selector of the submit element.",
+                            "type": "string",
+                            "default": "When not specified, the form is expected to react on 'change' event."
+                        }
+                    }
                 }
             }
         },
@@ -637,58 +637,58 @@
             "patternProperties": {
                 "^.*$": {
                     "description": "The name of the role.",
-                    "type": "string"
-                }
-            },
-            "properties": {
-                "credentials": {
-                    "description": "The credentials to be used when checking this role.",
                     "type": "object",
                     "properties": {
-                        "password": {
-                            "description": "The password.",
-                            "type": "string"
+                        "credentials": {
+                            "description": "The credentials to be used when checking this role.",
+                            "type": "object",
+                            "properties": {
+                                "password": {
+                                    "description": "The password.",
+                                    "type": "string"
+                                },
+                                "username": {
+                                    "description": "The username.",
+                                    "type": "string"
+                                }
+                            }
                         },
-                        "username": {
-                            "description": "The username.",
-                            "type": "string"
-                        }
-                    }
-                },
-                "enabled": {
-                    "description": "Whether this role must be considered.",
-                    "type": "boolean",
-                    "default": true
-                },
-                "routes": {
-                    "description": "The list of paths to be tested.",
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
-                    "default": [
-                        "/"
-                    ]
-                },
-                "signatures": {
-                    "description": "The initial list of queue signature chains to be tested. When provided, routes are not considered.",
-                    "type": "array",
-                    "items": {
-                        "type": "array",
-                        "items": {
-                            "type": "object"
+                        "enabled": {
+                            "description": "Whether this role must be considered.",
+                            "type": "boolean",
+                            "default": true
                         },
-                        "properties": {
-                            "label": {
-                                "description": "A description of this signatures chain.",
-                                "type": "string",
-                                "default": ""
+                        "routes": {
+                            "description": "The list of paths to be tested.",
+                            "type": "array",
+                            "items": {
+                                "type": "string"
                             },
-                            "chain": {
-                                "description": "The array of queue signatures.",
+                            "default": [
+                                "/"
+                            ]
+                        },
+                        "signatures": {
+                            "description": "The initial list of queue signature chains to be tested. When provided, routes are not considered.",
+                            "type": "array",
+                            "items": {
                                 "type": "array",
                                 "items": {
-                                    "type": "string"
+                                    "type": "object"
+                                },
+                                "properties": {
+                                    "label": {
+                                        "description": "A description of this signatures chain.",
+                                        "type": "string",
+                                        "default": ""
+                                    },
+                                    "chain": {
+                                        "description": "The array of queue signatures.",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
                                 }
                             }
                         }

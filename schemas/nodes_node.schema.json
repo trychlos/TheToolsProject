@@ -61,14 +61,14 @@
                 "patternProperties": {
                     "^.*$": {
                         "description": "The service name, available in commands values as <SERVICE> macro.",
-                        "type": "string"
-                    }
-                },
-                "properties": {
-                    "enabled": {
-                        "description": "Whether this service is enabled on the node.",
-                        "type": "boolean",
-                        "default": true
+                        "type": "object",
+                        "properties": {
+                            "enabled": {
+                                "description": "Whether this service is enabled on the node.",
+                                "type": "boolean",
+                                "default": true
+                            }
+                        }
                     }
                 }
             }
@@ -88,10 +88,12 @@
                                 "array",
                                 "object"
                             ],
-                            "items": [
-                                "string",
-                                "object"
-                            ],
+                            "items": {
+                                "type": [
+                                    "string",
+                                    "object"
+                                ]
+                            },
                             "properties": {
                                 "byOS": {
                                     "description": "Let a command be specific to the running OS.",

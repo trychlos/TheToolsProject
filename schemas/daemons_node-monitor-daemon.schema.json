@@ -97,7 +97,9 @@
                 "This same [ 'status', 'monitor' ] list of keys can be defined at the node level or at any service level for this node."
             ],
             "type": "array",
-            "items": "string",
+            "items": {
+                "type": "string"
+            },
             "default": [
                 "status",
                 "monitor"

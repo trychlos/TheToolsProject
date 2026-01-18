@@ -78,7 +78,11 @@
                         "array",
                         "string"
                     ],
-                    "items": "string",
+                    "items": {
+                        "type": [
+                            "string"
+                        ]
+                    },
                     "default": "the_full_list_of_databases"
                 },
                 "excludeDatabases": {
@@ -87,7 +91,11 @@
                         "array",
                         "string"
                     ],
-                    "items": "string"
+                    "items": {
+                        "type": [
+                            "string"
+                        ]
+                    }
                 },
                 "excludeSystemDatabases": {
                     "description": "Whether listing databases should exclude system databases.",
@@ -346,48 +354,47 @@
             "patternProperties": {
                 "^.*$": {
                     "description": "The workload name.",
-                    "type": "string"
-                }
-            },
-            "properties": {
-                "type": "array",
-                "items": {
-                    "type": "object"
-                },
-                "properties": {
-                    "label": {
-                        "description": "A descriptive label for this list of tasks",
-                        "type": "string",
-                        "default": "unnamed"
-                    },
-                    "order": {
-                        "description": "The order of this list of tasks when building the full workload list of commands.",
-                        "type": "string",
-                        "default": "<SERVICE>"
-                    },
-                    "commands": {
-                        "description": "The commands of the workload, either as strings or as by OS commands.",
-                        "type": [
-                            "string",
-                            "array",
-                            "object"
-                        ],
-                        "items": {
-                            "type": [
-                                "string",
-                                "object"
-                            ]
-                        },
+                    "type": [
+                        "array"
+                    ],
+                    "items": {
+                        "type": "object",
                         "properties": {
-                            "byOS": {
-                                "description": "Let a command be specific to the running OS.",
-                                "type": "object",
-                                "patternProperties": {
-                                    "^.*$": {
-                                        "description_array": [
-                                            "The OS name as reported by Perl-Config, the value being the command to be applied for this OS."
-                                        ],
-                                        "type": "string"
+                            "label": {
+                                "description": "A descriptive label for this list of tasks",
+                                "type": "string",
+                                "default": "unnamed"
+                            },
+                            "order": {
+                                "description": "The order of this list of tasks when building the full workload list of commands.",
+                                "type": "string",
+                                "default": "<SERVICE>"
+                            },
+                            "commands": {
+                                "description": "The commands of the workload, either as strings or as by OS commands.",
+                                "type": [
+                                    "string",
+                                    "array",
+                                    "object"
+                                ],
+                                "items": {
+                                    "type": [
+                                        "string",
+                                        "object"
+                                    ]
+                                },
+                                "properties": {
+                                    "byOS": {
+                                        "description": "Let a command be specific to the running OS.",
+                                        "type": "object",
+                                        "patternProperties": {
+                                            "^.*$": {
+                                                "description_array": [
+                                                    "The OS name as reported by Perl-Config, the value being the command to be applied for this OS."
+                                                ],
+                                                "type": "string"
+                                            }
+                                        }
                                     }
                                 }
                             }
