@@ -2,12 +2,13 @@
 
 ## ChangeLog
 
-### 4.27.2-rc.0
+### 4.28.0-rc.0
 
     Release date: 
 
     - Fix Text metric publication when several differents labels are used
     - Fix JSON schemas
+    - Define new bottomSummary and topSummary attributes, both defaulting to true, thus bumping minor candidate version number
 
 ### 4.27.1
 

@@ -1990,6 +1990,16 @@
                                                     }
                                                 }
                                             }
+                                        },
+                                        "summaryBottom": {
+                                            "description": "Whether to print a workload summary on the bottom.",
+                                            "type": "boolean",
+                                            "default": true
+                                        },
+                                        "summaryTop": {
+                                            "description": "Whether to print a workload summary on the top.",
+                                            "type": "boolean",
+                                            "default": true
                                         }
                                     }
                                 }

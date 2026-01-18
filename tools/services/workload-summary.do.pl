@@ -89,6 +89,8 @@ my $until_date = undef;
 # - an optional options args with following keys:
 #   > per_command: whether we are just printing a single command, defaulting to false
 #   > environment: the running environment identifier, used by the per-period output
+#   > bottomSummary: whether to print a summary at the bottom, defaulting to true
+#   > topSummary: whether to print a summary at the top, defaulting to true
 # (O):
 # - the output temp filename
 
@@ -98,6 +100,8 @@ sub printable_from {
 	my $per_command = $opts->{per_command} // false;
 	msgVerbose( "found per_command='".( $per_command ? 'true' : 'false' )."'" );
 	my $environment = $opts->{environment} // '';
+	my $bottomSummary = $opts->{bottomSummary} // true;
+	my $topSummary = $opts->{topSummary} // true;
 	msgVerbose( "found environment='$environment'" );
 
 	my $json = decode_json( path( $jsonfname )->slurp_utf8 );
@@ -149,6 +153,10 @@ sub printable_from {
 		$prefix = '     ';
 		$sep = '=';
 		$stdout .= TTP::pad( "| Workloads summary since $since_date in '$environment' environment", $totLength-57, ' ' );
+		if( !$per_command && $topSummary ){
+			$stdout .= TTP::pad( "| ".sprintf( "%3d", $count )." total command(s)", $totLength-1, ' ' )."|".EOL;
+			$stdout .= TTP::pad( "| ".sprintf( "%3d", $rc )." with an exit code greater than zero", $totLength-1, ' ' )."|".EOL;
+		}
 	} else {
 		msgErr( "unhandled publication type" );
 	}
@@ -176,7 +184,7 @@ sub printable_from {
 				}
 			}
 		}
-		if( !$per_command ){
+		if( !$per_command && $bottomSummary ){
 			$stdout .= TTP::pad( "+", $maxLength+5, $sep ).TTP::pad( "+", 26, $sep ).TTP::pad( "+", 26, $sep ).TTP::pad( "+", 6, $sep )."+".EOL;
 			$stdout .= TTP::pad( "| ".sprintf( "%3d", $count )." total command(s)", $totLength-1, ' ' )."|".EOL;
 			$stdout .= TTP::pad( "| ".sprintf( "%3d", $rc )." with an exit code greater than zero", $totLength-1, ' ' )."|".EOL;
@@ -197,7 +205,7 @@ sub printable_from {
 
 # -------------------------------------------------------------------------------------------------
 # print a funny per-period workload summary
-# this is almost same that per-workload summary, just print a summary for all workloads of the period
+# this is almost same that per-workload summary, adding a top-summary for all workloads of the period
 # we order that by workload/node
 
 =pod
@@ -245,7 +253,9 @@ sub doPerPeriod {
 				# get the running environment
 				$res = TTP::filter( "services.pl list -environment" );
 				my $environment = $res->[0];
-				my $textfname = printable_from( $jsonfname, { environment => $environment });
+				my $bottom = TTP::var( 'workloadSummary', 'perPeriod', 'publish', 'bottomSummary' ) // true;
+				my $top = TTP::var( 'workloadSummary', 'perPeriod', 'publish', 'topSummary' ) // true;
+				my $textfname = printable_from( $jsonfname, { environment => $environment, bottomSummary => $bottom, topSummary => $top });
 				$res = TTP::commandExec( $commands, {
 					macros => {
 						JSONFNAME => $jsonfname,
