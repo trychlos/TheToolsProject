@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.28.0-rc.0
+### 4.28.0
 
-    Release date: 
+    Release date: 2026- 1-18
 
     - Fix Text metric publication when several differents labels are used
     - Fix JSON schemas
