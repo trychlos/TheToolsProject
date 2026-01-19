@@ -253,8 +253,8 @@ sub doPerPeriod {
 				# get the running environment
 				$res = TTP::filter( "services.pl list -environment" );
 				my $environment = $res->[0];
-				my $bottom = TTP::var( 'workloadSummary', 'perPeriod', 'publish', 'bottomSummary' ) // true;
-				my $top = TTP::var( 'workloadSummary', 'perPeriod', 'publish', 'topSummary' ) // true;
+				my $bottom = TTP::var([ 'workloadSummary', 'perPeriod', 'publish', 'bottomSummary' ]) // true;
+				my $top = TTP::var([ 'workloadSummary', 'perPeriod', 'publish', 'topSummary' ]) // true;
 				my $textfname = printable_from( $jsonfname, { environment => $environment, bottomSummary => $bottom, topSummary => $top });
 				$res = TTP::commandExec( $commands, {
 					macros => {

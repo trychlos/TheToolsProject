@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - services.pl workload-summary fix
 
 ### 4.28.0
 
@@ -24,4 +24,4 @@
 
 ---
 P. Wieser
-- Last updated on 2026, Jan. 5th
+- Last updated on 2026, Jan. 19th
