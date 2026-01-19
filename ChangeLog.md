@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.28.1-rc.0
+### 4.28.1
 
-    Release date: 
+    Release date: 2026- 1-19
 
     - services.pl workload-summary fix
 
