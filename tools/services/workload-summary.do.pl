@@ -153,14 +153,14 @@ sub printable_from {
 		$prefix = '     ';
 		$sep = '=';
 		$stdout .= TTP::pad( "| Workloads summary since $since_date in '$environment' environment", $totLength-57, ' ' );
-		if( !$per_command && $topSummary ){
-			$stdout .= TTP::pad( "| ".sprintf( "%3d", $count )." total command(s)", $totLength-1, ' ' )."|".EOL;
-			$stdout .= TTP::pad( "| ".sprintf( "%3d", $rc )." with an exit code greater than zero", $totLength-1, ' ' )."|".EOL;
-		}
 	} else {
 		msgErr( "unhandled publication type" );
 	}
 	$stdout .= TTP::pad( "Started at", 26, ' ' ).TTP::pad( "Ended at", 26, ' ' )." Rc |".EOL;
+	if( !$per_command && $topSummary ){
+		$stdout .= TTP::pad( "| ".sprintf( "%3d", $count )." total command(s)", $totLength-1, ' ' )."|".EOL;
+		$stdout .= TTP::pad( "| ".sprintf( "%3d", $rc )." with an exit code greater than zero", $totLength-1, ' ' )."|".EOL;
+	}
 	$stdout .= TTP::pad( "+", $maxLength+5, $sep ).TTP::pad( "+", 26, $sep ).TTP::pad( "+", 26, $sep ).TTP::pad( "+", 6, $sep )."+".EOL;
 	if( $count ){
 		my $first = true;

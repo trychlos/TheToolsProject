@@ -8,6 +8,7 @@
 
     - TTP::Meteor::getApplication() now also checks the ability to run a Meteor command, and returns the Meteor version to the caller
     - Define new meteor.pl deploy verb, thus bumping minor candidate version number
+    - services.pl workload-summary fix
 
 ### 4.28.1
 
