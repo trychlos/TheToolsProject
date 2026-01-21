@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.29.0-rc.0
+### 4.29.0
 
-    Release date: 
+    Release date: 2026 -1-21
 
     - TTP::Meteor::getApplication() now also checks the ability to run a Meteor command, and returns the Meteor version to the caller
     - Define new meteor.pl deploy verb, thus bumping minor candidate version number
@@ -32,4 +32,4 @@
 
 ---
 P. Wieser
-- Last updated on 2026, Jan. 19th
+- Last updated on 2026, Jan. 21st
