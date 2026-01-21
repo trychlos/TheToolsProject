@@ -80,7 +80,8 @@ sub appFinder {
 # - an application object with following keys:
 #   > dir: the path to the application directory
 #   > json: the path to the package.json file
-#   > name: the name of the application
+#   > name: the name of the application, from package.json
+#   > version: the Meteor version for the application
 # - returns undef if not a Meteor application
 
 sub getApplication {
@@ -96,8 +97,9 @@ sub getApplication {
 		}
 		# must have a package.json with 'name' and 'meteor' keys
 		my $json = File::Spec->catfile( $dir, 'package.json' );
+		my $content;
 		if( -r $json ){
-			my $content = decode_json( path( $json )->slurp_utf8 );
+			$content = decode_json( path( $json )->slurp_utf8 );
 			# expect a non-empty 'name' value
 			if( !$content->{name} ){
 				msgVerbose( "$json: expects a 'name' key, not found" );
@@ -108,15 +110,24 @@ sub getApplication {
 				msgVerbose( "$json: expects a 'meteor' key, not found" );
 				return undef;
 			}
-			$res = {
-				dir => $dir,
-				json => $json,
-				name => $content->{name}
-			};
 		} else {
 			msgVerbose( "$json: file not found or not readable" );
 			return undef;
 		}
+		# must accept the execution of meteor commands
+		my $command = '(cd $dir; meteor --version)';
+		my $out = TTP::commandExec( $command );
+		if( @{$out->{stderrs}} ){
+			msgVerbose( "$dir: $out->{stderrs}->[0]" );
+			return undef;
+		}
+		my $version = $out->{stdouts}->[0];
+		$res = {
+			dir => $dir,
+			json => $json,
+			name => $content->{name},
+			version => $version
+		};
 	} else {
 		msgVerbose( "$dir: not a directory" );
 		return undef;

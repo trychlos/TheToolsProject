@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - TTP::Meteor::getApplication() now also checks the ability to run a Meteor command, and returns the Meteor version to the caller
 
 ### 4.28.1
 
