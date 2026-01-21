@@ -17,7 +17,40 @@
 # @(@) Note 1: Deploying from any environment 'A' to any environment 'B' always requires the availability of the json deployment description file,
 # @(@)         which is not part of any bundle, so not deployed, and is expected to be only available in the development environment(s).
 # @(@) Note 2: The JSON deployment file contains sensitive data. Remind that you MUST not publish it, and consider adding all your 'private/' subdirectories to your .gitignore.
-# @(@) Note 3: If previous sentences are not clear enough, this verb is expected to be run against a local development environment.
+# @(@) Note 3: If previous sentences are not clear enough, this verb is expected to be run against a local (development) environment.
+#
+#  Preparing the first deployement:
+#   - on ZimbraAdmin:
+#     > created a dedicated mail account
+#           + record in Keepass
+#   - on target host:
+#     > have a dedicated filesystem
+#       # lvcreate -n lvizmonitor /dev/vgdata -L 5G
+#       # mkfs.xfs /dev/vgdata/lvizmonitor
+#     > create an accout with ad-hoc uid, gid
+#       # useradd -d /home/izmonitor -u 982 -g 982 -m izmonitor
+#       # cp -rp /home/izmonitor /tmp
+#       # rm -vf /home/izmonitor/{.b,.k,.v}*
+#       # vi /etc/fstab
+#       # systemctl daemon-reload
+#       # mount /home/izmonitor
+#       # chown izmonitor:izmonitor /home/izmonitor
+#       # chmod 0700 /home/izmonitor
+#       # mv -v /tmp/izmonitor/{.b,.k,.v}* /home/izmonitor/
+#       # rmdir /tmp/izmonitor
+#     > define the mongo database account
+#       the Mongo user for the application must have been created before the first startup:
+#       # mongosh --authenticationDatabase admin -u rootAdmin -p UftIqxBLvPCD
+#         > use izmonitor
+#         > db.createUser({ user: 'izmonitor', pwd: 'xxxxxx', roles: [{ role: 'dbOwner', db: 'izmonitor' }]})
+#           + record in Keepass
+#         > use admin
+#         > db.system.users.find()
+#       note 1: really 'use izmonitor' even if the database doesn't yet exists at that time
+#       note 2: the izmonitor database will be actually created at first document insertion
+#     > choose the NodeJS listening port:
+#       # netstat -anp | grep 1024 is your friend
+#       $ find .. -type f -name 'targets.json' -exec grep port {} \; -print
 #
 # TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
@@ -45,6 +78,7 @@ use File::Spec;
 use JSON;
 use Path::Tiny;
 use Time::Moment;
+use URI::Encode qw( uri_encode uri_decode );
 
 use TTP::Meteor;
 
@@ -199,6 +233,124 @@ sub checkToSpace {
 }
 
 # -------------------------------------------------------------------------------------------------
+# Dump a collection into a .tgz file, and transfert it to the target host
+# (I):
+# - the collection name
+# (O):
+# - the path to the tgz file on the target host
+
+sub collectionDumpSource {
+	my ( $collection ) = @_;
+	my $uri = mongoURI( $from );
+	my $db = mongoDatabase( $from );
+	if( TTP::errs()){
+		msgVerbose( "an error happened when decoding 'from' Mongo URL" );
+		return undef;
+	}
+	my $tgz = "/tmp/$collection.tgz";
+	my $srctmpdir = "/tmp/$collection";
+	# if source is local
+	if( isLocal( $from )){
+		msgVerbose( "collectionDumpSource() ...dumping to '$srctmpdir'" );
+		my $res = TTP::commandExec( "mongodump --uri $uri --collection $collection --out $srctmpdir" );
+		if( !$res->{success} ){
+			msgErr( $res->{stderrs}->[0] );
+			return undef;
+		}
+		msgVerbose( "collectionDumpSource() ...compressing to '$tgz'" );
+		$res = TTP::commandExec( "(cd $srctmpdir/$db; tar -czf - ".uri_encode( $collection ).".* > $tgz)" );  # have a local /tmp.tgz
+		if( !$res->{success} ){
+			msgErr( $res->{stderrs}->[0] );
+			return undef;
+		}
+		if( !isLocal( $to )){
+			msgVerbose( "collectionDumpSource() ...transfering to '$to->{host}'" );
+			$res = TTP::commandExec( "scp $tgz $to->{host}:/tmp/" );     # have a /tmp.tgz on the target
+			if( !$res->{success} ){
+				msgErr( $res->{stderrs}->[0] );
+				return undef;
+			}
+		}
+	} else {
+		msgVerbose( "collectionDumpSource() ...dumping to '$from->{host}:$srctmpdir'" );
+		my $res = TTP::commandExec( "ssh $from->{host} \"mongodump --uri $uri --collection $collection --out $srctmpdir\"" );
+		if( !$res->{success} ){
+			msgErr( $res->{stderrs}->[0] );
+			return undef;
+		}
+		msgVerbose( "collectionDumpSource() ...compressing to '$from->{host}:$tgz'" );
+		$res = TTP::commandExec( "ssh $from->{host} \"(cd $srctmpdir/$db; tar -czf - ".uri_encode( $collection ).".* > $tgz)\"" );
+		if( !$res->{success} ){
+			msgErr( $res->{stderrs}->[0] );
+			return undef;
+		}
+		if( $from->{host} ne $to->{host} ){
+			msgVerbose( "collectionDumpSource() ...get a local copy" );
+			$res = TTP::commandExec( "scp $from->{host}:$tgz /tmp/" );
+			if( !$res->{success} ){
+				msgErr( $res->{stderrs}->[0] );
+				return undef;
+			}
+			if( !isLocal( $to )){
+				msgVerbose( "collectionDumpSource() ...transfering to '$to->{host}'" );
+				$res = TTP::commandExec( "scp $tgz $to->{host}:/tmp/" );
+				if( !$res->{success} ){
+					msgErr( $res->{stderrs}->[0] );
+					return undef;
+				}
+			}
+		}
+	}
+	return $tgz;
+}
+
+# -------------------------------------------------------------------------------------------------
+# Import a collection from a .tgz file
+# (I):
+# - the collection name
+# - the pathname to the dump.tgz
+# (O):
+# - true|false
+
+sub collectionImportTarget {
+	my ( $collection, $tgz ) = @_;
+	my $uri = mongoURI( $to );
+	my $db = mongoDatabase( $to );
+	if( TTP::errs()){
+		msgVerbose( "an error happened when decoding 'to' Mongo URL" );
+		return false;
+	}
+	if( isLocal( $to )){
+		msgVerbose( "collectionImportTarget() ...uncompressing" );
+		my $res = TTP::commandExec( "(cd /tmp; rm -fr $collection; mkdir $collection; cd $collection; tar -xzf $tgz)" );
+		if( !$res->{success} ){
+			msgErr( $res->{stderrs}->[0] );
+			return false;
+		}
+		msgVerbose( "collectionImportTarget() ...restoring" );
+		$res = TTP::commandExec( "mongorestore --uri $uri --nsInclude $db.$collection /tmp/$collection/".uri_encode( $collection ).".bson --drop" );
+		if( !$res->{success} ){
+			msgErr( $res->{stderrs}->[0] );
+			return false;
+		}
+	} else {
+		msgVerbose( "collectionImportTarget() ...uncompressing" );
+		my $res = TTP::commandExec( "ssh $to->{host} \"(cd /tmp; rm -fr $collection; mkdir $collection; cd $collection; tar -xzf $tgz)\"" );
+		if( !$res->{success} ){
+			msgErr( $res->{stderrs}->[0] );
+			return false;
+		}
+		msgVerbose( "collectionImportTarget() ...restoring" );
+		$res = TTP::commandExec( "ssh $to->{host} \"mongorestore --uri $uri --nsInclude $db.$collection /tmp/$collection/".uri_encode( $collection ).".bson --drop\"" );
+		if( !$res->{success} ){
+			msgErr( $res->{stderrs}->[0] );
+			return false;
+		}
+	}
+	return true;
+}
+
+# -------------------------------------------------------------------------------------------------
 # compute current and next versions
 # version is the current date with a daily increment counter as 'yy.mm.dd.n'
 # the sequence number start from 1, and increments the last deployed version at this same date.
@@ -246,22 +398,18 @@ sub computeNextVersion {
 # -------------------------------------------------------------------------------------------------
 # deploy a bundle
 # we have here:
-# - from, the source environment properties, may be undef
+# - from: the source environment properties, may be undef
 # - to: the target environment properties
 
 sub doDeployBundle {
-	msgOut( "deploying from '".( $opt_from || "local" )."' to '".( $opt_to || "local" )."'..." );
-	# sanity checks
-	sanitize( $from );
-	sanitize( $to );
-	msgErr( "'--from' and '--to' environments cannot be both local" ) if isLocal( $from ) && isLocal( $to );
-	# check from
+	msgOut( "deploying an application bundle from '".( $opt_from || "local" )."' to '".( $opt_to || "local" )."'..." );
+	# check source
 	if( isLocal( $from )){
 		gitCheckBranch();
 	} else {
 		checkHostPath( $from );
 	}
-	# check to
+	# check target
 	# never ever deploy a bundle to a local (development) environment
 	checkHostPath( $to ) if !TTP::errs();
 	checkToSpace() if !TTP::errs();
@@ -275,12 +423,6 @@ sub doDeployBundle {
 		if( isLocal( $from )){
 			updateVersions();
 			$from->{bundle} = buildBundle();
-			my $res = TTP::commandExec( "scp $from->{bundle} $to->{host}:/tmp" );
-			if( $res->{success} ){
-				msgVerbose( "doDeployBundle() '$from->{bundle}' bundle successfully transferred to '$to->{host}'")
-			} else {
-				msgErr( $res->{stderrs}->[0] );
-			}
 		} else {
 			$from->{bundle} = "/tmp/bundle.tgz";
 			my $res = TTP::commandExec( "ssh $from->{host} \"(cd $from->{path}; tar -czf - bundle-$versions->{next} > $from->{bundle})\"" );
@@ -297,6 +439,14 @@ sub doDeployBundle {
 		}
 	}
 	# install on target environment
+	if( !TTP::errs()){
+		my $res = TTP::commandExec( "scp $from->{bundle} $to->{host}:/tmp" );
+		if( $res->{success} ){
+			msgVerbose( "doDeployBundle() '$from->{bundle}' bundle successfully transferred to '$to->{host}'")
+		} else {
+			msgErr( $res->{stderrs}->[0] );
+		}
+	}
 	if( !TTP::errs() && !isLocal( $to )){
         installTarget() &&
         setupSystemdService() &&
@@ -337,8 +487,19 @@ sub doDeployBundle {
 # deploy one or more collections
 
 sub doDeployCollections {
-	msgOut( "deploying..." );
-	msgOut( "done" );
+	msgOut( "deploying [ '".join( '\', \'', @opt_collections )."' ] collections from '".( $opt_from || "local" )."' to '".( $opt_to || "local" )."'..." );
+	foreach my $collection ( @opt_collections ){
+		msgVerbose( "doDeployCollections() deploying '$collection' collection.." );
+		my $tgz = collectionDumpSource( $collection );
+		next if !$tgz;
+		# if target is local
+		collectionImportTarget( $collection, $tgz );
+	}
+	if( TTP::errs()){
+		msgErr( TTP::errs()." errors detected", { incErr => false });
+	} else {
+		msgOut( "done" );
+	}
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -653,6 +814,46 @@ sub installTarget {
 }
 
 # -------------------------------------------------------------------------------------------------
+# returns the Mongo database
+# (I):
+# - the 'from' or 'to' object
+# (O):
+# - the to-be-accessed MongoDB database, or undef
+
+sub mongoDatabase {
+	my ( $h ) = @_;
+	my $db = undef;
+	my $uri = mongoURI( $h );
+	if( $uri ){
+		my @w = split( /\//, $uri );
+		$db = pop( @w );
+	} else {
+		msgErr( "cannot get MongoDB database URI from provided deployment properties" );
+	}
+	return $db || undef;
+}
+
+# -------------------------------------------------------------------------------------------------
+# returns the MongoDB server URI
+# (I):
+# - the 'from' or 'to' object
+# (O):
+# - the MongoDB server URI, or undef
+
+sub mongoURI {
+	my ( $h ) = @_;
+	$h->{additional_env} //= {};
+	my $uri = $h->{additional_env}{MONGO_URL};
+	$uri = "mongodb://127.0.0.1:3001/meteor" if !$uri && isLocal( $h );
+	if( $uri ){
+		msgVerbose( "mongoURI() uri='$uri'" );
+	} else {
+		msgErr( "cannot get MongoDB server URI from provided deployment properties" );
+	}
+	return $uri || undef;
+}
+
+# -------------------------------------------------------------------------------------------------
 # normalize the application path and check for its existence
 # (I):
 # - the candidate path
@@ -718,6 +919,23 @@ sub sanitize {
 		$h->{local} = true;
 		msgVerbose( "sanitize() host and path are both undefined: assuming local environment" );
 	}
+}
+
+# -------------------------------------------------------------------------------------------------
+# initialize and sanitize the 'from' object
+
+sub setFrom {
+	$from = \%{ $deployments->{targets}{$opt_from} } if $opt_from;
+	$from //= {};
+	sanitize( $from );
+}
+
+# -------------------------------------------------------------------------------------------------
+# initialize and sanitize the 'to' object
+
+sub setTo {
+	$to = \%{ $deployments->{targets}{$opt_to} };
+	sanitize( $to );
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -1092,9 +1310,8 @@ if( !TTP::errs()){
 		doListCollections() if $opt_list_collections;
 		doListEnvironments() if $opt_list_environments;
 	} else {
-		$from = \%{ $deployments->{targets}{$opt_from} } if $opt_from;
-		$from //= {};
-		$to = \%{ $deployments->{targets}{$opt_to} };
+		setFrom();
+		setTo();
 		doDeployBundle() if $opt_bundle;
 		doDeployCollections() if scalar( @opt_collections );
 	}

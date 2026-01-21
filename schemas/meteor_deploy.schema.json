@@ -26,7 +26,9 @@
                                 "- APP_ENV: the environment identifier,",
                                 "- ROOT_URL: mandatory when running nodejs.",
                                 "The additional list may also contain MAIL_URL, MONGO_URL, NODE_ENV, PORT.",
-                                "Note: when embedding username/passwords, we could take advantage of using the Chrome console, and the 'encodeURIComponent(str)' function..."
+                                "Note 1: when embedding username/passwords, we could take advantage of using the Chrome console, and the 'encodeURIComponent(str)' function...",
+                                "Note 2: the MONGO_URL environment variable is not only required in all but development environments, but also in development environments when deploying collections.",
+                                "MONGO_URL defaults to 'mongodb://127.0.0.1:3001/meteor' for local environments."
                             ],
                             "type": "object",
                             "patternProperties": {
