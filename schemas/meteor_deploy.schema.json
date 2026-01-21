@@ -1,0 +1,149 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "org.trychlos.TheToolsProject/schemas/meteor_deploy.schema.json",
+    "title": "Meteor::Deploy",
+    "description_array": [
+        "The 'meteor.pl deploy' verb relies on:",
+        "- a Meteor application project directory,",
+        "- which contains a JSON deployments definition.",
+        "This JSON deployments definition lists and describes each of the target environments that we want manage.",
+        "A deployment is always from one environment to another, with some specific rules:",
+        " - exactly one site MUST be identified as the default source, and this is most probably the development site.",
+        "Informations here must be enough to automativally generate needed scripts:",
+        " - have the name of the application, which will name the running account and the running service",
+        " - have an account with dedicated user and group",
+        " - have a dedicated filesystem for the home directory",
+        " - have a start script which sources environment variables",
+        " - maybe the appli has email capabilities: so have an email account and a mail url",
+        " - set, NodeJS and other specifics, environment variables."
+    ],
+    "type": "object",
+    "properties": {
+        "app": {
+            "description": "The common application properties.",
+            "type": "object",
+            "properties": {
+                "description": {
+                    "description": "A short description of the application.",
+                    "type": "string"
+                },
+                "name": {
+                    "description_array": [
+                        "The (mandatory) name of the application.",
+                        "Unless otherwise specified, the first word of this name is used as a default when naming user and group account, service, and other elements of the target environment."
+                    ],
+                    "type": "string"
+                }
+            }
+        },
+        "targets": {
+            "description": "The definitions of deployment targets and their properties.",
+            "type": "object",
+            "patternProperties": {
+                "^.*$": {
+                    "description": "The target environment identifier.",
+                    "type": "string",
+                    "properties": {
+                        "account_group": {
+                            "description_array": [
+                                "The user group which owns the target service, defaulting to the application name.",
+                                "Be cautious of possible collisions when several environment are defined to live in the same host."
+                            ],
+                            "type": "string"
+                        },
+                        "account_name": {
+                            "description_array": [
+                                "The user account which owns the target service, defaulting to the application name.",
+                                "Be cautious of possible collisions when several environment are defined to live in the same host."
+                            ],
+                            "type": "string"
+                        },
+                        "app_env": {
+                            "description": "The list of name and value of application environment variables.",
+                            "type": "object",
+                            "patternProperties": {
+                                "^.*$": {
+                                    "description": "The name of the environment variable, the value being the value of this environment variable.",
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "service_name": {
+                            "description_array": [
+                                "The name of the target service, defaulting to the application name.",
+                                "Be cautious of possible collisions when several environment are defined to live in the same host."
+                            ],
+                            "type": "string"
+                        },
+                        "host": {
+                            "description": "The name or IP address of the machine which hosts this environment.",
+                            "type": "string"
+                        },
+                        "label": {
+                            "description": "A label for the environment.",
+                            "type": "string"
+                        },
+                        "mail_url": {
+                            "description_array": [
+                                "The URL of the SMTP service which handles the email sendings.",
+                                "It can (should) be built like: 'smtps://<sender_email>:<sender_password>@<mail_host_name_and_port>?tls.rejectUnauthorized=false'."
+                            ],
+                            "type": "string"
+                        },
+                        "mongo_db": {
+                            "description": "The name of the MongoDB database which contains the web site data.",
+                            "type": "string"
+                        },
+                        "mongo_ip": {
+                            "description": "The IP address the MongoDB server is listening to.",
+                            "type": "string"
+                        },
+                        "mongo_port": {
+                            "description": "The post number the MongoDB server is listening to.",
+                            "type": "integer"
+                        },
+                        "mongo_url": {
+                            "description_array": [
+                                "The URL of the MongoDB server.",
+                                "It can (should) be built like: 'mongodb://<user_account>:<user_password>@<dbserver_name_and_port>/<default_database>'."
+                            ],
+                            "type": "string"
+                        },
+                        "node_env": {
+                            "description": "The NodeJS environment label.",
+                            "enum": [
+                                "development",
+                                "staging",
+                                "production"
+                            ],
+                            "type": "string",
+                            "default": "development"
+                        },
+                        "path": {
+                            "description": "The target path of the deployment.",
+                            "type": "string"
+                        },
+                        "port": {
+                            "description": "The port number NodeJS is listening to when running the web site.",
+                            "type": "integer"
+                        },
+                        "root_url": {
+                            "description_array": [
+                                "The canonical URL of the web site."
+                            ],
+                            "type": "string"
+                        },
+                        "source": {
+                            "description_array": [
+                                "The environment identifier which is the source of this one.",
+                                "Specifying a 'source' key means that only this 'source' can be used as a source when deploying to this environment.",
+                                "Default is to allow all source environments."
+                            ],
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
