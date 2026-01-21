@@ -43,7 +43,10 @@
 |  164 | 2025- 5-27 | extend commandBYOS to accept both a node name and a ttp::node |
 |  170 | 2025- 6-27 | meteor.pl create --application should be fully configurable as a TTP schema and/or with command-line options |
 |  171 | 2026- 1- 8 | MQTTGateway and SMTPGateway should be managed as standard services |
-|  172 |  |  |
+|  172 | 2026- 1-20 | review schemas to choose between camelCase, snake_case and so on |
+|      |            | see also https://cleanformatter.com/blog/complete-guide-to-text-case-formats-title-case-camelcase-snake-case-and-more |
+|  173 | 2026- 1-20 | meteor.pl deploy should honor mobile target |
+|  174 |  |  |
 
 ---
 ## Done
