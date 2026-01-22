@@ -18,6 +18,11 @@
 # @(@)         which is not part of any bundle, so not deployed, and is expected to be only available in the development environment(s).
 # @(@) Note 2: The JSON deployment file contains sensitive data. Remind that you MUST not publish it, and consider adding all your 'private/' subdirectories to your .gitignore.
 # @(@) Note 3: If previous sentences are not clear enough, this verb is expected to be run against a local (development) environment.
+# @(@) Note 4: Actions are:
+# @(@)         --bundle [--application <application_dir>] [--json <json_path>] [--from <from>] --to <to>
+# @(@)         --collection=<collection>[,<collection>[,...]] [--application <application_dir>] [--json <json_path>] [--from <from>] --to <to>
+# @(@)         --list-collections [--application <application_dir>] [--json <json_path>]
+# @(@)         --list-environments [--application <application_dir>] [--json <json_path>]
 #
 #  Preparing the first deployement:
 #   - on ZimbraAdmin:
