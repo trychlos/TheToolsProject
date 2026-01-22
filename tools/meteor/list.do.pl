@@ -6,12 +6,18 @@
 # @(-) --[no]verbose               run verbosely [${verbose}]
 # @(-) --root=<path>               root tree path [${root}]
 # @(-) --[no]applications          apply to applications [${applications}]
+# @(-) --[no]dirs                  display the application directory [${dirs}]
+# @(-) --[no]diffs                display the application directory when the application name differes [${diffs}]
 # @(-) --[no]packages              apply to packages [${packages}]
 # @(-) --bypath=<regex>            identify packages by their pathname [${bypath}]
 # @(-) --[no]tree                  display packages as a tree [${tree}]
 # @(-) --[no]callers               display packages callers [${callers}]
 # @(-) --[no]publish-infos         also display packages publication informations [${publishInfos}]
 # @(-) --[no]only-publishables     only display packages which have something to publish [${onlyPublishables}]
+#
+# @(@) Note 1: Actions are:
+# @(@)         --applications [--root <root_dir>]
+# @(@)         --packages [--root <root_dir>] [ --bypath <regex>] [--[no]tree] [--[no]callers] [--[no]publish-infos] [--[no]only-publishables]
 #
 # TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
@@ -47,6 +53,8 @@ my $defaults = {
 	verbose => 'no',
 	root => Path::Tiny->cwd,
 	applications => 'no',
+	dirs => 'no',
+	diffs => 'no',
 	packages => 'no',
 	bypath => '',
 	tree => 'no',
@@ -58,6 +66,8 @@ my $defaults = {
 my $opt_root = $defaults->{root};
 my $opt_list = false;
 my $opt_applications = false;
+my $opt_dirs = false;
+my $opt_diffs = false;
 my $opt_packages = false;
 my $opt_bypath = $defaults->{bypath};
 my $opt_tree = false;
@@ -165,6 +175,26 @@ sub buildDependenciesTree {
 }
 
 # -------------------------------------------------------------------------------------------------
+# display the Meteor applications
+# - the actual name is read from package.json
+#   > emits a warn when it doesn't correspond to the basename of the application dir
+# (I):
+# - the application object as returned from TTP::Meteor::getApplication()
+# (O):
+# - nothing
+
+sub displayApplication {
+	my ( $app ) = @_;
+
+	print " $app->{name}";
+	my $dir = $app->{dir};
+	my @subdirs = File::Spec->splitdir( $dir );
+	my $basename = pop( @subdirs );
+	print "\tdir=$app->{dir}" if $opt_dirs || ( $basename ne $app->{name} && $opt_diffs );
+	print EOL;
+}
+
+# -------------------------------------------------------------------------------------------------
 # display a dependency tree of Meteor packages
 # (I):
 # - the list of packages
@@ -214,23 +244,6 @@ sub displayDependenciesTree {
 			msgVerbose( "$pck->{name} has nothing to release" );
 			#print Dumper( $pck->{infos} );
 		}
-	}
-	return $count;
-}
-
-# -------------------------------------------------------------------------------------------------
-# display the list of the Meteor applications
-# (I):
-# - the list of applications
-# (O):
-# - the count of displayed applis
-
-sub displayApplications {
-	my ( $applications ) = @_;
-	my $count = 0;
-	foreach my $app ( sort { $a->{name} cmp $b->{name} } @{$applications} ){
-		print " $app->{name}".EOL;
-		$count += 1;
 	}
 	return $count;
 }
@@ -288,21 +301,19 @@ sub displayPackages {
 sub doListApplications {
 	msgOut( "listing Meteor applications in '$opt_root'..." );
 	my $count = 0;
-	my $displayed = 0;
-	# get the items in the root path, filtering directories which have a suitable package.json file
+	# get the items in the root path, filtering directories which are identified as a Meteor application
 	my @items = path( $opt_root )->children;
 	my @applications = ();
-	# try to get and identify all Meteor applications
-	foreach my $it ( @items ){
-		my $obj = TTP::Meteor::getApplication( $it );
-		if( $obj ){
-			$obj->{infos} = getChangeLogInfos( $it );
-			push( @applications, $obj );
+	foreach my $it ( sort @items ){
+		my $app = TTP::Meteor::getApplication( $it );
+		if( $app ){
+			$app->{infos} = getChangeLogInfos( $it );
+			push( @applications, $app );
+			displayApplication( $app );
 			$count += 1;
 		}
 	}
-	#print "packages: ".Dumper( @packages );
-	$displayed = displayApplications( \@applications );
+	#print STDERR "applications: ".Dumper( @applications );
 	msgOut( "found $count applications(s)" );
 }
 
@@ -468,6 +479,8 @@ if( !GetOptions(
 	"verbose!"				=> sub { $ep->runner()->verbose( @_ ); },
 	"root=s"				=> \$opt_root,
 	"applications!"			=> \$opt_applications,
+	"dirs!"					=> \$opt_dirs,
+	"diffs!"				=> \$opt_diffs,
 	"packages!"				=> \$opt_packages,
 	"bypath=s"				=> \$opt_bypath,
 	"tree!"					=> \$opt_tree,
@@ -489,6 +502,8 @@ msgVerbose( "got dummy='".( $ep->runner()->dummy() ? 'true':'false' )."'" );
 msgVerbose( "got verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got root='$opt_root'" );
 msgVerbose( "got applications='".( $opt_applications ? 'true':'false' )."'" );
+msgVerbose( "got dirs='".( $opt_dirs ? 'true':'false' )."'" );
+msgVerbose( "got diffs='".( $opt_diffs ? 'true':'false' )."'" );
 msgVerbose( "got packages='".( $opt_packages ? 'true':'false' )."'" );
 msgVerbose( "got bypath='$opt_bypath'" );
 msgVerbose( "got tree='".( $opt_tree ? 'true':'false' )."'" );
