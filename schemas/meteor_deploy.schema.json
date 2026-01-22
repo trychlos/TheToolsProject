@@ -24,7 +24,7 @@
                                 "The list of name and value of application additional environment variables.",
                                 "The application environment is at least set with the variables:",
                                 "- APP_ENV: the environment identifier,",
-                                "- ROOT_URL: mandatory when running nodejs.",
+                                "- ROOT_URL: mandatory when running NodeJS.",
                                 "The additional list may also contain MAIL_URL, MONGO_URL, NODE_ENV, PORT.",
                                 "Note 1: when embedding username/passwords, we could take advantage of using the Chrome console, and the 'encodeURIComponent(str)' function...",
                                 "Note 2: the MONGO_URL environment variable is not only required in all but development environments, but also in development environments when deploying collections.",
