@@ -293,6 +293,21 @@ sub getPackageMD {
 	return $Const->{package}{md};
 }
 
+# ------------------------------------------------------------------------------------------------
+# Says if the directory hosts a Meteor application project
+# (I):
+# - the directory path
+# (O):
+# - true|false
+
+sub isDevel {
+	my( $dir ) = @_;
+
+	my $app = TTP::Meteor::getApplication( $dir );
+
+	return defined( $app ) && ref( $app ) eq 'HASH';
+}
+
 1;
 
 __END__

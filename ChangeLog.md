@@ -2,11 +2,11 @@
 
 ## ChangeLog
 
-### 4.29.1-rc.0
+### 4.30.0-rc.0
 
     Release date: 
 
-    - 
+    - New TTP::Meteor::isDevel() function, thus bumping minor candidate version number
 
 ### 4.29.0
 
