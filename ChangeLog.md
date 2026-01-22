@@ -9,6 +9,7 @@
     - New TTP::Meteor::isDevel() function, thus bumping minor candidate version number
     - meteor.pl deploy honors '--dummy' option
     - meteor.pl list --applications has '--dirs' and '--diffs' new options to list the directory when it is doesn't correspond to the name of the application
+    - Fix meteor.pl publish to have the right per-day termination
 
 ### 4.29.0
 

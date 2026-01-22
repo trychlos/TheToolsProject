@@ -64,11 +64,11 @@ sub dateWithCommas {
 	my $str = Time::Moment->now->strftime( '%Y, %b.' );
 	my $day = Time::Moment->now->strftime( '%d' );
 	$day =~ s/^0//;
-	if( $day == 1 ){
+	if( $day == 1 || $day == 21 || $day == 31 ){
 		$day .= 'st';
-	} elsif( $day == 2 ){
+	} elsif( $day == 2 || $day == 22 ){
 		$day .= 'nd';
-	} elsif( $day == 3 ){
+	} elsif( $day == 3 || $day == 13 || $day == 23 ){
 		$day .= 'rd';
 	} else {
 		$day .= 'th';
@@ -91,7 +91,7 @@ sub dateWithDashes {
 
 sub checkGitBranch {
     my $res = true;
-    my $stdout = execLocal( 'git branch', { withDummy => false });
+    my $stdout = execLocal( "git branch", { withDummy => false });
 	return false if !$stdout;
 	# if we have found git branch(es), we check that current is vnext and that master exists
 	if( scalar( @{$stdout} )){
@@ -131,7 +131,7 @@ sub checkGitBranch {
 
 sub checkGitClean {
     my $res = true;
-    my $stdout = execLocal( 'git status', { withDummy => false });
+    my $stdout = execLocal( "git status", { withDummy => false });
 	return false if !$stdout;
 	# if we have found git branch(es), check that we have nothing to commit
 	if( scalar( @{$stdout} )){
@@ -159,7 +159,7 @@ sub computeNextVersion {
 
 	my @words = split( /\./, $releasedVersion );
 	$words[$#words] = $words[$#words]+1;
-	$nextVersion = join( '.', @words ).'-rc';
+	$nextVersion = join( '.', @words ).'-rc.0';
 
     return $nextVersion;
 }
@@ -331,15 +331,23 @@ sub fileMDAbbrevDate {
 		my $found = false;
 		for( my $i=$#content ; $i>=0 ; --$i ){
 			my $line = $content[$i];
-			#print "$i: $line".EOL;
-			# should find first the rc version
 			if( $line =~ m/^-\s+Last updated on/ ){
-				$line = "- Last updated on $abbrevDate";
+				$line = "- Last updated on $abbrevDate".EOL;
 				$content[$i] = $line;
 				$found = true;
 				last;
 			}
 		}
+		# make sure we have one empty line at the end of the file
+		while( true ){
+			my $line = pop( @content );
+			chomp( $line );
+			if( length( $line )){
+				push( @content, $line.EOL );
+				last;
+			}
+		}
+		# and rewrite the file
 		if( $found ){
 			msgVerbose( "$package->{$md}: updating last update date to '$abbrevDate'" );
 			if( $ep->runner()->dummy()){
@@ -515,7 +523,7 @@ sub gitCommitPostRelease {
 
 sub gitCommitReleasing {
     my ( $releasedVersion ) = @_;
-	my $stdout = execLocal( "git commit -am 'Releasing v $releasedVersion'" );
+	my $stdout = execLocal( "git commit -am 'Releasing v$releasedVersion'" );
 	return defined $stdout;
 }
 
@@ -536,7 +544,7 @@ sub gitMerge {
 sub publishGithub {
 	my ( $releasedVersion ) = @_;
 	msgOut( "publishing to Github..." );
-	my $stdout = execLocal( "git tag -am 'Releasing v $releasedVersion' $releasedVersion" );
+	my $stdout = execLocal( "git tag -am 'Releasing v$releasedVersion' $releasedVersion" );
 	return false if !$stdout;
 	$stdout = execLocal( "git pull --rebase && git push && git push --tags", { ignoreStderr => true });
 	return false if !$stdout;
