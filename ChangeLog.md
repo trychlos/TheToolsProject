@@ -7,6 +7,7 @@
     Release date: 
 
     - New TTP::Meteor::isDevel() function, thus bumping minor candidate version number
+    - meteor.pl deploy honors '--dummy' option
 
 ### 4.29.0
 

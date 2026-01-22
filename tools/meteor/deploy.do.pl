@@ -161,7 +161,10 @@ sub checkHostPath {
 		if( $host && $path ){
 			my $res = TTP::commandExec( "ssh $host \"[ -d $path ] && echo true\"" );
 			if( $res->{success} ){
-				if( $res->{stdouts}->[0] =~ m/true/ ){
+				if( $ep->runner()->dummy()){
+					$valid = true;
+					msgDummy( "checkHostPath() dummy='true': assuming fine" );
+				} elsif( $res->{stdouts}->[0] =~ m/true/ ){
 					$valid = true;
 					msgVerbose( "checkHostPath() host='$host' path=$path': ok" );
 				} else {
@@ -189,41 +192,45 @@ sub checkToSpace {
 		if( $host && $path ){
 			my $res = TTP::commandExec( "ssh $host \"du -sm ${path}/bundle/\"" );
 			if( $res->{success} ){
-				my @w = split( /\s/, $res->{stdouts}->[0] );
-				my $size_mb = $w[0];
-				my $wanted_mb = 2 * $size_mb;
-				$res = TTP::commandExec( "ssh $host \"df -BM\"" );
-				if( $res->{success} ){
-					my @greped = scalar( @{$res->{stdouts}} ) ? grep( /$path/, @{$res->{stdouts}} ) : [];
-					my @w = scalar( @greped ) ? split( /\s+/, $greped[0] ) : [];
-					my $available_mb = scalar( @w ) ? $w[3] : "0M";
-					$available_mb =~ s/.$//;
-					if( $available_mb > $wanted_mb ){
-						msgVerbose( "checkToSpace() available space=$available_mb MB, wanted=$wanted_mb MB: fine" );
-					} else {
-						msgVerbose( "checkToSpace() available space=$available_mb MB, wanted=$wanted_mb MB: have to free up some space" );
-						$res = TTP::commandExec( "ssh $host ls -1dt ${path}/bundle-*" );
-						if( $res->{success} ){
-							my $count = scalar( @{$res->{stdouts}} );
-							my @list = @{$res->{stdouts}};
-							my $keep = 2;
-							my $to_delete = $count - $keep;
-							msgVerbose( "checkToSpace()  $count versions found, $to_delete to be removed" );
-							for my $i ( 0 .. $count-1 ){
-								if( $i < $keep ){
-									msgVerbose( "checkToSpace()  keeping $list[$i]" );
-								} else {
-									msgVerbose( "checkToSpace()  removing $list[$i]" );
-									$res = TTP::commandExec( "ssh $host \"rm -fr $list[$i]\"" );
-									msgErr( $res->{stderrs}->[0] ) if !$res->{success};
-								}
-							}
-						} else {
-							msgErr( $res->{stderrs}->[0] );
-						}
-					}
+				if( $ep->runner()->dummy()){
+					msgDummy( "checkToSpace() dummy='true': assuming fine" );
 				} else {
-					msgErr( $res->{stderrs}->[0] );
+					my @w = split( /\s/, $res->{stdouts}->[0] );
+					my $size_mb = $w[0];
+					my $wanted_mb = 2 * $size_mb;
+					$res = TTP::commandExec( "ssh $host \"df -BM\"" );
+					if( $res->{success} ){
+						my @greped = scalar( @{$res->{stdouts}} ) ? grep( /$path/, @{$res->{stdouts}} ) : [];
+						my @w = scalar( @greped ) ? split( /\s+/, $greped[0] ) : [];
+						my $available_mb = scalar( @w ) ? $w[3] : "0M";
+						$available_mb =~ s/.$//;
+						if( $available_mb > $wanted_mb ){
+							msgVerbose( "checkToSpace() available space=$available_mb MB, wanted=$wanted_mb MB: fine" );
+						} else {
+							msgVerbose( "checkToSpace() available space=$available_mb MB, wanted=$wanted_mb MB: have to free up some space" );
+							$res = TTP::commandExec( "ssh $host ls -1dt ${path}/bundle-*" );
+							if( $res->{success} ){
+								my $count = scalar( @{$res->{stdouts}} );
+								my @list = @{$res->{stdouts}};
+								my $keep = 2;
+								my $to_delete = $count - $keep;
+								msgVerbose( "checkToSpace()  $count versions found, $to_delete to be removed" );
+								for my $i ( 0 .. $count-1 ){
+									if( $i < $keep ){
+										msgVerbose( "checkToSpace()  keeping $list[$i]" );
+									} else {
+										msgVerbose( "checkToSpace()  removing $list[$i]" );
+										$res = TTP::commandExec( "ssh $host \"rm -fr $list[$i]\"" );
+										msgErr( $res->{stderrs}->[0] ) if !$res->{success};
+									}
+								}
+							} else {
+								msgErr( $res->{stderrs}->[0] );
+							}
+						}
+					} else {
+						msgErr( $res->{stderrs}->[0] );
+					}
 				}
 			} else {
 				msgErr( $res->{stderrs}->[0] );
@@ -702,10 +709,13 @@ sub gitCheckBranch {
 		my $allowed = $deployments->{targets}{$opt_from}{git_branches} // [ 'master' ];
 		my $branch = TTP::commandExec( "(cd $opt_application; git branch) | grep -E '^\\*' | awk '{ print \$2 }'" );
 		if( $branch->{success} ){
-			if( scalar( @{$branch->{stdouts}} ) == 1 ){
+			if( $ep->runner()->dummy()){
+				$valid = true;
+				msgDummy( "gitCheckBranch() dummy='true': assuming fine" );
+			} elsif( scalar( @{$branch->{stdouts}} ) == 1 ){
 				if( grep( /$branch->{stdouts}->[0]/, @{$allowed} )){
+					$valid = true;
 					msgVerbose( "gitCheckBranch() got current branch $branch->{stdouts}->[0]: fine" );
-					return true;
 				} else {
 					msgErr( "got current branch $branch->{stdouts}->[0]: not in allowed branches [ '".join( '\', \'', @{$allowed} )."' ]" );
 				}
