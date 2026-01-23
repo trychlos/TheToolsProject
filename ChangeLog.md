@@ -10,6 +10,7 @@
     - meteor.pl deploy honors '--dummy' option
     - meteor.pl list --applications has '--dirs' and '--diffs' new options to list the directory when it is doesn't correspond to the name of the application
     - Fix meteor.pl publish to have the right per-day termination
+    - Define new TTP::IRunnable->runnableOptionsCount() method
 
 ### 4.29.0
 

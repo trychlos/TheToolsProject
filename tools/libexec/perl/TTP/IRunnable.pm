@@ -143,6 +143,28 @@ sub runnablePath {
 };
 
 # -------------------------------------------------------------------------------------------------
+# Getter
+# (I):
+# - none
+# (O):
+# - returns the count of options provided on the command-line
+
+sub runnableOptionsCount {
+	my ( $self ) = @_;
+
+	my $args = $self->runnableArgs();
+	# args contains the verb itself, all options and their values
+	# only count options
+	my $count = 0;
+	shift( @{$args} );
+	foreach my $arg ( @{$args} ){
+		$count += 1 if substr( $arg, 0, 1 ) eq '-';
+	}
+
+	return $count;
+};
+
+# -------------------------------------------------------------------------------------------------
 # Setter
 # (I):
 # - push a new qualifier to this runner
