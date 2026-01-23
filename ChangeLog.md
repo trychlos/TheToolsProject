@@ -11,6 +11,7 @@
     - meteor.pl list --applications has '--dirs' and '--diffs' new options to list the directory when it is doesn't correspond to the name of the application
     - Fix meteor.pl publish to have the right per-day termination
     - Define new TTP::IRunnable->runnableOptionsCount() method
+    - meteor.pl deploy --first option displays an help to prepare the first deployment to a new target
 
 ### 4.29.0
 

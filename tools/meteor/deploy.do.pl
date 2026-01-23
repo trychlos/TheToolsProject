@@ -13,6 +13,7 @@
 # @(-) --[no]list-collections      list collections in the current environment [${list_collections}]
 # @(-) --[no]list-environments     list defined target environments [${list_environments}]
 # @(-) --[no]version               whether to update the version number in source tree [${version}]
+# @(-) --[no]first                 display instructions to prepare the first deployment to a new target [${first}]
 #
 # @(@) Note 1: Deploying from any environment 'A' to any environment 'B' always requires the availability of the json deployment description file,
 # @(@)         which is not part of any bundle, so not deployed, and is expected to be only available in the development environment(s).
@@ -23,39 +24,7 @@
 # @(@)         --collection=<collection>[,<collection>[,...]] [--application <application_dir>] [--json <json_path>] [--from <from>] --to <to>
 # @(@)         --list-collections [--application <application_dir>] [--json <json_path>]
 # @(@)         --list-environments [--application <application_dir>] [--json <json_path>]
-#
-#  Preparing the first deployement:
-#   - on ZimbraAdmin:
-#     > created a dedicated mail account
-#           + record in Keepass
-#   - on target host:
-#     > have a dedicated filesystem
-#       # lvcreate -n lvizmonitor /dev/vgdata -L 5G
-#       # mkfs.xfs /dev/vgdata/lvizmonitor
-#     > create an accout with ad-hoc uid, gid
-#       # useradd -d /home/izmonitor -u 982 -g 982 -m izmonitor
-#       # cp -rp /home/izmonitor /tmp
-#       # rm -vf /home/izmonitor/{.b,.k,.v}*
-#       # vi /etc/fstab
-#       # systemctl daemon-reload
-#       # mount /home/izmonitor
-#       # chown izmonitor:izmonitor /home/izmonitor
-#       # chmod 0700 /home/izmonitor
-#       # mv -v /tmp/izmonitor/{.b,.k,.v}* /home/izmonitor/
-#       # rmdir /tmp/izmonitor
-#     > define the mongo database account
-#       the Mongo user for the application must have been created before the first startup:
-#       # mongosh --authenticationDatabase admin -u rootAdmin -p UftIqxBLvPCD
-#         > use izmonitor
-#         > db.createUser({ user: 'izmonitor', pwd: 'xxxxxx', roles: [{ role: 'dbOwner', db: 'izmonitor' }]})
-#           + record in Keepass
-#         > use admin
-#         > db.system.users.find()
-#       note 1: really 'use izmonitor' even if the database doesn't yet exists at that time
-#       note 2: the izmonitor database will be actually created at first document insertion
-#     > choose the NodeJS listening port:
-#       # netstat -anp | grep 1024 is your friend
-#       $ find .. -type f -name 'targets.json' -exec grep port {} \; -print
+# @(@)         --first
 #
 # TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
@@ -100,7 +69,8 @@ my $defaults = {
 	json => './'.File::Spec->catfile( File::Spec->catdir( 'maintainer', 'private' ), 'deployments.json' ),
 	list_collections => 'no',
 	list_environments => 'no',
-	version => 'yes'
+	version => 'yes',
+	first => 'no'
 };
 
 my $opt_application = $defaults->{application};
@@ -112,6 +82,7 @@ my $opt_json = $defaults->{json};
 my $opt_list_collections = false;
 my $opt_list_environments = false;
 my $opt_version = true;
+my $opt_first = false;
 
 # whether we want list something
 my $want_list = false;
@@ -135,18 +106,18 @@ sub buildBundle {
 	my $arch = "os.linux.x86_64";
 	my $url = getRootURL( $to );
 	if( $url ){
-		my $dir = "/tmp";
-		my $res = TTP::commandExec( "(cd $opt_application; meteor build $dir --server ${url} --architecture ${arch})" );
-		#print STDERR "res ".Dumper( $res );
-		if( $res->{success} ){
-			my @dirs = File::Spec->splitdir( $opt_application );
-			my $name = pop( @dirs );
-			my $fname = File::Spec->catpath( "", $dir, "$name.tar.gz" );
-			msgOut( "bundle '$fname' successfully built" );
-			return $fname;
-		} else {
-			msgErr( $res->{stderrs}->[0] );
-		}
+      my $dir = "/tmp";
+      my $res = TTP::commandExec( "(cd $opt_application; meteor build $dir --server ${url} --architecture ${arch})" );
+      #print STDERR "res ".Dumper( $res );
+      if( $res->{success} ){
+      	my @dirs = File::Spec->splitdir( $opt_application );
+      	my $name = pop( @dirs );
+      	my $fname = File::Spec->catpath( "", $dir, "$name.tar.gz" );
+      	msgOut( "bundle '$fname' successfully built" );
+      	return $fname;
+      } else {
+      	msgErr( $res->{stderrs}->[0] );
+      }
 	}
 }
 
@@ -159,26 +130,26 @@ sub checkHostPath {
 	my ( $h ) = @_;
 	my $valid = false;
 	if( isLocal( $h )){
-		$valid = true;
+      $valid = true;
 	} else {
-		my $host = $h->{host};
-		my $path = $h->{path};
-		if( $host && $path ){
-			my $res = TTP::commandExec( "ssh $host \"[ -d $path ] && echo true\"" );
-			if( $res->{success} ){
-				if( $ep->runner()->dummy()){
-					$valid = true;
-					msgDummy( "checkHostPath() dummy='true': assuming fine" );
-				} elsif( $res->{stdouts}->[0] =~ m/true/ ){
-					$valid = true;
-					msgVerbose( "checkHostPath() host='$host' path=$path': ok" );
-				} else {
-					msgErr( "host='$host' path=$path': not found or not available" );
-				}
-			} else {
-				msgErr( $res->{stderrs}->[0] );
-			}
-		}
+      my $host = $h->{host};
+      my $path = $h->{path};
+      if( $host && $path ){
+      	my $res = TTP::commandExec( "ssh $host \"[ -d $path ] && echo true\"" );
+      	if( $res->{success} ){
+            if( $ep->runner()->dummy()){
+            	$valid = true;
+            	msgDummy( "checkHostPath() dummy='true': assuming fine" );
+            } elsif( $res->{stdouts}->[0] =~ m/true/ ){
+            	$valid = true;
+            	msgVerbose( "checkHostPath() host='$host' path=$path': ok" );
+            } else {
+            	msgErr( "host='$host' path=$path': not found or not available" );
+            }
+      	} else {
+            msgErr( $res->{stderrs}->[0] );
+      	}
+      }
 	}
 	return $valid;
 }
@@ -190,57 +161,57 @@ sub checkHostPath {
 
 sub checkToSpace {
 	if( isLocal( $to )){
-		msgVerbose( "checkToSpace() deploying to a local target environment, space is not checked" );
+      msgVerbose( "checkToSpace() deploying to a local target environment, space is not checked" );
 	} else {
-		my $host = $to->{host};
-		my $path = $to->{path};
-		if( $host && $path ){
-			my $res = TTP::commandExec( "ssh $host \"du -sm ${path}/bundle/\"" );
-			if( $res->{success} ){
-				if( $ep->runner()->dummy()){
-					msgDummy( "checkToSpace() dummy='true': assuming fine" );
-				} else {
-					my @w = split( /\s/, $res->{stdouts}->[0] );
-					my $size_mb = $w[0];
-					my $wanted_mb = 2 * $size_mb;
-					$res = TTP::commandExec( "ssh $host \"df -BM\"" );
-					if( $res->{success} ){
-						my @greped = scalar( @{$res->{stdouts}} ) ? grep( /$path/, @{$res->{stdouts}} ) : [];
-						my @w = scalar( @greped ) ? split( /\s+/, $greped[0] ) : [];
-						my $available_mb = scalar( @w ) ? $w[3] : "0M";
-						$available_mb =~ s/.$//;
-						if( $available_mb > $wanted_mb ){
-							msgVerbose( "checkToSpace() available space=$available_mb MB, wanted=$wanted_mb MB: fine" );
-						} else {
-							msgVerbose( "checkToSpace() available space=$available_mb MB, wanted=$wanted_mb MB: have to free up some space" );
-							$res = TTP::commandExec( "ssh $host ls -1dt ${path}/bundle-*" );
-							if( $res->{success} ){
-								my $count = scalar( @{$res->{stdouts}} );
-								my @list = @{$res->{stdouts}};
-								my $keep = 2;
-								my $to_delete = $count - $keep;
-								msgVerbose( "checkToSpace()  $count versions found, $to_delete to be removed" );
-								for my $i ( 0 .. $count-1 ){
-									if( $i < $keep ){
-										msgVerbose( "checkToSpace()  keeping $list[$i]" );
-									} else {
-										msgVerbose( "checkToSpace()  removing $list[$i]" );
-										$res = TTP::commandExec( "ssh $host \"rm -fr $list[$i]\"" );
-										msgErr( $res->{stderrs}->[0] ) if !$res->{success};
-									}
-								}
-							} else {
-								msgErr( $res->{stderrs}->[0] );
-							}
-						}
-					} else {
-						msgErr( $res->{stderrs}->[0] );
-					}
-				}
-			} else {
-				msgErr( $res->{stderrs}->[0] );
-			}
-		}
+      my $host = $to->{host};
+      my $path = $to->{path};
+      if( $host && $path ){
+      	my $res = TTP::commandExec( "ssh $host \"du -sm ${path}/bundle/\"" );
+      	if( $res->{success} ){
+            if( $ep->runner()->dummy()){
+            	msgDummy( "checkToSpace() dummy='true': assuming fine" );
+            } else {
+            	my @w = split( /\s/, $res->{stdouts}->[0] );
+            	my $size_mb = $w[0];
+            	my $wanted_mb = 2 * $size_mb;
+            	$res = TTP::commandExec( "ssh $host \"df -BM\"" );
+            	if( $res->{success} ){
+                  my @greped = scalar( @{$res->{stdouts}} ) ? grep( /$path/, @{$res->{stdouts}} ) : [];
+                  my @w = scalar( @greped ) ? split( /\s+/, $greped[0] ) : [];
+                  my $available_mb = scalar( @w ) ? $w[3] : "0M";
+                  $available_mb =~ s/.$//;
+                  if( $available_mb > $wanted_mb ){
+                  	msgVerbose( "checkToSpace() available space=$available_mb MB, wanted=$wanted_mb MB: fine" );
+                  } else {
+                  	msgVerbose( "checkToSpace() available space=$available_mb MB, wanted=$wanted_mb MB: have to free up some space" );
+                  	$res = TTP::commandExec( "ssh $host ls -1dt ${path}/bundle-*" );
+                  	if( $res->{success} ){
+                        my $count = scalar( @{$res->{stdouts}} );
+                        my @list = @{$res->{stdouts}};
+                        my $keep = 2;
+                        my $to_delete = $count - $keep;
+                        msgVerbose( "checkToSpace()  $count versions found, $to_delete to be removed" );
+                        for my $i ( 0 .. $count-1 ){
+                        	if( $i < $keep ){
+                              msgVerbose( "checkToSpace()  keeping $list[$i]" );
+                        	} else {
+                              msgVerbose( "checkToSpace()  removing $list[$i]" );
+                              $res = TTP::commandExec( "ssh $host \"rm -fr $list[$i]\"" );
+                              msgErr( $res->{stderrs}->[0] ) if !$res->{success};
+                        	}
+                        }
+                  	} else {
+                        msgErr( $res->{stderrs}->[0] );
+                  	}
+                  }
+            	} else {
+                  msgErr( $res->{stderrs}->[0] );
+            	}
+            }
+      	} else {
+            msgErr( $res->{stderrs}->[0] );
+      	}
+      }
 	}
 }
 
@@ -256,62 +227,62 @@ sub collectionDumpSource {
 	my $uri = mongoURI( $from );
 	my $db = mongoDatabase( $from );
 	if( TTP::errs()){
-		msgVerbose( "an error happened when decoding 'from' Mongo URL" );
-		return undef;
+      msgVerbose( "an error happened when decoding 'from' Mongo URL" );
+      return undef;
 	}
 	my $tgz = "/tmp/$collection.tgz";
 	my $srctmpdir = "/tmp/$collection";
 	# if source is local
 	if( isLocal( $from )){
-		msgVerbose( "collectionDumpSource() ...dumping to '$srctmpdir'" );
-		my $res = TTP::commandExec( "mongodump --uri $uri --collection $collection --out $srctmpdir" );
-		if( !$res->{success} ){
-			msgErr( $res->{stderrs}->[0] );
-			return undef;
-		}
-		msgVerbose( "collectionDumpSource() ...compressing to '$tgz'" );
-		$res = TTP::commandExec( "(cd $srctmpdir/$db; tar -czf - ".uri_encode( $collection ).".* > $tgz)" );  # have a local /tmp.tgz
-		if( !$res->{success} ){
-			msgErr( $res->{stderrs}->[0] );
-			return undef;
-		}
-		if( !isLocal( $to )){
-			msgVerbose( "collectionDumpSource() ...transfering to '$to->{host}'" );
-			$res = TTP::commandExec( "scp $tgz $to->{host}:/tmp/" );     # have a /tmp.tgz on the target
-			if( !$res->{success} ){
-				msgErr( $res->{stderrs}->[0] );
-				return undef;
-			}
-		}
+      msgVerbose( "collectionDumpSource() ...dumping to '$srctmpdir'" );
+      my $res = TTP::commandExec( "mongodump --uri $uri --collection $collection --out $srctmpdir" );
+      if( !$res->{success} ){
+      	msgErr( $res->{stderrs}->[0] );
+      	return undef;
+      }
+      msgVerbose( "collectionDumpSource() ...compressing to '$tgz'" );
+      $res = TTP::commandExec( "(cd $srctmpdir/$db; tar -czf - ".uri_encode( $collection ).".* > $tgz)" );  # have a local /tmp.tgz
+      if( !$res->{success} ){
+      	msgErr( $res->{stderrs}->[0] );
+      	return undef;
+      }
+      if( !isLocal( $to )){
+      	msgVerbose( "collectionDumpSource() ...transfering to '$to->{host}'" );
+      	$res = TTP::commandExec( "scp $tgz $to->{host}:/tmp/" );     # have a /tmp.tgz on the target
+      	if( !$res->{success} ){
+            msgErr( $res->{stderrs}->[0] );
+            return undef;
+      	}
+      }
 	} else {
-		msgVerbose( "collectionDumpSource() ...dumping to '$from->{host}:$srctmpdir'" );
-		my $res = TTP::commandExec( "ssh $from->{host} \"mongodump --uri $uri --collection $collection --out $srctmpdir\"" );
-		if( !$res->{success} ){
-			msgErr( $res->{stderrs}->[0] );
-			return undef;
-		}
-		msgVerbose( "collectionDumpSource() ...compressing to '$from->{host}:$tgz'" );
-		$res = TTP::commandExec( "ssh $from->{host} \"(cd $srctmpdir/$db; tar -czf - ".uri_encode( $collection ).".* > $tgz)\"" );
-		if( !$res->{success} ){
-			msgErr( $res->{stderrs}->[0] );
-			return undef;
-		}
-		if( $from->{host} ne $to->{host} ){
-			msgVerbose( "collectionDumpSource() ...get a local copy" );
-			$res = TTP::commandExec( "scp $from->{host}:$tgz /tmp/" );
-			if( !$res->{success} ){
-				msgErr( $res->{stderrs}->[0] );
-				return undef;
-			}
-			if( !isLocal( $to )){
-				msgVerbose( "collectionDumpSource() ...transfering to '$to->{host}'" );
-				$res = TTP::commandExec( "scp $tgz $to->{host}:/tmp/" );
-				if( !$res->{success} ){
-					msgErr( $res->{stderrs}->[0] );
-					return undef;
-				}
-			}
-		}
+      msgVerbose( "collectionDumpSource() ...dumping to '$from->{host}:$srctmpdir'" );
+      my $res = TTP::commandExec( "ssh $from->{host} \"mongodump --uri $uri --collection $collection --out $srctmpdir\"" );
+      if( !$res->{success} ){
+      	msgErr( $res->{stderrs}->[0] );
+      	return undef;
+      }
+      msgVerbose( "collectionDumpSource() ...compressing to '$from->{host}:$tgz'" );
+      $res = TTP::commandExec( "ssh $from->{host} \"(cd $srctmpdir/$db; tar -czf - ".uri_encode( $collection ).".* > $tgz)\"" );
+      if( !$res->{success} ){
+      	msgErr( $res->{stderrs}->[0] );
+      	return undef;
+      }
+      if( $from->{host} ne $to->{host} ){
+      	msgVerbose( "collectionDumpSource() ...get a local copy" );
+      	$res = TTP::commandExec( "scp $from->{host}:$tgz /tmp/" );
+      	if( !$res->{success} ){
+            msgErr( $res->{stderrs}->[0] );
+            return undef;
+      	}
+      	if( !isLocal( $to )){
+            msgVerbose( "collectionDumpSource() ...transfering to '$to->{host}'" );
+            $res = TTP::commandExec( "scp $tgz $to->{host}:/tmp/" );
+            if( !$res->{success} ){
+            	msgErr( $res->{stderrs}->[0] );
+            	return undef;
+            }
+      	}
+      }
 	}
 	return $tgz;
 }
@@ -329,35 +300,35 @@ sub collectionImportTarget {
 	my $uri = mongoURI( $to );
 	my $db = mongoDatabase( $to );
 	if( TTP::errs()){
-		msgVerbose( "an error happened when decoding 'to' Mongo URL" );
-		return false;
+      msgVerbose( "an error happened when decoding 'to' Mongo URL" );
+      return false;
 	}
 	if( isLocal( $to )){
-		msgVerbose( "collectionImportTarget() ...uncompressing" );
-		my $res = TTP::commandExec( "(cd /tmp; rm -fr $collection; mkdir $collection; cd $collection; tar -xzf $tgz)" );
-		if( !$res->{success} ){
-			msgErr( $res->{stderrs}->[0] );
-			return false;
-		}
-		msgVerbose( "collectionImportTarget() ...restoring" );
-		$res = TTP::commandExec( "mongorestore --uri $uri --nsInclude $db.$collection /tmp/$collection/".uri_encode( $collection ).".bson --drop" );
-		if( !$res->{success} ){
-			msgErr( $res->{stderrs}->[0] );
-			return false;
-		}
+      msgVerbose( "collectionImportTarget() ...uncompressing" );
+      my $res = TTP::commandExec( "(cd /tmp; rm -fr $collection; mkdir $collection; cd $collection; tar -xzf $tgz)" );
+      if( !$res->{success} ){
+      	msgErr( $res->{stderrs}->[0] );
+      	return false;
+      }
+      msgVerbose( "collectionImportTarget() ...restoring" );
+      $res = TTP::commandExec( "mongorestore --uri $uri --nsInclude $db.$collection /tmp/$collection/".uri_encode( $collection ).".bson --drop" );
+      if( !$res->{success} ){
+      	msgErr( $res->{stderrs}->[0] );
+      	return false;
+      }
 	} else {
-		msgVerbose( "collectionImportTarget() ...uncompressing" );
-		my $res = TTP::commandExec( "ssh $to->{host} \"(cd /tmp; rm -fr $collection; mkdir $collection; cd $collection; tar -xzf $tgz)\"" );
-		if( !$res->{success} ){
-			msgErr( $res->{stderrs}->[0] );
-			return false;
-		}
-		msgVerbose( "collectionImportTarget() ...restoring" );
-		$res = TTP::commandExec( "ssh $to->{host} \"mongorestore --uri $uri --nsInclude $db.$collection /tmp/$collection/".uri_encode( $collection ).".bson --drop\"" );
-		if( !$res->{success} ){
-			msgErr( $res->{stderrs}->[0] );
-			return false;
-		}
+      msgVerbose( "collectionImportTarget() ...uncompressing" );
+      my $res = TTP::commandExec( "ssh $to->{host} \"(cd /tmp; rm -fr $collection; mkdir $collection; cd $collection; tar -xzf $tgz)\"" );
+      if( !$res->{success} ){
+      	msgErr( $res->{stderrs}->[0] );
+      	return false;
+      }
+      msgVerbose( "collectionImportTarget() ...restoring" );
+      $res = TTP::commandExec( "ssh $to->{host} \"mongorestore --uri $uri --nsInclude $db.$collection /tmp/$collection/".uri_encode( $collection ).".bson --drop\"" );
+      if( !$res->{success} ){
+      	msgErr( $res->{stderrs}->[0] );
+      	return false;
+      }
 	}
 	return true;
 }
@@ -378,32 +349,32 @@ sub computeNextVersion {
 	my $prev = getLastRemoteVersion( $to );	# may be undef
 	my $next = undef;
 	if( isLocal( $from )){
-		my $today = Time::Moment->now->strftime( '%y.%m.%d' );
-		my $sequence = 0;
-		if( $prev ){
-			my $prev_date = substr( $prev, 0, 8 );
-			if( $prev_date eq $today ){
-				$sequence = 0+substr( $prev, 9 );
-			}
-		}
-		$sequence += 1;
-		$next = "$today.$sequence";
+      my $today = Time::Moment->now->strftime( '%y.%m.%d' );
+      my $sequence = 0;
+      if( $prev ){
+      	my $prev_date = substr( $prev, 0, 8 );
+      	if( $prev_date eq $today ){
+            $sequence = 0+substr( $prev, 9 );
+      	}
+      }
+      $sequence += 1;
+      $next = "$today.$sequence";
 	} else {
-		my $last_from = getLastRemoteVersion( $from );
-		if( $last_from ){
-			if( $last_from eq $prev ){
-				msgErr( "cowardly refuse to deploy from '$opt_from' v$last_from to '$opt_to' already existing v$prev" );
-				return undef;
-			}
-			$next = $last_from;
-		} else {
-			msgErr( "unable to deply a non-existant version from '$opt_from'" );
-			return undef;
-		}
+      my $last_from = getLastRemoteVersion( $from );
+      if( $last_from ){
+      	if( $last_from eq $prev ){
+            msgErr( "cowardly refuse to deploy from '$opt_from' v$last_from to '$opt_to' already existing v$prev" );
+            return undef;
+      	}
+      	$next = $last_from;
+      } else {
+      	msgErr( "unable to deply a non-existant version from '$opt_from'" );
+      	return undef;
+      }
 	}
 	return {
-		prev => $prev,
-		next => $next
+      prev => $prev,
+      next => $next
 	};
 }
 
@@ -417,9 +388,9 @@ sub doDeployBundle {
 	msgOut( "deploying an application bundle from '".( $opt_from || "local" )."' to '".( $opt_to || "local" )."'..." );
 	# check source
 	if( isLocal( $from )){
-		gitCheckBranch();
+      gitCheckBranch();
 	} else {
-		checkHostPath( $from );
+      checkHostPath( $from );
 	}
 	# check target
 	# never ever deploy a bundle to a local (development) environment
@@ -429,35 +400,35 @@ sub doDeployBundle {
 	# version computing - may trigger error
 	$versions = computeNextVersion() if !TTP::errs();
 	if( !TTP::errs()){
-		msgOut( "deployed version will be $versions->{next}" );
-		# build the source bundle
-		# transfer it to the target host
-		if( isLocal( $from )){
-			updateVersions();
-			$from->{bundle} = buildBundle();
-		} else {
-			$from->{bundle} = "/tmp/bundle.tgz";
-			my $res = TTP::commandExec( "ssh $from->{host} \"(cd $from->{path}; tar -czf - bundle-$versions->{next} > $from->{bundle})\"" );
-			if( $res->{success} ){
-				$res = TTP::commandExec( "scp $from->{host}:$from->{bundle} /tmp/" );
-				if( $res->{success} ){
-					msgVerbose( "doDeployBundle() '$from->{bundle}' bundle successfully transferred from '$from->{host}'")
-				} else {
-					msgErr( $res->{stderrs}->[0] );
-				}
-			} else {
-				msgErr( $res->{stderrs}->[0] );
-			}
-		}
+      msgOut( "deployed version will be $versions->{next}" );
+      # build the source bundle
+      # transfer it to the target host
+      if( isLocal( $from )){
+      	updateVersions();
+      	$from->{bundle} = buildBundle();
+      } else {
+      	$from->{bundle} = "/tmp/bundle.tgz";
+      	my $res = TTP::commandExec( "ssh $from->{host} \"(cd $from->{path}; tar -czf - bundle-$versions->{next} > $from->{bundle})\"" );
+      	if( $res->{success} ){
+            $res = TTP::commandExec( "scp $from->{host}:$from->{bundle} /tmp/" );
+            if( $res->{success} ){
+            	msgVerbose( "doDeployBundle() '$from->{bundle}' bundle successfully transferred from '$from->{host}'")
+            } else {
+            	msgErr( $res->{stderrs}->[0] );
+            }
+      	} else {
+            msgErr( $res->{stderrs}->[0] );
+      	}
+      }
 	}
 	# install on target environment
 	if( !TTP::errs()){
-		my $res = TTP::commandExec( "scp $from->{bundle} $to->{host}:/tmp" );
-		if( $res->{success} ){
-			msgVerbose( "doDeployBundle() '$from->{bundle}' bundle successfully transferred to '$to->{host}'")
-		} else {
-			msgErr( $res->{stderrs}->[0] );
-		}
+      my $res = TTP::commandExec( "scp $from->{bundle} $to->{host}:/tmp" );
+      if( $res->{success} ){
+      	msgVerbose( "doDeployBundle() '$from->{bundle}' bundle successfully transferred to '$to->{host}'")
+      } else {
+      	msgErr( $res->{stderrs}->[0] );
+      }
 	}
 	if( !TTP::errs() && !isLocal( $to )){
         installTarget() &&
@@ -465,33 +436,33 @@ sub doDeployBundle {
         setupStartupScript() &&
         setupEnv() &&
         sysRestart();
-		if( !TTP::errs()){
+      if( !TTP::errs()){
 	        msgOut( "server deployed as v$versions->{next}" );
-		}
+      }
 	}
 	# update our local development git repository
 	if( !TTP::errs() && isLocal( $from )){
-		gitUpdateOrRevert();
+      gitUpdateOrRevert();
 	}
 =pod
-		# mobile apk preparation
-		if [ $_ret -eq 0 -a -r "${projectdir}/mobile-config.js" ]; then
-			apk="/tmp/${app_name}-v${version}.apk" &&
-			apk_release_path="/tmp/android/project/app/build/outputs/apk/release/app-release-unsigned.apk" &&
-			execcmd "rm -f ${apk}" &&
-			execcmd "jarsigner -storepass abcdef -keystore ${projectdir}/.keystore -verbose -sigalg SHA1withRSA -digestalg SHA1 ${apk_release_path} ${target_domain}" &&
-			execcmd "${HOME}/data/Android/Sdk/build-tools/29.0.2/zipalign 4 /tmp/android/project/app/build/outputs/apk/release/app-release-unsigned.apk ${apk}" &&
-			execcmd "rm -fr ${projectdir}/public/res/apk" &&
-			execcmd "mkdir -p ${projectdir}/public/res/apk" &&
-			execcmd "cp ${apk} ${projectdir}/public/res/apk/" &&
-			echo "APK prepared as ${apk}"
-			_ret=$?
-		fi
+      # mobile apk preparation
+      if [ $_ret -eq 0 -a -r "${projectdir}/mobile-config.js" ]; then
+      	apk="/tmp/${app_name}-v${version}.apk" &&
+      	apk_release_path="/tmp/android/project/app/build/outputs/apk/release/app-release-unsigned.apk" &&
+      	execcmd "rm -f ${apk}" &&
+      	execcmd "jarsigner -storepass abcdef -keystore ${projectdir}/.keystore -verbose -sigalg SHA1withRSA -digestalg SHA1 ${apk_release_path} ${target_domain}" &&
+      	execcmd "${HOME}/data/Android/Sdk/build-tools/29.0.2/zipalign 4 /tmp/android/project/app/build/outputs/apk/release/app-release-unsigned.apk ${apk}" &&
+      	execcmd "rm -fr ${projectdir}/public/res/apk" &&
+      	execcmd "mkdir -p ${projectdir}/public/res/apk" &&
+      	execcmd "cp ${apk} ${projectdir}/public/res/apk/" &&
+      	echo "APK prepared as ${apk}"
+      	_ret=$?
+      fi
 =cut
 	if( TTP::errs()){
-		msgErr( TTP::errs()." errors detected", { incErr => false });
+      msgErr( TTP::errs()." errors detected", { incErr => false });
 	} else {
-		msgOut( "done" );
+      msgOut( "done" );
 	}
 }
 
@@ -501,17 +472,73 @@ sub doDeployBundle {
 sub doDeployCollections {
 	msgOut( "deploying [ '".join( '\', \'', @opt_collections )."' ] collections from '".( $opt_from || "local" )."' to '".( $opt_to || "local" )."'..." );
 	foreach my $collection ( @opt_collections ){
-		msgVerbose( "doDeployCollections() deploying '$collection' collection.." );
-		my $tgz = collectionDumpSource( $collection );
-		next if !$tgz;
-		# if target is local
-		collectionImportTarget( $collection, $tgz );
+      msgVerbose( "doDeployCollections() deploying '$collection' collection.." );
+      my $tgz = collectionDumpSource( $collection );
+      next if !$tgz;
+      # if target is local
+      collectionImportTarget( $collection, $tgz );
 	}
 	if( TTP::errs()){
-		msgErr( TTP::errs()." errors detected", { incErr => false });
+      msgErr( TTP::errs()." errors detected", { incErr => false });
 	} else {
-		msgOut( "done" );
+      msgOut( "done" );
 	}
+}
+
+# -------------------------------------------------------------------------------------------------
+# Preparing the first deployment to a new target environment
+
+sub doFirst {
+	msgOut( "preparing the first deployment to a new target environment:" );
+	my $str = << 'HERE';
+
+  Email account(s):
+    - If the application wants send emails, then it requires an email account as the sender of the emails; this email account will log-in to the SMTP server.
+    - If the application has a contact email address (and it should), then it also needs a contact email account which will receive the contact emails.
+    So: potentially two email accounts.
+    Note 1: do not forget to record them in your Keepass.
+
+  On the target host:
+     Run user:
+        We use to define a dedicated user account and group, with uid<100 and gid<1000 and uid=gid
+        # groupadd -g <app_gid> <app_group>
+        # useradd -d /home/<app_dir> -u <app_uid> -g <app_gid> -m <app_account>
+        # cp -rp /home/<app_dir> /tmp
+        # rm -vf /home/<app_dir>/{.b,.k,.v}*
+     Dedicated filesystem
+        We use to host each application in its own dedicated filesystem, mounted under /home.
+        It is usually about 5GB large.
+        # lvcreate -n lv<app_lv> /dev/vgdata -L 5G
+        # mkfs.xfs /dev/vgdata/lv<app_lv>
+     /etc/fstab
+        add a line like
+        /dev/vgdata/lv<app_lv>                     /home/<app_dir>  xfs   defaults  0 0
+     Mount
+        # systemctl daemon-reload
+        # mount /home/<app_dir>
+        # chown -R <app_account>:<app_group> /home/<app_dir>
+        # chmod 0700 /home/<app_dir>
+        # mv -v /tmp/<app_dir>/{.b,.k,.v}* /home/<app_dir>/
+        # rmdir /tmp/<app_dir>
+     MongoDB
+        Define the mongo database account as the Mongo user for the application must have been created before the first startup.
+        # mongosh --authenticationDatabase admin -u rootAdmin -p <rootAdmin_password> (see Keepass)
+          > use <app_db>
+       	  > db.createUser({ user: '<app_mongo_admin>', pwd: 'xxxxxx', roles: [{ role: 'dbOwner', db: '<app_db>' }]})
+       	  > use admin
+       	  > db.system.users.find()
+        Note 1: really 'use iz<app_db>' even if the database doesn't yet exists at that time;
+                the <app_db> database will be actually created at first document insertion
+        Note 2: do not forget to record the application admin account and its password in your Keepass.
+     NodeJS
+        Choose the NodeJS listening port
+        We use to use ports in the 10240-1250 range
+        # netstat -anp | grep -E '1024|1025' (on the target host)
+        $ find ~/data/dev -type f -name 'deployments.json' -exec grep -i port {} \; -print (on the development station)
+        Update the corresponding entry in deployments.json 'additional_env.PORT'
+HERE
+	print $str.EOL;
+	msgOut( "end" );
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -522,9 +549,9 @@ sub doListCollections {
 	my $count = 0;
 	my $collections = getCollections();
 	foreach my $it ( @{$collections} ){
-		print " $it";
-		print EOL;
-		$count += 1;
+      print " $it";
+      print EOL;
+      $count += 1;
 	}
 	msgOut( "found $count known collection(s)" );
 }
@@ -536,10 +563,10 @@ sub doListEnvironments {
 	msgOut( "listing defined target environments for '$app->{name}' application..." );
 	my $count = 0;
 	foreach my $it ( sort keys %{$deployments->{targets}} ){
-		print " $it";
-		print " ($deployments->{targets}{$it}{label_env})" if $deployments->{targets}{$it}{label_env};
-		print EOL;
-		$count += 1;
+      print " $it";
+      print " ($deployments->{targets}{$it}{label_env})" if $deployments->{targets}{$it}{label_env};
+      print EOL;
+      $count += 1;
 	}
 	msgOut( "found $count defined target environment(s)" );
 }
@@ -558,15 +585,15 @@ sub getCollections {
 	my $out = TTP::commandExec( $cmdline );
 	#print STDERR "out ".Dumper( $out );
 	if( @{$out->{stderrs}} ){
-		msgErr( $out->{stderrs}->[0] );
+      msgErr( $out->{stderrs}->[0] );
 	} else {
-		# the output is a stringified list - has to eval it to an actual js list
-		foreach my $it ( @{$out->{stdouts}} ){
-			next if $it eq '[' or $it eq ']';
-			$it =~ s/^\s*\'//;
-			$it =~ s/\',?$//;
-			push( @{$res}, $it );
-		}
+      # the output is a stringified list - has to eval it to an actual js list
+      foreach my $it ( @{$out->{stdouts}} ){
+      	next if $it eq '[' or $it eq ']';
+      	$it =~ s/^\s*\'//;
+      	$it =~ s/\',?$//;
+      	push( @{$res}, $it );
+      }
 	}
     return $res;
 }
@@ -582,10 +609,10 @@ sub getJSON {
 	my ( $json_path ) = @_;
 	my $res;
 	if( -r $json_path ){
-		$res = decode_json( path( $json_path )->slurp_utf8 );
+      $res = decode_json( path( $json_path )->slurp_utf8 );
 	} else {
-		msgErr( "$json_path: file not found or not readable" );
-		return undef;
+      msgErr( "$json_path: file not found or not readable" );
+      return undef;
 	}
     return $res;
 }
@@ -601,12 +628,12 @@ sub getLastRemoteVersion {
 	my $host = $h->{host};
 	my $path = $h->{path};
 	if( $host && $path ){
-		my $res = TTP::commandExec( "ssh $host /bin/ls -1dt $path/bundle-* 2>/dev/null" );
-		my $list = $res->{stdouts} || [];
-		my $fname = scalar( @{$list} ) ? $list->[0] : '';
-		my ( $volume, $directories, $version ) = File::Spec->splitpath( $fname );
-		$version =~ s/^bundle-//;
-		return $version || undef;
+      my $res = TTP::commandExec( "ssh $host /bin/ls -1dt $path/bundle-* 2>/dev/null" );
+      my $list = $res->{stdouts} || [];
+      my $fname = scalar( @{$list} ) ? $list->[0] : '';
+      my ( $volume, $directories, $version ) = File::Spec->splitpath( $fname );
+      $version =~ s/^bundle-//;
+      return $version || undef;
 	}
 	return undef;
 }
@@ -623,11 +650,11 @@ sub getRootURL {
 	my ( $h ) = @_;
 	my $url = $h->{root_url};
 	if( $url ){
-		msgVerbose( "getRootURL() got root url '$url'" );
+      msgVerbose( "getRootURL() got root url '$url'" );
 	} else {
-		my $host = $h->{host};
-		$url = "https://$host";
-		msgVerbose( "getRootURL() computed default root url '$url'" );
+      my $host = $h->{host};
+      $url = "https://$host";
+      msgVerbose( "getRootURL() computed default root url '$url'" );
 	}
 	return $url;
 }
@@ -701,35 +728,35 @@ sub gitCheckBranch {
 	# are we in a git repository ?
 	my $status = TTP::commandExec( "(cd $opt_application; git status)" );
 	if( scalar( @{$status->{stderrs}} )){
-		if( $status->{stderrs}->[0] =~ m/fatal: not a git repository/ ){
-			msgVerbose( "gitCheckBranch() ".$status->{stderrs}->[0].": fine (from deployment point of view, at least)" );
-			return true;
-		}
-		msgErr( $status->{stderrs}->[0] );
+      if( $status->{stderrs}->[0] =~ m/fatal: not a git repository/ ){
+      	msgVerbose( "gitCheckBranch() ".$status->{stderrs}->[0].": fine (from deployment point of view, at least)" );
+      	return true;
+      }
+      msgErr( $status->{stderrs}->[0] );
 	# if yes, are there any uncommitted changes ?
 	} elsif( grep( /^Changes/, @{$status->{stdouts}} )){
-		msgErr( "found uncommitted changes: cowarding refusing to deploy" );
+      msgErr( "found uncommitted changes: cowarding refusing to deploy" );
 	# if not, are we on the right branch ?
 	} else {
-		my $allowed = $deployments->{targets}{$opt_from}{git_branches} // [ 'master' ];
-		my $branch = TTP::commandExec( "(cd $opt_application; git branch) | grep -E '^\\*' | awk '{ print \$2 }'" );
-		if( $branch->{success} ){
-			if( $ep->runner()->dummy()){
-				$valid = true;
-				msgDummy( "gitCheckBranch() dummy='true': assuming fine" );
-			} elsif( scalar( @{$branch->{stdouts}} ) == 1 ){
-				if( grep( /$branch->{stdouts}->[0]/, @{$allowed} )){
-					$valid = true;
-					msgVerbose( "gitCheckBranch() got current branch $branch->{stdouts}->[0]: fine" );
-				} else {
-					msgErr( "got current branch $branch->{stdouts}->[0]: not in allowed branches [ '".join( '\', \'', @{$allowed} )."' ]" );
-				}
-			} else {
-				msgErr( "unable to determine the current branch" );
-			}
-		} else {
-			msgErr( $branch->{stderrs}->[0] );
-		}
+      my $allowed = $deployments->{targets}{$opt_from}{git_branches} // [ 'master' ];
+      my $branch = TTP::commandExec( "(cd $opt_application; git branch) | grep -E '^\\*' | awk '{ print \$2 }'" );
+      if( $branch->{success} ){
+      	if( $ep->runner()->dummy()){
+            $valid = true;
+            msgDummy( "gitCheckBranch() dummy='true': assuming fine" );
+      	} elsif( scalar( @{$branch->{stdouts}} ) == 1 ){
+            if( grep( /$branch->{stdouts}->[0]/, @{$allowed} )){
+            	$valid = true;
+            	msgVerbose( "gitCheckBranch() got current branch $branch->{stdouts}->[0]: fine" );
+            } else {
+            	msgErr( "got current branch $branch->{stdouts}->[0]: not in allowed branches [ '".join( '\', \'', @{$allowed} )."' ]" );
+            }
+      	} else {
+            msgErr( "unable to determine the current branch" );
+      	}
+      } else {
+      	msgErr( $branch->{stderrs}->[0] );
+      }
 	}
 	return $valid;
 }
@@ -741,20 +768,20 @@ sub gitCheckBranch {
 
 sub gitUpdateOrRevert {
 	if( scalar( @{$from->{updatedFiles}} )){
-		if( $opt_version ){
-			msgVerbose( "gitUpdateOrRevert() updating and tagging local git repository" );
-			my $res = TTP::commandExec( "cd $opt_application && git add ".join( ' ', @{$from->{updatedFiles}} ));
-			$res = TTP::commandExec( "cd $opt_application && git commit -m \"Deploy v$versions->{next} to \'$opt_to\' site\"" ) if $res->{success};
-			$res = TTP::commandExec( "cd $opt_application && git tag -am \"Releasing v$versions->{next} to \'$opt_to\' site\" $versions->{next}" ) if $res->{success};
-			$res = TTP::commandExec( "cd $opt_application && git remote" ) if $res->{success};
-			if( $res->{success} && scalar( @{$res->{stdouts}} ) > 0 ){
-				msgVerbose( "gitUpdateOrRevert() updating and tagging remote git repository" );
-				$res = TTP::commandExec( "(cd $opt_application && git push && git push --tags)" );
-			}
-		} else {
-			msgVerbose( "gitUpdateOrRevert() reverting updated versioned files" );
-			my $res = TTP::commandExec( "cd $opt_application && git checkout ".join( ' ', @{$from->{updatedFiles}} ));
-		}
+      if( $opt_version ){
+      	msgVerbose( "gitUpdateOrRevert() updating and tagging local git repository" );
+      	my $res = TTP::commandExec( "cd $opt_application && git add ".join( ' ', @{$from->{updatedFiles}} ));
+      	$res = TTP::commandExec( "cd $opt_application && git commit -m \"Deploy v$versions->{next} to \'$opt_to\' site\"" ) if $res->{success};
+      	$res = TTP::commandExec( "cd $opt_application && git tag -am \"Releasing v$versions->{next} to \'$opt_to\' site\" $versions->{next}" ) if $res->{success};
+      	$res = TTP::commandExec( "cd $opt_application && git remote" ) if $res->{success};
+      	if( $res->{success} && scalar( @{$res->{stdouts}} ) > 0 ){
+            msgVerbose( "gitUpdateOrRevert() updating and tagging remote git repository" );
+            $res = TTP::commandExec( "(cd $opt_application && git push && git push --tags)" );
+      	}
+      } else {
+      	msgVerbose( "gitUpdateOrRevert() reverting updated versioned files" );
+      	my $res = TTP::commandExec( "cd $opt_application && git checkout ".join( ' ', @{$from->{updatedFiles}} ));
+      }
 	}
 }
 
@@ -782,48 +809,48 @@ sub installTarget {
 	msgVerbose( "installTarget() installing the provided '$from->{bundle}' bundle" );
 	my $res = TTP::commandExec( "scp $from->{bundle} $to->{host}:/tmp" );
 	if( !$res->{success} ){
-		msgErr( $res->{stderrs}->[0] );
-		return false;
+      msgErr( $res->{stderrs}->[0] );
+      return false;
 	}
 	msgVerbose( "installTarget()  ...removing current symlink" );
 	$res = TTP::commandExec( "ssh $to->{host} \"cd $to->{path} && rm -f bundle\"" );
 	if( !$res->{success} ){
-		msgErr( $res->{stderrs}->[0] );
-		return false;
+      msgErr( $res->{stderrs}->[0] );
+      return false;
 	}
 	msgVerbose( "installTarget()  ...extracting" );
 	$res = TTP::commandExec( "ssh $to->{host} \"cd $to->{path} && tar -xzf $from->{bundle}\"" );
 	if( !$res->{success} ){
-		msgErr( $res->{stderrs}->[0] );
-		return false;
+      msgErr( $res->{stderrs}->[0] );
+      return false;
 	}
 	msgVerbose( "installTarget()  ...changing ownership" );
 	my $uid = GetUserAccount( $to );
 	my $gid = getUserGroup( $to );
 	if( isLocal( $from )){
-		$res = TTP::commandExec( "ssh $to->{host} \"cd $to->{path} && chown -R $uid:$gid bundle\"" );
-		if( !$res->{success} ){
-			msgErr( $res->{stderrs}->[0] );
-			return false;
-		}
-		msgVerbose( "installTarget()  ...renaming" );
-		$res = TTP::commandExec( "ssh $to->{host} \"cd $to->{path} && mv bundle bundle-$versions->{next}\"" );
-		if( !$res->{success} ){
-			msgErr( $res->{stderrs}->[0] );
-			return false;
-		}
+      $res = TTP::commandExec( "ssh $to->{host} \"cd $to->{path} && chown -R $uid:$gid bundle\"" );
+      if( !$res->{success} ){
+      	msgErr( $res->{stderrs}->[0] );
+      	return false;
+      }
+      msgVerbose( "installTarget()  ...renaming" );
+      $res = TTP::commandExec( "ssh $to->{host} \"cd $to->{path} && mv bundle bundle-$versions->{next}\"" );
+      if( !$res->{success} ){
+      	msgErr( $res->{stderrs}->[0] );
+      	return false;
+      }
 	} else {
-		$res = TTP::commandExec( "ssh $to->{host} \"cd $to->{path} && chown -R $uid:$gid bundle-$versions->{next}\"" );
-		if( !$res->{success} ){
-			msgErr( $res->{stderrs}->[0] );
-			return false;
-		}
+      $res = TTP::commandExec( "ssh $to->{host} \"cd $to->{path} && chown -R $uid:$gid bundle-$versions->{next}\"" );
+      if( !$res->{success} ){
+      	msgErr( $res->{stderrs}->[0] );
+      	return false;
+      }
 	}
 	msgVerbose( "installTarget()  ...restablishing symlink" );
 	$res = TTP::commandExec( "ssh $to->{host} \"cd $to->{path} && ln -s bundle-$versions->{next} bundle\"" );
 	if( !$res->{success} ){
-		msgErr( $res->{stderrs}->[0] );
-		return false;
+      msgErr( $res->{stderrs}->[0] );
+      return false;
 	}
 	return true;
 }
@@ -840,10 +867,10 @@ sub mongoDatabase {
 	my $db = undef;
 	my $uri = mongoURI( $h );
 	if( $uri ){
-		my @w = split( /\//, $uri );
-		$db = pop( @w );
+      my @w = split( /\//, $uri );
+      $db = pop( @w );
 	} else {
-		msgErr( "cannot get MongoDB database URI from provided deployment properties" );
+      msgErr( "cannot get MongoDB database URI from provided deployment properties" );
 	}
 	return $db || undef;
 }
@@ -861,9 +888,9 @@ sub mongoURI {
 	my $uri = $h->{additional_env}{MONGO_URL};
 	$uri = "mongodb://127.0.0.1:3001/meteor" if !$uri && isLocal( $h );
 	if( $uri ){
-		msgVerbose( "mongoURI() uri='$uri'" );
+      msgVerbose( "mongoURI() uri='$uri'" );
 	} else {
-		msgErr( "cannot get MongoDB server URI from provided deployment properties" );
+      msgErr( "cannot get MongoDB server URI from provided deployment properties" );
 	}
 	return $uri || undef;
 }
@@ -879,14 +906,14 @@ sub normalizeApplicationPath {
 	my ( $path ) = @_;
 	my $normalized = $path;
 	if( substr( $path, 0, 1 ) ne "/" ){
-		$normalized = path( $path )->realpath;
-		msgVerbose( "normalizeApplicationPath() path='$path' normalized to '$normalized'" );
+      $normalized = path( $path )->realpath;
+      msgVerbose( "normalizeApplicationPath() path='$path' normalized to '$normalized'" );
 	}
 	if( -d $normalized ){
-		msgVerbose( "normalizeApplicationPath() path='$normalized' exists" );
+      msgVerbose( "normalizeApplicationPath() path='$normalized' exists" );
 	} else {
-		msgErr( "--application='$opt_application': directory not found or not available" );
-		$normalized = undef;
+      msgErr( "--application='$opt_application': directory not found or not available" );
+      $normalized = undef;
 	}
 	return $normalized;
 }
@@ -905,13 +932,13 @@ sub normalizeFilePath {
 	my ( $fname ) = @_;
 	my $normalized = $fname;
 	if( substr( $fname, 0, 1 ) ne "/" ){
-		my ( $volume, $directories, $filename ) = File::Spec->splitpath( $fname );
-		my @in_dirs = File::Spec->splitdir( $directories );
-		shift( @in_dirs ) if !$in_dirs[0];
-		my @app_dirs = File::Spec->splitdir( $opt_application );
-		unshift( @in_dirs, @app_dirs );
-		$normalized = File::Spec->catfile( File::Spec->catdir( @in_dirs ), $filename );
-		msgVerbose( "normalizeFilePath() filename='$fname' normalized to '$normalized'" );
+      my ( $volume, $directories, $filename ) = File::Spec->splitpath( $fname );
+      my @in_dirs = File::Spec->splitdir( $directories );
+      shift( @in_dirs ) if !$in_dirs[0];
+      my @app_dirs = File::Spec->splitdir( $opt_application );
+      unshift( @in_dirs, @app_dirs );
+      $normalized = File::Spec->catfile( File::Spec->catdir( @in_dirs ), $filename );
+      msgVerbose( "normalizeFilePath() filename='$fname' normalized to '$normalized'" );
 	}
 	return $normalized;
 }
@@ -926,13 +953,13 @@ sub normalizeFilePath {
 sub sanitize {
 	my ( $h ) = @_;
 	if( $h->{host} && $h->{path} ){
-		delete $h->{local};
-		msgVerbose( "sanitize() host='$h->{host}' path='$h->{path}': assuming remote environment" );
+      delete $h->{local};
+      msgVerbose( "sanitize() host='$h->{host}' path='$h->{path}': assuming remote environment" );
 	} else {
-		delete $h->{host};
-		delete $h->{path};
-		$h->{local} = true;
-		msgVerbose( "sanitize() host and path are both undefined: assuming local environment" );
+      delete $h->{host};
+      delete $h->{path};
+      $h->{local} = true;
+      msgVerbose( "sanitize() host and path are both undefined: assuming local environment" );
 	}
 }
 
@@ -979,7 +1006,7 @@ sub setupEnv {
 	push( @{$content}, "export ROOT_URL=\"$to->{root_url}\"" ) if $to->{root_url};
 	# set additional environment variables
 	foreach my $k ( sort keys %{$to->{additional_env}} ){
-		push( @{$content}, "export $k=\"$to->{additional_env}{$k}\"" );
+      push( @{$content}, "export $k=\"$to->{additional_env}{$k}\"" );
 	}
 	# set APP_ENV
 	push( @{$content}, "export APP_ENV=\"$opt_to\"" );
@@ -988,13 +1015,13 @@ sub setupEnv {
 	path( $tmpname )->spew_utf8( join( EOL, @{$content} ));
 	my $res = TTP::commandExec( "scp $tmpname $to->{host}:$to->{path}/$fname" );
 	if( !$res->{success} ){
-		msgErr( $res->{stderrs}->[0] );
-		return false;
+      msgErr( $res->{stderrs}->[0] );
+      return false;
 	}
 	$res = TTP::commandExec( "ssh $to->{host} \"chown $account_name:$account_group $to->{path}/$fname && chmod 0600 $to->{path}/$fname\"" );
 	if( !$res->{success} ){
-		msgErr( $res->{stderrs}->[0] );
-		return false;
+      msgErr( $res->{stderrs}->[0] );
+      return false;
 	}
 	return true;
 }
@@ -1032,13 +1059,13 @@ sub setupStartupScript {
 	path( $tmpname )->spew_utf8( join( EOL, @{$content} ));
 	my $res = TTP::commandExec( "scp $tmpname $to->{host}:$to->{path}/$fname" );
 	if( !$res->{success} ){
-		msgErr( $res->{stderrs}->[0] );
-		return false;
+      msgErr( $res->{stderrs}->[0] );
+      return false;
 	}
 	$res = TTP::commandExec( "ssh $to->{host} \"chown $account_name:$account_group $to->{path}/$fname && chmod a+x $to->{path}/$fname\"" );
 	if( !$res->{success} ){
-		msgErr( $res->{stderrs}->[0] );
-		return false;
+      msgErr( $res->{stderrs}->[0] );
+      return false;
 	}
 	return true;
 }
@@ -1081,13 +1108,13 @@ sub setupSystemdService {
 	path( $tmpname )->spew_utf8( join( EOL, @{$content} ));
 	my $res = TTP::commandExec( "scp $tmpname $to->{host}:$todir/$fname" );
 	if( !$res->{success} ){
-		msgErr( $res->{stderrs}->[0] );
-		return false;
+      msgErr( $res->{stderrs}->[0] );
+      return false;
 	}
 	$res = TTP::commandExec( "ssh $to->{host} \"systemctl daemon-reload && systemctl enable $service_name\"" );
 	if( !$res->{success} ){
-		msgErr( $res->{stderrs}->[0] );
-		return false;
+      msgErr( $res->{stderrs}->[0] );
+      return false;
 	}
 	return true;
 }
@@ -1102,8 +1129,8 @@ sub sysRestart {
     msgVerbose( "sysRestart() restarting the target '$service_name' service on '$to->{host}'" );
 	my $res = TTP::commandExec( "ssh $to->{host} \"systemctl restart $service_name\"" );
 	if( !$res->{success} ){
-		msgErr( $res->{stderrs}->[0] );
-		return false;
+      msgErr( $res->{stderrs}->[0] );
+      return false;
 	}
 	return true;
 }
@@ -1115,40 +1142,40 @@ sub sysRestart {
 sub updateVersions {
 	my $versionings = $deployments->{versioning} // [];
 	if( $versions && $versions->{next} && scalar( @{$versionings} )){
-		msgVerbose( "updateVersions() versions: ".TTP::chompDumper( $versions ));
-		$from->{updatedFiles} = [];
-		foreach my $it ( @${versionings} ){
-			if( $it->{filename} && $it->{pattern} && $it->{replacement} ){
-				my $fname = normalizeFilePath( $it->{filename} );
-				if( -r $fname ){
-					my $pat = qr/$it->{pattern}/m;
-					my $rep = $it->{replacement};
-					#print STDERR "pat ".Dumper( $pat );
-					#print STDERR "rep ".Dumper( $rep );
-					my $content = path( $fname )->slurp_utf8();
-					#print STDERR "before ".Dumper( $content );
-					#msgVerbose( "matched" ) if $content =~ m/$pat/;
-					my @captures = ( $content =~ $pat );
-					#print STDERR "captures ".Dumper( @captures );
-					$content =~ s/$pat/$rep/;
-					for( reverse 0 .. $#captures ){ 
-						my $n = $_ + 1;
-						#  Many More Rules can go here, ie: \g matchers  and \{ } 
-						$content =~ s/\$$n/${captures[$_]}/g ;
-					}
-					$content =~ s/<VERSION>/$versions->{next}/g;
-					#print STDERR "after ".Dumper( $content );
-					path( $fname )->spew_utf8( $content );
-					push( @{$from->{updatedFiles}}, $fname );
-				} else {
-					msgVerbose( "updateVersions() $fname: not found or not readable, do not update version" );
-				}
-			} else {
-				msgErr( "either 'filename' or 'pattern' or 'replacement' are missing keys" );
-			}
-		}
+      msgVerbose( "updateVersions() versions: ".TTP::chompDumper( $versions ));
+      $from->{updatedFiles} = [];
+      foreach my $it ( @${versionings} ){
+      	if( $it->{filename} && $it->{pattern} && $it->{replacement} ){
+            my $fname = normalizeFilePath( $it->{filename} );
+            if( -r $fname ){
+            	my $pat = qr/$it->{pattern}/m;
+            	my $rep = $it->{replacement};
+            	#print STDERR "pat ".Dumper( $pat );
+            	#print STDERR "rep ".Dumper( $rep );
+            	my $content = path( $fname )->slurp_utf8();
+            	#print STDERR "before ".Dumper( $content );
+            	#msgVerbose( "matched" ) if $content =~ m/$pat/;
+            	my @captures = ( $content =~ $pat );
+            	#print STDERR "captures ".Dumper( @captures );
+            	$content =~ s/$pat/$rep/;
+            	for( reverse 0 .. $#captures ){ 
+                  my $n = $_ + 1;
+                  #  Many More Rules can go here, ie: \g matchers  and \{ } 
+                  $content =~ s/\$$n/${captures[$_]}/g ;
+            	}
+            	$content =~ s/<VERSION>/$versions->{next}/g;
+            	#print STDERR "after ".Dumper( $content );
+            	path( $fname )->spew_utf8( $content );
+            	push( @{$from->{updatedFiles}}, $fname );
+            } else {
+            	msgVerbose( "updateVersions() $fname: not found or not readable, do not update version" );
+            }
+      	} else {
+            msgErr( "either 'filename' or 'pattern' or 'replacement' are missing keys" );
+      	}
+      }
 	} else {
-		msgVerbose( "updateVersions() no version found or no versioning configured: nowhere or nothing to update" );
+      msgVerbose( "updateVersions() no version found or no versioning configured: nowhere or nothing to update" );
 	}
 }
 
@@ -1157,22 +1184,23 @@ sub updateVersions {
 # =================================================================================================
 
 if( !GetOptions(
-	"help!"					=> sub { $ep->runner()->help( @_ ); },
-	"colored!"				=> sub { $ep->runner()->colored( @_ ); },
-	"dummy!"				=> sub { $ep->runner()->dummy( @_ ); },
-	"verbose!"				=> sub { $ep->runner()->verbose( @_ ); },
-	"application=s"			=> \$opt_application,
-	"from=s"				=> \$opt_from,
-	"to=s"					=> \$opt_to,
-	"bundle!"				=> \$opt_bundle,
-	"collection=s"			=> \@opt_collections,
-	"json=s"				=> \$opt_json,
-	"list-collections!"		=> \$opt_list_collections,
+	"help!"            	=> sub { $ep->runner()->help( @_ ); },
+	"colored!"            => sub { $ep->runner()->colored( @_ ); },
+	"dummy!"            => sub { $ep->runner()->dummy( @_ ); },
+	"verbose!"            => sub { $ep->runner()->verbose( @_ ); },
+	"application=s"      	=> \$opt_application,
+	"from=s"            => \$opt_from,
+	"to=s"            	=> \$opt_to,
+	"bundle!"            => \$opt_bundle,
+	"collection=s"      	=> \@opt_collections,
+	"json=s"            => \$opt_json,
+	"list-collections!"      => \$opt_list_collections,
 	"list-environments!"	=> \$opt_list_environments,
-	"version!"				=> \$opt_version )){
+	"version!"            => \$opt_version,
+	"first!"            => \$opt_first )){
 
-		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
-		TTP::exit( 1 );
+      msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
+      TTP::exit( 1 );
 }
 
 if( $ep->runner()->help()){
@@ -1193,143 +1221,144 @@ msgVerbose( "got json='$opt_json'" );
 msgVerbose( "got list-collections='".( $opt_list_collections ? 'true':'false' )."'" );
 msgVerbose( "got list-environments='".( $opt_list_environments ? 'true':'false' )."'" );
 msgVerbose( "got version='".( $opt_version ? 'true':'false' )."'" );
+msgVerbose( "got first='".( $opt_first ? 'true':'false' )."'" );
 
-# check that the application path addresses a Meteor project
-# get the deployment informations
-$opt_application = normalizeApplicationPath( $opt_application );
-if( $opt_application ){
-	$app = TTP::Meteor::getApplication( $opt_application );
-	if( $app ){
-		$opt_json = normalizeFilePath( $opt_json );
-		$deployments = getJSON( $opt_json );
-		if( !$deployments->{targets} ){
-			msgErr( "$opt_json deployement file lacks of a non-empty 'targets' value" );
-		}
-		#print STDERR "targets ".Dumper( $deployments );
-	} else {
-		msgErr( "--application='$opt_application' doesn't address a Meteor application" );
-	}
-}
-
-# from, to, bundle, collection are deployment options, are ignored when just listing the environments
-# when listing, we do not deploy
-if( $opt_list_collections || $opt_list_environments ){
-	msgWarn( "'--from' is a deploiement option, ignored when listing collections or environment" ) if $opt_from;
-	msgWarn( "'--to' is a deploiement option, ignored when listing collections or environment" ) if $opt_to;
-	msgWarn( "'--bundle' is a deploiement option, ignored when listing collections or environment" ) if $opt_bundle;
-	msgWarn( "'--collection' is a deploiement option, ignored when listing collections or environment" ) if scalar @opt_collections;
-	$want_list = true;
+my $optionsCount = $ep->runner()->runnableOptionsCount();
+if( $optionsCount == 1 && $opt_first ){
+	# --first options is the only one which doesn't access Meteor project directory
 } else {
-	# when deploying, --from defaults to the current local environment
-	if( $opt_from ){
-		if( $deployments->{targets}{$opt_from} ){
-			msgVerbose( "'--from=$opt_from' is a known environment" );
-			my $allowed = $deployments->{targets}{$opt_from}{isAllowedSource} // true;
-			if( $allowed ){
-				msgVerbose( "'--from=$opt_from' is allowed as a source environment" );
-				if( $opt_to ){
-					my $targets = $deployments->{targets}{$opt_from}{allowed_targets} // [];
-					if( scalar( @{$targets} )){
-						if( grep( /$opt_to/, @{$targets} )){
-							msgVerbose( "'--from=$opt_from' accepts '$opt_to' target" );
-						} else {
-							msgErr( "'--from=$opt_from' doesn't accept '$opt_to' target among allowed [ '".join('\', \'', @{$targets} )."' ]" );
-						}
-					} else {
-						msgVerbose( "'--from=$opt_from' accepts all targets" );
-					}
-					$targets = $deployments->{targets}{$opt_from}{forbidden_targets} // [];
-					if( scalar( @{$targets} )){
-						if( grep( /$opt_to/, @{$targets} )){
-							msgErr( "'--from=$opt_from' forbids '$opt_to' target, forbidden being [ '".join('\', \'', @{$targets} )."' ]" );
-						} else {
-							msgVerbose( "'--from=$opt_from' doesn't forbid '$opt_to'" );
-						}
-					} else {
-						msgVerbose( "'--from=$opt_from' doesn't forbid any target" );
-					}
-				}
-			} else {
-				msgErr( "'--from=$opt_from' is not allowed as a source environment" );
-			}
-		} else {
-			msgErr( "'--from=$opt_from': unknown environment" );
-		}
-	} else {
-		msgVerbose( "'--from' option is not specified, defaulting to addressed local environment in '$opt_application'" );
-		if( 0 ){
-			my $devs = [];
-			foreach my $k ( sort keys %{$deployments} ){
-				my $env = $deployments->{$k};
-				my $node_env = $env->{node_env} // 'development';
-				push( @{$devs}, $k ) if $node_env eq 'development';
-			}
-			my $count = scalar( @{$devs} );
-			if( $count == 0 ){
-				msgErr( "no development environment is found: unable to get a '--from' default source" );
-			} elsif( $count == 1 ){
-				$opt_from = $devs->[0];
-				msgVerbose( "compute default source '$opt_from'" );
-			} else {
-				msgErr( "$count development environments have been found: unable to compute a '--from' default source" );
-			}
-		}
+	# check that the application path addresses a Meteor project
+	# get the deployment informations
+	$opt_application = normalizeApplicationPath( $opt_application );
+	if( $opt_application ){
+      $app = TTP::Meteor::getApplication( $opt_application );
+      if( $app ){
+      	$opt_json = normalizeFilePath( $opt_json );
+      	$deployments = getJSON( $opt_json );
+      	if( !$deployments->{targets} ){
+            msgErr( "$opt_json deployement file lacks of a non-empty 'targets' value" );
+      	}
+      	#print STDERR "targets ".Dumper( $deployments );
+      } else {
+      	msgErr( "--application='$opt_application' doesn't address a Meteor application" );
+      }
 	}
-	# --to is mandatory
-	# and must be compatible with --from
-	if( $opt_to ){
-		if( $deployments->{targets}{$opt_to} ){
-			msgVerbose( "'--to=$opt_to' is a known environment" );
-			my $allowed = $deployments->{targets}{$opt_to}{isAllowedTarget} // true;
-			if( $allowed ){
-				msgVerbose( "'--to=$opt_to' is allowed as a target environment" );
-				if( $opt_from ){
-					my $sources = $deployments->{targets}{$opt_to}{allowed_sources} // [];
-					if( scalar( @{$sources} )){
-						if( grep( /$opt_from/, @{$sources} )){
-							msgVerbose( "'--to=$opt_to' accepts '$opt_from' source" );
-						} else {
-							msgErr( "'--to=$opt_to' doesn't accept '$opt_from' source among allowed [ '".join('\', \'', @{$sources} )."' ]" );
-						}
-					} else {
-						msgVerbose( "'--to=$opt_to' accepts all sources" );
-					}
-					$sources = $deployments->{targets}{$opt_to}{forbidden_sources} // [];
-					if( scalar( @{$sources} )){
-						if( grep( /$opt_from/, @{$sources} )){
-							msgErr( "'--to=$opt_to' forbids '$opt_from' source, forbidden being [ '".join('\', \'', @{$sources} )."' ]" );
-						} else {
-							msgVerbose( "'--to=$opt_to' doesn't forbid '$opt_from'" );
-						}
-					} else {
-						msgVerbose( "'--to=$opt_to' doesn't forbid any target" );
-					}
-				}
-			} else {
-				msgErr( "'--to=$opt_to' is not allowed as a target environment" );
-			}
-		} else {
-			msgErr( "'--to=$opt_to': unknown environment" );
-		}
-	} else {
-		msgErr( "'--to' option is mandatory when deploying" );
+	# --bundle and --collection deployments requires at least --to
+	if( $opt_bundle || scalar( @opt_collections )){
+      # when deploying, --from defaults to the current local environment
+      if( $opt_from ){
+      	if( $deployments->{targets}{$opt_from} ){
+            msgVerbose( "'--from=$opt_from' is a known environment" );
+            my $allowed = $deployments->{targets}{$opt_from}{isAllowedSource} // true;
+            if( $allowed ){
+            	msgVerbose( "'--from=$opt_from' is allowed as a source environment" );
+            	if( $opt_to ){
+                  my $targets = $deployments->{targets}{$opt_from}{allowed_targets} // [];
+                  if( scalar( @{$targets} )){
+                  	if( grep( /$opt_to/, @{$targets} )){
+                        msgVerbose( "'--from=$opt_from' accepts '$opt_to' target" );
+                  	} else {
+                        msgErr( "'--from=$opt_from' doesn't accept '$opt_to' target among allowed [ '".join('\', \'', @{$targets} )."' ]" );
+                  	}
+                  } else {
+                  	msgVerbose( "'--from=$opt_from' accepts all targets" );
+                  }
+                  $targets = $deployments->{targets}{$opt_from}{forbidden_targets} // [];
+                  if( scalar( @{$targets} )){
+                  	if( grep( /$opt_to/, @{$targets} )){
+                        msgErr( "'--from=$opt_from' forbids '$opt_to' target, forbidden being [ '".join('\', \'', @{$targets} )."' ]" );
+                  	} else {
+                        msgVerbose( "'--from=$opt_from' doesn't forbid '$opt_to'" );
+                  	}
+                  } else {
+                  	msgVerbose( "'--from=$opt_from' doesn't forbid any target" );
+                  }
+            	}
+            } else {
+            	msgErr( "'--from=$opt_from' is not allowed as a source environment" );
+            }
+      	} else {
+            msgErr( "'--from=$opt_from': unknown environment" );
+      	}
+      } else {
+      	msgVerbose( "'--from' option is not specified, defaulting to addressed local environment in '$opt_application'" );
+      	if( 0 ){
+            my $devs = [];
+            foreach my $k ( sort keys %{$deployments} ){
+            	my $env = $deployments->{$k};
+            	my $node_env = $env->{node_env} // 'development';
+            	push( @{$devs}, $k ) if $node_env eq 'development';
+            }
+            my $count = scalar( @{$devs} );
+            if( $count == 0 ){
+            	msgErr( "no development environment is found: unable to get a '--from' default source" );
+            } elsif( $count == 1 ){
+            	$opt_from = $devs->[0];
+            	msgVerbose( "compute default source '$opt_from'" );
+            } else {
+            	msgErr( "$count development environments have been found: unable to compute a '--from' default source" );
+            }
+      	}
+      }
+      # --to is mandatory
+      # and must be compatible with --from
+      if( $opt_to ){
+      	if( $deployments->{targets}{$opt_to} ){
+            msgVerbose( "'--to=$opt_to' is a known environment" );
+            my $allowed = $deployments->{targets}{$opt_to}{isAllowedTarget} // true;
+            if( $allowed ){
+            	msgVerbose( "'--to=$opt_to' is allowed as a target environment" );
+            	if( $opt_from ){
+                  my $sources = $deployments->{targets}{$opt_to}{allowed_sources} // [];
+                  if( scalar( @{$sources} )){
+                  	if( grep( /$opt_from/, @{$sources} )){
+                        msgVerbose( "'--to=$opt_to' accepts '$opt_from' source" );
+                  	} else {
+                        msgErr( "'--to=$opt_to' doesn't accept '$opt_from' source among allowed [ '".join('\', \'', @{$sources} )."' ]" );
+                  	}
+                  } else {
+                  	msgVerbose( "'--to=$opt_to' accepts all sources" );
+                  }
+                  $sources = $deployments->{targets}{$opt_to}{forbidden_sources} // [];
+                  if( scalar( @{$sources} )){
+                  	if( grep( /$opt_from/, @{$sources} )){
+                        msgErr( "'--to=$opt_to' forbids '$opt_from' source, forbidden being [ '".join('\', \'', @{$sources} )."' ]" );
+                  	} else {
+                        msgVerbose( "'--to=$opt_to' doesn't forbid '$opt_from'" );
+                  	}
+                  } else {
+                  	msgVerbose( "'--to=$opt_to' doesn't forbid any target" );
+                  }
+            	}
+            } else {
+            	msgErr( "'--to=$opt_to' is not allowed as a target environment" );
+            }
+      	} else {
+            msgErr( "'--to=$opt_to': unknown environment" );
+      	}
+      } else {
+      	msgErr( "'--to' option is mandatory when deploying" );
+      }
+      # from and to cannot be the same
+      msgErr( "cowardly refuse to have same source and target environments" ) if $opt_from eq $opt_to;
+      if( !TTP::errs()){
+      	setFrom();
+      	setTo();
+      }
 	}
-	# from and to cannot be the same
-	msgErr( "cowardly refuse to have same source and target environments" ) if $opt_from eq $opt_to;
-	# must deploy at least a bundle or a collection
-	msgWarn( "neither '--bundle' nor '--collection' options are specified, will not deploy anything" ) if !$opt_bundle && !scalar( @opt_collections );
 }
+
 
 if( !TTP::errs()){
-	if( $want_list ){
-		doListCollections() if $opt_list_collections;
-		doListEnvironments() if $opt_list_environments;
-	} else {
-		setFrom();
-		setTo();
-		doDeployBundle() if $opt_bundle;
-		doDeployCollections() if scalar( @opt_collections );
-	}
+	# wants at least one action
+	msgWarn( "none of '--bundle', '--collection', '--list-collections', '--list-environments' or '--first' options are specified, will not do anything" )
+      if !$opt_bundle && !scalar( @opt_collections ) && !$opt_list_collections && !$opt_list_environments && !$opt_first;
+	# do the actions
+	doDeployBundle() if $opt_bundle;
+	doDeployCollections() if scalar( @opt_collections );
+	doFirst() if $opt_first;
+	doListCollections() if $opt_list_collections;
+	doListEnvironments() if $opt_list_environments;
 }
 
 TTP::exit();
