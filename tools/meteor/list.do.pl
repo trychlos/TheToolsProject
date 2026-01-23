@@ -7,7 +7,7 @@
 # @(-) --root=<path>               root tree path [${root}]
 # @(-) --[no]applications          apply to applications [${applications}]
 # @(-) --[no]dirs                  display the application directory [${dirs}]
-# @(-) --[no]diffs                display the application directory when the application name differes [${diffs}]
+# @(-) --[no]diffs                 display the application directory when the application name differes [${diffs}]
 # @(-) --[no]packages              apply to packages [${packages}]
 # @(-) --bypath=<regex>            identify packages by their pathname [${bypath}]
 # @(-) --[no]tree                  display packages as a tree [${tree}]
@@ -425,13 +425,56 @@ sub getChangeLogInfos {
 }
 
 # -------------------------------------------------------------------------------------------------
-# build a string with publication informations
+# build a JSON-like with publication informations
 # (I):
 # - the package object with an 'infos' key
 # (O):
 # - the built string
 
 sub packagePublishInfos {
+	my ( $pck ) = @_;
+	my $str = '{';
+	my $first = true;
+	if( $pck->{infos} ){
+		$str .= ' ';
+		if( $pck->{infos}{prevDate} || $pck->{infos}{prevVersion} ){
+			if( $pck->{infos}{prevDate} ){
+				$str .= ', ' if !$first;
+				$first = false;
+				$str .= '"lastDate": "'.$pck->{infos}{prevDate}.'"';
+			}
+			if( $pck->{infos}{prevVersion} ){
+				$str .= ', ' if !$first;
+				$first = false;
+				$str .= '"lastVersion": "'.$pck->{infos}{prevVersion}.'"';
+			}
+		} else {
+			$str .= ', ' if !$first;
+			$first = false;
+			$str .= '"lastDate": "never released"';
+		}
+		if( $pck->{infos}{nextVersion} ){
+			$str .= ', ' if !$first;
+			$first = false;
+			$str .= '"nextVersion": "'.$pck->{infos}{nextVersion}.'"';
+		}
+		$str .= ', ' if !$first;
+		$first = false;
+		$str .= '"pendingChanges": "'.$pck->{infos}{changes}.'"';
+	}
+	$str .= ' ' if !$first;
+	$str .= '}';
+	return $str;
+}
+
+# -------------------------------------------------------------------------------------------------
+# build a string with publication informations
+# (I):
+# - the package object with an 'infos' key
+# (O):
+# - the built string
+
+sub packagePublishInfosAsText {
 	my ( $pck ) = @_;
 	my $str = '';
 	if( $pck->{infos} ){

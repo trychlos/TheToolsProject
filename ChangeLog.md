@@ -12,6 +12,7 @@
     - Fix meteor.pl publish to have the right per-day termination
     - Define new TTP::IRunnable->runnableOptionsCount() method
     - meteor.pl deploy --first option displays an help to prepare the first deployment to a new target
+    - meteor.pl list --packages displays publication informations as a JSON-like string
 
 ### 4.29.0
 
