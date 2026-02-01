@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.30.0-rc.0
+### 4.30.0
 
-    Release date: 
+    Release date: 2026- 2- 1
 
     - New TTP::Meteor::isDevel() function, thus bumping minor candidate version number
     - meteor.pl deploy honors '--dummy' option
@@ -46,4 +46,4 @@
 
 ---
 P. Wieser
-- Last updated on 2026, Jan. 21st
+- Last updated on 2026, Feb. 1st
