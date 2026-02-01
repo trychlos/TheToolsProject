@@ -385,6 +385,7 @@ sub findByService {
 			$inhibits = [ $opts->{inhibit} ];
 		}
 	}
+	msgVerbose( __PACKAGE__."::findByService() inhibit=[".join( ',', @{$inhibits} )."]" );
 
 	# test the current execution node before scanning the full list
 	$candidate = $ep->node();
@@ -444,13 +445,15 @@ sub findByService_addCandidate {
 	my ( $self, $environment, $service, $founds, $inhibits ) = @_;
 
 	my $addedCandidate = false;
+	my $name = $self->name();
 
-	if( grep( /$self->name()/, @{$inhibits} )){
-		msgVerbose( __PACKAGE__."::findByService_addCandidate() '".$self->name()."' is inhibited by option" );
+	if( grep( /$name/, @{$inhibits} )){
+		msgVerbose( __PACKAGE__."::findByService_addCandidate() '$name' is inhibited by option" );
 
 	} else {
 		if( $self->hasService( $service ) &&
 			(( $self->environment() && $environment && $self->environment() eq $environment ) || ( !$self->environment() && !$environment ))){
+
 			my $alreadyAdded = false;
 			foreach my $node ( @{$founds} ){
 				if( $node->name() eq $self->name()){
@@ -459,11 +462,11 @@ sub findByService_addCandidate {
 				}
 			}
 			if( $alreadyAdded ){
-				msgVerbose( __PACKAGE__."::findByService_addCandidate() '".$self->name()."' has already been added" );
+				msgVerbose( __PACKAGE__."::findByService_addCandidate() '$name' has already been added" );
 			} else {
 				$addedCandidate = true;
 				push( @{$founds}, $self );
-				msgVerbose( __PACKAGE__."::findByService_addCandidate() adding '".$self->name()."'" );
+				msgVerbose( __PACKAGE__."::findByService_addCandidate() adding '$name'" );
 			}
 		}
 	}

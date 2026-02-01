@@ -14,6 +14,7 @@
     - meteor.pl deploy --first option displays an help to prepare the first deployment to a new target
     - meteor.pl list --packages displays publication informations as a JSON-like string
     - daemon.pl restore -monitor: only insert if previous delete has been successful
+    - Node::findByService(): fix the inhibition detection
 
 ### 4.29.0
 
