@@ -163,7 +163,9 @@ sub doRestore {
 				$res = TTP::commandExec( "dbms.pl sql -service MonitorDB -command \"delete from Monitor.dbo.RESTORES where topic='$topic'\"" );
 				$payload = $opt_diff;
 			}
-			$res = TTP::commandExec( "dbms.pl sql -service MonitorDB -command \"insert into Monitor.dbo.RESTORES ( topic, payload ) values ( '$topic', '$payload' )\"" );
+			$res = TTP::commandExec( "dbms.pl sql -service MonitorDB -command \"insert into Monitor.dbo.RESTORES ( topic, payload ) values ( '$topic', '$payload' )\"" ) if $res->{success};
+			# be compliant with $objDbms->restoreDatabase() result
+			$res->{ok} = $res->{success};
 		}
 	}
 	if( $res->{ok} ){
