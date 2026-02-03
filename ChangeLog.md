@@ -7,6 +7,7 @@
     Release date: 
 
     - Restore TTP::Credentials::findWithFile(), updating OVH::conect() accordingly
+    - services.pl live is improved to no more depend of the command semantic, but just take the outputed result
 
 ### 4.30.0
 

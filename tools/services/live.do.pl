@@ -70,20 +70,26 @@ sub getLive {
 		$command = $service->var([ 'status', 'live' ]);
 	}
 	if( $command ){
-		my $stdout = TTP::filter( $command );
-		if( !scalar( @{$stdout} )){
+		# the provided command must returns the live node name as its single output
+		my $res = TTP::commandExec( $command, { macros => {
+			SERVICE => $opt_service,
+			ENVIRONMENT => $opt_environment
+		}});
+		if( !$res->{success} ){
+			msgErr( $res->{stderrs}->[0] );
+		} elsif( !scalar( @{$res->{stdouts}} )){
 			msgWarn( "the service seems unable to identify its own live machine, saying there is none (maybe is it dead ?)" );
 		} else {
-			my @live = grep( /X-Sent-By/, @{$stdout} );
-			my $live = $live[0];
-			$live =~ s/^\s*X-Sent-By:\s*//;
+			my $live = $res->{stdouts}->[0];
 			print "  live: $live".EOL;
 			# get all hosts for this service and this environment
+			# be cautious that the filtered output may contain intermediate ones when run verbosely
 			my @hosts = ();
 			my @nexts;
 			$command = "services.pl list -service $opt_service -identifier $opt_environment -machines -nocolored $dummy $verbose";
-			$stdout = TTP::filter( $command );
-			foreach my $it ( @{$stdout} ){
+			my $stdout = TTP::filter( $command );
+			my @founds = grep( /^\s*$opt_environment\s*:\s*/, @{$stdout} );
+			foreach my $it ( @founds ){
 				my @words = split( /\s+/, $it );
 				push( @hosts, $words[scalar( @words )-1] );
 			}

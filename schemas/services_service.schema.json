@@ -294,6 +294,16 @@
                 }
             }
         },
+        "status": {
+            "description": "Provides informations on how to get the status of the service.",
+            "type": "object",
+            "properties": {
+                "live": {
+                    "description": "A command which must identify the node which hosts the 'live' version of the service (if any).",
+                    "type": "string"
+               }
+            }
+        },
         "wantsLocal": {
             "description": "Whether this service is bound only to local connections.",
             "type": "boolean",
