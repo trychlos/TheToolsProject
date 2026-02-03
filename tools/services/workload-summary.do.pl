@@ -4,6 +4,7 @@
 # @(-) --[no]colored           color the output depending of the message level [${colored}]
 # @(-) --[no]dummy             dummy run (ignored here) [${dummy}]
 # @(-) --[no]verbose           run verbosely [${verbose}]
+# @(-) --[no]stdout            print the summary to stdout [${stdout}]
 # @(-) either:
 # @(-) --workload=<name>       the workload name [${workload}]
 # @(-) --commands=<name>       the name of the environment variable which holds the commands [${commands}]
@@ -55,6 +56,7 @@ my $defaults = {
 	colored => 'no',
 	dummy => 'no',
 	verbose => 'no',
+	stdout => 'no',
 	workload => '',
 	commands => 'command',
 	start => 'start',
@@ -65,6 +67,7 @@ my $defaults = {
 	until => ''
 };
 
+my $opt_stdout = false;
 my $opt_workload = $defaults->{workload};
 my $opt_commands = $defaults->{commands};
 my $opt_start = $defaults->{start};
@@ -75,8 +78,9 @@ my $opt_since = $defaults->{since};
 my $opt_until = $defaults->{until};
 
 # whether we use the first form of a per-workload summary, or the second form of a per-period summary
-my $per_workload = false;
-my $per_period = false;
+my $opt_stdout_set = false;
+my $workload_run = false;
+my $since_run = false;
 my $since_date = undef;
 my $until_date = undef;
 
@@ -135,21 +139,21 @@ sub printable_from {
 	my @ordered = sort( @{$ordered} );
 	# we now have the right order if several workloads
 	# build the summary to be published / sent by email / logged
-	$maxLength += 6 if $per_period;
+	$maxLength += 6 if $since_run;
 	my $totLength = $maxLength + 64;
 	my $stdout = EOL;
 	$stdout .= TTP::pad( "+", $totLength-1, '=' )."+".EOL;
 	# header differs depending of the type of publication
 	my $prefix = '';
 	my $sep = '-';
-	if( $per_workload ){
+	if( $workload_run ){
 		my $node = $ep->node()->name();
 		if( $per_command ){
 			$stdout .= TTP::pad( "| <$opt_workload\@$node> Command result ", $totLength-57, ' ' );
 		} else {
 			$stdout .= TTP::pad( "| <$opt_workload\@$node> Workload summary ", $totLength-57, ' ' );
 		}
-	} elsif( $per_period ){
+	} elsif( $since_run ){
 		$prefix = '     ';
 		$sep = '=';
 		$stdout .= TTP::pad( "| Workloads summary since $since_date in '$environment' environment", $totLength-57, ' ' );
@@ -169,9 +173,9 @@ sub printable_from {
 			my $workload = $w[1];
 			$stdout .= TTP::pad( "+", $maxLength+5, '-' ).TTP::pad( "+", 26, '-' ).TTP::pad( "+", 26, '-' ).TTP::pad( "+", 6, '-' )."+".EOL if !$first;
 			$first = false;
-			$stdout .= TTP::pad( "| <$workload> workload results", $totLength-1, ' ' )."|".EOL if $per_period;
+			$stdout .= TTP::pad( "| <$workload> workload results", $totLength-1, ' ' )."|".EOL if $since_run;
 			foreach my $node ( sort keys %{$results->{$workload}} ){
-				$stdout .= TTP::pad( "|    $node", $totLength-1, ' ' )."|".EOL if $per_period;
+				$stdout .= TTP::pad( "|    $node", $totLength-1, ' ' )."|".EOL if $since_run;
 				my @commands = sort { $a->{STARTED} cmp $b->{STARTED} } @{$results->{$workload}{$node}};
 				foreach my $it ( @commands ){
 					my $started = $it->{STARTED};
@@ -195,8 +199,8 @@ sub printable_from {
 		$stdout .= TTP::pad( "|", $totLength-1, ' ' )."|".EOL;
 	}
 	$stdout .= TTP::pad( "+", $totLength-1, '=' )."+".EOL;
-	# and to stdout (at last) which sends the summary to the daily log
-	msgOut( $stdout );
+	# and be verbose which sends the summary to the daily log
+	msgVerbose( $stdout );
 	my $textfname = TTP::getTempFileName();
 	my $fh = path( $textfname );
 	$fh->spew( $stdout );
@@ -231,9 +235,9 @@ sub printable_from {
 +================================================================================================================================+
 =cut
 
-sub doPerPeriod {
+sub doSinceRun {
 	# get a JSON content from pre-stored results
-	my $commands = TTP::commandByOS([ 'workloadSummary', 'perPeriod', 'get' ]);
+	my $commands = get_since_get_commands();
 	if( $commands && scalar( @{$commands} )){
 		if( !$until_date ){
 			$until_date = Time::Moment->now->strftime( "%Y-%m-%d %H:%M:%S" );
@@ -248,13 +252,13 @@ sub doPerPeriod {
 			}
 		});
 		if( $res->{success} ){
-			$commands = TTP::commandByOS([ 'workloadSummary', 'perPeriod', 'publish' ]);
+			$commands = get_since_publish_commands();
 			if( $commands && scalar( @{$commands} )){
 				# get the running environment
 				$res = TTP::filter( "services.pl list -environment" );
 				my $environment = $res->[0];
-				my $bottom = TTP::var([ 'workloadSummary', 'perPeriod', 'publish', 'bottomSummary' ]) // true;
-				my $top = TTP::var([ 'workloadSummary', 'perPeriod', 'publish', 'topSummary' ]) // true;
+				my $bottom = get_since_publish_bottom_summary();
+				my $top = get_since_publish_top_summary();
 				my $textfname = printable_from( $jsonfname, { environment => $environment, bottomSummary => $bottom, topSummary => $top });
 				$res = TTP::commandExec( $commands, {
 					macros => {
@@ -265,9 +269,22 @@ sub doPerPeriod {
 						UNTIL => $until_date
 					}
 				});
+				if( $res->{success} ){
+					my $stdout = get_since_publish_stdout();
+					if( $opt_stdout || ( $stdout && !$opt_stdout_set )){
+						my $content = path( $textfname )->slurp_utf8();
+						print $content;
+					} else {
+						msgVerbose( "stdout is not enabled" );
+					}
+				} else {
+					msgErr( $res->{stderrs}->[0] );
+				}
 			} else {
 				msgWarn( "per-period summary detected, and no per-period 'publish' command found" );
 			}
+		} else {
+			msgErr( $res->{stderrs}->[0] );
 		}
 	} else {
 		msgWarn( "per-period summary detected, and no per-period 'get' command found" );
@@ -277,6 +294,15 @@ sub doPerPeriod {
 # -------------------------------------------------------------------------------------------------
 # print a funny workload summary
 # may also produce a per-command output
+# JSON is:
+# 	workloadSummary:
+#		perWorkload: deprecated in v4.31
+#		workloadRun:
+#			perCommand:
+#				convertToSql:
+#				publish:
+#			publish:
+#				stdout:
 
 =pod
 +=============================================================================================================================+
@@ -293,7 +319,7 @@ sub doPerPeriod {
 +=============================================================================================================================+
 =cut
 
-sub doPerWorkload {
+sub doWorkloadRun {
 	# get the results from the environment, building an array of per-command hashes
 	my @results = ();
 	for( my $i=0 ; $i<$opt_count ; ++$i ){
@@ -310,9 +336,8 @@ sub doPerWorkload {
 	}
 	my $have_workload = false;
 	my $have_command = false;
-	# which applyable commands ?
-	# for the per-workload, have to build a printable output
-	my $commands = TTP::commandByOS([ 'workloadSummary', 'perWorkload', 'publish' ]);
+	# do we want publish a workload summary for this workload ?
+	my $commands = get_workload_publish_commands();
 	if( $commands && scalar( @{$commands} )){
 		$have_workload = true;
 		# write all the content as a temp JSON file
@@ -323,26 +348,38 @@ sub doPerWorkload {
 		my $res = TTP::commandExec( $commands, {
 			macros => {
 				WORKLOAD => $opt_workload,
-				TEXTFNAME => $textfname
+				TEXTFNAME => $textfname,
+				JSONFNAME => $jsonfname
 			}
 		});
+		if( $res->{success} ){
+			my $stdout = get_workload_publish_stdout();
+			if( $opt_stdout || ( $stdout && !$opt_stdout_set )){
+				my $content = path( $textfname )->slurp_utf8();
+				print $content;
+			} else {
+				msgVerbose( "stdout is not enabled" );
+			}
+		} else {
+			msgErr( $res->{stderrs}->[0] );
+		}
 	} else {
 		msgVerbose( "per-workload summary detected, and no per-workload command found" );
 	}
-	# for the per-command, have to build a printable output too
-	# the per-command has also access to each and every workload item
-	$commands = TTP::commandByOS([ 'workloadSummary', 'perWorkload', 'perCommand', 'publish' ]);
+	# do we have a perCommand item to deal with for each command ?
+	# the per-command has access to each and every workload item
+	# we produce a per-item text file so that the commands have access to the TEXTFNAME macro
+	$commands = get_workload_publish_per_command_commands();
 	if( $commands && scalar( @{$commands} )){
 		$have_command = true;
 		# convert to SQL ?
-		my $convertSql = TTP::var([ 'workloadSummary', 'perWorkload', 'perCommand', 'convertToSql' ]) // false;
+		my $convertSql = get_workload_publish_per_command_convert_sql();
 		# iter on each workload command
 		if( $opt_count ){
 			foreach my $it ( @results ){
 				# write each item as a temp JSON file
 				my $jsonfname = TTP::getTempFileName();
 				path( $jsonfname )->spew_utf8( encode_json( $it ));
-				my $textfname = printable_from( $jsonfname, { per_command => true });
 				my $it_command = $it->{COMMAND};
 				if( $convertSql ){
 					$it_command =~ s/"/\\"/g;
@@ -350,13 +387,16 @@ sub doPerWorkload {
 				my $res = TTP::commandExec( $commands, {
 					macros => {
 						WORKLOAD => $opt_workload,
-						TEXTFNAME => $textfname,
+						JSONFNAME => $jsonfname,
 						COMMAND => $it_command,
 						STARTED => $it->{STARTED},
 						ENDED => $it->{ENDED},
 						RC => $it->{RC}
 					}
 				});
+				if( !$res->{success} ){
+					msgErr( $res->{stderrs}->[0] );
+				}
 			}
 		} else {
 			msgVerbose( "found per-command command, but no item to produce a result" );
@@ -369,6 +409,146 @@ sub doPerWorkload {
 	}
 }
 
+# -------------------------------------------------------------------------------------------------
+# Returns whether and how to publish a per-period workload summary
+# Warns if using the 'perPeriod' deprecated key
+
+sub get_since_get_commands {
+	my $commands = TTP::commandByOS([ 'workloadSummary', 'sinceRun', 'get' ]);
+	if( !$commands || !scalar( @${commands} )){
+		$commands = TTP::commandByOS([ 'workloadSummary', 'perPeriod', 'get' ]);
+		if( $commands && scalar( @${commands} )){
+			msgWarn( "'perPeriod.get' property is deprecated in favor of 'sinceRun.get'. You should update your configurations." );
+		}
+	}
+	return $commands;
+}
+
+# -------------------------------------------------------------------------------------------------
+# Whether to publish a bottom summary, defaulting to true
+# Warns if using the 'perPeriod' deprecated key
+
+sub get_since_publish_bottom_summary {
+	my $value = TTP::var([ 'workloadSummary', 'sinceRun', 'publish', 'bottomSummary' ]);
+	if( !defined( $value )){
+		$value = TTP::var([ 'workloadSummary', 'perPeriod', 'publish', 'bottomSummary' ]);
+		if( defined( $value )){
+			msgWarn( "'perPeriod.publish.bottomSummary' property is deprecated in favor of 'sinceRun.publish.bottomSummary'. You should update your configurations." );
+		}
+	}
+	$value = true if !defined( $value );
+	return $value;
+}
+
+# -------------------------------------------------------------------------------------------------
+# Returns whether and how to publish a per-period workload summary
+# Warns if using the 'perPeriod' deprecated key
+
+sub get_since_publish_commands {
+	my $commands = TTP::commandByOS([ 'workloadSummary', 'sinceRun', 'publish' ]);
+	if( !$commands || !scalar( @${commands} )){
+		$commands = TTP::commandByOS([ 'workloadSummary', 'perPeriod', 'publish' ]);
+		if( $commands && scalar( @${commands} )){
+			msgWarn( "'perPeriod.publish' property is deprecated in favor of 'sinceRun.publish'. You should update your configurations." );
+		}
+	}
+	return $commands;
+}
+
+# -------------------------------------------------------------------------------------------------
+# Whether to publish a top summary, defaulting to false
+# Warns if using the 'perPeriod' deprecated key
+
+sub get_since_publish_stdout {
+	my $value = TTP::var([ 'workloadSummary', 'sinceRun', 'publish', 'stdout' ]);
+	if( !defined( $value )){
+		$value = TTP::var([ 'workloadSummary', 'perPeriod', 'publish', 'stdout' ]);
+		if( defined( $value )){
+			msgWarn( "'perPeriod.publish.stdout' property is deprecated in favor of 'sinceRun.publish.stdout'. You should update your configurations." );
+		}
+	}
+	$value = false if !defined( $value );
+	return $value;
+}
+
+# -------------------------------------------------------------------------------------------------
+# Whether to publish a top summary, defaulting to true
+# Warns if using the 'perPeriod' deprecated key
+
+sub get_since_publish_top_summary {
+	my $value = TTP::var([ 'workloadSummary', 'sinceRun', 'publish', 'topSummary' ]);
+	if( !defined( $value )){
+		$value = TTP::var([ 'workloadSummary', 'perPeriod', 'publish', 'topSummary' ]);
+		if( defined( $value )){
+			msgWarn( "'perPeriod.publish.topSummary' property is deprecated in favor of 'sinceRun.publish.topSummary'. You should update your configurations." );
+		}
+	}
+	$value = true if !defined( $value );
+	return $value;
+}
+
+# -------------------------------------------------------------------------------------------------
+# Returns whether and how to publish a workload summary
+# Warns if using the 'perWorkload' deprecated key
+
+sub get_workload_publish_commands {
+	my $commands = TTP::commandByOS([ 'workloadSummary', 'workloadRun', 'publish' ]);
+	if( !$commands || !scalar( @${commands} )){
+		$commands = TTP::commandByOS([ 'workloadSummary', 'perWorkload', 'publish' ]);
+		if( $commands && scalar( @${commands} )){
+			msgWarn( "'perWorkload.publish' property is deprecated in favor of 'workloadRun.publish'. You should update your configurations." );
+		}
+	}
+	return $commands;
+}
+
+# -------------------------------------------------------------------------------------------------
+# Returns whether and how to publish a workload summary per item
+# Warns if using the 'perWorkload' deprecated key
+
+sub get_workload_publish_per_command_commands {
+	my $commands = TTP::commandByOS([ 'workloadSummary', 'workloadRun', 'perCommand', 'publish' ]);
+	if( !$commands || !scalar( @${commands} )){
+		$commands = TTP::commandByOS([ 'workloadSummary', 'perWorkload', 'perCommand', 'publish' ]);
+		if( $commands && scalar( @${commands} )){
+			msgWarn( "'perWorkload.perCommand.publish' property is deprecated in favor of 'workloadRun.perCommand.publish'. You should update your configurations." );
+		}
+	}
+	return $commands;
+}
+
+# -------------------------------------------------------------------------------------------------
+# Whether to convert to SQL, defaulting to false
+# Warns if using the 'perWorkload' deprecated key
+
+sub get_workload_publish_per_command_convert_sql {
+	my $convert = TTP::var([ 'workloadSummary', 'workloadRun', 'perCommand', 'convertToSql' ]);
+	if( !defined( $convert )){
+		$convert = TTP::var([ 'workloadSummary', 'perWorkload', 'perCommand', 'convertToSql' ]);
+		if( defined( $convert )){
+			msgWarn( "'perWorkload.perCommand.convertToSql' property is deprecated in favor of 'workloadRun.perCommand.convertToSql'. You should update your configurations." );
+		}
+	}
+	$convert = false if !defined( $convert );
+	return $convert;
+}
+
+# -------------------------------------------------------------------------------------------------
+# Whether to publish the workload summary on stdout, defaulting to false
+# Warns if using the 'perWorkload' deprecated key
+
+sub get_workload_publish_stdout {
+	my $stdout = TTP::var([ 'workloadSummary', 'workloadRun', 'publish', 'stdout' ]);
+	if( !defined( $stdout )){
+		$stdout = TTP::var([ 'workloadSummary', 'perWorkload', 'publish', 'stdout' ]);
+		if( defined( $stdout )){
+			msgWarn( "'perWorkload.publish.stdout' property is deprecated in favor of 'workloadRun.publish.stdout'. You should update your configurations." );
+		}
+	}
+	$stdout = false if !defined( $stdout );
+	return $stdout;
+}
+
 # =================================================================================================
 # MAIN
 # =================================================================================================
@@ -378,6 +558,11 @@ if( !GetOptions(
 	"colored!"			=> sub { $ep->runner()->colored( @_ ); },
 	"dummy!"			=> sub { $ep->runner()->dummy( @_ ); },
 	"verbose!"			=> sub { $ep->runner()->verbose( @_ ); },
+	"stdout!"			=> sub {
+		my ( $name, $value ) = @_;
+		$opt_stdout = $value;
+		$opt_stdout_set = true;
+	},
 	"workload=s"		=> \$opt_workload,
 	"commands=s"		=> \$opt_commands,
 	"start=s"			=> \$opt_start,
@@ -399,6 +584,7 @@ if( $ep->runner()->help()){
 msgVerbose( "got colored='".( $ep->runner()->colored() ? 'true':'false' )."'" );
 msgVerbose( "got dummy='".( $ep->runner()->dummy() ? 'true':'false' )."'" );
 msgVerbose( "got verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got stdout='".( $opt_stdout ? 'true':'false' )."'" );
 msgVerbose( "got workload='$opt_workload'" );
 msgVerbose( "got commands='$opt_commands'" );
 msgVerbose( "got start='$opt_start'" );
@@ -410,23 +596,23 @@ msgVerbose( "got until='$opt_until'" );
 
 # do wde have either a per-workload (first form) or per-period (second form) run, and only one of them ?
 if( $opt_workload ){
-	$per_workload = true;
+	$workload_run = true;
 	if( !$opt_commands || !$opt_start || !$opt_end || !$opt_rc ){
 		msgErr( "all '--workload', '--commands', '--start', '--end', '--rc' and '--count' arguments are mandatory when asking for a per-workload summary" );
 	}
 }
 if( $opt_since ){
-	$per_period = true;
+	$since_run = true;
 }
-if( $per_workload && $per_period ){
+if( $workload_run && $since_run ){
 	msgErr( "asking for both a per-workload and a per-period summary is not supported" );
 }
-if( !$per_workload && !$per_period ){
+if( !$workload_run && !$since_run ){
 	msgErr( "a per-workload or a per-period summary is expected, no valid request found" );
 }
 
 # check that the since argument is right
-if( $per_period ){
+if( $since_run ){
 	my $seconds = parse_duration( $opt_since );
 	if( $seconds ){
 		my $tm = Time::Moment->now;
@@ -439,7 +625,7 @@ if( $per_period ){
 }
 
 # check that the until argument is right when set
-if( $per_period && $opt_until ){
+if( $since_run && $opt_until ){
 	my $seconds = parse_duration( $opt_until );
 	if( $seconds ){
 		my $tm = Time::Moment->now;
@@ -452,10 +638,10 @@ if( $per_period && $opt_until ){
 }
 
 if( !TTP::errs()){
-	msgVerbose( "per_workload='".( $per_workload ? 'true' : 'false' )."'" );
-	doPerWorkload() if $per_workload;
-	msgVerbose( "per_period='".( $per_period ? 'true' : 'false' )."'" );
-	doPerPeriod() if $per_period;
+	msgVerbose( "workload_run='".( $workload_run ? 'true' : 'false' )."'" );
+	doWorkloadRun() if $workload_run;
+	msgVerbose( "since_run='".( $since_run ? 'true' : 'false' )."'" );
+	doSinceRun() if $since_run;
 }
 
 TTP::exit();

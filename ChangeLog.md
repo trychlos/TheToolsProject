@@ -9,6 +9,9 @@
     - Restore TTP::Credentials::findWithFile(), updating OVH::conect() accordingly
     - services.pl live is improved to no more depend of the command semantic, but just take the outputed result
     - dbms.pl restore finds and honors the live MonitorDB current node
+    - Deprecate workloadSummary.perPeriod in favor of workloadSummary.sinceRun
+    - Deprecate workloadSummary.perWorkload in favor of workloadSummary.workloadRun
+    - services.pl workload-summary: fix errors management
 
 ### 4.30.0
 

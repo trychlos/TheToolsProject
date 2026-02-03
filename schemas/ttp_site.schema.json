@@ -1893,15 +1893,19 @@
                 "workloadSummary": {
                     "description_array": [
                         "The configuration of how and when publish workloads summaries.",
-                        "Workloads are defined at the service level, and are just a list of commands executed at various times.",
+                        "Workloads are defined at the service or the node levels, and are just a list of commands executed at the time the workload runs.",
                         "They provide their results as a list of the executed commands, with a start and end date and time, and a return code.",
                         "The respective workload.cmd/workload.sh default to try to publish a workload summary per workload (but see below for other options)."
                     ],
                     "type": "object",
                     "properties": {
                         "perPeriod": {
+                            "description": "The properties of a '--since' run. Deprecated in favor of 'sinceRun' in v4.31.",
+                            "deprecated": true
+                        },
+                        "sinceRun": {
                             "description_array": [
-                                "Publishing a 'per period' workloads summary means than we publish a single summary for all workloads executed (actually started) during a given period.",
+                                "The 'services.pl workload-summary --since' verb publishes a single summary for all workloads executed (actually started) during the given period.",
                                 "In such a situation, two commands must be specified:",
                                 "- first is how to get the (previously recorded) list of workload summaries,",
                                 "- second is how to publish them."
@@ -1911,7 +1915,7 @@
                                 "get": {
                                     "description_array": [
                                         "The command(s) to get the workloads summaries to be dealt with.",
-                                        "It is expected to produce a JSON file which contains an array of the workloads results.",
+                                        "It is expected to produce a JSON file which contains an array of the workloads results to be summarized.",
                                         "The configured command(s) have access to following macros:",
                                         "- <JSONFNAME> the path to a temporary file which will eventually contain the JSON data produced by the command(s),",
                                         "- <SINCE> the date and time of the start of the considered period, as a 'YYYY-MM-DD HH:MI:SS.CC' string,",
@@ -1991,13 +1995,18 @@
                                                 }
                                             }
                                         },
+                                        "stdout": {
+                                            "description": "Whether to print the summary on stdout.",
+                                            "type": "boolean",
+                                            "default": false
+                                        },
                                         "summaryBottom": {
-                                            "description": "Whether to print a workload summary on the bottom.",
+                                            "description": "Whether to print a counters summary on the bottom.",
                                             "type": "boolean",
                                             "default": true
                                         },
                                         "summaryTop": {
-                                            "description": "Whether to print a workload summary on the top.",
+                                            "description": "Whether to print a counters summary on the top.",
                                             "type": "boolean",
                                             "default": true
                                         }
@@ -2006,11 +2015,12 @@
                             }
                         },
                         "perWorkload": {
+                            "description": "The properties of a '--workload' run. Deprecated in favor of 'workloadRun' in v4.31.",
+                            "deprecated": true
+                        },
+                        "workloadRun": {
                             "description_array": [
-                                "Publishing a 'per workload' workload summary means than we publish a summary for each executed workload as soon as it is ended.",
-                                "The configured command(s) have access to following macros:",
-                                "- <WORKLOAD> the workload name.",
-                                "- <TEXTFNAME> the path to a temporary file which contains a formatted printable output,"
+                                "Publishing a 'per workload' workload summary means than we publish a summary for each executed workload as soon as it is ended."
                             ],
                             "type": "object",
                             "properties": {
@@ -2019,8 +2029,8 @@
                                         "Publishing a 'per command' workload summary means than we publish the result for each executed command inside of a workload as soon as this later is ended.",
                                         "This is defined as a sub-object of the 'perWorkload' as only honored in that later case.",
                                         "The configured command(s) have access to following macros:",
-                                        "- <TEXTFNAME> the path to a temporary file which contains a formatted printable output,",
                                         "- <WORKLOAD> the workload name.",
+                                        "- <JSONFNAME> the path to a temporary JSON file which contains the properties of the item,",
                                         "- <COMMAND> the item's command,",
                                         "- <STARTED> the command start date and time as 'YYYY-MM-DD HH:MI:SS.CC',",
                                         "- <ENDED> the command end date and time as 'YYYY-MM-DD HH:MI:SS.CC',",
@@ -2071,7 +2081,12 @@
                                     }
                                 },
                                 "publish": {
-                                    "description": "The command(s) to produce the summary to the administrator.",
+                                    "description_array": [
+                                        "The command(s) to produce the summary to the administrator.",
+                                        "- <WORKLOAD> the workload name,",
+                                        "- <JSONFNAME> the path to a temporary JSON file which contains the properties of the commands,",
+                                        "- <TEXTFNAME> the path to a temporary file which contains a formatted printable output."
+                                    ],
                                     "type": "object",
                                     "properties": {
                                         "command": {
@@ -2102,6 +2117,11 @@
                                                     }
                                                 }
                                             }
+                                        },
+                                        "stdout": {
+                                            "description": "Whether to print the summary on stdout.",
+                                            "type": "boolean",
+                                            "default": false
                                         }
                                     }
                                 }
