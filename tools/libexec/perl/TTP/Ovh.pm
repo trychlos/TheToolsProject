@@ -41,7 +41,7 @@ use TTP::OvhApi;
 # - an opaque handle on the OVH API connection
 
 sub connect {
-	my $credentials = TTP::Credentials::find( 'ovh.ini' );
+	my $credentials = TTP::Credentials::findWithFile( 'ovh.ini' );
 	msgVerbose( "Ovh::connect() credentials='".( $credentials ? $credentials : '(undef)' )."'" );
 	my $api = undef;
 	if( $credentials ){

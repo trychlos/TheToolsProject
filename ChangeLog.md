@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - Restore TTP::Credentials::findWithFile(), updating OVH::conect() accordingly
 
 ### 4.30.0
 

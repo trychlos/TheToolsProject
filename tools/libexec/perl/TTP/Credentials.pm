@@ -74,6 +74,20 @@ sub finder {
 }
 
 # ------------------------------------------------------------------------------------------------
+# Returns the first found file in credentials directories
+# (I):
+# - the file specs to be searched for
+# (O):
+# - the object found at the given address, or undef
+
+sub findWithFile {
+	my ( $file ) = @_;
+	my $finder = TTP::Finder->new( $ep );
+	my $res = $finder->find({ dirs => [ $Const->{finder}{dirs}, $file ]});
+	return $res && ref( $res ) eq 'ARRAY' ? $res->[0] : undef;
+}
+
+# ------------------------------------------------------------------------------------------------
 # Returns the found credentials
 # Note that we first search in toops/host configuration, and then in a dedicated credentials JSON file with the same key
 # (I):
