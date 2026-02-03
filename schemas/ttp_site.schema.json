@@ -1901,7 +1901,7 @@
                     "properties": {
                         "perPeriod": {
                             "description_array": [
-                                "Publishing a 'per period' workloads summary means than we publish a summary for all workloads executed (actually started) during a given period.",
+                                "Publishing a 'per period' workloads summary means than we publish a single summary for all workloads executed (actually started) during a given period.",
                                 "In such a situation, two commands must be specified:",
                                 "- first is how to get the (previously recorded) list of workload summaries,",
                                 "- second is how to publish them."
