@@ -174,7 +174,7 @@ sub doPublish {
 	# remove -rc.* from package.js and get new version
 	my $releasedVersion = filePackageRemoveRC();
 	return if !$releasedVersion;
-	msgOut( "releasing $package->{name} v $releasedVersion" );
+	msgOut( "releasing $package->{name} v$releasedVersion" );
 	# remove -rc from ChangeLog.md and update release date
 	my $releaseDate = dateWithDashes();
 	return if !fileChangeLogRemoveRC( $releaseDate );
@@ -247,7 +247,7 @@ sub fileChangeLogBump {
 		"",
 		"    - "
 	);
-	# lines_utf8() returns non-chomped lines - so need an EOL char suffix
+	# lines_utf8() returns non-chomped lines - so @adds needs an EOL char suffix
 	for( my $i=0 ; $i<=$#adds ; ++$i ){
 		$adds[$i] .= EOL;
 	}

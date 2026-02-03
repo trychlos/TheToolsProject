@@ -46,7 +46,8 @@
 |  172 | 2026- 1-20 | review schemas to choose between camelCase, snake_case and so on |
 |      |            | see also https://cleanformatter.com/blog/complete-guide-to-text-case-formats-title-case-camelcase-snake-case-and-more |
 |  173 | 2026- 1-20 | meteor.pl deploy should honor mobile target |
-|  174 |  |  |
+|  174 | 2026- 2- 2 | meteor.pl publish should 1/ check first all that will be needed later 2/ revert errors before publication 3/ let retry if error after publication |
+|  175 |  |  |
 
 ---
 ## Done
