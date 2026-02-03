@@ -153,17 +153,23 @@ sub doRestore {
 		# honor --monitor option
 		# record the topic and the payload to be able to display them in a grafana dashboard
 		if( $opt_monitor ){
-			my $root = $objNode->name().'/executionReport/'.$ep->runner()->command().'/'.$ep->runner()->verb()."/$opt_service/$opt_database";
-			my $topic = "$root/$mode";
-			my $payload;
-			if( $mode eq 'full' ){
-				$res = TTP::commandExec( "dbms.pl sql -service MonitorDB -command \"delete from Monitor.dbo.RESTORES where topic like '$root/%'\"" );
-				$payload = $opt_full;
+			$res = TTP::commandExec( "services.pl live -service MonitorDB" );
+			if( $res->{success} ){
+				my $target = $res->{stdouts}->[0];
+				my $root = $objNode->name().'/executionReport/'.$ep->runner()->command().'/'.$ep->runner()->verb()."/$opt_service/$opt_database";
+				my $topic = "$root/$mode";
+				my $payload;
+				if( $mode eq 'full' ){
+					$res = TTP::commandExec( "dbms.pl sql -service MonitorDB -target $target -command \"delete from Monitor.dbo.RESTORES where topic like '$root/%'\"" );
+					$payload = $opt_full;
+				} else {
+					$res = TTP::commandExec( "dbms.pl sql -service MonitorDB -target $target -command \"delete from Monitor.dbo.RESTORES where topic='$topic'\"" );
+					$payload = $opt_diff;
+				}
+				$res = TTP::commandExec( "dbms.pl sql -service MonitorDB -target $target -command \"insert into Monitor.dbo.RESTORES ( topic, payload ) values ( '$topic', '$payload' )\"" ) if $res->{success};
 			} else {
-				$res = TTP::commandExec( "dbms.pl sql -service MonitorDB -command \"delete from Monitor.dbo.RESTORES where topic='$topic'\"" );
-				$payload = $opt_diff;
+				msgErr( $res->{stderrs}->[0] );
 			}
-			$res = TTP::commandExec( "dbms.pl sql -service MonitorDB -command \"insert into Monitor.dbo.RESTORES ( topic, payload ) values ( '$topic', '$payload' )\"" ) if $res->{success};
 			# be compliant with $objDbms->restoreDatabase() result
 			$res->{ok} = $res->{success};
 		}
