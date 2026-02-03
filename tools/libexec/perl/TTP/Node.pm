@@ -359,8 +359,8 @@ sub _enumTestSingle {
 # - environment identifier, which may be undef
 # - service name
 # - an optional options hash with following keys:
-#   > inhibit: a node or a list of node names to prevent from being candidates
-#   > target: a target node to be chosen among the found candidates
+#   > inhibit: a node name or a list of node names to prevent from being candidates
+#   > target: a target node name to be chosen among the found candidates
 # (O):
 # - the first found node as a TTP::Node instance, or undef
 
@@ -387,16 +387,23 @@ sub findByService {
 	}
 	msgVerbose( __PACKAGE__."::findByService() inhibit=[".join( ',', @{$inhibits} )."]" );
 
-	# test the current execution node before scanning the full list
-	$candidate = $ep->node();
-	$candidate->findByService_addCandidate( $environment, $service, $founds, $inhibits ) if $candidate;
+	# the preferred candidate is the specified target if any
+	if( $opts->{target} ){
+		$candidate = $class->new( $ep, { node => $opts->{target} });
+		if( !$candidate->findByService_addCandidate( $environment, $service, $founds, $inhibits )){
+			msgWarn( "target='$opts->{target}' not accepted as a valid candidate" );
+		}
+	}
 
-	# if it is candidate, this node will be chosen by default
-	# scan the full list a) to find others b) to be able to emit a warning when several nodes are found and c) to honor the target option
+	# the current execution node is the next natural candidate
+	$candidate = $ep->node();
+	$candidate->findByService_addCandidate( $environment, $service, $founds, $inhibits );
+
+	# scan the full list to find others to be able to emit a warning when several nodes are found
 	my $nodeNames = $class->list();
 	foreach my $name ( @{$nodeNames} ){
 		$candidate = $class->new( $ep, { node => $name });
-		$candidate->findByService_addCandidate( $environment, $service, $founds, $inhibits ) if $candidate;
+		$candidate->findByService_addCandidate( $environment, $service, $founds, $inhibits );
 	}
 
 	# this is an error to not have any candidate
@@ -406,32 +413,26 @@ sub findByService {
 		msgErr( "unable to find an hosting node for '$service' service in ".( "'$environment'" || '(undef)' )." environment" ) ;
 
 	# it is possible to have several candidates and we choose the first one
-	# we emit a warning when several candidates are found but no target is specified
+	# we emit a warning when several candidates are found and the services is configured for being warned in that case
 	} else {
+		$found = $founds->[0];
+		# have an array of found node names
 		my $names = [];
-		my $founds_hash = {};
 		foreach my $it ( @{$founds} ){
 			push( @{$names}, $it->name());
-			$founds_hash->{$it->name()} = $it;
 		}
-		if( $opts->{target} ){
-			if( defined( $founds_hash->{$opts->{target}} )){
-				$found = $founds_hash->{$opts->{target}};
-				msgVerbose( "found target='$opts->{target}' among candidates [".join( ',', @{$names} )."]" );
+		# if several candidates, maybe warn
+		if( $count > 1 ){
+			my $objService = TTP::Service->new( $ep, { service => $service });
+			my $msg = "found $count hosting nodes [".join( ',', @{$names} )."] for '$service' service in ".( "'$environment'" || '(undef)' )." environment, choosing the first one (".$found->name().")";
+			if( $objService->warnOnMultipleHostingNodes()){
+				msgWarn( $msg ) ;
 			} else {
-				msgErr( "target='$opts->{target}' not found among candidates [".join( ',', @{$names} )."]" );
+				msgVerbose( $msg ) ;
 			}
-		} else {
-			$found = $founds->[0];
-			if( $count > 1 ){
-				my $objService = TTP::Service->new( $ep, { service => $service });
-				my $msg = "found $count hosting nodes [".join( ',', @{$names} )."] for '$service' service in ".( "'$environment'" || '(undef)' )." environment, choosing the first one (".$found->name().")";
-				if( $objService->warnOnMultipleHostingNodes()){
-					msgWarn( $msg ) ;
-				} else {
-					msgVerbose( $msg ) ;
-				}
-			}
+		# found a single candidate, be at least verbose
+		} elsif( $count == 1 ){
+			msgVerbose( "found a single candidate node [".join( ',', @{$names} )."] for '$service' service in ".( "'$environment'" || '(undef)' )." environment, choosing it" );
 		}
 	}
 
@@ -440,6 +441,7 @@ sub findByService {
 
 # $environment may be undef
 # $founds is an (ordered) array ref of current candidates
+# returns true|false if the candidate has been added to the list
 
 sub findByService_addCandidate {
 	my ( $self, $environment, $service, $founds, $inhibits ) = @_;
