@@ -12,6 +12,7 @@
     - Deprecate workloadSummary.perPeriod in favor of workloadSummary.sinceRun
     - Deprecate workloadSummary.perWorkload in favor of workloadSummary.workloadRun
     - services.pl workload-summary: fix errors management
+    - TTP::execRemote() improve message readibility
 
 ### 4.30.0
 

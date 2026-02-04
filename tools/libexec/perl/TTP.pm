@@ -740,7 +740,8 @@ sub execRemote {
 	});
 
 	# and execute
-	msgOut( __PACKAGE__."::execRemote() $full_remote" );
+	msgOut( "remotely execute on $target" );
+	msgVerbose( __PACKAGE__."::execRemote() $full_remote" );
 	my $rc = system( $full_remote );
 	$ep->runner()->runnableErrs( $rc );
 }
