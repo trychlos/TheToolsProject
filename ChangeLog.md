@@ -13,6 +13,7 @@
     - Deprecate workloadSummary.perWorkload in favor of workloadSummary.workloadRun
     - services.pl workload-summary: fix errors management
     - TTP::execRemote() improve message readibility
+    - services.pl commands: improve hash detection
 
 ### 4.30.0
 

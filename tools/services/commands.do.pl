@@ -63,7 +63,8 @@ sub executeCommands {
 	my $cmdCount = 0;
 	# addressed value can be a scalar or an array of scalars
 	my $value = $objService->var( \@opt_keys );
-	if( $value && $value->{commands} ){
+	my $ref = $value ? ref( $value ) : '';
+	if( $value && $ref eq 'HASH' && $value->{commands} ){
 		_execute( $objService, $value->{commands} );
 	} else {
 		msgErr( "unable to find the requested information" );
