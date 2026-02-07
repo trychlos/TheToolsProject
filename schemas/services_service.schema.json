@@ -117,7 +117,7 @@
                     "default": "localhost"
                 },
                 "package": {
-                    "description": "The Perl TTP package to be use'd when working with this DBMS service.",
+                    "description": "The Perl TTP package to be use'd when working with this DBMS service. This is a MANDATORY information",
                     "type": "string",
                     "default": ""
                 }

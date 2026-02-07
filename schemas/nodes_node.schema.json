@@ -32,8 +32,7 @@
             "description_array": [
                 "The environment to which this machine is attached.",
                 "A machine is attached to at most one environment which, for example, determines the level of expected service quality.",
-			    "If this is not what you are searching for, maybe you could take a glance at the logical machine paradigm, unless you could be more interested by roles.",
-                "Please note too that services vs. nodes vs. environments should be determined so that a service + an environment identifies zero or one node only."
+			    "If this is not what you are searching for, maybe you could take a glance at the logical machine paradigm, unless you could be more interested by properties."
             ],
             "type": "object",
             "properties": {
@@ -44,6 +43,25 @@
                 "id": {
                     "description": "The identifier of the environment.",
                     "type": "string"
+                }
+            }
+        },
+        "properties": {
+            "description_array": [
+                "A free list of properties attached to this node.",
+                "Any property can be attached to a node, and these properties can be requested by verbs.",
+                "When property is a boolean or a string, it can usually be requested as 'property=value'.",
+                "When property is an object, then all the keys hierarchy must be specified when requested so that the got value be a scalar, as 'property.key1.key2=value'."
+            ],
+            "type": "object",
+            "patternProperties": {
+                "^.*$": {
+                    "description": "The name of the property, the value being not specified",
+                    "type": [
+                        "boolean",
+                        "object",
+                        "string"
+                    ]
                 }
             }
         },
