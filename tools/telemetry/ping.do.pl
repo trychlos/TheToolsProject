@@ -281,7 +281,7 @@ sub publish_metric {
 	if( $enabled ){
 		my $suffix = TTP::Telemetry::var([ 'ping', $which, 'publish', 'suffix' ]) // $which;
 		my $metric_name = $opt_metric || TTP::Telemetry::var([ 'ping', $which, 'publish', 'name' ]) || "ttp_ping_<SUFFIX>";
-		my $metric_description = $opt_description || TTP::Telemetry::var([ 'ping', $which, 'publish', 'description' ]) || "ttp_ping_<DEVICE>_<SUFFIX>";
+		my $metric_description = $opt_description || TTP::Telemetry::var([ 'ping', $which, 'publish', 'description' ]) || "ttp_ping <SUFFIX>";
 
 		my $metric = {
 			name => $metric_name,
