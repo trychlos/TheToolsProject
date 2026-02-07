@@ -155,18 +155,24 @@ sub doRestore {
 		if( $opt_monitor ){
 			$res = TTP::commandExec( "services.pl live -service MonitorDB" );
 			if( $res->{success} ){
-				my $target = $res->{stdouts}->[0];
-				my $root = $objNode->name().'/executionReport/'.$ep->runner()->command().'/'.$ep->runner()->verb()."/$opt_service/$opt_database";
-				my $topic = "$root/$mode";
-				my $payload;
-				if( $mode eq 'full' ){
-					$res = TTP::commandExec( "dbms.pl sql -service MonitorDB -target $target -command \"delete from Monitor.dbo.RESTORES where topic like '$root/%'\"" );
-					$payload = $opt_full;
+				my @stdout = grep( /^\s*live:/, @{$res->{stdouts}} );
+				if( scalar( @stdout )){
+					my $target = $stdout[0];
+					$target =~ s/^\s*live:\s*//;
+					my $root = $objNode->name().'/executionReport/'.$ep->runner()->command().'/'.$ep->runner()->verb()."/$opt_service/$opt_database";
+					my $topic = "$root/$mode";
+					my $payload;
+					if( $mode eq 'full' ){
+						$res = TTP::commandExec( "dbms.pl sql -service MonitorDB -target $target -command \"delete from ttpMonitor.dbo.RESTORES where topic like '$root/%'\"" );
+						$payload = $opt_full;
+					} else {
+						$res = TTP::commandExec( "dbms.pl sql -service MonitorDB -target $target -command \"delete from ttpMonitor.dbo.RESTORES where topic='$topic'\"" );
+						$payload = $opt_diff;
+					}
+					$res = TTP::commandExec( "dbms.pl sql -service MonitorDB -target $target -command \"insert into ttpMonitor.dbo.RESTORES ( topic, payload ) values ( '$topic', '$payload' )\"" ) if $res->{success};
 				} else {
-					$res = TTP::commandExec( "dbms.pl sql -service MonitorDB -target $target -command \"delete from Monitor.dbo.RESTORES where topic='$topic'\"" );
-					$payload = $opt_diff;
+					msgErr( "services.pl live -service MonitorDB: no usable output" );
 				}
-				$res = TTP::commandExec( "dbms.pl sql -service MonitorDB -target $target -command \"insert into Monitor.dbo.RESTORES ( topic, payload ) values ( '$topic', '$payload' )\"" ) if $res->{success};
 			} else {
 				msgErr( $res->{stderrs}->[0] );
 			}

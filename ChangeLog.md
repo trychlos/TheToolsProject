@@ -15,6 +15,7 @@
     - TTP::execRemote() improve message readibility
     - services.pl commands: improve hash detection
     - telemetry.pl ping: have the same help string whatever be the device
+    - dbms.pl restore fix access to ttpMonitor database after rename
 
 ### 4.30.0
 
