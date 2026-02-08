@@ -7,6 +7,7 @@
     Release date: 
 
     - Display the starting version in all deprecation messages
+    - DBMS.host is deprecated in favor of 'host'
 
 ### 4.31.0
 

@@ -150,6 +150,27 @@ sub hidden {
 }
 
 # ------------------------------------------------------------------------------------------------
+# Getter
+# (I):
+# - none
+# (O):
+# - returns the defined host, which may be undef
+
+sub host {
+	my ( $self ) = @_;
+
+	my $str = $self->service()->var([ 'host' ], $self->node());
+	if( !defined( $str )){
+		$str = $self->service()->var([ 'DBMS', 'host' ], $self->node());
+		if( defined( $str )){
+			msgWarn( "'DBMS.host' property is deprecated in favor of 'host' since v4.32. You should update your code and/or your configurations." );
+		}
+	}
+
+	return $str;
+}
+
+# ------------------------------------------------------------------------------------------------
 # Returns the name of the service
 # (I):
 # - none

@@ -157,6 +157,7 @@ sub computeDefaultBackupFilename {
 
 # ------------------------------------------------------------------------------------------------
 # Getter
+# Starting with v4.31.1-rc.0, the 'host' attribute is moved to service root definition.
 # (I):
 # - none
 # (O):
@@ -165,9 +166,7 @@ sub computeDefaultBackupFilename {
 sub connectionString {
 	my ( $self ) = @_;
 
-	my $str = $self->service()->var([ 'DBMS', 'host' ], $self->node());
-
-	return $str;
+	return $self->service()->host();
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -408,7 +407,7 @@ sub matchInsensitive {
 # (I):
 # - none
 # (O):
-# - returns the hosting TTP::Node node, defaulting to the current execution node
+# - returns the hosting TTP::Node node
 
 sub node {
 	my ( $self, $node ) = @_;

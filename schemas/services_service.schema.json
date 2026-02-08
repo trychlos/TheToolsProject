@@ -107,15 +107,6 @@
                     "type": "boolean",
                     "default": false
                 },
-                "host": {
-                    "description_array": [
-                        "The address name or IP, possibly with a colon and a port number, of the DBMS server, or a full connection string.",
-                        "This property should be rarely useful, but it lets the site administrator specify a particular host address for a node.",
-                        "E.g., addressing a SqlServer remote instance could be like \"host\": \"remote.node\\INSTANCE\"."
-                    ],
-                    "type": "string",
-                    "default": "localhost"
-                },
                 "package": {
                     "description": "The Perl TTP package to be use'd when working with this DBMS service. This is a MANDATORY information",
                     "type": "string",
@@ -124,7 +115,7 @@
             }
         },
         "enabled": {
-            "description": "Whether this JSON configuration must be considered.",
+            "description": "Whether this service configuration must be considered.",
             "type": "boolean",
             "default": true
         },
@@ -133,6 +124,16 @@
             "type": "boolean",
             "default": false
         },
+        "host": {
+            "description_array": [
+                "The address name or IP, possibly with a colon and a port number, of the service, or a full connection string if apply.",
+                "This property should be rarely useful, but it lets the site administrator specify a particular host address for a node.",
+                "E.g., addressing a SqlServer remote instance could be like \"host\": \"remote.node\\INSTANCE\".",
+                "The way this attribute is honored may depend of the particular service type, and is not controlled by TTP. In particular, this attributes does cross the environments boundary."
+            ],
+            "type": "string",
+            "default": "localhost"
+        },
         "LDAP": {
             "description_array": [
                 "The LDAP description part of the service.",
@@ -140,7 +141,8 @@
                 "- 1. node: services.<SERVICE>.LDAP.key if a service is requested",
                 "- 2. node: LDAP.key",
                 "- 3. service: LDAP.key if a service is requested and this service has a dedicated JSON configuration file",
-                "- 4. site: LDAP.key"
+                "- 4. site: LDAP.key",
+                "Please note that LDAP service should be defined as 'wantsLocal=true' to be able to perform default backup/restore operations."
             ],
             "type": "object",
             "properties": {
@@ -294,6 +296,26 @@
                 }
             }
         },
+        "properties": {
+            "description_array": [
+                "A free list of properties attached to this service (this node).",
+                "Any property can be defined, and these properties can be requested by the 'services.pl by-property' verb.",
+                "When property is a boolean or a string, it can usually be requested as 'property=value'.",
+                "When property is an object, then all the keys hierarchy must be specified when requested so that the got value be a scalar, as 'key1.key2=value'.",
+                "Each scalar (the property value) can be replaced by a 'command' or a 'commands' object, in which case the command will be executed to provide the property value."
+            ],
+            "type": "object",
+            "patternProperties": {
+                "^.*$": {
+                    "description": "The name of the property, the value being not specified",
+                    "type": [
+                        "boolean",
+                        "object",
+                        "string"
+                    ]
+                }
+            }
+        },
         "status": {
             "description": "Provides informations on how to get the status of the service.",
             "type": "object",
@@ -301,7 +323,14 @@
                 "live": {
                     "description": "A command which must identify the node which hosts the 'live' version of the service (if any).",
                     "type": "string"
-               }
+                },
+                "monitor": {
+                    "description": "",
+                    "type": "object",
+                    "properties": {
+
+                    }
+                }
             }
         },
         "wantsLocal": {

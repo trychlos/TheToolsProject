@@ -46,25 +46,6 @@
                 }
             }
         },
-        "properties": {
-            "description_array": [
-                "A free list of properties attached to this node.",
-                "Any property can be attached to a node, and these properties can be requested by verbs.",
-                "When property is a boolean or a string, it can usually be requested as 'property=value'.",
-                "When property is an object, then all the keys hierarchy must be specified when requested so that the got value be a scalar, as 'property.key1.key2=value'."
-            ],
-            "type": "object",
-            "patternProperties": {
-                "^.*$": {
-                    "description": "The name of the property, the value being not specified",
-                    "type": [
-                        "boolean",
-                        "object",
-                        "string"
-                    ]
-                }
-            }
-        },
         "Services": {
             "description": "The services running (and managed) on this node. Deprecated in favor of 'services' in v4.10.",
             "deprecated": true
@@ -72,21 +53,15 @@
         "services": {
             "description_array": [
                 "The services running (and managed) on this node.",
-                "Note that even if the node doesn't want override any service configuration option, it still MUST define the service here to mark it as managed by the node."
+                "Note that even if the node doesn't want override any service configuration option, it still MUST define the service here to mark it as managed by the node.",
+                "All the service configuration is described in the services_service.schema.json file."
             ],
             "type": "object",
             "properties": {
                 "patternProperties": {
                     "^.*$": {
                         "description": "The service name, available in commands values as <SERVICE> macro.",
-                        "type": "object",
-                        "properties": {
-                            "enabled": {
-                                "description": "Whether this service is enabled on the node.",
-                                "type": "boolean",
-                                "default": true
-                            }
-                        }
+                        "type": "object"
                     }
                 }
             }
