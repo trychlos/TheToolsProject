@@ -49,7 +49,9 @@
 |  174 | 2026- 2- 2 | meteor.pl publish should 1/ check first all that will be needed later 2/ revert errors before publication 3/ let retry if error after publication |
 |  175 | 2026- 2- 5 | services.pl list -services should alpha-order the list of display services (to be deterministic) |
 |  176 | 2026- 2- 5 | services.pl list -services should have an option to list the services running in the environment (resp. in all environmnts) |
-|  177 |  |  |
+|  177 | 2026- 2- 7 | <ENVIRONMENT> macro should be honored by all verbs i.e; by TTP::commandExec() |
+|  178 | 2026- 2- 8 | credentials.dir property is not consistent with other (like logsDir) properties - has been introduced in v4.7 but should be reversed |
+|  179 |  |  |
 
 ---
 ## Done

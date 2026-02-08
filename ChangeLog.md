@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - Display the starting version in all deprecation messages
 
 ### 4.31.0
 

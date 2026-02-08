@@ -214,10 +214,10 @@ msgVerbose( "got alertsDir='".( $opt_alertsDir ? 'true':'false' )."'" );
 msgVerbose( "got keys=[".join( ',', @opt_keys )."]" );
 
 # removed options
-msgErr( "'--nodesRoot' option is deprecated and not replaced. You should update your configurations and/or your code." ) if $opt_nodeRoot;
+msgErr( "'--nodesRoot' option is deprecated since v4.7 and not replaced. You should update your code and/or your configurations." ) if $opt_nodeRoot;
 
 # deprecated options
-msgWarn( "'--logsDaily' option is deprecated in favor of '--logsPeriodic'. You should update your configurations and/or your code." ) if $opt_logsDaily;
+msgWarn( "'--logsDaily' option is deprecated in favor of '--logsPeriodic' since v4.7. You should update your code and/or your configurations." ) if $opt_logsDaily;
 
 if( !TTP::errs()){
 	listAlertsDir() if $opt_alertsDir;

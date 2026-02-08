@@ -61,11 +61,11 @@ my $Const = {
 };
 
 # -------------------------------------------------------------------------------------------------
-# Returns the configured alertsDir (when alerts are sent by file), defaulting to tempDir()
+# Returns the configured alertsFileDropdir (when alerts are sent by file), defaulting to tempDir()
 # (I):
 # - none
 # (O):
-# - returns the alertsdir
+# - returns the alertsFileDropdir
 
 sub alertsFileDropdir {
 	my $dir = $ep->var([ 'alerts', 'withFile', 'dropDir' ]) || File::Spec->catdir( TTP::tempDir(), 'TTP', 'alerts' );
@@ -339,7 +339,7 @@ sub dbmsArchivesPeriodic {
 			$dir = $ep->var([ 'DBMS', 'archivesDir' ]);
 			if( $dir ){
 				if( !$ep->{_warnings}{archivessdir} ){
-					msgWarn( "'DBMS.archivesDir' property is deprecated in favor of 'DBMS.archives.periodicDir'. You should update your configurations." );
+					msgWarn( "'DBMS.archivesDir' property is deprecated in favor of 'DBMS.archives.periodicDir' since v4.10. You should update your configurations." );
 					$ep->{_warnings}{archivessdir} = true;
 				}
 			}
@@ -369,7 +369,7 @@ sub dbmsArchivesRoot {
 			$dir = $ep->var([ 'DBMS', 'archivesRoot' ]);
 			if( $dir ){
 				if( !$ep->{_warnings}{archivessroot} ){
-					msgWarn( "'DBMS.archivesRoot' property is deprecated in favor of 'DBMS.archives.rootDir'. You should update your configurations." );
+					msgWarn( "'DBMS.archivesRoot' property is deprecated in favor of 'DBMS.archives.rootDir' since v4.10. You should update your configurations." );
 					$ep->{_warnings}{archivessroot} = true;
 				}
 			}
@@ -404,7 +404,7 @@ sub dbmsBackupsPeriodic {
 			$dir = $ep->var([ 'DBMS', 'backupsDir' ], $opts );
 			if( $dir ){
 				if( !$ep->{_warnings}{backupsdir} ){
-					msgWarn( "'DBMS.backupsDir' property is deprecated in favor of 'DBMS.backups.periodicDir'. You should update your configurations." );
+					msgWarn( "'DBMS.backupsDir' property is deprecated in favor of 'DBMS.backups.periodicDir' since v4.8. You should update your configurations." );
 					$ep->{_warnings}{backupsdir} = true;
 				}
 			}
@@ -435,7 +435,7 @@ sub dbmsBackupsRoot {
 			$dir = $ep->var([ 'DBMS', 'backupsRoot' ]);
 			if( $dir ){
 				if( !$ep->{_warnings}{backupsroot} ){
-					msgWarn( "'DBMS.backupsRoot' property is deprecated in favor of 'DBMS.backups.rootDir'. You should update your configurations." );
+					msgWarn( "'DBMS.backupsRoot' property is deprecated in favor of 'DBMS.backups.rootDir' since v4.8. You should update your configurations." );
 					$ep->{_warnings}{backupsroot} = true;
 				}
 			}
@@ -562,7 +562,7 @@ sub logsCommands {
 		if( !$dir ){
 			$dir = $ep->var( 'logsCommands' );
 			if( $dir && $ep->bootstrapped() && !$ep->{_warnings}{logscommands} && !$ENV{ttp_me} ){
-				msgWarn( "'logsCommands' property is deprecated in favor of 'logs.commandsDir'. You should update your configurations." );
+				msgWarn( "'logsCommands' property is deprecated in favor of 'logs.commandsDir' since v4.7. You should update your configurations." );
 				$ep->{_warnings}{logscommands} = true;
 			}
 		}
@@ -591,7 +591,7 @@ sub logsMain {
 		if( !$file ){
 			$file = $ep->var( 'logsMain' );
 			if( $file && $ep->bootstrapped() && !$ep->{_warnings}{logsmain} && !$ENV{ttp_me} ){
-				msgWarn( "'logsMain' property is deprecated in favor of 'logs.mainFile'. You should update your configurations." );
+				msgWarn( "'logsMain' property is deprecated in favor of 'logs.mainFile' since v4.7. You should update your configurations." );
 				$ep->{_warnings}{logsmain} = true;
 			}
 		}
@@ -621,7 +621,7 @@ sub logsPeriodic {
 		if( !$dir ){
 			$dir = $ep->var( 'logsDaily' );
 			if( $dir && $ep->bootstrapped() && !$ep->{_warnings}{logsdaily} && !$ENV{ttp_me} ){
-				msgWarn( "'logsDaily' property is deprecated in favor of 'logs.periodicDir'. You should update your configurations." );
+				msgWarn( "'logsDaily' property is deprecated in favor of 'logs.periodicDir' since v4.7. You should update your configurations." );
 				$ep->{_warnings}{logsdaily} = true;
 			}
 		}
@@ -649,7 +649,7 @@ sub logsRoot {
 		if( !$dir ){
 			$dir = $ep->var( 'logsRoot' );
 			if( $dir && $ep->bootstrapped() && !$ep->{_warnings}{logsroot} && !$ENV{ttp_me} ){
-				msgWarn( "'logsRoot' property is deprecated in favor of 'logs.rootDir'. You should update your configurations." );
+				msgWarn( "'logsRoot' property is deprecated in favor of 'logs.rootDir' since v4.7. You should update your configurations." );
 				$ep->{_warnings}{logsroot} = true;
 			}
 		}

@@ -175,8 +175,8 @@ msgVerbose( "got service='$opt_service'" );
 msgVerbose( "got keys=[".join( ',', @opt_keys )."]" );
 
 # deprecated options
-msgWarn( "'--backupsDir' option is deprecated in favor of '--backupsPeriodic'. You should update your configurations and/or your code." ) if $opt_backupsDir;
-msgWarn( "'--archivesDir' option is deprecated in favor of '--archivesPeriodic'. You should update your configurations and/or your code." ) if $opt_archivesDir;
+msgWarn( "'--backupsDir' option is deprecated in favor of '--backupsPeriodic' since v4.9. You should update your code and/or your configurations." ) if $opt_backupsDir;
+msgWarn( "'--archivesDir' option is deprecated in favor of '--archivesPeriodic' since v4.10. You should update your code and/or your configurations." ) if $opt_archivesDir;
 
 # warn if no option has been requested
 msgWarn( "none of '--backupsRoot', '--backupsPeriodic', '--archivesRoot', '--archivesPeriodic' or '--key' options has been requested, nothing to do" ) if !$opt_backupsRoot && !$opt_backupsDir && !$opt_backupsPeriodic && !$opt_archivesRoot && !$opt_archivesDir && !$opt_archivesPeriodic && !scalar( @opt_keys );

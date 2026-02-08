@@ -142,18 +142,18 @@ sub environment {
 		if( !defined( $envId )){
 			$envId = $envObject->{type};
 			if( defined( $envId )){
-				msgWarn( "'environment.type' property is deprecated in favor of 'environment.id'. You should update your configurations." );
+				msgWarn( "'environment.type' property is deprecated in favor of 'environment.id' since v4.2. You should update your code and/or your configurations." );
 			}
 		}
 	} else {
 		$envObject = $self->jsonData()->{Environment};
 		if( defined( $envObject )){
-			msgWarn( "'Environment' property is deprecated in favor of 'environment'. You should update your configurations." );
+			msgWarn( "'Environment' property is deprecated in favor of 'environment' since v4.2. You should update your code and/or your configurations." );
 			$envId = $envObject->{id};
 			if( !defined( $envId )){
 				$envId = $envObject->{type};
 				if( defined( $envId )){
-					msgWarn( "'environment.type' property is deprecated in favor of 'environment.id'. You should update your configurations." );
+					msgWarn( "'environment.type' property is deprecated in favor of 'environment.id' since v4.2. You should update your code and/or your configurations." );
 				}
 			}
 		}
@@ -200,7 +200,7 @@ sub evaluate {
 	$services = $data->{Services};
 	if( $services && scalar( keys %{$services} ) > 0 ){
 		if( !$ep->{_warnings}{services} ){
-			msgWarn( "'Services' property is deprecated in favor of 'services'. You should update your configurations." );
+			msgWarn( "'Services' property is deprecated in favor of 'services' since v4.10. You should update your code and/or your configurations." );
 			$ep->{_warnings}{services} = true;
 		}
 		foreach my $it ( keys %{$services} ){
@@ -509,11 +509,11 @@ sub finder {
 	if( !$dirs ){
 		$dirs = $ep->var([ 'nodes', 'dirs' ]);
 		if( $dirs ){
-			msgWarn( "'nodes.dirs' property is deprecated in favor of 'nodes.confDirs'. You should update your configurations." );
+			msgWarn( "'nodes.dirs' property is deprecated in favor of 'nodes.confDirs' since v4.7. You should update your code and/or your configurations." );
 		} else {
 			$dirs = $ep->var( 'nodesDirs' );
 			if( $dirs ){
-				msgWarn( "'nodesDirs' property is deprecated in favor of 'nodes.confDirs'. You should update your configurations." );
+				msgWarn( "'nodesDirs' property is deprecated in favor of 'nodes.confDirs' since v4.7. You should update your code and/or your configurations." );
 			}
 		}
 	}

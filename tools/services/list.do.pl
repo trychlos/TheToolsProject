@@ -372,7 +372,7 @@ if( $opt_workload && !$opt_commands && !$opt_details ){
 	msgWarn( "a workload is named, but without any requested information" );
 }
 if( $opt_type ){
-	msgWarn( "'--type' option has been obsoleted in favor of '--identifier'. Please update your codes or configurations." );
+	msgWarn( "'--type' option has been obsoleted in favor of '--identifier' since v4.10. You should update your code and/or your configurations." );
 	if( $opt_identifier ){
 		msgErr( "'--type' and '--identifier' options should not be both specified" );
 	} else {

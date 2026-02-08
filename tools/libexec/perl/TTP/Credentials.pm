@@ -65,7 +65,7 @@ sub finder {
 	if( !$dirs ){
 		$dirs = $ep->var( 'credentialsDirs' );
 		if( $dirs ){
-			msgWarn( "'credentialsDirs' property is deprecated in favor of 'credentials.dirs'. You should update your configurations." );
+			msgWarn( "'credentialsDirs' property is deprecated in favor of 'credentials.dirs' since v4.7. You should update your code and/or your configurations." );
 		}
 	}
 	$finder{dirs} = $dirs if $dirs;

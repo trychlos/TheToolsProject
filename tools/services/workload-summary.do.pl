@@ -418,7 +418,7 @@ sub get_since_get_commands {
 	if( !$commands || !scalar( @${commands} )){
 		$commands = TTP::commandByOS([ 'workloadSummary', 'perPeriod', 'get' ]);
 		if( $commands && scalar( @${commands} )){
-			msgWarn( "'perPeriod.get' property is deprecated in favor of 'sinceRun.get'. You should update your configurations." );
+			msgWarn( "'perPeriod.get' property is deprecated in favor of 'sinceRun.get' since v4.31. You should update your code and/or your configurations." );
 		}
 	}
 	return $commands;
@@ -433,7 +433,7 @@ sub get_since_publish_bottom_summary {
 	if( !defined( $value )){
 		$value = TTP::var([ 'workloadSummary', 'perPeriod', 'publish', 'bottomSummary' ]);
 		if( defined( $value )){
-			msgWarn( "'perPeriod.publish.bottomSummary' property is deprecated in favor of 'sinceRun.publish.bottomSummary'. You should update your configurations." );
+			msgWarn( "'perPeriod.publish.bottomSummary' property is deprecated in favor of 'sinceRun.publish.bottomSummary' since v4.31. You should update your code and/or your configurations." );
 		}
 	}
 	$value = true if !defined( $value );
@@ -449,7 +449,7 @@ sub get_since_publish_commands {
 	if( !$commands || !scalar( @${commands} )){
 		$commands = TTP::commandByOS([ 'workloadSummary', 'perPeriod', 'publish' ]);
 		if( $commands && scalar( @${commands} )){
-			msgWarn( "'perPeriod.publish' property is deprecated in favor of 'sinceRun.publish'. You should update your configurations." );
+			msgWarn( "'perPeriod.publish' property is deprecated in favor of 'sinceRun.publish' since v4.31. You should update your code and/or your configurations." );
 		}
 	}
 	return $commands;
@@ -464,7 +464,7 @@ sub get_since_publish_stdout {
 	if( !defined( $value )){
 		$value = TTP::var([ 'workloadSummary', 'perPeriod', 'publish', 'stdout' ]);
 		if( defined( $value )){
-			msgWarn( "'perPeriod.publish.stdout' property is deprecated in favor of 'sinceRun.publish.stdout'. You should update your configurations." );
+			msgWarn( "'perPeriod.publish.stdout' property is deprecated in favor of 'sinceRun.publish.stdout' since v4.31. You should update your code and/or your configurations." );
 		}
 	}
 	$value = false if !defined( $value );
@@ -480,7 +480,7 @@ sub get_since_publish_top_summary {
 	if( !defined( $value )){
 		$value = TTP::var([ 'workloadSummary', 'perPeriod', 'publish', 'topSummary' ]);
 		if( defined( $value )){
-			msgWarn( "'perPeriod.publish.topSummary' property is deprecated in favor of 'sinceRun.publish.topSummary'. You should update your configurations." );
+			msgWarn( "'perPeriod.publish.topSummary' property is deprecated in favor of 'sinceRun.publish.topSummary' since v4.31. You should update your code and/or your configurations." );
 		}
 	}
 	$value = true if !defined( $value );
@@ -496,7 +496,7 @@ sub get_workload_publish_commands {
 	if( !$commands || !scalar( @${commands} )){
 		$commands = TTP::commandByOS([ 'workloadSummary', 'perWorkload', 'publish' ]);
 		if( $commands && scalar( @${commands} )){
-			msgWarn( "'perWorkload.publish' property is deprecated in favor of 'workloadRun.publish'. You should update your configurations." );
+			msgWarn( "'perWorkload.publish' property is deprecated in favor of 'workloadRun.publish' since v4.31. You should update your code and/or your configurations." );
 		}
 	}
 	return $commands;
@@ -511,7 +511,7 @@ sub get_workload_publish_per_command_commands {
 	if( !$commands || !scalar( @${commands} )){
 		$commands = TTP::commandByOS([ 'workloadSummary', 'perWorkload', 'perCommand', 'publish' ]);
 		if( $commands && scalar( @${commands} )){
-			msgWarn( "'perWorkload.perCommand.publish' property is deprecated in favor of 'workloadRun.perCommand.publish'. You should update your configurations." );
+			msgWarn( "'perWorkload.perCommand.publish' property is deprecated in favor of 'workloadRun.perCommand.publish' since v4.31. You should update your code and/or your configurations." );
 		}
 	}
 	return $commands;
@@ -526,7 +526,7 @@ sub get_workload_publish_per_command_convert_sql {
 	if( !defined( $convert )){
 		$convert = TTP::var([ 'workloadSummary', 'perWorkload', 'perCommand', 'convertToSql' ]);
 		if( defined( $convert )){
-			msgWarn( "'perWorkload.perCommand.convertToSql' property is deprecated in favor of 'workloadRun.perCommand.convertToSql'. You should update your configurations." );
+			msgWarn( "'perWorkload.perCommand.convertToSql' property is deprecated in favor of 'workloadRun.perCommand.convertToSql' since v4.31. You should update your code and/or your configurations." );
 		}
 	}
 	$convert = false if !defined( $convert );
@@ -542,7 +542,7 @@ sub get_workload_publish_stdout {
 	if( !defined( $stdout )){
 		$stdout = TTP::var([ 'workloadSummary', 'perWorkload', 'publish', 'stdout' ]);
 		if( defined( $stdout )){
-			msgWarn( "'perWorkload.publish.stdout' property is deprecated in favor of 'workloadRun.publish.stdout'. You should update your configurations." );
+			msgWarn( "'perWorkload.publish.stdout' property is deprecated in favor of 'workloadRun.publish.stdout' since v4.31. You should update your code and/or your configurations." );
 		}
 	}
 	$stdout = false if !defined( $stdout );

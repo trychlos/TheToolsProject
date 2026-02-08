@@ -33,7 +33,7 @@
 #
 # JSON specific configuration:
 #
-# - monitoredDir: the directory to be monitored for alerts files, defaulting to alertsDir
+# - monitoredDir: the directory to be monitored for alerts files, defaulting to TTP::alertsFileDropdir()
 # - monitoredFile: a regular expression to match the alert files, defaulting to '^.*$'
 # - workerInterval, the scan interval, defaulting to 10000 ms (10 sec.)
 

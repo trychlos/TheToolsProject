@@ -164,7 +164,7 @@ $opt_targetpath = TTP::Path::fromCommand( $opt_targetcmd ) if $opt_targetcmd;
 
 # --dirs option is deprecated as of v4.2
 if( $opt_dirs_set ){
-	msgWarn( "'--dirs' option is deprecated since v4.2. You should update your code." );
+	msgWarn( "'--dirs' option is deprecated since v4.2 and not replaced. You should update your code and/or your configurations." );
 }
 
 if( !TTP::errs()){

@@ -74,7 +74,7 @@ sub var {
 		unshift( @newKeys, 'Telemetry' );
 		$value = TTP::var( \@newKeys );
 		if( defined( $value )){
-			msgWarn( "'Telemetry' property is deprecated in favor of 'telemetry'. You should update your configurations." );
+			msgWarn( "'Telemetry' property is deprecated in favor of 'telemetry' since v4.9. You should update your code and/or your configurations." );
 		}
 	}
 	return $value;

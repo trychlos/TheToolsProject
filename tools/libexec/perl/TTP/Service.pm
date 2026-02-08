@@ -357,7 +357,7 @@ sub enum {
 				}
 			}
 			if( $deprecated && !$ep->{_warnings}{services} ){
-				msgWarn( "'Services' property is deprecated in favor of 'services'. You should update your configurations." );
+				msgWarn( "'Services' property is deprecated in favor of 'services' since v4.10. You should update your code and/or your configurations." );
 				$ep->{_warnings}{services} = true;
 			}
 		} else {
@@ -382,7 +382,7 @@ sub finder {
 	if( !$dirs ){
 		$dirs = $ep->var( 'servicesDirs' );
 		if( $dirs ){
-			msgWarn( "'servicesDirs' property is deprecated in favor of 'services.confDirs'. You should update your configurations." );
+			msgWarn( "'servicesDirs' property is deprecated in favor of 'services.confDirs' since v4.10. You should update your code and/or your configurations." );
 		}
 	}
 	$finder{dirs} = $dirs if $dirs;
@@ -532,7 +532,7 @@ sub serviceVar {
 			@first_keys = ( 'Services', $opts->{service}->name(), @{$keys} );
 			$value = $jsonable->TTP::IJSONable::var( \@first_keys );
 			if( defined( $value ) && !$ep->{_warnings}{services} ){
-				msgWarn( "'Services' property is deprecated in favor of 'services'. You should update your configurations." );
+				msgWarn( "'Services' property is deprecated in favor of 'services' since v4.10. You should update your code and/or your configurations." );
 				$ep->{_warnings}{services} = true;
 			}
 		}

@@ -78,12 +78,12 @@ my $Const = {
 # - returns the alertsdir
 
 sub alertsDir {
-	msgWarn( "TTP::alertsDir() is deprecated in favor of TTP:alertsFileDropdir(). You should update your code." );
+	msgWarn( "TTP::alertsDir() is deprecated in favor of TTP:alertsFileDropdir() since with v4.1. You should update your code and/or your configurations." );
 	return TTP::alertsFileDropdir( @_ );
 }
 
 # -------------------------------------------------------------------------------------------------
-# Returns the configured alertsDir (when alerts are sent by file), defaulting to tempDir()
+# Returns the configured alertsFileDropdir (when alerts are sent by file), defaulting to tempDir()
 # (I):
 # - none
 # (O):
@@ -1188,7 +1188,7 @@ sub logsCommands {
 #   and at least not definitive while the node has not been instanciated/loaded/evaluated
 
 sub logsDaily {
-	msgWarn( "TTP::logsDaily() is deprecated in favor of TTP:logsPeriodic(). You should update your code." );
+	msgWarn( "TTP::logsDaily() is deprecated in favor of TTP:logsPeriodic() since v4.7. You should update your code and/or your configurations." );
 	return TTP::Path::logsPeriodic( @_ );
 }
 
@@ -1265,7 +1265,7 @@ sub nodeName {
 # - returns the 'nodeRoot' directory - removed in v4.7
 
 sub nodeRoot {
-	msgErr( __PACKAGE__."::nodeRoot() is deprecated and not replaced. You should update your code." );
+	msgErr( __PACKAGE__."::nodeRoot() is deprecated since v4.7 and not replaced. You should update your code and/or your configurations." );
 	TTP::stackTrace();
 }
 

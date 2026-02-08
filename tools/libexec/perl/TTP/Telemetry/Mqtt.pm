@@ -100,7 +100,7 @@ sub publish {
 		if( !$commands || !scalar( @{$commands} )){
 			$commands = TTP::commandByOS([ 'Telemetry', 'withMqtt' ]);
 			if( $commands && scalar( @{$commands} )){
-				msgWarn( "'Telemetry' property is deprecated is favor of 'telemetry'. You should update your configurations" );
+				msgWarn( "'Telemetry' property is deprecated is favor of 'telemetry' since v4.9. You should update your code and/or your configurations" );
 			} else {
 				$commands = [ "mqtt.pl publish -topic <TOPIC> -payload \"<VALUE>\"" ];
 			}

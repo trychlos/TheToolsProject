@@ -514,7 +514,7 @@ sub _printMsg_color {
 		if( !$color ){
 			$color = $ep->var([ 'Message', $Const->{$level}{key}, 'color' ]) || '';
 			if( $color && $ep->boostrapped() && !$ep->{_warnings}{message} && !$ENV{ttp_me} ){
-				msgWarn( "'Message' property is deprecated in favor of 'messages'. You should update your configurations." );
+				msgWarn( "'Message' property is deprecated in favor of 'messages' since v4.7. You should update your code and/or your configurations." );
 				$ep->{_warnings}{message} = true;
 			}
 		}
@@ -538,7 +538,7 @@ sub _printMsg_marker {
 		if( !$marker ){
 			$marker = $ep->var([ 'Message', $Const->{$level}{key}, 'marker' ]) || '';
 			if( $marker && $ep->boostrapped() && !$ep->{_warnings}{message} && !$ENV{ttp_me} ){
-				msgWarn( "'Message' property is deprecated in favor of 'messages'. You should update your configurations." );
+				msgWarn( "'Message' property is deprecated in favor of 'messages' since v4.7. You should update your code and/or your configurations." );
 				$ep->{_warnings}{message} = true;
 			}
 		}
@@ -565,7 +565,7 @@ sub _printMsg_withColor {
 		if( !defined $value ){
 			$value = $ep->var([ 'Message', $Const->{$level}{key}, 'withColor' ]);
 			if( defined $value && $ep->boostrapped() && !$ep->{_warnings}{message} && !$ENV{ttp_me} ){
-				msgWarn( "'Message' property is deprecated in favor of 'messages'. You should update your configurations." );
+				msgWarn( "'Message' property is deprecated in favor of 'messages' since v4.7. You should update your code and/or your configurations." );
 				$ep->{_warnings}{message} = true;
 			}
 		}
@@ -588,7 +588,7 @@ sub _printMsg_withLog {
 		if( !defined $value ){
 			$value = $ep->var([ 'Message', $Const->{$level}{key}, 'withLog' ]);
 			if( defined $value && $ep->boostrapped() && !$ep->{_warnings}{message} && !$ENV{ttp_me} ){
-				msgWarn( "'Message' property is deprecated in favor of 'messages'. You should update your configurations." );
+				msgWarn( "'Message' property is deprecated in favor of 'messages' since v4.7. You should update your code and/or your configurations." );
 				$ep->{_warnings}{message} = true;
 			}
 		}

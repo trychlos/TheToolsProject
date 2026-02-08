@@ -380,7 +380,7 @@ sub limitedDatabases {
 	if( !$limit ){
 		$limit = $self->service()->var([ 'DBMS', 'databases' ]);
 		if( $limit ){
-			msgWarn( "'DBMS.databases' property is deprecated in favor of 'DBMS.limitDatabases'. You should update your configurations." );
+			msgWarn( "'DBMS.databases' property is deprecated in favor of 'DBMS.limitDatabases' since v4.12. You should update your code and/or your configurations." );
 		}
 	}
 

@@ -63,12 +63,12 @@ sub connect {
 		if( !$broker ){
 			$broker = $ep->var([ 'MQTTGateway', 'broker' ]);
 			if( $broker ){
-				msgWarn( "'MQTTGateway.broker' property is deprecated in favor of 'MQTTGateway.host'. You should update your configurations." );
+				msgWarn( "'MQTTGateway.broker' property is deprecated in favor of 'MQTTGateway.host' since v4.2. You should update your code and/or your configurations." );
 			}
 		}
 		my $port = $ep->var([ 'MQTTGateway', 'port' ]);
 		if( $port ){
-			msgWarn( "'MQTTGateway.port' property is deprecated in favor of 'MQTTGateway.host'. You should update your configurations." );
+			msgWarn( "'MQTTGateway.port' property is deprecated in favor of 'MQTTGateway.host' since v4.2. You should update your code and/or your configurations." );
 			$broker = "$broker:$port";
 		}
 	}
