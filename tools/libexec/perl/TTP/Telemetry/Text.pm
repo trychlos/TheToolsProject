@@ -141,10 +141,10 @@ sub publish {
 				my $fname = File::Spec->catfile( $dropdir, "$name.prom" );
 				my $content = undef;
 				# get previous content
-				my $text = path( $fname )->slurp_utf8() // '';
-				if( $text ){
-					$content = $text;
-					if( index( $text, $line ) != -1 ){
+				my $path = path( $fname );
+				if( $path->is_file()){
+					$content = $path->slurp_utf8();
+					if( index( $content, $line ) != -1 ){
 						my $searched = $line;
 						$searched =~ s/\{/\\{/g;
 						$content =~ s/$searched [^\n]*/$line $value/;

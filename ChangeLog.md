@@ -8,6 +8,7 @@
 
     - Display the starting version in all deprecation messages
     - DBMS.host is deprecated in favor of 'host'
+    - dbms.pl telemetry -text: check the existance of the .prom file before reading it
 
 ### 4.31.0
 
