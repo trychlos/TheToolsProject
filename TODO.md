@@ -10,7 +10,6 @@
 
 |   Id | Date       | Description and comment(s) |
 | ---: | :---       | :---                       |
-|    8 | 2024- 5- 2 | implements and honors text-based telemetry |
 |   53 | 2025- 1-17 | have a timeout on movedirs and purgedirs at least, maybe on all verbs which needs a network access + alert when this timeout is reached |
 |      | 2025- 1-20 | daemon.pl command done |
 |      | 2025- 4-10 | should build an inventory of what should be done, and what can be done |
@@ -48,7 +47,6 @@
 |  174 | 2026- 2- 2 | meteor.pl publish should 1/ check first all that will be needed later 2/ revert errors before publication 3/ let retry if error after publication |
 |  175 | 2026- 2- 5 | services.pl list -services should alpha-order the list of display services (to be deterministic) |
 |  176 | 2026- 2- 5 | services.pl list -services should have an option to list the services running in the environment (resp. in all environmnts) |
-|  177 | 2026- 2- 7 | <ENVIRONMENT> macro should be honored by all verbs i.e; by TTP::commandExec() |
 |  178 | 2026- 2- 8 | credentials.dir property is not consistent with other (like logsDir) properties - has been introduced in v4.7 but should be reversed |
 |  179 | 2026- 2- 9 | ttp.pl writejson is deprecated as of v4.32 - remove it later ? |
 |  180 |  |  |
@@ -58,7 +56,11 @@
 
 |   Id | Date       | Description and comment(s) |
 | ---: | :---       | :---                       |
+|    8 | 2024- 5- 2 | implements and honors text-based telemetry |
+|      | 2026- 2- 9 | has been done some time ago... |
 |   61 | 2025- 4- 8 | ttp.pl writejson should should actually be ttp.pl filewrite as the json is provided as a string on input - so this is not dedicated to json |
+|      | 2026- 2- 9 | done |
+|  177 | 2026- 2- 7 | <ENVIRONMENT> macro should be honored by all verbs i.e; by TTP::commandExec() |
 |      | 2026- 2- 9 | done |
 
 ---

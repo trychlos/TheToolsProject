@@ -1449,6 +1449,7 @@ sub stackTrace {
 # ------------------------------------------------------------------------------------------------
 # Substitute the macros in a string, array or hash (values)
 # Always honors <NODE> macro which defaults to current execution node
+# Always honors <ENVIRONMENT> macro which defaults to node environment identifier, which itself defaults to an empty string
 # Macros must be specified as {
 #	MACRO => value
 # }
@@ -1489,6 +1490,10 @@ sub substituteMacros {
 			if( !defined $macros->{NODE} && $ep->node()){
 				my $executionNode = $ep->node()->name();
 				$data =~ s/<NODE>/$executionNode/g;
+			}
+			if( !defined $macros->{ENVIRONMENT} && $ep->node()){
+				my $env = $ep->node()->environment() // '';
+				$data =~ s/<ENVIRONMENT>/$env/g;
 			}
 		# when output data is same than prev data, then all has been changed and nothing we are capable of is left
 		} while( $data ne $prev );
