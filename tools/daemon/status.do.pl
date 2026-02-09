@@ -8,6 +8,8 @@
 # @(-) --name=<name>           the daemon name [${name}]
 # @(-) --port=<port>           the port number to address [${port}]
 # @(-) --[no]http              publish the metrics to the (HTTP-based) Prometheus PushGateway system [${http}]
+# @(-) --[no]mqtt              publish the metrics to the (MQTT-based) messaging system [${mqtt}]
+# @(-) --[no]text              publish the metrics to the (text-based) Prometheus TextFile Collector system [${text}]
 # @(-) --metric=<metric>       the metric to be published [${metric}]
 # @(-) --label=<name=value>    label(s) to be added to the published metric, may be specified several times or as comma-separated strings [${label}]
 #
@@ -51,6 +53,8 @@ my $defaults = {
 	name => '',
 	port => '',
 	http => 'no',
+	mqtt => 'no',
+	text => 'no',
 	metric => 'service_daemon',
 	label => ''
 };
@@ -60,6 +64,8 @@ my $opt_name = $defaults->{name};
 my $opt_port = -1;
 my $opt_port_set = false;
 my $opt_http = false;
+my $opt_mqtt = false;
+my $opt_text = false;
 my $opt_metric = $defaults->{metric};
 my @opt_labels = ();
 
@@ -95,7 +101,9 @@ sub doStatus {
 			help => 'Daemon status',
 			labels => \@opt_labels
 		})->publish({
-			http => $opt_http
+			http => $opt_http,
+			mqtt => $opt_mqtt,
+			text => $opt_text
 		});
 	}
 }
@@ -117,6 +125,8 @@ if( !GetOptions(
 		$opt_port_set = true;
 	},
 	"http!"				=> \$opt_http,
+	"mqtt!"				=> \$opt_mqtt,
+	"text!"				=> \$opt_text,
 	"metric=s"			=> \$opt_metric,
 	"label=s@"			=> \@opt_labels )){
 
@@ -137,6 +147,8 @@ msgVerbose( "got name='$opt_name'" );
 msgVerbose( "got port='$opt_port'" );
 msgVerbose( "got port_set='".( $opt_port_set ? 'true':'false' )."'" );
 msgVerbose( "got http='".( $opt_http ? 'true':'false' )."'" );
+msgVerbose( "got mqtt='".( $opt_mqtt ? 'true':'false' )."'" );
+msgVerbose( "got text='".( $opt_text ? 'true':'false' )."'" );
 msgVerbose( "got metric='$opt_metric'" );
 @opt_labels = split( /,/, join( ',', @opt_labels ));
 msgVerbose( "got labels=[".join( ',', @opt_labels )."]" );

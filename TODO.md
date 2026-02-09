@@ -15,10 +15,6 @@
 |      | 2025- 4-10 | should build an inventory of what should be done, and what can be done |
 |   54 | 2025- 1-19 | verbs should have an internal telemetry for the memory they consume, the execution elapsed time |
 |      | 2025- 4-29 | have to define the telemetry to get and how and where to publish it |
-|   55 | 2025- 2-17 | daemon.pl status should have an option to publish to mqtt too |
-|      | 2025- 4-29 | the daemon itself is already able to publish its status to MQTT - is it relevant to have this option |
-|      | 2025- 4-29 | yes, the option is relevant, for consistency first, and to publish status to MQTT if the daemon has disabled it |
-|   57 | 2025- 2-17 | daemon.pl status should have an option to publish to text too |
 |   59 | 2025- 2-18 | Daemon.pm: metrics for the daemon are windows-specific: re-code for unix'es |
 |      | 2025- 4-14 | mswin32 metrics are isolated |
 |   78 | 2025- 4-12 | some daemons should be moveable to libexec/daemons |
@@ -58,6 +54,12 @@
 | ---: | :---       | :---                       |
 |    8 | 2024- 5- 2 | implements and honors text-based telemetry |
 |      | 2026- 2- 9 | has been done some time ago... |
+|   55 | 2025- 2-17 | daemon.pl status should have an option to publish to mqtt too |
+|      | 2025- 4-29 | the daemon itself is already able to publish its status to MQTT - is it relevant to have this option |
+|      | 2025- 4-29 | yes, the option is relevant, for consistency first, and to publish status to MQTT if the daemon has disabled it |
+|      | 2026- 2- 9 | done |
+|   57 | 2025- 2-17 | daemon.pl status should have an option to publish to text too |
+|      | 2026- 2- 9 | done |
 |   61 | 2025- 4- 8 | ttp.pl writejson should should actually be ttp.pl filewrite as the json is provided as a string on input - so this is not dedicated to json |
 |      | 2026- 2- 9 | done |
 |  177 | 2026- 2- 7 | <ENVIRONMENT> macro should be honored by all verbs i.e; by TTP::commandExec() |

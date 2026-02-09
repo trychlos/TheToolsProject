@@ -14,6 +14,7 @@
     - services.pl by-property new verb, thus bumping minor candidate version number
     - Deprecate 'ttp.pl writejson' in favor of 'ttp.pl writefile' (todo #61)
     - TTP::commandExec() now honors <ENVIRONMENT> macro (todo #177)
+    - daemon.pl status publishes its telemetry to MQTT and as text (todo #55, #57)
 
 ### 4.31.0
 
