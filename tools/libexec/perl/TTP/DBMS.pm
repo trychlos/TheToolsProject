@@ -166,7 +166,7 @@ sub computeDefaultBackupFilename {
 sub connectionString {
 	my ( $self ) = @_;
 
-	return $self->service()->host();
+	return $self->service()->host( $self->node());
 }
 
 # -------------------------------------------------------------------------------------------------
