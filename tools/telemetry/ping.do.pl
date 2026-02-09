@@ -533,6 +533,9 @@ foreach my $label ( @opt_appends ){
 	}
 }
 
+# warns if we publish both to http and text (as both go to same telemetry service)
+msgWarn( "publishing telemetry to both 'http' and 'text' media is not advised and should be avoided" ) if $opt_publish_http && $opt_publish_text;
+
 if( !TTP::errs()){
 	doPing();
 }

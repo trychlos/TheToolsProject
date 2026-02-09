@@ -229,6 +229,9 @@ foreach my $label ( @opt_appends ){
 
 msgWarn( "at least one of '--mqtt', '--http' or '--text' options should be specified" ) if !$opt_mqtt && !$opt_http && !$opt_text;
 
+# warns if we publish both to http and text (as both go to same telemetry service)
+msgWarn( "publishing telemetry to both 'http' and 'text' media is not advised and should be avoided" ) if $opt_http && $opt_text;
+
 if( !TTP::errs()){
 	doPublish() if $opt_mqtt || $opt_http || $opt_text;
 }

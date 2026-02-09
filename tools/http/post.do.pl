@@ -32,8 +32,6 @@ use warnings;
 
 use LWP;
 
-use TTP::Metric;
-
 my $defaults = {
 	help => 'no',
 	colored => 'no',

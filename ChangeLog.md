@@ -10,6 +10,7 @@
     - DBMS.host is deprecated in favor of 'host'
     - dbms.pl telemetry -text: check the existance of the .prom file before reading it
     - TTP::DBMS::newDbms() no more tries to load ':all' as there is not exported method in our DBMS packages
+    - Warns when trying to publish a telemetry to both 'http' and 'text' media
 
 ### 4.31.0
 

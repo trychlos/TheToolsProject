@@ -228,6 +228,9 @@ msgVerbose( "got appends=[".join( ',', @opt_appends )."]" );
 # a service name is mandatory when querying its status
 msgErr( "'--name' service name is mandatory when querying for a status" ) if $opt_state && !$opt_name;
 
+# warns if we publish both to http and text (as both go to same telemetry service)
+msgWarn( "publishing telemetry to both 'http' and 'text' media is not advised and should be avoided" ) if $opt_http && $opt_text;
+
 if( !TTP::errs()){
 	my $count = 0;
 	if( $opt_list ){

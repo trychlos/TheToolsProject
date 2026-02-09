@@ -308,16 +308,13 @@ if( scalar @{$databases} ){
 }
 
 # if no option is given, have a warning message
-if( !$opt_dbsize && !$opt_tabcount ){
-	msgWarn( "no measure has been requested" );
-
-}
+msgWarn( "no measure has been requested" ) if !$opt_dbsize && !$opt_tabcount;
 
 # also warns if no telemetry is to be published
-if( !$opt_mqtt && !$opt_http && !$opt_text ){
-	msgWarn( "no telemetry has been requested" );
+msgWarn( "no telemetry has been requested" ) if !$opt_mqtt && !$opt_http && !$opt_text;
 
-}
+# warns if we publish both to http and text (as both go to same telemetry service)
+msgWarn( "publishing telemetry to both 'http' and 'text' media is not advised and should be avoided" ) if $opt_http && $opt_text;
 
 if( !TTP::errs()){
 	doDbSize() if $opt_dbsize;

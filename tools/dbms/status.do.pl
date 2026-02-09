@@ -233,6 +233,9 @@ if( scalar @{$databases} ){
 # if no option is given, have a warning message
 msgWarn( "no status has been requested, exiting gracefully" ) if !$opt_state;
 
+# warns if we publish both to http and text (as both go to same telemetry service)
+msgWarn( "publishing telemetry to both 'http' and 'text' media is not advised and should be avoided" ) if $opt_http && $opt_text;
+
 if( !TTP::errs()){
 	doState() if $opt_state;
 }

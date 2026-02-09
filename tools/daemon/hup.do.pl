@@ -36,7 +36,6 @@ use File::Spec;
 
 use TTP::DaemonConfig;
 use TTP::Finder;
-use TTP::Metric;
 
 my $defaults = {
 	help => 'no',

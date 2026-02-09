@@ -51,7 +51,8 @@
 |  176 | 2026- 2- 5 | services.pl list -services should have an option to list the services running in the environment (resp. in all environmnts) |
 |  177 | 2026- 2- 7 | <ENVIRONMENT> macro should be honored by all verbs i.e; by TTP::commandExec() |
 |  178 | 2026- 2- 8 | credentials.dir property is not consistent with other (like logsDir) properties - has been introduced in v4.7 but should be reversed |
-|  179 |  |  |
+|  179 | 2026- 2- 9 | daemon.pl status should also be able to publish telemetry to mqtt and text |
+|  180 |  |  |
 
 ---
 ## Done

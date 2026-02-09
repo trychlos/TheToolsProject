@@ -279,6 +279,9 @@ if( $opt_publishHeader ){
 	msgWarn( "asking to publish a header without publishing any telemetry it has no sense, will be ignored" ) if !$opt_mqtt && !$opt_http;
 }
 
+# warns if we publish both to http and text (as both go to same telemetry service)
+msgWarn( "publishing telemetry to both 'http' and 'text' media is not advised and should be avoided" ) if $opt_http && $opt_text;
+
 if( !TTP::errs()){
 	doGet() if $opt_url;
 }

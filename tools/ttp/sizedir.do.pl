@@ -193,6 +193,9 @@ $count += 1 if $opt_dirpath;
 $count += 1 if $opt_dircmd;
 msgErr( "one of '--dirpath' and '--dircmd' options must be specified" ) if $count != 1;
 
+# warns if we publish both to http and text (as both go to same telemetry service)
+msgWarn( "publishing telemetry to both 'http' and 'text' media is not advised and should be avoided" ) if $opt_http && $opt_text;
+
 # if we have a source cmd, get the path and make it exist to be sure to have something to publish
 $opt_dirpath = TTP::Path::fromCommand( $opt_dircmd, { makeDirExist => true }) if $opt_dircmd;
 
