@@ -200,7 +200,7 @@ sub newDbms {
 	my $package = $self->var([ 'DBMS', 'package' ]);
 	if( $package ){
 		msgVerbose( __PACKAGE__."::newDbms() got package='$package'" );
-		load $package, ':all';
+		load $package;
 		if( $package->can( 'new' )){
 			$dbms = $package->new( $ep, {
 				node => $args->{node} || $ep->node(),
