@@ -176,6 +176,7 @@ sub site {
 # - an optional options hash with following keys:
 #   > jsonable: a JSONable object to be searched for
 #     defaulting to current execution node, itself defaulting to site
+#   > debug: whether to debug the search, defaulting to false
 # (O):
 # - the evaluated value of this variable, which may be undef
 
@@ -191,6 +192,14 @@ sub var {
 			if( blessed( $jsonable )){
 				if( $jsonable->does( 'TTP::IJSONable' )){
 					$value = $jsonable->var( $keys );
+					if( $opts->{debug} ){
+						print STDERR "jsonable ".Dumper( $jsonable );
+						print STDERR "keys ".Dumper( $keys );
+						print STDERR "value ".Dumper( $value );
+					}
+				} else {
+					msgErr( __PACKAGE__."::var() the provided object is not 'TTP::IJSONable'" );
+					TTP::stackTrace();
 				}
 			} else {
 				msgErr( __PACKAGE__."::var() can't call method 'does' on unblessed reference" );

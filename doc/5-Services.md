@@ -4,8 +4,6 @@
 
 [Introduction](#introduction)
 
-[The `services.pl live` verb](#the-services.pl-live-verb)
-
 ## Introduction
 
 Like its name says, a service is something which provides an action or a result. This is most often one of the hearts of our production. Examples of services are DBMS, MQTT or SMTP gateway, Secured file transfer. A service can be almost anything which wa want be able to address or to request.

@@ -301,15 +301,14 @@
                 "A free list of properties attached to this service (this node).",
                 "Any property can be defined, and these properties can be requested by the 'services.pl by-property' verb.",
                 "When property is a boolean or a string, it can usually be requested as 'property=value'.",
-                "When property is an object, then all the keys hierarchy must be specified when requested so that the got value be a scalar, as 'key1.key2=value'.",
-                "Each scalar (the property value) can be replaced by a 'command' or a 'commands' object, in which case the command will be executed to provide the property value."
+                "When property is an object, then all the keys hierarchy must be specified when requested so that the got value be a scalar, as 'key1,key2=value'.",
+                "Each final scalar (the property value) can be replaced by a 'command' or a 'commands' object, in which case the command will be executed to provide the property value."
             ],
             "type": "object",
             "patternProperties": {
                 "^.*$": {
                     "description": "The name of the property, the value being not specified",
                     "type": [
-                        "boolean",
                         "object",
                         "string"
                     ]

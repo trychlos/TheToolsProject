@@ -251,7 +251,7 @@ sub coderef_walk {
 
 # -------------------------------------------------------------------------------------------------
 # Read from configuration either a 'command' or a 'commands' property.
-# 'command' itself is obsoleted starting with v4.16
+# 'command' itself is obsoleted starting with v4.16, but has been un-obsoleted back in v4.17
 # Both 'command' and 'commands' accept:
 # - either a single string
 # - or an array
@@ -285,6 +285,8 @@ sub commandByOS {
 			( $res, $obj ) = commandByOS_getObject( \@locals, $opts );
 		}
 	}
+	#print STDERR "res ".Dumper( $res );
+	#print STDERR "obj ".Dumper( $obj );
 
 	# if no error and something has been found, resolve the 'byOS' configs
 	if( $res && $obj ){
