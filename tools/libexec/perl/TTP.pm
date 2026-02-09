@@ -937,6 +937,52 @@ sub exit {
 }
 
 # -------------------------------------------------------------------------------------------------
+# Append some text data to a file
+# (I):
+# - the data to be written into
+# - the full path to be written into, is created if not yet exists
+# (O):
+# - returns true|false
+
+sub fileAppend {
+	my ( $data, $path ) = @_;
+	msgVerbose( "fileAppend() to '$path'" );
+	my ( $vol, $dirs, $file ) = File::Spec->splitpath( $path );
+	TTP::Path::makeDirExist( File::Spec->catdir( $vol, $dirs ));
+	my $path_obj = path( $path );
+	my $res;
+	chomp( $data );
+	if( $path_obj->exists()){
+		$res = $path_obj->append_utf8( $data.EOL );
+	} else {
+		$res = $path_obj->spew_utf8( $data.EOL );
+	}
+	msgVerbose( "fileAppend() returns ".chompDumper( $res ));
+	return $res ? true : false;
+}
+
+# -------------------------------------------------------------------------------------------------
+# Write some text data to a file
+# (I):
+# - the data to be written into
+# - the full path to be created (is overwritten if already exists)
+# (O):
+# - returns true|false
+
+sub fileWrite {
+	my ( $data, $path ) = @_;
+	msgVerbose( "fileWrite() to '$path'" );
+	my ( $vol, $dirs, $file ) = File::Spec->splitpath( $path );
+	TTP::Path::makeDirExist( File::Spec->catdir( $vol, $dirs ));
+	# some daemons may monitor this file in order to be informed of various executions - make sure we end up with an EOL
+	# '$res' is an array with the original path and an interpreted one - may also return true
+	chomp( $data );
+	my $res = path( $path )->spew_utf8( $data.EOL );
+	msgVerbose( "fileWrite() returns ".chompDumper( $res ));
+	return (( looks_like_number( $res ) && $res == 1 ) || ( ref( $res ) eq 'Path::Tiny' && scalar( @{$res} ) > 0 )) ? true : false;
+}
+
+# -------------------------------------------------------------------------------------------------
 # given a command, executes it and extracts the [command.pl verb] lines from stdout, returning the
 # rest as an array
 # (I):

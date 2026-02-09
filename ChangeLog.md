@@ -12,6 +12,7 @@
     - TTP::DBMS::newDbms() no more tries to load ':all' as there is not exported method in our DBMS packages
     - Warns when trying to publish a telemetry to both 'http' and 'text' media
     - services.pl by-property new verb, thus bumping minor candidate version number
+    - Deprecate 'ttp.pl writejson' in favor of 'ttp.pl writefile' (todo #61)
 
 ### 4.31.0
 

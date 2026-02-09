@@ -1,4 +1,4 @@
-# @(#) write JSON data into a file
+# @(#) write text data into a file
 #
 # @(-) --[no]help              print this message, and exit [${help}]
 # @(-) --[no]colored           color the output depending of the message level [${colored}]
@@ -8,7 +8,7 @@
 # @(-) --dir=<dir>             the directory where to create the file [${dir}]
 # @(-) --template=<template>   the filename template [${template}]
 # @(-) --suffix=<suffix>       the filename suffix [${suffix}]
-# @(-) --data=<data>           the data to be written as a JSON string [${data}]
+# @(-) --data=<data>           the text data to be written [${data}]
 # @(-) --[no]append            whether to append to the file [${append}]
 #
 # TheToolsProject - Tools System and Working Paradigm for IT Production
@@ -34,7 +34,6 @@ use utf8;
 use warnings;
 
 use File::Temp;
-use JSON;
 
 use TTP::Path;
 
@@ -57,6 +56,38 @@ my $opt_template = $defaults->{template};
 my $opt_suffix = $defaults->{suffix};
 my $opt_data = $defaults->{data};
 my $opt_append = false;
+
+# -------------------------------------------------------------------------------------------------
+# write the data into the file
+
+sub doWriteData {
+	msgOut( "writing data into ".( $opt_file ? "'$opt_file' file" : "'$opt_dir' dir" )."..." );
+	my $res = false;
+	# if no filename is provided, compute one with maybe a dir, maybe a template, maybe a suffix
+	if( !$opt_file ){
+		my %parms = ();
+		if( $opt_dir ){
+			$parms{DIR} = $opt_dir;
+			TTP::Path::makeDirExist( $opt_dir );
+		}
+		$parms{TEMPLATE} = $opt_template if $opt_template;
+		$parms{SUFFIX} = $opt_suffix if $opt_suffix;
+		$parms{UNLINK} = false;
+		my $tmp = File::Temp->new( %parms );
+		$opt_file = $tmp->filename();
+		msgVerbose( "setting opt_file tp '$opt_file'" );
+	}
+	if( $opt_append ){
+		$res = TTP::fileAppend( $opt_data, $opt_file );
+	} else {
+		$res = TTP::fileWrite( $opt_data, $opt_file );
+	}
+	if( $res ){
+		msgOut( "success" );
+	} else {
+		msgErr( "NOT OK" );
+	}
+}
 
 # =================================================================================================
 # MAIN
@@ -93,17 +124,14 @@ msgVerbose( "got suffix='$opt_suffix'" );
 msgVerbose( "got data='$opt_data'" );
 msgVerbose( "got append='".( defined $opt_append ? ( $opt_append ? 'true':'false' ) : '(undef)' )."'" );
 
-msgWarn( "'ttp.pl writejson' verb is deprecated in favor of 'ttp.pl writefile' since v4.32. You should update your code and/or your configurations." );
+# data is mandatory
+msgErr( "data is mandatory, not specified" ) if !$opt_data;
 
-my @argv = @{ $ep->runner()->argv() };
-shift( @argv );
+# a filename is mandatory if we want to append to it
+msgErr( "filename is mandatory to be able to append to it, not specified" ) if !$opt_file && $opt_append;
 
-my $res = TTP::commandExec( "ttp.pl writefile ".join( ' ', @argv ));
-foreach my $it ( @{$res->{stdouts}} ){
-	print $it.EOL;
-}
-foreach my $it ( @{$res->{stderrs}} ){
-	print $it.EOL;
+if( !TTP::errs()){
+	doWriteData();
 }
 
 TTP::exit();
