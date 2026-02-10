@@ -361,6 +361,7 @@ sub _enumTestSingle {
 # - an optional options hash with following keys:
 #   > inhibit: a node name or a list of node names to prevent from being candidates
 #   > target: a target node name to be chosen among the found candidates
+#   > force: force target, ignoring all safety checks, defaulting to false
 # (O):
 # - the first found node as a TTP::Node instance, or undef
 
@@ -390,20 +391,20 @@ sub findByService {
 	# the preferred candidate is the specified target if any
 	if( $opts->{target} ){
 		$candidate = $class->new( $ep, { node => $opts->{target} });
-		if( !$candidate->findByService_addCandidate( $environment, $service, $founds, $inhibits )){
+		if( !$candidate->findByService_addCandidate( $environment, $service, $founds, $inhibits, $opts )){
 			msgWarn( "target='$opts->{target}' not accepted as a valid candidate" );
 		}
 	}
 
 	# the current execution node is the next natural candidate
 	$candidate = $ep->node();
-	$candidate->findByService_addCandidate( $environment, $service, $founds, $inhibits );
+	$candidate->findByService_addCandidate( $environment, $service, $founds, $inhibits, $opts );
 
 	# scan the full list to find others to be able to emit a warning when several nodes are found
 	my $nodeNames = $class->list();
 	foreach my $name ( @{$nodeNames} ){
 		$candidate = $class->new( $ep, { node => $name });
-		$candidate->findByService_addCandidate( $environment, $service, $founds, $inhibits );
+		$candidate->findByService_addCandidate( $environment, $service, $founds, $inhibits, $opts );
 	}
 
 	# this is an error to not have any candidate
@@ -444,17 +445,18 @@ sub findByService {
 # returns true|false if the candidate has been added to the list
 
 sub findByService_addCandidate {
-	my ( $self, $environment, $service, $founds, $inhibits ) = @_;
+	my ( $self, $environment, $service, $founds, $inhibits, $opts ) = @_;
 
+	$opts //= {};
 	my $addedCandidate = false;
 	my $name = $self->name();
 
-	if( grep( /$name/, @{$inhibits} )){
+	if( !$opts->{force} && grep( /$name/, @{$inhibits} )){
 		msgVerbose( __PACKAGE__."::findByService_addCandidate() '$name' is inhibited by option" );
 
 	} else {
-		if( $self->hasService( $service ) &&
-			(( $self->environment() && $environment && $self->environment() eq $environment ) || ( !$self->environment() && !$environment ))){
+		if( $opts->{force} || ( $self->hasService( $service ) &&
+			(( $self->environment() && $environment && $self->environment() eq $environment ) || ( !$self->environment() && !$environment )))){
 
 			my $alreadyAdded = false;
 			foreach my $node ( @{$founds} ){

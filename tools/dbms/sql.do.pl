@@ -6,6 +6,7 @@
 # @(-) --[no]verbose           run verbosely [${verbose}]
 # @(-) --service=<name>        acts on the named service [${service}]
 # @(-) --target=<name>         target node [${target}]
+# @(-) --[no]force             force target to ignore environment [${force}]
 # @(-) --[no]stdin             whether the sql command has to be read from stdin [${stdin}]
 # @(-) --script=<filename>     the sql script filename [${script}]
 # @(-) --command=<command>     the sql command as a string [${command}]
@@ -53,6 +54,7 @@ my $defaults = {
 	verbose => 'no',
 	service => '',
 	target => '',
+	force => 'no',
 	stdin => 'no',
 	script => '',
 	command => '',
@@ -64,6 +66,7 @@ my $defaults = {
 
 my $opt_service = $defaults->{service};
 my $opt_target = $defaults->{target};
+my $opt_force = false;
 my $opt_stdin = false;
 my $opt_script = $defaults->{script};
 my $opt_command = $defaults->{command};
@@ -147,6 +150,7 @@ if( !GetOptions(
 	"verbose!"			=> sub { $ep->runner()->verbose( @_ ); },
 	"service=s"			=> \$opt_service,
 	"target=s"			=> \$opt_target,
+	"forcce!"			=> \$opt_force,
 	"stdin!"			=> \$opt_stdin,
 	"script=s"			=> \$opt_script,
 	"command=s"			=> \$opt_command,
@@ -169,6 +173,7 @@ msgVerbose( "got dummy='".( $ep->runner()->dummy() ? 'true':'false' )."'" );
 msgVerbose( "got verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
 msgVerbose( "got service='$opt_service'" );
 msgVerbose( "got target='$opt_target'" );
+msgVerbose( "got force='".( $opt_force ? 'true':'false' )."'" );
 msgVerbose( "got stdin='".( $opt_stdin ? 'true':'false' )."'" );
 msgVerbose( "got script='$opt_script'" );
 msgVerbose( "got command='$opt_command'" );
@@ -181,7 +186,7 @@ msgVerbose( "got columns='$opt_columns'" );
 # find the node which hosts this service in this same environment (should be at most one)
 # and check that the service is DBMS-aware
 if( $opt_service ){
-	$objNode = TTP::Node->findByService( $ep->node()->environment(), $opt_service, { target => $opt_target });
+	$objNode = TTP::Node->findByService( $ep->node()->environment(), $opt_service, { target => $opt_target, force => $opt_force });
 	if( $objNode ){
 		msgVerbose( "got hosting node='".$objNode->name()."'" );
 		$objService = TTP::Service->new( $ep, { service => $opt_service });

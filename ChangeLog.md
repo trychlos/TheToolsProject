@@ -15,6 +15,7 @@
     - Deprecate 'ttp.pl writejson' in favor of 'ttp.pl writefile' (todo #61)
     - TTP::commandExec() now honors <ENVIRONMENT> macro (todo #177)
     - daemon.pl status publishes its telemetry to MQTT and as text (todo #55, #57)
+    - daemon.pl sql has a --force option to skip all safety checks
 
 ### 4.31.0
 
