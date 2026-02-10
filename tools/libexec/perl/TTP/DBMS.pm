@@ -58,6 +58,7 @@ sub _getCredentials {
 	my $passwd = undef;
 
 	my $node = $opts->{node} // $self->node();
+	msgVerbose( __PACKAGE__."_getCredentials() node=".$node->name());
 	if( ref( $node ) eq 'TTP::Node' ){
 		my $credentials = TTP::Credentials::get([ 'services', $self->service()->name() ], { jsonable => $node });
 		if( $credentials ){
@@ -382,10 +383,11 @@ sub getProperties {
 sub hostingNode {
 	my ( $self ) = @_;
 
-	my $host = $self->service()->host();
-	my $node = $self->node();
+    my $host = $self->service()->host( $self->node());
+    msgVerbose( __PACKAGE__."hostingNode() found host=".TTP::chompDumper( $host ));	my $node = $self->node();
 	if( $host ){
-		$node = TTP::Node->new( $ep, { node => $host });
+		msgVerbose( __PACKAGE__."hostingNode() got service.host='$host', applying for another hosting node" );
+		$node = TTP::Node->new( $node->ep(), { node => $host });
 	}
 
 	return $node; 
