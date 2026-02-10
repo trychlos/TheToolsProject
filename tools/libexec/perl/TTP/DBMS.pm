@@ -47,24 +47,30 @@ use TTP::PostgreSQL;
 # returns the first account defined for this DBMS service
 # (I):
 # - an optional account, defaulting to the first one found
+# - an optional options hash with following keys:
+#   > node: the hosting TTP::Node, defaulting to the current one
 # (O):
 # - an array ( username, password )
 
 sub _getCredentials {
-	my ( $self, $account ) = @_;
-
-	my $credentials = TTP::Credentials::get([ 'services', $self->service()->name() ], { jsonable => $self->node() });
-	#print STDERR "credentials=".TTP::chompDumper( $credentials ).EOL;
+	my ( $self, $account, $opts ) = @_;
+	$opts //= {};
 	my $passwd = undef;
 
-	if( $credentials ){
-		$account = $self->account() if !$account;
-		$account = ( sort keys %{$credentials} )[0] if !$account;
-		$passwd = $credentials->{$account} if $account;
-		msgVerbose( __PACKAGE__."::_getCredentials() got account='".( $account || '(undef)' )."'" );
-
+	my $node = $opts->{node} // $self->node();
+	if( ref( $node ) eq 'TTP::Node' ){
+		my $credentials = TTP::Credentials::get([ 'services', $self->service()->name() ], { jsonable => $node });
+		if( $credentials ){
+			$account = $self->account() if !$account;
+			$account = ( sort keys %{$credentials} )[0] if !$account;
+			$passwd = $credentials->{$account} if $account;
+			msgVerbose( __PACKAGE__."::_getCredentials() got account='".( $account || '(undef)' )."'" );
+		} else {
+			msgErr( __PACKAGE__."::_getCredentials() unable to get credentials with provided arguments" );
+		}
 	} else {
-		msgErr( __PACKAGE__."::_getCredentials() unable to get credentials with provided arguments" );
+		msgErr( __PACKAGE__."::_getCredentials() provided node is not a TTP::Node" );
+		TTP::stackTrace();
 	}
 
 	return ( $account, $passwd );
@@ -353,6 +359,7 @@ sub getProperties {
 
 	push( @{$props}, { name => 'account', value => $self->account() || '(undef)' });
 	push( @{$props}, { name => 'connectionString', value => $self->connectionString() || '(undef)' });
+	push( @{$props}, { name => 'hostingNode', value => $self->hostingNode()->name() });
 	my $excluded = $self->excludedDatabases();
 	push( @{$props}, { name => 'excludeDatabases', value => ( $excluded ? "[".join( ',', @{$excluded} )."]" : '(undef)' )});
 	push( @{$props}, { name => 'excludeSystemDatabases', value => $self->excludeSystemDatabases() ? 'true' : 'false' });
@@ -363,6 +370,25 @@ sub getProperties {
 	push( @{$props}, { name => 'wantsLocal', value => $self->service()->wantsLocal() ? 'true' : 'false' });
 
 	return $props;
+}
+
+# ------------------------------------------------------------------------------------------------
+# returns the hosting TTP::Node node
+# (I):
+# - nothing
+# (O):
+# - the hosting TTP::Node, defaulting of course to current running node
+
+sub hostingNode {
+	my ( $self ) = @_;
+
+	my $host = $self->service()->host();
+	my $node = $self->node();
+	if( $host ){
+		$node = TTP::Node->new( $ep, { node => $host });
+	}
+
+	return $node; 
 }
 
 # ------------------------------------------------------------------------------------------------

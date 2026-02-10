@@ -89,7 +89,7 @@ sub _connect {
 		msgVerbose( __PACKAGE__."::_connect() already connected" );
 
 	} else {
-		my( $account, $passwd ) = $self->_getCredentials();
+		my( $account, $passwd ) = $self->_getCredentials( undef, { node => $self->hostingNode() });
 		#print STDERR __PACKAGE__."::_connect() got account='$account' password='$passwd'".EOL;
 		if( length $account && length $passwd ){
 			Win32::SqlServer::SetDefaultForEncryption( 'Optional', true );

@@ -85,7 +85,7 @@ sub _connect {
 		msgVerbose( __PACKAGE__."::_connect() already connected" );
 
 	} else {
-		my( $account, $passwd ) = $self->_getCredentials();
+		my( $account, $passwd ) = $self->_getCredentials( undef, { node => $self->hostingNode() });
 		if( length $account && length $passwd ){
 			my $server = $self->connectionString() || 'localhost';
 			my @words = split( /:/, $server );
