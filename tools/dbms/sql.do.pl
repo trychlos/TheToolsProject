@@ -6,7 +6,7 @@
 # @(-) --[no]verbose           run verbosely [${verbose}]
 # @(-) --service=<name>        acts on the named service [${service}]
 # @(-) --target=<name>         target node [${target}]
-# @(-) --[no]force             force target to ignore environment [${force}]
+# @(-) --[no]force             force target to ignore safety checks [${force}]
 # @(-) --[no]stdin             whether the sql command has to be read from stdin [${stdin}]
 # @(-) --script=<filename>     the sql script filename [${script}]
 # @(-) --command=<command>     the sql command as a string [${command}]
@@ -150,7 +150,7 @@ if( !GetOptions(
 	"verbose!"			=> sub { $ep->runner()->verbose( @_ ); },
 	"service=s"			=> \$opt_service,
 	"target=s"			=> \$opt_target,
-	"forcce!"			=> \$opt_force,
+	"force!"			=> \$opt_force,
 	"stdin!"			=> \$opt_stdin,
 	"script=s"			=> \$opt_script,
 	"command=s"			=> \$opt_command,
