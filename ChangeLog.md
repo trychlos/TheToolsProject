@@ -19,6 +19,7 @@
     - DBMS::getCredentials() searches for the credentials in the hosting node
     - meteor.pl deploy warns when 'versioning' key is missing
     - ttp.pl writejson protects the '"' double quotes against shell interpretation
+    - meteor.pl publish better handles separate publications (todo #180)
 
 ### 4.31.0
 

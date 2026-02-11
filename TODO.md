@@ -45,7 +45,6 @@
 |  176 | 2026- 2- 5 | services.pl list -services should have an option to list the services running in the environment (resp. in all environmnts) |
 |  178 | 2026- 2- 8 | credentials.dir property is not consistent with other (like logsDir) properties - has been introduced in v4.7 but should be reversed |
 |  179 | 2026- 2- 9 | ttp.pl writejson is deprecated as of v4.32 - remove it later ? |
-|  180 | 2026- 2-11 | meteor.pl publish -package -github and -meteor both increment published version |
 |  181 |  |  |
 
 ---
@@ -65,6 +64,8 @@
 |      | 2026- 2- 9 | done |
 |  177 | 2026- 2- 7 | <ENVIRONMENT> macro should be honored by all verbs i.e; by TTP::commandExec() |
 |      | 2026- 2- 9 | done |
+|  180 | 2026- 2-11 | meteor.pl publish -package -github and -meteor both increment published version |
+|      | 2026- 2-11 | fixed |
 
 ---
 P. Wieser

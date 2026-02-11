@@ -8,6 +8,44 @@
 # @(-) --[no]github                publish to Github [${github}]
 # @(-) --[no]meteor                publish to Meteor [${meteor}]
 # @(-) --[no]all                   publish to all targets [${all}]
+# @(-) --[no]prepare-published     remove the '-rc' version suffix (requires starting from 'vnext' branch') [${prepare_published}]
+# @(-) --[no]prepare-next          prepare the next version [${prepare_next}]
+# @(-) --from=<branch>             force a startup from this branch [${from}]
+#
+# @(@) Note 1: The published version is automatically prepared (removing terminating '-rc*' suffix) at each publication unless otherwise specified.
+# @(@)         The next version is only computed by default when requesting all publications.
+# @(@)         When only requesting either GitHub or Meteor publication, then the current version defaults to be left unchanged.
+# @(@)
+# @(@) Note 2: When publishing to all, operations are like:
+# @(@)         - in 'vnext' branch:
+# @(@)           > preparing the published version by removing terminating '-rc*' version suffix
+# @(@)           > committing the changes with a message 'Releasing v<aa.bb.c>'
+# @(@)           > tag the commit 'Releasing v<aa.bb.c>'
+# @(@)         - checkout 'master' (resp. 'main') branch
+# @(@)           > merge 'vnext' branch
+# @(@)           > publish to Github
+# @(@)           > publish to Meteor
+# @(@)         - checkout 'vnext' again
+# @(@)           > preparing next version by creating a new 'rc.0' candidate
+# @(@)         When contrarily we want publish to a single target, we have to know what exactly we want publish
+# @(@)         - whether the published version has to be prepared from vnext and then merged into master
+# @(@)         - or whether we want publish the master version directly
+# @(@)         - and after the publication whether we want prepare a new version, of just stay on the vnext one.
+# @(@)         This is where the options '--[no]prepare-published', '--[no]prepare-next' and '--from=<branch>' can help you:
+# @(@)         - when we want to publish the master and leave the vnext as-is, it is enough to just say '--from=master'.
+# @(@)           because the master is the image of what has been last published, this will be fine, and the '--[no]prepare-published' will be ignored.
+#
+# Change from Master to Main in Git
+# Timeline of the Change
+# Announcement: GitHub announced the change from "master" to "main" on June 11, 2020.
+# Implementation: Starting October 1, 2020, all new GitHub repositories began using "main" as the default branch name instead of "master."
+# Reasons for the Change
+# Cultural Sensitivity: The term "master" was associated with the master/slave metaphor, which many found offensive. The change aimed to promote inclusive language in technology.
+# Community Support: The decision was supported by various communities within the tech industry, recognizing the need for more meaningful and inclusive terminology.
+# Impact on Existing Projects
+# No Retroactive Change: Existing repositories that already used "master" were not automatically changed to "main." Users can still create a "master" branch if desired.
+# Transition Guidance: Developers were encouraged to rename their branches from "master" to "main" to align with the new standard, with guidance available on how to make this transition smoothly.
+# This change reflects a broader movement within the tech community to adopt more inclusive language and practices.
 #
 # TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
@@ -46,16 +84,100 @@ my $defaults = {
 	package => Path::Tiny->cwd,
 	github => 'no',
 	meteor => 'no',
-	all => 'no'
+	all => 'no',
+	prepare_published => 'yes',
+	prepare_next => 'yes',
+	from => 'vnext'
 };
 
 my $opt_package = $defaults->{package};
 my $opt_github = false;
 my $opt_meteor = false;
 my $opt_all = false;
+my $opt_prepare_published = true;
+my $opt_prepare_next = true;
+my $opt_from = $defaults->{from};
 
 # the package object
 my $package;
+
+# -------------------------------------------------------------------------------------------------
+# we expect to run from the 'vnext' branch, and have a master (or main) branch
+# accepting to be already in the master (as long as git is clean and this is checked later)
+# return true|false
+
+sub checkGitBranch {
+    my $res = true;
+    my $stdout = execLocal( "git branch", { withDummy => false });
+	return false if !$stdout;
+	# if we have found git branch(es), we check that current is same than 'opt_from' and that master (or main) exists
+	if( scalar( @{$stdout} )){
+		my @currents = grep( /^\* /, @{$stdout} );
+		if( scalar( @currents ) != 1 ){
+			msgWarn( "unable to identify the current git branch" );
+			$res = false;
+		} else {
+			msgVerbose( "found a current git branch, fine" );
+			my $current = $currents[0];
+			$current =~ s/^\*\s*//;
+			if( $current eq $opt_from ){
+				msgVerbose( "found '$opt_from' branch, fine" );
+				if( $opt_from ne 'master' && $opt_from ne 'main' ){
+					my @masters = grep( /^\s*(master|main)$/, @{$stdout} );
+					if( scalar( @masters ) == 1 ){
+						my $branch = $masters[0];
+						$branch =~ s/\s//g;
+						msgVerbose( "found '$branch' branch, fine" );
+					} else {
+						msgWarn( "unable to identify the 'master' branch" );
+						$res = false;
+					}
+				} else {
+					msgVerbose( "starting from '$opt_from': fine" );
+				}
+			} elsif( $opt_from eq 'master' || $opt_from eq 'main' ){
+				execLocal( "git checkout $opt_from", { ignoreStderr => true });
+				return checkGitBranch();
+			} else {
+				msgWarn( "found current branch='$current', while '$opt_from' was expected" );
+				$res = false;
+			}
+		}
+	} else {
+		msgWarn( "no git branch found" );
+		return false;
+	}
+	return $res;
+}
+
+# -------------------------------------------------------------------------------------------------
+# check that the git repository is clean
+# return true|false
+
+sub checkGitClean {
+    my $res = gitHasChanges();
+	if( $res ){
+		msgWarn( "you still have changes in your git working tree" );
+		return false;
+	}
+	# no git or git clean
+	return true;
+}
+
+# -------------------------------------------------------------------------------------------------
+# compute the next candidate version
+# returning the next rc version
+
+sub computeNextVersion {
+    my ( $releasedVersion ) = @_;
+	my $nextVersion = undef;
+
+	my @words = split( /\./, $releasedVersion );
+	$words[$#words] = $words[$#words]+1;
+	$nextVersion = join( '.', @words ).'-rc.0';
+
+    return $nextVersion;
+}
 
 # -------------------------------------------------------------------------------------------------
 # return the date as yyyy, Jan. 1st
@@ -86,107 +208,51 @@ sub dateWithDashes {
 }
 
 # -------------------------------------------------------------------------------------------------
-# we expect to run from the 'vnext' branch, and have a master branch
-# return true|false
-
-sub checkGitBranch {
-    my $res = true;
-    my $stdout = execLocal( "git branch", { withDummy => false });
-	return false if !$stdout;
-	# if we have found git branch(es), we check that current is vnext and that master exists
-	if( scalar( @{$stdout} )){
-		my @currents = grep( /^\* /, @{$stdout} );
-		if( scalar( @currents ) != 1 ){
-			msgWarn( "unable to identify the current git branch" );
-			$res = false;
-		} else {
-			msgVerbose( "found a current git branch, fine" );
-			my $current = $currents[0];
-			$current =~ s/^\*\s*//;
-			if( $current eq 'vnext' ){
-				msgVerbose( "found 'vnext' branch, fine" );
-				my @masters = grep( /^\s*master$/, @{$stdout} );
-				if( scalar( @masters ) == 1 ){
-					msgVerbose( "found 'master' branch, fine" );
-				} else {
-					msgWarn( "unable to identify the 'master' branch" );
-					$res = false;
-				}
-
-			} else {
-				msgWarn( "found current branch = '$current', while 'vnext' was expected" );
-				$res = false;
-			}
-		}
-	} else {
-		msgWarn( "no git branch found" );
-		return false;
-	}
-	return $res;
-}
-
-# -------------------------------------------------------------------------------------------------
-# check that the git repository is clean
-# return true|false
-
-sub checkGitClean {
-    my $res = true;
-    my $stdout = execLocal( "git status", { withDummy => false });
-	return false if !$stdout;
-	# if we have found git branch(es), check that we have nothing to commit
-	if( scalar( @{$stdout} )){
-		my @commits = grep( /nothing to commit, working tree clean/, @{$stdout} );
-		if( scalar( @commits ) != 1 ){
-			msgWarn( "you still have changes in your git working tree" );
-			$res = false;
-		} else {
-			msgVerbose( "git working tree is clean, fine" );
-		}
-	} else {
-		msgWarn( "no git branch found" );
-		return false;
-	}
-	return $res;
-}
-
-# -------------------------------------------------------------------------------------------------
-# compute the next candidate version
-# returning the next rc version
-
-sub computeNextVersion {
-    my ( $releasedVersion ) = @_;
-	my $nextVersion = undef;
-
-	my @words = split( /\./, $releasedVersion );
-	$words[$#words] = $words[$#words]+1;
-	$nextVersion = join( '.', @words ).'-rc.0';
-
-    return $nextVersion;
-}
-
-# -------------------------------------------------------------------------------------------------
 # publish
+#
+# always:
+#   wants start from a clean git repository - either vnext or master or main
+# publish one target
+#   maybe remove rc from vnext
+#   checkout master/main if needed
+#   merge vnext if needed and wanted ????
+
 
 sub doPublish {
 	# some common tasks before actually publishing to anywhere
 	return if !checkGitBranch();
 	return if !checkGitClean();
-	# remove -rc.* from package.js and get new version
-	my $releasedVersion = filePackageRemoveRC();
-	return if !$releasedVersion;
-	msgOut( "releasing $package->{name} v$releasedVersion" );
-	# remove -rc from ChangeLog.md and update release date
-	my $releaseDate = dateWithDashes();
-	return if !fileChangeLogRemoveRC( $releaseDate );
-	# update release date in bottom of README.md, ChangeLog.md, TODO.md
-	my $abbrevDate = dateWithCommas();
-	return if !fileMDAbbrevDate( $abbrevDate );
-	# update required npms in README.md
-	return if !fileReadmeUpdateNpms( $releasedVersion );
-	# commit Releasing v x.x.x
-	return if !gitCommitReleasing( $releasedVersion );
-	# checkout master and merge
-	return if !gitMerge();
+	# whether to prepare the published version requires:
+	# - that we are in a 'vnext' branch
+	# - that we have not refused the 'prepare_published' option
+	my $releasedVersion = undef;
+	if( $opt_from eq 'vnext' && $opt_prepare_published ){
+		# remove -rc.* from package.js and get new version
+		$releasedVersion = filePackageRemoveRC();
+		return if !$releasedVersion;
+		msgOut( "releasing $package->{name} v$releasedVersion" );
+		# remove -rc from ChangeLog.md and update release date
+		my $releaseDate = dateWithDashes();
+		return if !fileChangeLogRemoveRC( $releaseDate );
+		# update release date in bottom of README.md, ChangeLog.md, TODO.md
+		my $abbrevDate = dateWithCommas();
+		return if !fileMDAbbrevDate( $abbrevDate );
+		# update required npms in README.md
+		return if !fileReadmeUpdateNpms( $releasedVersion );
+		# commit Releasing v x.x.x (if anything has been changed)
+		if( gitHasChanges()){
+			return if !gitCommitReleasing( $releasedVersion );
+		}
+		# checkout master and merge (if not started from master/main)
+		return if !gitMerge();
+	} elsif( $opt_from eq 'master' || $opt_from eq 'main' ){
+		$releasedVersion = filePackageGetVersion();
+		return if !$releasedVersion;
+		msgOut( "releasing $package->{name} v$releasedVersion" );
+	} else {
+		msgErr( "unable to publish from '$opt_from' branch" );
+		return;
+	}
 	# publish to Meteor if opted
 	if( $opt_meteor ){
 		return if !publishMeteor();
@@ -195,16 +261,25 @@ sub doPublish {
 	if( $opt_github ){
 		return if !publishGithub( $releasedVersion );
 	}
-	my $nextVersion = computeNextVersion( $releasedVersion );
-	msgOut( "preparing next $nextVersion release" );
 	# back to vnext branch
 	return if !gitBackToVNext();
-	# bump version in package.js
-	return if !filePackageBump( $nextVersion );
-	# set new paragraph in ChangeLog.md
-	return if !fileChangeLogBump( $nextVersion );
-    # commit post-release
-	return if !gitCommitPostRelease();
+	# and prepare next version
+	if( $opt_prepare_next ){
+		my $nextVersion = computeNextVersion( $releasedVersion );
+		if( nextVersionAlreadyPrepared( $nextVersion )){
+			msgVerbose( "next version '$nextVersion' has already been prepared" );
+		} else {
+			msgOut( "preparing next $nextVersion release" );
+			# bump version in package.js
+			return if !filePackageBump( $nextVersion );
+			# set new paragraph in ChangeLog.md
+			return if !fileChangeLogBump( $nextVersion );
+			# commit post-release
+			return if !gitCommitPostRelease();
+		}
+	} else {
+		msgVerbose()
+	}
 	msgOut( "done" );
 }
 
@@ -388,6 +463,27 @@ sub filePackageBump {
 }
 
 # -------------------------------------------------------------------------------------------------
+# returning the current version
+
+sub filePackageGetVersion {
+	my $version = undef;
+	my @content = path( $package->{jspck} )->lines_utf8;
+	for( my $i=0 ; $i<=$#content ; ++$i ){
+		my $line = $content[$i];
+		if( $line =~ m/^\s*version\s*:\s*'(\d+\.\d+\.\d+)/ ){
+			$version = $1;
+			last;
+		}
+	}
+	if( $version ){
+		msgVerbose( "$package->{jspck}: found version '$version'" );
+	} else {
+		msgWarn( "$package->{jspck}: unable to find the version" );
+	}
+    return $version;
+}
+
+# -------------------------------------------------------------------------------------------------
 # remove the release candidate flag from package.js
 # returning the to-be-released version
 
@@ -528,6 +624,27 @@ sub gitCommitReleasing {
 }
 
 # -------------------------------------------------------------------------------------------------
+# test if git has uncommitted changes
+# return true|false
+
+sub gitHasChanges {
+    my $stdout = execLocal( "git status", { withDummy => false });
+	return false if !$stdout;
+	# if we have found git branch(es), check that we have nothing to commit
+	if( scalar( @{$stdout} )){
+		my @commits = grep( /nothing to commit, working tree clean/, @{$stdout} );
+		if( scalar( @commits ) == 1 ){
+			msgVerbose( "git working tree is clean, fine" );
+			return false;
+		}
+		# has changes
+		return true;
+	}
+	msgWarn( "no git branch found" );
+	return false;
+}
+
+# -------------------------------------------------------------------------------------------------
 # checkout to master branch, and merge vnext
 # NB: git checkout prints to stderr 'Switched to branch 'master'', so ignore it here
 # returns true|false
@@ -535,6 +652,16 @@ sub gitCommitReleasing {
 sub gitMerge {
 	my $stdout = execLocal( "git checkout master && git merge vnext", { ignoreStderr => true });
 	return defined $stdout;
+}
+
+# -------------------------------------------------------------------------------------------------
+# check if the next version has already been prepared (maybe by a previous single publication)
+# return true|false
+
+sub nextVersionAlreadyPrepared {
+	my ( $nextVersion ) = @_;
+	my $version = filePackageGetVersion();
+	return ( $version eq $nextVersion );
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -601,7 +728,10 @@ if( !GetOptions(
 		$opt_all = $value;
 		$opt_github = $value;
 		$opt_meteor = $value;
-	} )){
+	},
+	"prepare-published!"	=> \$opt_prepare_published,
+	"prepare-next!"			=> \$opt_prepare_next,
+	"from=s"				=> \$opt_from )){
 
 		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
 		TTP::exit( 1 );
@@ -619,6 +749,9 @@ msgVerbose( "got package='$opt_package'" );
 msgVerbose( "got github='".( $opt_github ? 'true':'false' )."'" );
 msgVerbose( "got meteor='".( $opt_meteor ? 'true':'false' )."'" );
 msgVerbose( "got all='".( $opt_all ? 'true':'false' )."'" );
+msgVerbose( "got prepare-published='".( $opt_prepare_published ? 'true':'false' )."'" );
+msgVerbose( "got prepare-next='".( $opt_prepare_next ? 'true':'false' )."'" );
+msgVerbose( "got from='$opt_from'" );
 
 # get package absolute path which must exist
 $opt_package = path( $opt_package )->realpath;
