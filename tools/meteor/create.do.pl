@@ -16,6 +16,36 @@
 # @(@)         - both application and package will be created with our standard structure.
 # @(@) Note 2: The name of the package is directly derived from the name of the directory which should be formatted as 'owner-name'.
 #
+# MyApplication_2602/
+#	├── client
+#	├── imports
+#	│   ├── client
+#	│   │   ├── classes
+#	│   │   ├── components
+#	│   │   ├── init
+#	│   │   ├── interfaces
+#	│   │   ├── layouts
+#	│   │   ├── stylesheets
+#	│   │   └── third-party
+#	│   ├── collections
+#	│   ├── common
+#	│   │   ├── classes
+#	│   │   ├── definitions
+#	│   │   ├── init
+#	│   │   ├── interfaces
+#	│   │   └── third-party
+#	│   ├── i18n
+#	│   └── server
+#	│       ├── classes
+#	│       ├── init
+#	│       ├── interfaces
+#	│       └── third-party
+#	├── maintainer
+#	├── private
+#	├── public
+#	├── server
+#	└── tests
+#
 # TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
 # Copyright (©) 2023-2026 PWI Consulting
