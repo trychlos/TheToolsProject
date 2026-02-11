@@ -97,6 +97,24 @@ msgWarn( "'ttp.pl writejson' verb is deprecated in favor of 'ttp.pl writefile' s
 
 my @argv = @{ $ep->runner()->argv() };
 shift( @argv );
+# protect data against shell interpretation
+for( my $i=0; $i<scalar( @argv ); ++$i ){
+	my $it = $argv[$i];
+	if( $it =~ m/-data/ ){
+		if( $it =~ m/-data=/ ){
+			$it =~ s/"/\\"/g;
+			$it =~ s/=/="/;
+			$it = "$it\"";
+			$argv[$i] = $it;
+		} else {
+			$it = $argv[$i+1];
+			$it =~ s/"/\\"/g;
+			$it = "\"$it\"";
+			$argv[$i+1] = $it;
+		}
+		last;
+	}
+}
 
 my $res = TTP::commandExec( "ttp.pl writefile ".join( ' ', @argv ));
 foreach my $it ( @{$res->{stdouts}} ){

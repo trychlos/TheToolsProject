@@ -18,6 +18,7 @@
     - daemon.pl sql has a --force option to skip all safety checks
     - DBMS::getCredentials() searches for the credentials in the hosting node
     - meteor.pl deploy warns when 'versioning' key is missing
+    - ttp.pl writejson protects the '"' double quotes against shell interpretation
 
 ### 4.31.0
 
