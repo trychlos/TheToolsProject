@@ -21,6 +21,7 @@
     - ttp.pl writejson protects the '"' double quotes against shell interpretation
     - meteor.pl publish better handles separate publications (todo #180)
     - dbms.pl restore improves its arguments checks
+    - Define backup-monitor-daemon code and its configuration schema (todo #78)
 
 ### 4.31.0
 

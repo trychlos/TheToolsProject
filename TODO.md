@@ -17,11 +17,6 @@
 |      | 2025- 4-29 | have to define the telemetry to get and how and where to publish it |
 |   59 | 2025- 2-18 | Daemon.pm: metrics for the daemon are windows-specific: re-code for unix'es |
 |      | 2025- 4-14 | mswin32 metrics are isolated |
-|   78 | 2025- 4-12 | some daemons should be moveable to libexec/daemons |
-|      | 2025- 4-14 | alerts-monitor-daemon.pl is moved to libexec/daemons |
-|      | 2025- 4-14 | node-monitor-daemon.pl is moved to libexec/daemons |
-|      | 2025- 4-17 | mqtt-monitor-daemon.pl is moved to libexec/daemons |
-|      | 2025- 4-17 | at the moment, still exists backup-monitor-daemon in site tree - to be evaluated |
 |  111 | 2025- 4-20 | site.schema for telemetry |
 |      | 2025- 4-22 | done - has to be honored |
 |      | 2025- 5-11 | Mqtt honors it |
@@ -62,6 +57,12 @@
 |      | 2026- 2- 9 | done |
 |   61 | 2025- 4- 8 | ttp.pl writejson should should actually be ttp.pl filewrite as the json is provided as a string on input - so this is not dedicated to json |
 |      | 2026- 2- 9 | done |
+|   78 | 2025- 4-12 | some daemons should be moveable to libexec/daemons |
+|      | 2025- 4-14 | alerts-monitor-daemon.pl is moved to libexec/daemons |
+|      | 2025- 4-14 | node-monitor-daemon.pl is moved to libexec/daemons |
+|      | 2025- 4-17 | mqtt-monitor-daemon.pl is moved to libexec/daemons |
+|      | 2025- 4-17 | at the moment, still exists backup-monitor-daemon in site tree - to be evaluated |
+|      | 2026- 2-11 | backup-monitor-daemon is now integrated in TTP - terminated |
 |  177 | 2026- 2- 7 | <ENVIRONMENT> macro should be honored by all verbs i.e; by TTP::commandExec() |
 |      | 2026- 2- 9 | done |
 |  180 | 2026- 2-11 | meteor.pl publish -package -github and -meteor both increment published version |
