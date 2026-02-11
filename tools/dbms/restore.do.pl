@@ -65,6 +65,8 @@ my $opt_diff = $defaults->{diff};
 my $opt_verifyonly = false;
 my $opt_inhibit = $defaults->{inhibit};
 
+my $opt_diff_set = false;
+
 my $opt_file = TTP::var([ 'executionReports', 'withFile', 'default' ]);
 $opt_file = false if !defined $opt_file;
 my $file_enabled = TTP::var([ 'executionReports', 'withFile', 'enabled' ]);
@@ -200,7 +202,11 @@ if( !GetOptions(
 	"target=s"			=> \$opt_target,
 	"database=s"		=> \$opt_database,
 	"full=s"			=> \$opt_full,
-	"diff=s"			=> \$opt_diff,
+	"diff=s"			=> sub {
+		my ( $name, $value ) = @_;
+		$opt_diff = $value;
+		$opt_diff_set = true;
+	},
 	"verifyonly!"		=> \$opt_verifyonly,
 	"file!"				=> sub {
 		my( $name, $value ) = @_;
@@ -260,8 +266,13 @@ if( $opt_service ){
 }
 
 msgErr( "'--database' option is mandatory, but is not specified" ) if !$opt_database && !$opt_verifyonly;
+# if it happens that we have dbms.pl restore -service SERVICE -full -diff /path/to/diff.backup, then the opt_full argument will be '-diff'
+#  and the diff pathanme will be considered as a positional argument, not an optional one
+#  the opt_diff argument will be empty (which could be acceptable if the -diff option itself was not specified)
 msgErr( "'--full' option is mandatory, but is not specified" ) if !$opt_full;
+msgErr( "$opt_full: file not found or not readable" ) if $opt_full && ! -f $opt_full;
 msgErr( "$opt_diff: file not found or not readable" ) if $opt_diff && ! -f $opt_diff;
+msgErr( "'--diff' option is specified whithout argument which is wrong" ) if !$opt_diff && $opt_diff_set;
 
 # disabled media are just ignored (or refused if option was explicit)
 if( $opt_file ){

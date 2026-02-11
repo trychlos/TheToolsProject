@@ -20,6 +20,7 @@
     - meteor.pl deploy warns when 'versioning' key is missing
     - ttp.pl writejson protects the '"' double quotes against shell interpretation
     - meteor.pl publish better handles separate publications (todo #180)
+    - dbms.pl restore improves its arguments checks
 
 ### 4.31.0
 
