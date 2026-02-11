@@ -17,6 +17,7 @@
     - daemon.pl status publishes its telemetry to MQTT and as text (todo #55, #57)
     - daemon.pl sql has a --force option to skip all safety checks
     - DBMS::getCredentials() searches for the credentials in the hosting node
+    - meteor.pl deploy warns when 'versioning' key is missing
 
 ### 4.31.0
 
