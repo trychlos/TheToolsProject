@@ -470,7 +470,7 @@ sub doDeployBundle {
 # deploy one or more collections
 
 sub doDeployCollections {
-	msgOut( "deploying [ '".join( '\', \'', @opt_collections )."' ] collections from '".( $opt_from || "local" )."' to '".( $opt_to || "local" )."'..." );
+	msgOut( "deploying [ '".join( '\', \'', @opt_collections )."' ] collection(s) from '".( $opt_from || "local" )."' to '".( $opt_to || "local" )."'..." );
 	foreach my $collection ( @opt_collections ){
 		msgVerbose( "doDeployCollections() deploying '$collection' collection.." );
 		my $tgz = collectionDumpSource( $collection );
@@ -888,7 +888,18 @@ sub mongoURI {
 	my ( $h ) = @_;
 	$h->{additional_env} //= {};
 	my $uri = $h->{additional_env}{MONGO_URL};
-	$uri = "mongodb://127.0.0.1:3001/meteor" if !$uri && isLocal( $h );
+	# ask to meteor to provide the mongo url
+	if( !$uri && isLocal( $h )){
+		my $res = TTP::commandExec( "meteor mongo --url" );
+		if( !$res->{success} ){
+			msgErr( $res->{stderrs}->[0] );
+			return undef;
+		}
+		my @w = split( /\s+/, $res->{stdouts}->[0] );
+		$uri = $w[-1];
+		chomp $uri;
+		$uri =~ s/\e\[[\d;?]*[ -\/]*[@-~]//g;
+	}
 	if( $uri ){
 		msgVerbose( "mongoURI() uri='$uri'" );
 	} else {
@@ -951,17 +962,23 @@ sub normalizeFilePath {
 # - local is determined by the absence of host and path
 # (I):
 # - the global to sanitize
+# - an optional options hash with following keys:
+#   > qualifier: a qualifier for the environment
 
 sub sanitize {
-	my ( $h ) = @_;
+	my ( $h, $opts ) = @_;
+	$opts //= {};
+	$opts->{qualifier} //= '';
+
 	if( $h->{host} && $h->{path} ){
 		delete $h->{local};
-		msgVerbose( "sanitize() host='$h->{host}' path='$h->{path}': assuming remote environment" );
+		msgVerbose( "sanitize() host='$h->{host}' path='$h->{path}': assuming remote $opts->{qualifier} environment" );
+
 	} else {
 		delete $h->{host};
 		delete $h->{path};
 		$h->{local} = true;
-		msgVerbose( "sanitize() host and path are both undefined: assuming local environment" );
+		msgVerbose( "sanitize() host and path are both undefined: assuming local $opts->{qualifier} environment" );
 	}
 }
 
@@ -971,7 +988,7 @@ sub sanitize {
 sub setFrom {
 	$from = \%{ $deployments->{targets}{$opt_from} } if $opt_from;
 	$from //= {};
-	sanitize( $from );
+	sanitize( $from, { qualifier => 'source' });
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -979,7 +996,7 @@ sub setFrom {
 
 sub setTo {
 	$to = \%{ $deployments->{targets}{$opt_to} };
-	sanitize( $to );
+	sanitize( $to, { qualifier => 'target' });
 }
 
 # -------------------------------------------------------------------------------------------------

@@ -22,6 +22,7 @@
     - meteor.pl publish better handles separate publications (todo #180)
     - dbms.pl restore improves its arguments checks
     - Define backup-monitor-daemon code and its configuration schema (todo #78)
+    - meteor.pl deploy detects the url of the running mongo
 
 ### 4.31.0
 
