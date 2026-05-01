@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.32.0-rc.5
+### 4.32.0
 
-    Release date: 
+    Release date: 2026- 5- 1
 
     - Display the starting version in all deprecation messages
     - DBMS.host is deprecated in favor of 'host'
@@ -83,4 +83,4 @@
 
 ---
 P. Wieser
-- Last updated on 2026, Feb. 7th
+- Last updated on 2026, May 1st
