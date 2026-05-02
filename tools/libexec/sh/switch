@@ -35,6 +35,7 @@
 # pwi 2017- 6-21 publish the release at last
 # pwi 2021- 5-25 merge with bspSwitch code
 # pwi 2025- 4- 3 starting with v4, VERBOSE environment variable is replaced with TTP_DEBUG
+# pwi 2026- 5- 2 replace 'export VAR=value' single lines by distincts 'VAR=value' plus 'export VAR'
 
 [ "${TTP_DEBUG}" = "1" ] && echo "[sh/switch] 0=$0 #=$# *=$*" 1>&2
 
@@ -49,7 +50,8 @@ else
 		echo "[ttp.sh switch] execution node was already set to ${_node}, unchanged"
 	else
 		echo "[ttp.sh switch] execution node successfully setup to ${_node}"
-		export TTP_NODE="${_node}"
+		TTP_NODE="${_node}"
+		export TTP_NODE
 	fi
 
 	[ -d "/${_node}" ] && cd "/${_node}"

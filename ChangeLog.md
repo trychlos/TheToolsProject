@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - sh/bootstrap, sh/switch: replace 'export VAR=value' single lines by distincts 'VAR=value' plus 'export VAR'
 
 ### 4.32.0
 

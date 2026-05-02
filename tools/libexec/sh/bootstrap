@@ -57,6 +57,7 @@
 # pwi 2021- 5-24 change the bootstrapping process to ttp.d/*.conf
 # pwi 2025- 2- 7 get the drop-in directories as argument(s), providing nonetheless a default value
 # pwi 2025- 4- 3 starting with v4, VERBOSE environment variable is replaced with TTP_DEBUG
+# pwi 2026- 5- 2 replace 'export VAR=value' single lines by distincts 'VAR=value' plus 'export VAR'
 
 f_append_by_name()
 {
@@ -67,7 +68,8 @@ f_append_by_name()
 	if [ ! -z "${_name}" -a ! -z "${_dir}" ]; then
 		typeset _value="$(eval echo '${'${_name}'}')"
 		typeset _new_value="$(f_append_by_value "${_value}" "${_dir}")"
-		eval $(echo "export "${_name}"="${_new_value})
+		eval $(echo ""${_name}"="${_new_value}"")
+		eval $(echo "export "${_name}"")
 	fi
 }
 
@@ -134,7 +136,8 @@ f_prepend_by_name()
 	if [ ! -z "${_name}" -a ! -z "${_dir}" ]; then
 		typeset _value="$(eval echo '${'${_name}'}')"
 		typeset _new_value="$(f_prepend_by_value "${_value}" "${_dir}")"
-		eval $(echo "export "${_name}"="${_new_value})
+		eval $(echo ""${_name}"="${_new_value}"")
+		eval $(echo "export "${_name}"")
 	fi
 }
 
