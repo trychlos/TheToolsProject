@@ -182,6 +182,13 @@ f_setup()
 ### MAIN
 ###
 
+[ "${TTP_DEBUG}" = "1" ] && set -x
+
+[ "$(systemctl is-system-running)" = "running" ] || return 0
+
+[ "$(groups | grep -w ttp)" = "" ] && return 0
+
+
 # Set the umask
 # in TTP world, account and group permissions must be the same
 umask 0002
@@ -190,7 +197,7 @@ umask 0002
 typeset d_bootstrap_list="$@"
 [ -z "${1}" ] && d_bootstrap_list=""${HOME}/.ttp.d" "/etc/ttp.d""
 
-f_bootstrap "${d_bootstrap_list}" && . ttp.sh switch -default 2>&1
+f_bootstrap "${d_bootstrap_list}" && . ttp.sh switch -default </dev/null
 typeset -i _ret=$?
 
 [ "${TTP_DEBUG}" = "1" ] && echo "[sh/bootstrap] PATH='${PATH}'" 1>&2

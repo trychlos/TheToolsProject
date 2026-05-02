@@ -7,6 +7,7 @@
     Release date: 
 
     - sh/bootstrap, sh/switch: replace 'export VAR=value' single lines by distincts 'VAR=value' plus 'export VAR'
+    - sh/bootstrap: guard against user not of 'ttp' group and against running too early
 
 ### 4.32.0
 
