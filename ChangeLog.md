@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - SMTP::send() now distinguish and manage local files and URI-addressed attachments
 
 ### 4.32.1
 

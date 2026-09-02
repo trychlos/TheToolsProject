@@ -35,6 +35,7 @@ use warnings;
 use Data::Dumper;
 use Email::Stuffer;
 use Email::Sender::Transport::SMTP;
+use LWP::UserAgent;
 use Try::Tiny;
 
 use TTP;
@@ -43,6 +44,37 @@ use vars::global qw( $ep );
 use TTP::Constants qw( :all );
 use TTP::Credentials;
 use TTP::Message qw( :all );
+
+# ------------------------------------------------------------------------------------------------
+# tries to attach a file to an email
+# (I):
+# - the Email::Stuffer email instance
+# - the file path or URI
+# (O):
+# - the file path or content may have been attached
+
+sub _email_attach {
+	my ( $email, $join ) = @_;
+
+	if( -f $join ){
+		msgVerbose( "attaching '$join' file" );
+		$email->attach_file( $join );
+
+	} else {
+		my $ua = LWP::UserAgent->new(
+	        timeout => 30,
+		);
+		my $response = $ua->get( $join );
+
+	    if( $response->is_success ){
+			msgVerbose( "attaching '$join' content" );
+			$email->attach( $response->content );
+
+		} else {
+			msgWarn( "$join: unable to get URI content (or not an URI)" );
+		}
+	}
+}
 
 # ------------------------------------------------------------------------------------------------
 # returns the first account defined for the SMTP service
@@ -87,7 +119,6 @@ sub _getCredentials {
 # - returns true|false
 sub send {
 	my ( $msg ) = @_;
-	#print Dumper( $msg );
 	my $res = false;
 	msgErr( "Mail::send() expect parms as a hashref, not found" ) if !$msg || ref( $msg ) ne 'HASH';
 	msgErr( "Mail::send() expect subject, not found" ) if $msg && ref( $msg ) eq 'HASH' && !$msg->{subject};
@@ -113,7 +144,7 @@ sub send {
 		}
 		if( scalar( @{$msg->{join}} )){
 			foreach my $join ( @{$msg->{join}} ){
-				$email->attach_file( $join );
+				TTP::SMTP::_email_attach( $email, $join );
 			}
 		}
 		$email->text_body( $msg->{text} ) if $msg->{text};
