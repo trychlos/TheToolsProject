@@ -6,7 +6,7 @@
 
     Release date: 
 
-    - 
+    - Integrate maintainer/release.sh to automatize TheToolsProject release process
 
 ### 4.32.2
 
