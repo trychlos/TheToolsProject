@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.32.2-rc.0
+### 4.32.2
 
-    Release date: 
+    Release date: 2026-9-9
 
     - SMTP::send() now distinguish and manage local files and URI-addressed attachments
     - SqlServer::restoreDatabase() is improved to always finish with a 'RESTORE WITH RECOVERY' instruction
@@ -97,4 +97,4 @@
 
 ---
 P. Wieser
-- Last updated on 2026, May 2nd
+- Last updated on 2026, September 9th

@@ -264,4 +264,4 @@ Under the cover, the Perl version is used almost everywhere, but the Shell versi
 
 ---
 P. Wieser
-- Last updated on 2026, May 2nd
+- Last updated on 2026, September 9th
