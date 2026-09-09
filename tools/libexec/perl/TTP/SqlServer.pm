@@ -118,26 +118,22 @@ sub _connect {
 
 # -------------------------------------------------------------------------------------------------
 # restore the target database from the specified backup file
+# pwi 2026- 9- 9 always restore WITH NORECOVERY here
 # (I):
 # - parms is a hash ref with keys:
 #   > database: mandatory
 #   > file: mandatory
-#   > last: mandatory
 # (O):
-# - returns the needed 'MOVE' sentence
+# - returns truethy value on success
 
 sub _restoreFile {
 	my ( $self, $parms ) = @_;
 
 	my $database = $parms->{database};
 	my $fname = $parms->{file};
-	my $last = $parms->{last};
 
 	msgVerbose(  __PACKAGE__."::_restoreFile() restoring $fname" );
 	my $recovery = 'NORECOVERY';
-	if( $last ){
-		$recovery = 'RECOVERY';
-	}
 	my $move = $self->_restoreMove( $parms );
 	my $result = true;
 	if( $move ){
@@ -232,6 +228,28 @@ sub _restoreVerify {
 	my $move = $self->_restoreMove( $parms );
 	my $res = $self->_sqlExec( "RESTORE VERIFYONLY FROM DISK='$fname' WITH $move;" );
 	msgLog( __PACKAGE__."::_restoreVerify() stdout='".TTP::chompDumper( $res->{stdout} )."'" );
+
+	return $res->{ok};
+}
+
+# -------------------------------------------------------------------------------------------------
+# the last phase of a database restoration:
+# - all files have been previously restored with NORECOVERY option
+# - here, we will complete the restoration transaction with RECOVERY option
+# (I):
+# - parms is a hash ref with keys:
+#   > database: mandatory
+# (O):
+# - returns true|false
+
+sub _restoreWithRecovery {
+	my ( $self, $parms ) = @_;
+
+	my $database = $parms->{database};
+	msgVerbose( __PACKAGE__."::_restoreWithRecovery() completing $database restoration" );
+
+	my $res = $self->_sqlExec( "RESTORE DATABASE $database WITH RECOVERY;" );
+	msgLog( __PACKAGE__."::_restoreWithRecovery() stdout='".TTP::chompDumper( $res->{stdout} )."'" );
 
 	return $res->{ok};
 }
@@ -435,7 +453,7 @@ sub databaseSize {
 # - database name
 # (O):
 # - returns a hash with following keys:
-#   > state: whether the database is up and running, with values 0 (down) or 1 (up)
+#   > state: the numeric value of the state (0=online)
 #   > state_desc: a label which describes the state, e.g. 'online' or 'down'
 
 sub databaseState {
@@ -463,7 +481,7 @@ sub databaseState {
 # - none
 # (O):
 # - returns a hash with following items where:
-#   > the key is the numerical 'state' as returned by databaseState() abode
+#   > the key is the numerical 'state' as returned by databaseState() above
 #   > the value is the corresponding string 'state_desc'
 
 sub dbStatuses {
@@ -681,7 +699,6 @@ sub restoreDatabase {
 		my $diff = $parms->{diff} || '';
 		if( $verifyonly || $self->_restoreSetOffline( $parms )){
 			$parms->{'file'} = $parms->{full};
-			$parms->{'last'} = length $diff == 0 ? true : false;
 			if( $verifyonly ){
 				$result->{ok} = $self->_restoreVerify( $parms );
 			} else {
@@ -689,12 +706,19 @@ sub restoreDatabase {
 			}
 			if( $result->{ok} && length $diff ){
 				$parms->{'file'} = $diff;
-				$parms->{'last'} = true;
 				if( $verifyonly ){
 					$result->{ok} &= $self->_restoreVerify( $parms );
 				} else {
 					$result->{ok} &= $self->_restoreFile( $parms );
 				}
+			}
+			if( $result->{ok} && !$verifyonly ){
+				$result->{ok} &= $self->_restoreWithRecovery( $parms );
+			}
+			if( $result->{ok} ){
+				my $state = $self->databaseState( $parms->{database} );
+				msgVerbose( __PACKAGE__."::restoreDatabase() ending state='".TTP::chompDumper( $state )."'" );
+				$result->{ok} = $state->{state} == 0 && $state->{state_desc} eq 'ONLINE';
 			}
 		}
 	}

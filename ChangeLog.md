@@ -7,6 +7,7 @@
     Release date: 
 
     - SMTP::send() now distinguish and manage local files and URI-addressed attachments
+    - SqlServer::restoreDatabase() is improved to always finish with a 'RESTORE WITH RECOVERY' instruction
 
 ### 4.32.1
 
