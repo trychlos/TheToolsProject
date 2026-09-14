@@ -4,6 +4,7 @@
 # @(-) --[no]colored           color the output depending of the message level [${colored}]
 # @(-) --[no]dummy             dummy run (ignored here) [${dummy}]
 # @(-) --[no]verbose           run verbosely [${verbose}]
+# @(-) --[no]invoices          list invoices [${invoices}]
 # @(-) --[no]services          list subscribed services [${services}]
 #
 # TheToolsProject - Tools System and Working Paradigm for IT Production
@@ -35,10 +36,32 @@ my $defaults = {
 	colored => 'no',
 	dummy => 'no',
 	verbose => 'no',
+	invoices => 'no',
 	services => 'no'
 };
 
+my $opt_invoices = false;
 my $opt_services = false;
+
+# -------------------------------------------------------------------------------------------------
+# list the existing invoices
+
+sub listInvoices {
+	msgOut( "displaying invoices..." );
+	my $api = TTP::Ovh::connect();
+	if( $api ){
+		my $list = TTP::Ovh::getContentByPath( $api, "/me/bill" );
+		my $result = [];
+		foreach my $it ( @{$list} ){
+			my $row = { InvoideId => $it };
+			push( @{$result}, $row );
+		}
+		TTP::displayTabular( $result );
+		msgOut( scalar @{$list}." found invoices(s)" );
+	} else {
+		msgErr( "NOT OK" );
+	}
+}
 
 # -------------------------------------------------------------------------------------------------
 # list all the subscribed services
@@ -99,6 +122,7 @@ if( !GetOptions(
 	"colored!"			=> sub { $ep->runner()->colored( @_ ); },
 	"dummy!"			=> sub { $ep->runner()->dummy( @_ ); },
 	"verbose!"			=> sub { $ep->runner()->verbose( @_ ); },
+	"invoices!"			=> \$opt_invoices,
 	"services!"			=> \$opt_services )){
 
 		msgOut( "try '".$ep->runner()->command()." ".$ep->runner()->verb()." --help' to get full usage syntax" );
@@ -113,9 +137,11 @@ if( $ep->runner()->help()){
 msgVerbose( "got colored='".( $ep->runner()->colored() ? 'true':'false' )."'" );
 msgVerbose( "got dummy='".( $ep->runner()->dummy() ? 'true':'false' )."'" );
 msgVerbose( "got verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
+msgVerbose( "got invoices='".( $opt_invoices ? 'true':'false' )."'" );
 msgVerbose( "got services='".( $opt_services ? 'true':'false' )."'" );
 
 if( !TTP::errs()){
+	listInvoices() if $opt_invoices;
 	listServices() if $opt_services;
 }
 
