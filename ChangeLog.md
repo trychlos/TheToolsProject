@@ -8,17 +8,18 @@
 
     - Integrate maintainer/release.sh to automatize TheToolsProject release process
     - ovh.pl list now also lists invoices, thus bumping minor candidate version number
+    - Fix RunnerVerb.pm module to expose compilation errors correctly instead of reporting stale '\$!' messages
 
 ### 4.32.2
 
-    Release date: 2026-9-9
+    Release date: 2026- 9- 9
 
     - SMTP::send() now distinguish and manage local files and URI-addressed attachments
     - SqlServer::restoreDatabase() is improved to always finish with a 'RESTORE WITH RECOVERY' instruction
 
 ### 4.32.1
 
-    Release date: 
+    Release date: 2026- 5- 2
 
     - sh/bootstrap, sh/switch: replace 'export VAR=value' single lines by distincts 'VAR=value' plus 'export VAR'
     - sh/bootstrap: guard against user not of 'ttp' group and against running too early

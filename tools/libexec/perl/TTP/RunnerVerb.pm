@@ -245,7 +245,9 @@ sub run {
 				# + have direct access to '$ep' entry point
 				local @ARGV = @command_args;
 				unless( defined do $self->{_verb}{path} ){
-					msgErr( "do $self->{_verb}{path}: ".( $! || $@ ));
+					# $! may contain an unrelated error left by code compiled or run by the
+					# verb. Prefer $@, which contains the actual compilation/runtime error.
+					msgErr( "do $self->{_verb}{path}: ".( $@ || $! || 'returned undef' ));
 				}
 			} else {
 				msgErr( "script not found or not readable in [$ENV{TTP_ROOTS}]: '$verb$Const->{verbSuffixes}{$self->runnableRunMode()}'" );
