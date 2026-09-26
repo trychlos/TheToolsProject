@@ -920,7 +920,10 @@ sub checkVideoStage1 {
 		}
 	}
 
-	# all what we may say here is whether we have found something...
+	# doesn't override a potential file-level ERROR
+	return [] if $result->{status} eq ERROR;
+
+	# all what we may say here is whether we have found something, but 
 	$result->{status} = FINDINGS if scalar( @{$qualifiers} );
 	return $qualifiers;
 }
