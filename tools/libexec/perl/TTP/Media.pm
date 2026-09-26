@@ -1846,8 +1846,8 @@ sub trackTitleFromScan {
 # Set the result of a qualified check
 # (I):
 # - the result hash ref
-# - the check qualifier (BITSTREAM, DURATION or TIMELINE)
-# - the status (OK, SUSPICIOUS, FAILED, REPAIRABLE)
+# - the check qualifier (BITSTREAM, DURATION, TIMELINE, ...)
+# - the status (OK, SUSPICIOUS, FAILED, REPAIRABLE, ...)
 # - a reason or an array ref of reasons
 # (O):
 # - <nothing>
@@ -1859,7 +1859,12 @@ sub videoCheckSet {
 
 	$result->{findings}{$qualifier}{status} = $status;
 
-	if( $reasons ){
+	# clear the reasons when status is set to 'OK'
+	if( $status eq OK ){
+		$result->{findings}{$qualifier}{reasons} = [];
+
+	# else push new available reasons
+	} elsif( $reasons ){
 		if( ref( $reasons ) eq 'HASH' ){
 			push( @{$result->{findings}{$qualifier}{reasons}}, $reasons );
 			msgLog( "videoCheckSet() $reasons->{id} ".sprintf( $reasons->{format}, @{$reasons->{args}} ));
@@ -1873,8 +1878,10 @@ sub videoCheckSet {
 		} else {
 			msgErr( __PACKAGE__."::videoCheckSet() () reasons is neither a hash nor an array" );
 		}
+
+	# warn if not OK but no reason
 	} else {
-		msgVerbose( "videoCheckSet() qualifier='$qualifier' status='$status'" );
+		msgWarn( "videoCheckSet() qualifier='$qualifier' status='$status' but no proposed reason" );
 	}
 }
 
