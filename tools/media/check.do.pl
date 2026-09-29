@@ -114,6 +114,17 @@ my $opt_duration_set = false;
 
 # -------------------------------------------------------------------------------------------------
 # Process a candidate file
+# The full workflow is:
+#	check ->
+#	  maybe check for known bitstream pathology
+#	  maybe check for (non-repairable) duration
+#	  maybe check for known timeline pathology
+#     -> maybe repair
+#        maybe repair known bitstream pathology
+#        maybe repair known timeline pathology
+#        -> maybe verify
+#	        maybe verify known bitstream pathology
+#	        maybe verify known timeline pathology
 
 sub checkFile {
 	my ( $fname ) = @_;
@@ -184,8 +195,30 @@ sub checkFile {
 				my $verified = TTP::Media::checkVideo( $repaired->{fname}, {
 					timeline => $opt_timeline,
 					bitstream => $opt_bitstream,
-					duration => $opt_duration
+					duration => $opt_duration,
+					displaySummary => true
 				});
+
+				# verify counters
+				foreach my $check ( sort keys( %{$verified->{findings}} )){
+					$stats->{verified}{$check}{$verified->{findings}{$check}{status}} //= 0;
+					$stats->{verified}{$check}{$verified->{findings}{$check}{status}} += 1;
+				}
+
+				# display a verification status
+				msgOut( sprintf( "%-9s%-8s %s", "", $verified->{status}, $repaired->{fname} ));
+				if( $verified->{status} ne TTP::Media::OK ){
+					# if error
+					foreach my $reason ( @{$verified->{reasons}} ){
+						msgOut( sprintf( "%-9s%-8s %s", "", " ", sprintf( $reason->{format}, @{$reason->{args} // [] })));
+					}
+					# for findings
+					foreach my $key ( sort keys( %{$verified->{findings}} )){
+						foreach my $reason ( @{$verified->{findings}{$key}{reasons}} ){
+							msgOut( sprintf( "%-9s%-8s %s", "", " ", sprintf( $reason->{format}, @{$reason->{args} // [] })));
+						}
+					}
+				}
 			}
 		}
 	}
@@ -254,6 +287,20 @@ sub checkPath {
 						$stats->{byFindings}{$check}{TTP::Media::REPAIRABLE},
 						$stats->{repaired}{$check}{TTP::Media::ERROR},
 						$stats->{repaired}{$check}{TTP::Media::OK} ));
+			}
+		}
+	}
+	# when verifying
+	if( $opt_verify ){
+		msgOut( "Verified:           TODO       ERROR          OK" );
+		foreach my $check ( sort keys( %{$stats->{verified}} )){
+			if(( $check eq 'BITSTREAM' && $opt_bitstream ) || ( $check eq 'TIMELINE' && $opt_timeline )){
+				msgOut( "  ".
+					sprintf( "%-10s      %6d      %6d      %6d",
+						$check,
+						$stats->{verified_count},
+						$stats->{verified}{$check}{TTP::Media::ERROR},
+						$stats->{verified}{$check}{TTP::Media::OK} ));
 			}
 		}
 	}

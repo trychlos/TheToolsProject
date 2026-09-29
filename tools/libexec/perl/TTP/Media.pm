@@ -471,9 +471,10 @@ sub checkGstLaunch {
 # (I):
 # - the video filename
 # - an optional options hash with following keys:
-#   > timeline: whether to test for timeline pathology, defaulting to true
 #   > bitstream: whether to test for bitstream pathology, defaulting to true
 #   > duration: whether to test for minimal duration, defaulting to -1 (disabled)
+#   > timeline: whether to test for timeline pathology, defaulting to true
+#   > displaySummary: whether to display a check summary per check type, defaulting to false
 # (O):
 # - a hash with following keys:
 #   > status: OK, ERROR or FINDINGS
@@ -495,9 +496,10 @@ sub checkVideo {
 
 	# set default values
 	$opts //= {};
-	$opts->{timeline} //= true;
 	$opts->{bitstream} //= true;
 	$opts->{duration} //= -1;
+	$opts->{timeline} //= true;
+	$opts->{displaySummary} //= false;
 
 	# prepare the returned result
 	my $result = {
@@ -549,6 +551,7 @@ sub checkVideo {
 
 	if( scalar( grep( /BITSTREAM/, @{$qualifiers} ))){
 		checkVideoForBitstream( $result );
+		checkVideoSummary( $result, BITSTREAM ) if $opts->{displaySummary};
 	}
 
 	# if minimal duration has been requested and is not satisfied, there is nothing we can do here to repair
@@ -559,9 +562,9 @@ sub checkVideo {
 
 	if( scalar( grep( /TIMELINE/, @{$qualifiers} ))){
 		checkVideoForTimeline( $result );
+		checkVideoSummary( $result, TIMELINE ) if $opts->{displaySummary};
 	}
 
-	#print "checkVideo ".Dumper( $result );
 	videoFinalizeStatus( $result );
 	return $result;
 }
@@ -773,7 +776,8 @@ sub checkVideoForTimelineStage2 {
 						[ $stream->{index}, $packets, sprintf( "%.1f", $formatDuration )]));
 
 			} else {
-				msgLog( "checkVideoForTimelineStage2() stream #$stream->{index} formatDuration is compatible with packets count" );
+				msgLog( "checkVideoForTimelineStage2() ".
+					"stream #$stream->{index} formatDuration is compatible with packets count" );
 			}
 		} else {
 			videoCheckSet( $result, TIMELINE, SUSPICIOUS,
@@ -860,7 +864,11 @@ sub checkVideoStage1 {
 		next if $stream->{codec_type} ne 'video';
 
 		if( $opts->{bitstream} ){
-			msgLog( "checkVideoStage1() checking for bitstream pathology" );
+			if( $opts->{displaySummary} ){
+				msgOut( sprintf( "%-8s %s", " ", "verifying bitstream..."));
+			} else {
+				msgLog( "checkVideoStage1() checking for bitstream pathology" );
+			}
 			if( defined( $stream->{divx_packed}) && $stream->{divx_packed} eq 'true' ){
 				my $qualifier = BITSTREAM;
 				videoCheckSet( $result,
@@ -883,7 +891,11 @@ sub checkVideoStage1 {
 		}
 
 		if( $opts->{timeline} ){
-			msgLog( "checkVideoStage1() checking for timeline pathology" );
+			if( $opts->{displaySummary} ){
+				msgOut( sprintf( "%-8s %s", " ", "verifying timeline..."));
+			} else {
+				msgLog( "checkVideoStage1() checking for timeline pathology" );
+			}
 			my $duration = $stream->{duration};
 			msgLog( "checkVideoStage1() stream #$stream->{index} duration=".( $duration // '(undefined)' ));
 			if( defined( $duration ) && $duration ne 'N/A' ){
@@ -926,6 +938,34 @@ sub checkVideoStage1 {
 	# all what we may say here is whether we have found something, but 
 	$result->{status} = FINDINGS if scalar( @{$qualifiers} );
 	return $qualifiers;
+}
+
+# ------------------------------------------------------------------------------------------------
+# A summary for each repair operation
+# (I):
+# - the checkVideo() result hash
+# - the check qualifier
+# (O):
+# - <nothing>
+
+sub checkVideoSummary {
+    my ( $result, $check ) = @_;
+	msgLog( "checkVideoSummary() check'$check'" );
+
+    my $status = $result->{findings}{$check}{status};
+    return if !$status;
+
+    msgOut( sprintf( "%-10s %s", '', "$check verification: $status" ));
+
+    if( scalar( @{$result->{findings}{$check}{reasons} // []} )){
+        foreach my $reason ( @{$result->{findings}{$check}{reasons}} ){
+            msgOut( sprintf(
+                "%-10s %s",
+                '',
+                sprintf( $reason->{format}, @{$reason->{args} // [] })
+            ));
+        }
+    }
 }
 
 # ------------------------------------------------------------------------------------------------
@@ -1337,7 +1377,7 @@ sub repairVideo {
 		msgOut( sprintf( "%-8s %s", " ", "repairing bitstream..."));
 		repairVideoBitstream( $result, $fname, $checkResult );
 		$fname = $result->{fname};
-		repairVideoOutput( BITSTREAM, $result );
+		repairVideoSummary( $result, BITSTREAM );
 	}
 
 	# repair timeline default if nedded
@@ -1345,7 +1385,7 @@ sub repairVideo {
 		msgOut( sprintf( "%-8s %s", " ", "repairing timeline..."));
 		repairVideoTimeline( $result, $fname, $checkResult );
 		$fname = $result->{fname};
-		repairVideoOutput( TIMELINE, $result );
+		repairVideoSummary( $result, TIMELINE );
 	}
 
 	videoFinalizeStatus( $result );
@@ -1388,6 +1428,44 @@ sub repairVideoBitstream {
 	}
 
 	return $new_fname;
+}
+
+# ------------------------------------------------------------------------------------------------
+# A summary for each repair operation
+# (I):
+# - the repairVideo() result hash
+# - the check qualifier
+# (O):
+# - <nothing>
+
+sub repairVideoSummary {
+    my ( $result, $check ) = @_;
+	msgLog( "repairVideoSummary() check'$check'" );
+
+    my $status = $result->{findings}{$check}{status};
+    return if !$status;
+
+    my $suffix = '';
+    if( $status eq OK && $result->{fname} ){
+        $suffix = " -> $result->{fname}";
+    }
+
+    msgOut( sprintf(
+        "%-10s %s%s",
+        '',
+        "$check repair: $status",
+        $suffix
+    ));
+
+    if( scalar( @{$result->{findings}{$check}{reasons} // []} )){
+        foreach my $reason ( @{$result->{findings}{$check}{reasons}} ){
+            msgOut( sprintf(
+                "%-10s %s",
+                '',
+                sprintf( $reason->{format}, @{$reason->{args} // [] })
+            ));
+        }
+    }
 }
 
 # ------------------------------------------------------------------------------------------------
@@ -1573,45 +1651,6 @@ sub repairVideoTimeline {
     $repairResult->{fname} = $new_fname;
 
     return $new_fname;
-}
-
-# ------------------------------------------------------------------------------------------------
-# A summary for each repair operation
-# (I):
-# - the check qualifier
-# - the repairVideo() result hash
-# (O):
-# - <nothing>
-
-sub repairVideoOutput {
-    my ( $check, $result ) = @_;
-	msgLog( "repairVideoOutput() check'$check'" );
-
-    my $status = $result->{findings}{$check}{status};
-    return if !$status;
-
-    my $suffix = '';
-
-    if( $status eq OK && $result->{fname} ){
-        $suffix = " -> $result->{fname}";
-    }
-
-    msgOut( sprintf(
-        "%-10s %s%s",
-        '',
-        "$check repair: $status",
-        $suffix
-    ));
-
-    if( scalar( @{$result->{findings}{$check}{reasons} // []} )){
-        foreach my $reason ( @{$result->{findings}{$check}{reasons}} ){
-            msgOut( sprintf(
-                "%-10s %s",
-                '',
-                sprintf( $reason->{format}, @{$reason->{args} // [] })
-            ));
-        }
-    }
 }
 
 # ------------------------------------------------------------------------------------------------
