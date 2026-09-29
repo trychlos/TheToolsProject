@@ -108,7 +108,7 @@ my $Const = {
 		},
 		{
 			id => 'STREAM_DIVX_SAMPLE',
-			format => 'excessive (repairable) bitstream confirmed at start=%ss'
+			format => 'excessive bitstream confirmed at start=%ss'
 		},
 		{
 			id => 'STREAM_DURATION_DELTA',
@@ -631,14 +631,20 @@ sub checkVideoForBitstreamSample {
 sub checkVideoForBitstreamSingleSample {
 	my ( $result, $start ) = @_;
 
-	# ffmpeg refuses to stream from start=0
+	# ffmpeg warns when asked to stream from start=0
 	$start = 1 if !$start;
 
-	my $cmd = "ffmpeg -v warning ".
-		"-ss $start -t $Const->{sampling}{length} -i \"$result->{info}{format}{filename}\" ".
-		"-map 0:v:0 -f null -";
+	my $args = [
+		'-v', 'warning',
+		'-ss', $start,
+		'-t', $Const->{sampling}{length},
+		'-i', $result->{info}{format}{filename},
+		'-map', '0:v:0',
+		'-f', 'null',
+		'-'
+	];
 
-	my $res = TTP::commandExec( $cmd );
+	my $res = TTP::commandExec({ command => 'ffmpeg', args => $args });
 	my $errorFound = false;
 	if( $res->{success} ){
 		foreach my $line ( @{$res->{stderrs}} ){
@@ -847,6 +853,8 @@ sub checkVideoForTimelineStage3 {
 # - an array ref of the found qualifiers
 #   > ERRORS are set to result->{reasons}
 #   > findings are set to the relevant object
+# Note: A supported-extension file containing only audio can be classified as a valid video and
+# ultimately return OK.
 
 sub checkVideoStage1 {
 	my ( $result, $opts ) = @_;
@@ -1116,21 +1124,20 @@ sub ffprobeInfoGet {
 	my ( $fname, $result, $opts ) = @_;
 	$opts //= {};
 
-	my @args = (
-		'ffprobe',
+	my $args = [
 		'-v', 'error'
-	);
+	];
 
-	push( @args, '-count_packets' ) if $opts->{countPackets};
+	push( @{$args}, '-count_packets' ) if $opts->{countPackets};
 
-	push( @args,
+	push( @{$args},
 		'-show_format',
 		'-show_streams',
-		'-of', 'json'
+		'-of', 'json',
+		$fname
 	);
 
-	my $command = join( ' ', @args );
-	my $res = TTP::commandExec( "$command \"$fname\"" );
+	my $res = TTP::commandExec({ command => 'ffprobe', args => $args });
 	#print Dumper( $result );
 	my $reason = undef;
 	my $decoded = undef;
@@ -1210,7 +1217,10 @@ sub genreFromScan {
 sub gstDuration {
 	my ( $result ) = @_;
 
-	my $res = TTP::commandExec( "gst-discoverer-1.0 \"$result->{info}{format}{filename}\"" );
+	my $args = [
+		$result->{info}{format}{filename}
+	];
+	my $res = TTP::commandExec({ command => 'gst-discoverer-1.0', args => $args });
 
 	if( !$res->{success} ){
 		msgErr( __PACKAGE__."::gstDuration() gst-discoverer-1.0 failed for '$result->{info}{format}{filename}'" );
@@ -1408,16 +1418,34 @@ sub repairVideoBitstream {
 	my ( undef, undef, $suffix ) = File::Basename::fileparse( $fname, qr/\.[^.]*/ );
 	my $tmp_fname = "$fname.tmp$suffix";
 
-	my $cmd = "ffmpeg -i \"$fname\" -map 0 -c copy -bsf:v mpeg4_unpack_bframes \"$tmp_fname\" && ".
-				"mv -v \"$tmp_fname\" \"$fname\"";
-	my $res = TTP::commandExec( $cmd );
+	my $args = [
+		'-i', $fname,
+		'-map', '0',
+		'-c', 'copy',
+		'-bsf:v',
+		'mpeg4_unpack_bframes',
+		$tmp_fname
+	];
+
+	my $res = TTP::commandExec({ command => 'ffmpeg', args => $args });
+	my $success = false;
 
 	if( $res->{success} ){
-		# filename is left unchanged by that repair
-		videoCheckSet( $repairResult, BITSTREAM, OK );
-		$repairResult->{fname} = $fname;
+		$args = [
+			'-v',
+			$tmp_fname,
+			$fname
+		];
+		$res = TTP::commandExec({ command => 'mv', args => $args });
+		if( $res->{success} ){
+			# filename is left unchanged by that repair
+			videoCheckSet( $repairResult, BITSTREAM, OK );
+			$repairResult->{fname} = $fname;
+			$success = true;
+		}
 
-	} else {
+	}
+	if( !$success ){
 		unlink( $tmp_fname );
 		videoCheckSet( $repairResult, BITSTREAM, ERROR, videoReason( 'FFMPEG_ERROR', [
 			"unable to successfully execute ffmpeg to repair \'$fname\'"
@@ -1590,6 +1618,7 @@ sub repairVideoTimeline {
 		return $fname;
 	}
 
+	# don't know how to prevent shell interpretation giving the syntax of the command
     my $cmd =
         "gst-launch-1.0 -e ".
         "filesrc location=\"$fname\" ! qtdemux name=d ".
