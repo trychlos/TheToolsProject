@@ -185,7 +185,11 @@ sub checkFile {
 			( $opt_timeline && $result->{findings}{TTP::Media::TIMELINE}{status} eq TTP::Media::REPAIRABLE )){
 
 			$stats->{repaired_count} += 1;
-			my $repaired = TTP::Media::repairVideo( $fname, $result );
+			my $repaired = TTP::Media::repairVideo( $fname, $result, {
+				timeline => $opt_timeline,
+				bitstream => $opt_bitstream,
+				verify => $opt_verify
+			});
 			$error = true if $repaired->{status} eq TTP::Media::ERROR;
 
 			# repair counters

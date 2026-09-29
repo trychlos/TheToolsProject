@@ -138,7 +138,7 @@ my $Const = {
 	# a list of regexps to be ignored when walking a tree
 	walkingIgnore => {
 		dirs => [
-			'^.Trash'
+			'^\.Trash'
 		]
 	}
 };
@@ -1334,6 +1334,10 @@ sub isVideoCapable {
 # (I):
 # - the video filename
 # - the checkVideo() result hash
+# - an optional options hash with following keys:
+#   > bitstream: whether to test for bitstream pathology, defaulting to true
+#   > timeline: whether to test for timeline pathology, defaulting to true
+#   > verify: whether the repair will later be verified, defaulting to false
 # (O):
 # - a hash with following keys:
 #   > status: 'OK' or 'ERROR'
@@ -1347,10 +1351,11 @@ sub isVideoCapable {
 #       > reasons: an array ref of reasons
 #   > info: the ffprobe informations
 #
-# nb: 'findings' is the same name than in checkVideo() to be able to reused '$result'-oriented functions
+# nb: 'findings' is the same name than in checkVideo() to be able to reuse '$result'-oriented functions
 
 sub repairVideo {
-	my ( $fname, $checkResult ) = @_;
+	my ( $fname, $checkResult, $opts ) = @_;
+	$opts //= {};
 	my $new_fname = $fname;
 
 	# prepare the returned result
@@ -1362,14 +1367,14 @@ sub repairVideo {
 		findings => {}
 	};
 	my $count = 0;
-	if( $checkResult->{findings}{BITSTREAM}{status} eq REPAIRABLE ){
+	if( $opts->{bitstream} && $checkResult->{findings}{BITSTREAM}{status} eq REPAIRABLE ){
 		$count += 1;
 		$result->{findings}{BITSTREAM} = {
 			status => OK,
 			reasons => []
 		};
 	}
-	if( $checkResult->{findings}{TIMELINE}{status} eq REPAIRABLE ){
+	if( $opts->{timeline} && $checkResult->{findings}{TIMELINE}{status} eq REPAIRABLE ){
 		$count += 1;
 		$result->{findings}{TIMELINE} = {
 			status => OK,
@@ -1622,14 +1627,13 @@ sub repairVideoTimeline {
 		return $fname;
 	}
 
-	# don't know how to prevent shell interpretation giving the syntax of the command
-    my $cmd =
-        "gst-launch-1.0 -e ".
-        "filesrc location=\"$fname\" ! qtdemux name=d ".
-        "matroskamux name=mux ! filesink location=\"$tmp_fname\" ".
-        join( ' ', @branches );
+    my $args = [
+        "-e filesrc location=\"$fname\" ! qtdemux name=d",
+        "matroskamux name=mux ! filesink location=\"$tmp_fname\""
+	];
+	push( @{$args}, @branches );
 
-    my $res = TTP::commandExec( $cmd );
+    my $res = TTP::commandExec({ command => 'gst-launch-1.0', args => $args });
 
     if( !$res->{success} ){
         unlink( $tmp_fname );
