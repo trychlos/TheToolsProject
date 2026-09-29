@@ -79,6 +79,10 @@ my $Const = {
 	],
 	videoReasons => [
 		{
+			id => 'CONTAINER_UNSUPPORTED_FOR_REPAIR',
+			format => "container format '%s' is not supported by timeline repair"
+		},
+		{
 			id => 'FFMPEG_ERROR',
 			format => '%s'
 		},
@@ -722,8 +726,19 @@ sub checkVideoForTimeline {
 sub checkVideoForTimelineHandledStreams {
 	my ( $result ) = @_;
 
+    my $format = $result->{info}{format} // {};
+    my $formatName = $format->{format_name} // 'unknown';
 	my $formatDuration = $result->{info}{format}{duration};
-	msgLog( "checkVideoForTimelineHandledStreams() $result->{info}{format}{filename}" );
+
+	msgLog( "checkVideoForTimelineHandledStreams() ".
+		"result->{info}{format}{filename} format='$formatName'" );
+
+    if( !timelineContainerSupported( $format )){
+        videoCheckSet( $result, TIMELINE, SUSPICIOUS,
+            videoReason( 'CONTAINER_UNSUPPORTED_FOR_REPAIR', [ $formatName ])
+        );
+        return;
+    }
 
 	foreach my $stream ( @{$result->{info}{streams} || []} ){
 		msgLog( "checkVideoForTimelineHandledStreams() ".
@@ -1366,38 +1381,23 @@ sub repairVideo {
 		fname => $new_fname,
 		findings => {}
 	};
-	my $count = 0;
+
 	if( $opts->{bitstream} && $checkResult->{findings}{BITSTREAM}{status} eq REPAIRABLE ){
-		$count += 1;
 		$result->{findings}{BITSTREAM} = {
 			status => OK,
 			reasons => []
 		};
-	}
-	if( $opts->{timeline} && $checkResult->{findings}{TIMELINE}{status} eq REPAIRABLE ){
-		$count += 1;
-		$result->{findings}{TIMELINE} = {
-			status => OK,
-			reasons => []
-		};
-	}
-
-	# if nothing to do, just return
-	if( !$count ){
-		msgWarn( "repairVideo() nothing to do for '$fname'" );
-		return $result;
-	}
-
-	# repair bitstream default if needed
-	if( $checkResult->{findings}{BITSTREAM}{status} eq REPAIRABLE ){
 		msgOut( sprintf( "%-8s %s", " ", "repairing bitstream..."));
 		repairVideoBitstream( $result, $fname, $checkResult );
 		$fname = $result->{fname};
 		repairVideoSummary( $result, BITSTREAM );
 	}
 
-	# repair timeline default if nedded
-	if( $checkResult->{findings}{TIMELINE}{status} eq REPAIRABLE ){
+	if( $opts->{timeline} && $checkResult->{findings}{TIMELINE}{status} eq REPAIRABLE ){
+		$result->{findings}{TIMELINE} = {
+			status => OK,
+			reasons => []
+		};
 		msgOut( sprintf( "%-8s %s", " ", "repairing timeline..."));
 		repairVideoTimeline( $result, $fname, $checkResult );
 		$fname = $result->{fname};
@@ -1568,11 +1568,16 @@ sub repairVideoTimeline {
 				return $fname;
 			}
 
-			push( @branches,
-				"d.video_$video_idx ! ".
-				"queue max-size-time=10000000000 ! ".
-				"$parser ! mux."
-			);
+			push( @branches, (
+				"d.video_$video_idx",
+				'!',
+				'queue',
+				'max-size-time=10000000000',
+				'!',
+				$parser,
+				'!',
+				'mux'
+			));
 
 			$video_idx += 1;
 
@@ -1586,10 +1591,15 @@ sub repairVideoTimeline {
 				return $fname;
 			}
 
-			push( @branches,
-				"d.audio_$audio_idx ! ".
-				"queue ! aacparse ! mux."
-			);
+			push( @branches, (
+				"d.audio_$audio_idx",
+				'!',
+				'queue',
+				'!',
+				'aacparse',
+				'!',
+				'mux'
+			));
 
 			$audio_idx += 1;
 
@@ -1604,8 +1614,11 @@ sub repairVideoTimeline {
 			}
 
 			push( @branches,
-				"d.subtitle_$subtitle_idx ! ".
-				"queue ! mux."
+				"d.subtitle_$subtitle_idx",
+				'!',
+				'queue',
+				'!',
+				'mux'
 			);
 
 			$subtitle_idx += 1;
@@ -1619,7 +1632,8 @@ sub repairVideoTimeline {
 		}
 	}
 
-	# theorically impossible guard
+	# theorically impossible guards
+
 	if( !$video_idx ){
 		videoCheckSet( $repairResult, TIMELINE, ERROR,
 			videoReason( 'GST_REPAIR_ERROR',
@@ -1628,8 +1642,17 @@ sub repairVideoTimeline {
 	}
 
     my $args = [
-        "-e filesrc location=\"$fname\" ! qtdemux name=d",
-        "matroskamux name=mux ! filesink location=\"$tmp_fname\""
+        '-e',
+        'filesrc',
+        "location=\"$fname\"",
+        '!',
+        'qtdemux',
+        'name=d',
+        'matroskamux',
+        'name=mux',
+        '!',
+        'filesink',
+        "location=\"$tmp_fname\""
 	];
 	push( @{$args}, @branches );
 
@@ -1815,6 +1838,39 @@ sub scan_tree {
 
 # ------------------------------------------------------------------------------------------------
 # When trying to repair a video whose timeline exhibits the known unsynchronized pathology,
+#  we have to make sure that we will be able to demux the container
+# (I):
+# - the stream format, as a comma-separated string
+# (O):
+# - true if the audio stream is managed
+
+sub timelineContainerSupported {
+    my ( $format ) = @_;
+	msgLog( "timelineContainerSupported() format='$format->{format_name}'" );
+
+    return false if !$format;
+
+    my $formatName = lc( $format->{format_name} // '' );
+    return false if !$formatName;
+
+    my %qtdemuxFormats = map { $_ => true } qw(
+        mov
+        mp4
+        m4a
+        3gp
+        3g2
+        mj2
+    );
+
+    foreach my $name ( split( /,/, $formatName )){
+        return true if $qtdemuxFormats{$name};
+    }
+
+    return false;
+}
+
+# ------------------------------------------------------------------------------------------------
+# When trying to repair a video whose timeline exhibits the known unsynchronized pathology,
 #  we have to make sure all audio streams are correctly managed - thus this helper
 # (I):
 # - the stream information
@@ -1824,8 +1880,11 @@ sub scan_tree {
 sub timelineStreamSupported {
     my ( $stream ) = @_;
 
+    return false if !$stream;
+
     my $type = $stream->{codec_type} // '';
     my $codec = $stream->{codec_name} // '';
+	msgLog( "timelineStreamSupported() #$stream->{index} type='$type' codec='$codec'" );
 
     return true if $type eq 'video'
         && grep( /^$codec$/, qw( h264 hevc ));
