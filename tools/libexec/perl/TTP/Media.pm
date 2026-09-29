@@ -600,7 +600,10 @@ sub checkVideoForBitstreamSample {
 	my ( $result ) = @_;
 
 	my $formatDuration = $result->{info}{format}{duration};
-	my $spread = ( $formatDuration - $Const->{sampling}{length} ) / $Const->{sampling}{count};
+	my $spread = 0;
+	if( $formatDuration > $Const->{sampling}{length} ){
+		$spread = ( $formatDuration - $Const->{sampling}{length} ) / $Const->{sampling}{count};
+	}
 	my $start = 0;
 	my $found = false;
 	for( my $i=0 ; $i<$Const->{sampling}{count} ; ++$i ){
@@ -608,6 +611,7 @@ sub checkVideoForBitstreamSample {
 		$found = checkVideoForBitstreamSingleSample( $result, $start );
 		return if $result->{status} eq ERROR;
 		last if $found;
+		last if !$spread;
 	}
 	if( $found ){
 		videoCheckSet( $result, BITSTREAM, REPAIRABLE, videoReason( 'STREAM_DIVX_SAMPLE', [ $start ]));
