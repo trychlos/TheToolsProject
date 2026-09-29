@@ -505,8 +505,7 @@ sub checkVideo {
 	my $result = {
 		status => OK,
 		reasons => [],
-		info => undef,
-		checks => {}
+		info => undef
 	};
 	if( $opts->{bitstream} ){
 		$result->{findings}{BITSTREAM} = {
