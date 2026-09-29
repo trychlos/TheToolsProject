@@ -144,6 +144,8 @@ sub checkFile {
 
 	$stats->{checked} += 1;
 	msgVerbose( "checking '$fname'..." );
+	my $error = false;
+	my $prevErrors = $ep->runner()->runnableErrs();
 
 	my $result = TTP::Media::checkVideo( $fname, {
 		timeline => $opt_timeline,
@@ -153,6 +155,7 @@ sub checkFile {
 
 	# file-level summary
 	msgOut( sprintf( "%-8s %s", $result->{status}, $fname ));
+	$error = true if $result->{status} eq TTP::Media::ERROR;
 	if( $result->{status} ne TTP::Media::OK ){
 		# if error
 		foreach my $reason ( @{$result->{reasons}} ){
@@ -177,12 +180,13 @@ sub checkFile {
 	}
 
 	# if repair is asked ?
-	if( $opt_repair ){
+	if( $opt_repair && !$error ){
 		if(( $opt_bitstream && $result->{findings}{TTP::Media::BITSTREAM}{status} eq TTP::Media::REPAIRABLE ) ||
 			( $opt_timeline && $result->{findings}{TTP::Media::TIMELINE}{status} eq TTP::Media::REPAIRABLE )){
 
 			$stats->{repaired_count} += 1;
 			my $repaired = TTP::Media::repairVideo( $fname, $result );
+			$error = true if $repaired->{status} eq TTP::Media::ERROR;
 
 			# repair counters
 			foreach my $check ( sort keys( %{$repaired->{findings}} )){
@@ -190,7 +194,7 @@ sub checkFile {
 				$stats->{repaired}{$check}{$repaired->{findings}{$check}{status}} += 1;
 			}
 
-			if( $repaired->{status} ne TTP::Media::ERROR && $opt_verify ){
+			if( $opt_verify && !$error ){
 				$stats->{verified_count} += 1;
 				my $verified = TTP::Media::checkVideo( $repaired->{fname}, {
 					timeline => $opt_timeline,
@@ -198,6 +202,7 @@ sub checkFile {
 					duration => $opt_duration,
 					displaySummary => true
 				});
+				$error = true if $verified->{status} eq TTP::Media::ERROR;
 
 				# verify counters
 				foreach my $check ( sort keys( %{$verified->{findings}} )){
@@ -222,6 +227,9 @@ sub checkFile {
 			}
 		}
 	}
+
+	# display an error message if a hard error has been detected but msgErr() has not been called
+	msgErr( "hard error detected in '$fname'" ) if $error && $prevErrors == $ep->runner()->runnableErrs();
 }
 
 # -------------------------------------------------------------------------------------------------
