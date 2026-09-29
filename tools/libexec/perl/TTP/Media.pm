@@ -878,18 +878,6 @@ sub checkVideoStage1 {
 			}
 		}
 
-		if( $opts->{duration} > 0 ){
-			msgLog( "checkVideoStage1() checking for minimal duration" );
-			if( $opts->{duration} > $formatDuration ){
-				my $qualifier = DURATION;
-				videoCheckSet( $result,
-					$qualifier, FAILED,
-					videoReason( 'MEDIA_MIN_DURATION',
-						[ sprintf( "%.3f", $formatDuration ), sprintf( "%.3f", $opts->{duration} ) ]));
-				push( @{$qualifiers}, $qualifier );
-			}
-		}
-
 		if( $opts->{timeline} ){
 			if( $opts->{displaySummary} ){
 				msgOut( sprintf( "%-8s %s", " ", "verifying timeline..."));
@@ -929,6 +917,18 @@ sub checkVideoStage1 {
 				# this can be normal in particular for Matroska containers
 				msgLog( "checkVideoStage1() stream #$stream->{index} duration not considered" );
 			}
+		}
+	}
+
+	if( $opts->{duration} > 0 ){
+		msgLog( "checkVideoStage1() checking for minimal duration" );
+		if( $opts->{duration} > $formatDuration ){
+			my $qualifier = DURATION;
+			videoCheckSet( $result,
+				$qualifier, FAILED,
+				videoReason( 'MEDIA_MIN_DURATION',
+					[ sprintf( "%.3f", $formatDuration ), sprintf( "%.3f", $opts->{duration} ) ]));
+			push( @{$qualifiers}, $qualifier );
 		}
 	}
 
