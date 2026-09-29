@@ -41,7 +41,8 @@
 |  178 | 2026- 2- 8 | credentials.dir property is not consistent with other (like logsDir) properties - has been introduced in v4.7 but should be reversed |
 |  179 | 2026- 2- 9 | ttp.pl writejson is deprecated as of v4.32 - remove it later ? |
 |  181 | 2026- 9-14 | workload.summary: limit the length of the displayed commands so that the output may stay in a page and doesn't lead to line breaks |
-|  182 |  |  |
+|  182 | 2026- 9-29 | have a guard against non-existant modules so that we display a clean error message rather than aborting |
+|  183 |  |  |
 
 ---
 ## Done
