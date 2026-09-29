@@ -537,7 +537,6 @@ sub checkVideo {
 	# status is OK or ERROR
 	ffprobeInfo( $fname, $result );
 	if( $result->{status} ne OK ){
-		videoError( $result, videoReason( 'FFPROBE_ERROR', [ 'first stage ffprobe failed or not valid' ]));
 		return $result;
 	}
 
@@ -675,7 +674,6 @@ sub checkVideoForTimeline {
 	# if we find something suspicious, we will ask a confirmation to GStreamer
 	ffprobeInfo( $result->{info}{format}{filename}, $result, { countPackets => true });
 	if( $result->{status} eq ERROR ){
-		videoError( $result, videoReason( 'FFPROBE_ERROR', [ 'second stage ffprobe failed or not valid' ]));
 		return;
 	}
 
