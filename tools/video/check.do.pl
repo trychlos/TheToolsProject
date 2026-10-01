@@ -1,4 +1,4 @@
-# @(#) check objects
+# @(#) check video media
 #
 # @(-) --[no]help                   print this message, and exit [${help}]
 # @(-) --[no]colored                color the output depending of the message level [${colored}]

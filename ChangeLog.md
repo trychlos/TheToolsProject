@@ -10,6 +10,7 @@
     - ovh.pl list now also lists invoices, thus bumping minor candidate version number
     - Fix RunnerVerb.pm module to expose compilation errors correctly instead of reporting stale '\$!' messages
     - video.pl check: new command, new verb to check and repair videos consistency
+    - audio.pl list is renamed audio.pl check to be consistent with video.pl
 
 ### 4.32.2
 

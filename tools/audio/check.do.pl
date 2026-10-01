@@ -1,4 +1,4 @@
-# @(#) list objects
+# @(#) check audio media
 #
 # CAUTION - NOT STANDARD DISPLAY
 #
