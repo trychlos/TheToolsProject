@@ -8,12 +8,16 @@
 # @(-) --[no]timeline               whether check also for video timeline issues [${timeline}]
 # @(-) --[no]bitstream              whether check also for divx bitstream issues [${bitstream}]
 # @(-) --duration=<seconds>         whether check also for a minimum video duration [${duration}]
+# @(-) --[no]specials               whether check for special characters in the filename [${specials}]
 # @(-) --[no]repair                 whether try to repair the REPAIRABLE media [${repair}]
 # @(-) --[no]keep-orig              whether keep the original file when repairing [${keepOrig}]
 # @(-) --[no]verify                 whether verify the repaired media [${verify}]
 #
 # @(@) Note 1: The verb accepts one or more files or directories as positional arguments.
 # @(@) Note 2: In dummy mode, candidate files are only displayed and no media check is performed.
+# @(@) Note 3: You should be conscious that both Special characters and Timeline pathology repairs will change
+#              the pathname of the media. If this is important for you, or your media is referenced elsewhere
+#              (say in Kodi for example), you should not omit to update your libraries (remove, repair re-add).
 #
 # TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
@@ -52,6 +56,7 @@ my $defaults = {
 	timeline => 'yes',
 	bitstream => 'yes',
 	duration => -1,
+	specials => 'yes',
 	repair => 'no',
 	keepOrig => 'yes',
 	verify => 'no'
@@ -61,6 +66,7 @@ my $opt_recurse = true;
 my $opt_timeline = true;
 my $opt_bitstream = true;
 my $opt_duration = $defaults->{duration};
+my $opt_specials = true;
 my $opt_repair = false;
 my $opt_keepOrig = true;
 my $opt_verify = false;
@@ -91,6 +97,10 @@ my $stats = {
 				OK => 0,
 				FAILED => 0
 			},
+			SPECIALS => {
+				OK => 0,
+				REPAIRABLE => 0
+			},
 			TIMELINE => {
 				OK => 0,
 				SUSPICIOUS => 0,
@@ -107,6 +117,11 @@ my $stats = {
 		},
 		byFindings => {
 			BITSTREAM => {
+				TODO => 0,
+				OK => 0,
+				ERROR => 0
+			},
+			SPECIALS => {
 				TODO => 0,
 				OK => 0,
 				ERROR => 0
@@ -130,6 +145,10 @@ my $stats = {
 				OK => 0,
 				ERROR => 0
 			},
+			SPECIALS => {
+				OK => 0,
+				ERROR => 0
+			},
 			TIMELINE => {
 				OK => 0,
 				ERROR => 0
@@ -147,12 +166,15 @@ my $opt_duration_set = false;
 #	check ->
 #	  maybe check for known bitstream pathology
 #	  maybe check for (non-repairable) duration
+#	  maybe check for special characters pathology
 #	  maybe check for known timeline pathology
 #     -> maybe repair
 #        maybe repair known bitstream pathology
+#        maybe repair special characters pathology
 #        maybe repair known timeline pathology
 #        -> maybe verify
 #	        maybe verify known bitstream pathology
+#	        maybe verify special characters pathology
 #	        maybe verify known timeline pathology
 #
 # As we want to display messages as soon as they are available, and to wait for the end of a walked
@@ -242,7 +264,8 @@ sub fileCheck {
 	my $result = TTP::Media::videoCheck( $fname, {
 		timeline => $opt_timeline,
 		bitstream => $opt_bitstream,
-		duration => $opt_duration
+		duration => $opt_duration,
+		specials => $opt_specials
 	});
 
 	# counters per level
@@ -279,12 +302,15 @@ sub fileRepair {
 
 	if(( $opt_bitstream &&
 			$checkResult->{findings}{TTP::Media::Video::BITSTREAM}{status} eq TTP::Media::Video::REPAIRABLE ) ||
+		( $opt_specials &&
+				$checkResult->{findings}{TTP::Media::Video::SPECIALS}{status} eq TTP::Media::Video::REPAIRABLE ) ||
 		( $opt_timeline &&
 				$checkResult->{findings}{TTP::Media::Video::TIMELINE}{status} eq TTP::Media::Video::REPAIRABLE )){
 
 		$result = TTP::Media::videoRepair( $checkResult, {
 			timeline => $opt_timeline,
 			bitstream => $opt_bitstream,
+			specials => $opt_specials,
 			keepOrig => $opt_keepOrig
 		});
 
@@ -403,6 +429,14 @@ sub printCheckSummary {
 			$stats->{checkings}{byFindings}{TTP::Media::Video::DURATION}{TTP::Media::Video::OK}
 		));
 	}
+	if( $opt_specials ){
+		msgOut( "    Special characters:" );
+		msgOut( "      ".sprintf( "%12s  %12s  %12s", "", "REPAIRABLE", "OK" ));
+		msgOut( "      ".sprintf( "%12s  %12d  %12d", "",
+			$stats->{checkings}{byFindings}{TTP::Media::Video::SPECIALS}{TTP::Media::Video::REPAIRABLE},
+			$stats->{checkings}{byFindings}{TTP::Media::Video::SPECIALS}{TTP::Media::Video::OK}
+		));
+	}
 	if( $opt_timeline ){
 		msgOut( "     Timeline:" );
 		msgOut( "      ".sprintf( "%12s  %12s  %12s", "SUSPICIOUS", "REPAIRABLE", "OK" ));
@@ -438,6 +472,15 @@ sub printRepairSummary {
 			$stats->{repairings}{byFindings}{TTP::Media::Video::BITSTREAM}{TTP::Media::Video::OK}
 		));
 	}
+	if( $opt_specials ){
+		msgOut( "     Specials characters:" );
+		msgOut( "      ".sprintf( "%12s  %12s  %12s", "TODO", "ERROR", "OK" ));
+		msgOut( "      ".sprintf( "%12d  %12d  %12d",
+			$stats->{repairings}{byFindings}{TTP::Media::Video::SPECIALS}{TODO},
+			$stats->{repairings}{byFindings}{TTP::Media::Video::SPECIALS}{TTP::Media::Video::ERROR},
+			$stats->{repairings}{byFindings}{TTP::Media::Video::SPECIALS}{TTP::Media::Video::OK}
+		));
+	}
 	if( $opt_timeline ){
 		msgOut( "     Timeline:" );
 		msgOut( "      ".sprintf( "%12s  %12s  %12s", "TODO", "ERROR", "OK" ));
@@ -446,7 +489,8 @@ sub printRepairSummary {
 			$stats->{repairings}{byFindings}{TTP::Media::Video::TIMELINE}{TTP::Media::Video::ERROR},
 			$stats->{repairings}{byFindings}{TTP::Media::Video::TIMELINE}{TTP::Media::Video::OK}
 		));
-	}}
+	}
+}
 
 # -------------------------------------------------------------------------------------------------
 # Output the verification summary (only for repairable/repaired checks)
@@ -469,6 +513,14 @@ sub printVerifySummary {
 		msgOut( "      ".sprintf( "%12s  %12d  %12d", "",
 			$stats->{verifyings}{byFindings}{TTP::Media::Video::BITSTREAM}{TTP::Media::Video::ERROR},
 			$stats->{verifyings}{byFindings}{TTP::Media::Video::BITSTREAM}{TTP::Media::Video::OK}
+		));
+	}
+	if( $opt_specials ){
+		msgOut( "     Special characters:" );
+		msgOut( "      ".sprintf( "%12s  %12s  %12s", "", "ERROR", "OK" ));
+		msgOut( "      ".sprintf( "%12s  %12d  %12d", "",
+			$stats->{verifyings}{byFindings}{TTP::Media::Video::SPECIALS}{TTP::Media::Video::ERROR},
+			$stats->{verifyings}{byFindings}{TTP::Media::Video::SPECIALS}{TTP::Media::Video::OK}
 		));
 	}
 	if( $opt_timeline ){
@@ -498,6 +550,7 @@ if( !GetOptions(
 		$opt_duration = $value;
 		$opt_duration_set = true;
 	},
+	"specials!"				=> \$opt_specials,
 	"repair!"				=> \$opt_repair,
 	"keep-orig!"			=> \$opt_keepOrig,
 	"verify!"				=> \$opt_verify )){
@@ -518,6 +571,7 @@ msgVerbose( "got recurse='".( $opt_recurse ? 'true':'false' )."'" );
 msgVerbose( "got timeline='".( $opt_timeline ? 'true':'false' )."'" );
 msgVerbose( "got bitstream='".( $opt_bitstream ? 'true':'false' )."'" );
 msgVerbose( "got duration='$opt_duration'" );
+msgVerbose( "got specials='".( $opt_specials ? 'true':'false' )."'" );
 msgVerbose( "got repair='".( $opt_repair ? 'true':'false' )."'" );
 msgVerbose( "got keep-orig='".( $opt_keepOrig ? 'true':'false' )."'" );
 msgVerbose( "got verify='".( $opt_verify ? 'true':'false' )."'" );
@@ -545,7 +599,7 @@ TTP::Media::checkGstDiscoverer() if $opt_timeline;
 TTP::Media::checkGstLaunch() if $opt_timeline && $opt_repair;
 
 if( !TTP::errs()){
-	if( $opt_bitstream || $opt_duration > 0 || $opt_timeline ){
+	if( $opt_bitstream || $opt_duration > 0 || $opt_timeline || $opt_specials ){
 		doCheckPath();
 	} else {
 		msgWarn( "cowardly refuse to not do something" );

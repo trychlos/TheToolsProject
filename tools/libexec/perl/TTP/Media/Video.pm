@@ -26,6 +26,7 @@ use warnings;
 use Data::Dumper;
 use File::Basename;
 use File::Copy;
+use File::Path qw( make_path );
 use File::Spec;
 use JSON::PP;
 
@@ -107,6 +108,14 @@ my $Const = {
 			format => 'video duration=\'%ss\' less than minimal requested=\'%ss\''
 		},
 		{
+			id => 'SPECIAL_CHARS',
+			format => "name='%s' exhibits forbidden special characters"
+		},
+		{
+			id => 'SPECIAL_ERRORS',
+			format => '%s'
+		},
+		{
 			id => 'STREAM_DIVX_PACKED',
 			format => 'video stream #%s: divx_packed=\'true\' detected'
 		},
@@ -146,6 +155,7 @@ use constant {
 	# check qualifiers
 	BITSTREAM => 'BITSTREAM',
 	DURATION => 'DURATION',
+	SPECIALS => 'SPECIALS',
 	TIMELINE => 'TIMELINE',
 	# check statuses
 	OK => 'OK',
@@ -352,6 +362,7 @@ sub checkBitstreamSingleSample {
 # - an optional options hash with following keys:
 #   > bitstream: whether to test for bitstream pathology, defaulting to true
 #   > duration: whether to test for minimal duration, defaulting to -1 (disabled)
+#   > specials: whether to test for special characters pathology, defaulting to true
 #   > timeline: whether to test for timeline pathology, defaulting to true
 #   > displayResult: whether to display a check summary per check type, defaulting to true
 #   > summaryPrefix: a prefix to be displayed on the start of each summary line, defaulting to ''
@@ -368,6 +379,10 @@ sub checkBitstreamSingleSample {
 #     - DURATION: a hash with following keys:
 #       > status: OK or FAILED
 #       > reasons: an array ref of failed reasons
+#     - SPECIALS: a hash with following keys:
+#       > status: OK or REPAIRABLE
+#       > reasons: an array ref of error reasons, empty because this check doesn't identify errors
+#         but left here for homogeneity reasons
 #     - TIMELINE: a hash with following keys:
 #       > status: OK, SUSPICIOUS or REPAIRABLE
 #       > reasons: an array ref of reasons
@@ -384,6 +399,7 @@ sub checkDo {
 	$opts //= {};
 	$opts->{bitstream} //= true;
 	$opts->{duration} //= -1;
+	$opts->{specials} //= true;
 	$opts->{timeline} //= true;
 	$opts->{displayResult} //= true;
 	$opts->{verifyRun} //= false;
@@ -407,6 +423,12 @@ sub checkDo {
 			reasons => []
 		};
 	}
+	if( $opts->{specials} ){
+		$result->{findings}{SPECIALS} = {
+			status => OK,
+			reasons => []
+		};
+	}
 	if( $opts->{timeline} ){
 		$result->{findings}{TIMELINE} = {
 			status => OK,
@@ -416,7 +438,7 @@ sub checkDo {
 
 	# if nothing to do, just return
 	# should never happen as the verb is expected to protect against that - so the warning
-	if( !$opts->{timeline} && !$opts->{bitstream} && $opts->{duration} <= 0 ){
+	if( !$opts->{bitstream} && $opts->{duration} <= 0 && !$opts->{specials} && !$opts->{timeline} ){
 		msgWarn( __PACKAGE__."::check() nothing to do for '$fname'" );
 		return $result;
 	}
@@ -448,9 +470,13 @@ sub checkDo {
 	}
 
 	# if minimal duration has been requested and is not satisfied, there is nothing we can do here to repair
-	# just keep the media suspicious
+	# just keep the media failed
 	if( scalar( grep( /DURATION/, @{$qualifiers} ))){
 		# nothing to do to confirm a failed duration
+	}
+
+	if( scalar( grep( /SPECIALS/, @{$qualifiers} ))){
+		# nothing to do to confirm a repairable special chars anomaly
 	}
 
 	if( scalar( grep( /TIMELINE/, @{$qualifiers} ))){
@@ -723,14 +749,6 @@ sub displayResult {
 		}
 		# for findings
 		foreach my $key ( sort keys( %{$result->{findings}} )){
-			#my $status = $result->{findings}{$key}{status};
-			#my $suffix = '';
-			#if( $status eq OK && $result->{fname} ne $result->{info}{format}{filename} ){
-			#	$suffix = " -> $result->{fname}";
-			#}
-			#my $ope = '';
-			#$ope = 'repair' if $opts->{repairRun };
-			#msgOut( sprintf( "%s%-8s %s %s: %s %s", $prefix, '', $key, $ope, $status, $suffix ));
 			foreach my $reason ( @{$result->{findings}{$key}{reasons}} ){
 				msgOut( sprintf( "%s%-8s %s", $prefix, '', sprintf( $reason->{format}, @{$reason->{args} // [] })));
 			}
@@ -1060,6 +1078,29 @@ sub ffprobeStage {
 		}
 	}
 
+	# have to check each element of the full filename
+	if( $opts->{specials} ){
+		msgLog( __PACKAGE__."::ffprobeStage() checking for special characters" );
+		my $qualifier = SPECIALS;
+		my ( $base, $dir, $suffix ) = File::Basename::fileparse( $result->{info}{format}{filename}, qr/\.[^.]*/ );
+		my $names = [ "$base$suffix" ];
+		push( @{$names}, File::Spec->splitdir( $dir ));
+		my $errs = 0;
+		foreach my $piece ( @{$names} ){
+			if( TTP::Media::hasForbiddenChars( $piece )){
+				setQualifierStatus( $result,
+					$qualifier, REPAIRABLE,
+					setReason( 'SPECIAL_CHARS', [ $piece ]));
+				$errs += 1;
+			}
+		}
+		if( $errs ){
+			push( @{$qualifiers}, $qualifier );
+		} else {
+			msgLog( __PACKAGE__."::ffprobeStage() no specials detected" );
+		}
+	}
+
 	# doesn't override a potential file-level ERROR
 	return [] if $result->{status} eq ERROR;
 
@@ -1091,6 +1132,7 @@ sub isCapable {
 # - the check results as a hash ref
 # - an optional options hash with following keys:
 #   > bitstream: whether to test for bitstream pathology, defaulting to true
+#   > specials: whether to test for special characters pathology, defaulting to true
 #   > timeline: whether to test for timeline pathology, defaulting to true
 #   > keepOrig: whether to keep the original file, defaulting to true
 # (O):
@@ -1099,6 +1141,9 @@ sub isCapable {
 #   > reasons: an array ref of error reasons
 #   > findings: a hash ref per done repair:
 #     - BITSTREAM: a hash with following keys:
+#       > status: OK or ERROR
+#       > reasons: an array ref of reasons
+#     - SPECIALS: a hash with following keys:
 #       > status: OK or ERROR
 #       > reasons: an array ref of reasons
 #     - TIMELINE: a hash with following keys:
@@ -1116,6 +1161,7 @@ sub repair {
 
 	$opts //= {};
 	$opts->{bitstream} //= true;
+	$opts->{specials} //= true;
 	$opts->{timeline} //= true;
 	$opts->{displayResult} //= true;
 	$opts->{keepOrig} //= true;
@@ -1153,6 +1199,17 @@ sub repair {
 		$errorsCount += 1 if $result->{findings}{BITSTREAM}{status} ne OK;
 	}
 
+	if( $opts->{specials} && $checkResult->{findings}{SPECIALS}{status} eq REPAIRABLE ){
+		$result->{findings}{SPECIALS} = {
+			status => OK,
+			reasons => []
+		};
+		msgOut( sprintf( "%-8s %s", " ", "trying to repair special characters..."));
+		repairSpecials( $result, $fname, $checkResult, $opts );
+		$fname = $result->{fname};
+		$errorsCount += 1 if $result->{findings}{SPECIALS}{status} ne OK;
+	}
+
 	if( $opts->{timeline} && $checkResult->{findings}{TIMELINE}{status} eq REPAIRABLE ){
 		$result->{findings}{TIMELINE} = {
 			status => OK,
@@ -1171,13 +1228,16 @@ sub repair {
 		my $orig_fname = "$checkResult->{fname}.orig";
 		if( $opts->{keepOrig} ){
 			if( rename( $backup_fname, $orig_fname )){
-				msgLog( __PACKAGE__."::repair() original copy kept as '$orig_fname'" );
+				msgLog( __PACKAGE__."::repair() original copy kept as '$orig_fname'"));
 			} else {
 				setError( $result, setReason( 'BACKUP_RENAME_ERROR', [ $backup_fname, $orig_fname, $! ]));
 			}
 		} else {
 			msgLog( __PACKAGE__."::repair() deleting '$backup_fname'" );
 			unlink( $backup_fname );
+			# remove the directory (last level only) if it becomes empty
+		    my ( undef, $backup_dir, undef ) = File::Basename::fileparse( $backup_fname, qr/\.[^.]*/ );
+			TTP::Path::removeEmptyDir( $backup_dir );
 		}
 	}
 
@@ -1253,6 +1313,52 @@ sub repairBitstream {
 
 	# filename is left unchanged by that repair
 	setQualifierStatus( $repairResult, BITSTREAM, OK );
+	$repairResult->{fname} = $new_fname;
+	return $new_fname;
+}
+
+# ------------------------------------------------------------------------------------------------
+# Repair a filename which exhibits forbidden special characters
+# Reminder: these 'forbidden' special characters are those which are not supported by either
+#  KDE Connect application or Android OS or FAT32 filesystems. They prevent a correct synchronisation
+#  between a NFS storage space and various remote devices.
+# (I):
+# - the repair result hash for this file
+# - the video filename
+# - the check() result hash
+# - an optional options has with following keys:
+#   > keepOrig, whether to keep a copy of the original file, defaulting to true
+# (O):
+# - the new filename
+# + the global result->{findings}{SPECIALS}{status} has been updated
+
+sub repairSpecials {
+	my ( $repairResult, $fname, $checkResult, $opts ) = @_;
+
+	my ( $base, $dir, $suffix ) = File::Basename::fileparse( $fname, qr/\.[^.]*/ );
+	my @names = File::Spec->splitdir( $dir );
+	push( @names, "$base$suffix" );
+	my @new_names = ();
+	foreach my $piece ( @names ){
+		push( @new_names, TTP::Media::convertStr( $piece ));
+	}
+	my $new_base = pop( @new_names );
+	my $new_fname = File::Spec->catfile( @new_names, $new_base );
+	my $new_dir = File::Spec->catdir( @new_names );
+
+	# install the repaired (renamed) copy
+	if( make_path( $new_dir ) && move( $fname, $new_fname )){
+		msgLog( __PACKAGE__."::repairSpecials() repaired (renamed) copy successfully installed as '$new_fname'" );
+
+	} else {
+		setQualifierStatus( $repairResult, SPECIALS, ERROR, setReason( 'SPECIALS_ERROR', [
+			"unable to install '$new_fname': $!"
+		]));
+		return $fname;
+	}
+
+	# filename is changed by that repair
+	setQualifierStatus( $repairResult, SPECIALS, OK );
 	$repairResult->{fname} = $new_fname;
 	return $new_fname;
 }
@@ -1645,6 +1751,8 @@ sub verify {
 
 	$opts //= {};
 	$opts->{verifyRun} = true;
+
+	msgOut( sprintf( "%-8s %s", " ", "verifying..." ));
 
 	return checkDo( $fname, $opts );
 }

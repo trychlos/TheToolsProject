@@ -546,6 +546,35 @@ sub getResource {
 }
 
 # ------------------------------------------------------------------------------------------------
+# Test whether a directory is empty
+# (I):
+# - the directory path
+# (O):
+# - true if empty, or false
+#   also returns false if not a directory
+
+sub isDirEmpty {
+	my ( $dirname ) = @_;
+
+	my $haveSomething = false;
+
+	if( opendir( my $dh, $dirname )){
+		while( !$haveSomething ){
+			my $name = readdir( $dh );
+			last if !$name;
+			next if $name eq '.' or $name eq '..';
+			$haveSomething = true;
+		}
+		closedir( $dh );
+		return !$haveSomething;
+
+	} else {
+        msgErr( "cannot open directory '$dirname': $!" );
+		return false;
+	}
+}
+
+# ------------------------------------------------------------------------------------------------
 # Compute and returns the commands logs directory.
 # As a particular case, we emit the deprecation warning only once to not clutter the user.
 # (I):
@@ -714,6 +743,28 @@ sub makeDirExist {
 		TTP::Message::msgVerbose( __PACKAGE__."::makeDirExist() dir='$dir' result=$result" ) if $verbose;
 	}
 	return $result;
+}
+
+# -------------------------------------------------------------------------------------------------
+# Delete (non recursively) the directory if it is empty
+# (I):
+# - the directory path
+# (O):
+# - true if directory was empty and has been successfully deleted
+
+sub removeEmptyDir {
+	my( $dirname ) = @_;
+	msgLog( __PACKAGE__."removeEmptyDir() dirname='$dirname'" );
+
+	if( isDirEmpty( $dirname )){
+		if( rmdir( $dirname )){
+			msgLog( __PACKAGE__."removeEmptyDir() dir has been found empty and successfully removed" );
+			return true;
+		}
+		msgErr( "unable to remove empty directory '$dirname': $!" );
+	}
+
+	return false;
 }
 
 # -------------------------------------------------------------------------------------------------

@@ -41,7 +41,7 @@ use TTP::Message qw( :all );
 use TTP::Path;
 
 my $Const = {
-	# KDE Connect / Android /FAT32 filesystems do not like these characters
+	# KDE Connect / Android / FAT32 filesystems do not like these characters
 	forbiddenChars => {
 		'\s*\?' => '',
 		'\s*:' => ' -',
@@ -708,6 +708,10 @@ sub trackTitleFromScan {
 #     - DURATION: a hash with following keys:
 #       > status: OK or FAILED
 #       > reasons: an array ref of failed reasons
+#     - SPECIALS: a hash with following keys:
+#       > status: OK or REPAIRABLE
+#       > reasons: an array ref of error reasons, empty because this check doesn't identify errors
+#         but left here for homogeneity reasons
 #     - TIMELINE: a hash with following keys:
 #       > status: OK, SUSPICIOUS or REPAIRABLE
 #       > reasons: an array ref of reasons
@@ -743,6 +747,9 @@ sub videoCheck {
 #   > reasons: an array ref of (runtime) error reasonsE
 #   > findings: a hash ref per done repair:
 #     - BITSTREAM: a hash with following keys:
+#       > status: OK or ERROR
+#       > reasons: an array ref of reasons
+#     - SPECIALS: a hash with following keys:
 #       > status: OK or ERROR
 #       > reasons: an array ref of reasons
 #     - TIMELINE: a hash with following keys:
@@ -782,6 +789,9 @@ sub videoRepair {
 #   > reasons: an array ref of error reasons
 #   > findings: a hash ref per done repair:
 #     - BITSTREAM: a hash with following keys:
+#       > status: OK or ERROR
+#       > reasons: an array ref of reasons
+#     - SPECIALS: a hash with following keys:
 #       > status: OK or ERROR
 #       > reasons: an array ref of reasons
 #     - TIMELINE: a hash with following keys:
