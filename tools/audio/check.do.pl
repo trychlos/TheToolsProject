@@ -12,6 +12,7 @@
 # @(-) --step=<count>               the progress indicator step when listing by genres, set to zero or a negative value to disable [${step}]
 # @(-) --album-level=<level>        the directory level where the album is to be find [${albumLevel}]
 # @(-) --artist-level=<level>       the directory level where the artist is to be find [${artistLevel}]
+# @(-) --[no]recurse                whether act recursively on a directory [${recurse}]
 # @(-) album directory level options:
 # @(-) --[no]check-path-album       check that the album directory corresponds to the album tag (of the first track) [${checkAlbumPath}]
 # @(-) --[no]check-specials-album   check that the album title doesn't have special characters [${checkAlbumSpecials}]
@@ -111,6 +112,7 @@ my $defaults = {
 	albumLevel => 6,
 	artistLevel => 5,
 	format => '%AP / %BP',
+	recurse => 'yes',
 	step => 100,
 	summaryList => 'yes',
 	summaryCounters => 'yes',
@@ -142,6 +144,7 @@ my $opt_checkAllTrack = false;
 my $opt_albumLevel = $defaults->{albumLevel};
 my $opt_artistLevel = $defaults->{artistLevel};
 my $opt_format = $defaults->{format};
+my $opt_recurse = true;
 my $opt_step = $defaults->{step};
 my $opt_step_set = false;
 my $opt_summaryList = true;
@@ -717,6 +720,7 @@ sub doListAlbums {
 	msgOut( "displaying music albums in [".join( ",", @ARGV )."]..." );
 	foreach my $path ( @ARGV ){
 		my $result = TTP::Media::scan_tree( $path, {
+			recurse => $opt_recurse,
 			sub => sub {
 				# expect to have only supported files
 				my ( $fname, $scan ) = @_;
@@ -803,10 +807,15 @@ sub doListGenres {
 	};
 	my $genres = {};
 	my $prev_cents = 0;
+	my $fcount = 0;
 	foreach my $path ( @ARGV ){
 		msgOut( "scanning .", { withEol => false });
 		my $result = TTP::Media::scan_tree( $path, {
+			recurse => $opt_recurse,
 			sub => sub {
+				# display a '.' dot every 10 files
+				$fcount += 1;
+				print STDOUT "." if $fcount % 10 == 0;
 				# expect to have only supported files
 				my ( $fname, $scan ) = @_;
 				$counters->{total} += 1;
@@ -1108,6 +1117,7 @@ if( !GetOptions(
 	"album-level=i"			=> \$opt_albumLevel,
 	"artist-level=i"		=> \$opt_artistLevel,
 	"format=s"				=> \$opt_format,
+	"recurse!"				=> \$opt_recurse,
 	"step=s"				=> sub {
 		my ( $name, $value ) = @_;
 		$opt_step = $value;
@@ -1153,6 +1163,7 @@ msgVerbose( "got check-all-track='".( $opt_checkAllTrack ? 'true':'false' )."'" 
 msgVerbose( "got album-level='$opt_albumLevel'" );
 msgVerbose( "got artist-level='$opt_artistLevel'" );
 msgVerbose( "got format='$opt_format'" );
+msgVerbose( "got recurse='".( $opt_recurse ? 'true':'false' )."'" );
 msgVerbose( "got step='$opt_step'" );
 msgVerbose( "got summary-list='".( $opt_summaryList ? 'true':'false' )."'" );
 msgVerbose( "got summary-counters='".( $opt_summaryCounters ? 'true':'false' )."'" );
