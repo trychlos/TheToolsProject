@@ -1078,7 +1078,7 @@ sub ffprobeStage {
 		}
 	}
 
-	# have to check each element of the full filename
+	# have to check each element of the full filename (but only set the qualifier+status once)
 	if( $opts->{specials} ){
 		msgLog( __PACKAGE__."::ffprobeStage() checking for special characters" );
 		my $qualifier = SPECIALS;
@@ -1088,13 +1088,12 @@ sub ffprobeStage {
 		my $errs = 0;
 		foreach my $piece ( @{$names} ){
 			if( TTP::Media::hasForbiddenChars( $piece )){
-				setQualifierStatus( $result,
-					$qualifier, REPAIRABLE,
-					setReason( 'SPECIAL_CHARS', [ $piece ]));
 				$errs += 1;
 			}
 		}
 		if( $errs ){
+			setQualifierStatus( $result,
+				$qualifier, REPAIRABLE, setReason( 'SPECIAL_CHARS', [ $result->{info}{format}{filename} ]));
 			push( @{$qualifiers}, $qualifier );
 		} else {
 			msgLog( __PACKAGE__."::ffprobeStage() no specials detected" );
