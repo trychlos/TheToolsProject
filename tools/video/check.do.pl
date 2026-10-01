@@ -242,6 +242,26 @@ sub checkOrchestration {
 }
 
 # -------------------------------------------------------------------------------------------------
+# each path can be either a single filename or a directory
+# whether the directory is recursively treated is managed by opt_recurse option
+
+sub doCheckPath {
+	msgLog( "doCheckpath() ARGV=[".join( ",", @ARGV )."]" );
+
+	foreach my $path ( @ARGV ){
+		TTP::Media::walkTree( $path, {
+			recurse => $opt_recurse,
+			sub => sub {
+				my ( $fname ) = @_;
+				checkOrchestration( $fname );
+			}
+		});
+	}
+
+	printSummary();
+}
+
+# -------------------------------------------------------------------------------------------------
 # Check a candidate file
 # Video-supported extensions which do not embed any video stream as checked as OK.
 # (I):
@@ -355,26 +375,6 @@ sub fileVerify {
 	}
 
 	return $result;
-}
-
-# -------------------------------------------------------------------------------------------------
-# each path can be either a single filename or a directory
-# whether the directory is recursively treated is managed by opt_recurse option
-
-sub doCheckPath {
-	msgLog( "doCheckpath() ARGV=[".join( ",", @ARGV )."]" );
-
-	foreach my $path ( @ARGV ){
-		TTP::Media::walkTree( $path, {
-			recurse => $opt_recurse,
-			sub => sub {
-				my ( $fname ) = @_;
-				checkOrchestration( $fname );
-			}
-		});
-	}
-
-	printSummary();
 }
 
 # -------------------------------------------------------------------------------------------------
