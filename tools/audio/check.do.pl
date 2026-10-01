@@ -6,7 +6,6 @@
 # @(-) --[no]colored                color the output depending of the message level [${colored}]
 # @(-) --[no]dummy                  dummy run [${dummy}]
 # @(-) --[no]verbose                run verbosely [${verbose}]
-# @(-) --source-path=<source>       acts on this source [${sourcePath}]
 # @(-) --[no]list-albums            list the albums [${listAlbums}]
 # @(-) --[no]list-genres            list the recensed genres [${listGenres}]
 # @(-) --format=<format>            print artists/albums with this format [${format}]
@@ -51,6 +50,7 @@
 # @(@)         e.g. when a track is played or singed by the main artist with another one or feat. someone.
 # @(@) Note 3: Checking that all tracks of an album are tagged with the same tracks count or the same year is disabled when the album has several discs.
 # @(@) Note 4: Checking that we have a good count of tracks is only enabled if the 'same-count' check is true.
+# @(@) Note 5: The verb accepts one or more files or directories as positional arguments.
 #
 # TheToolsProject - Tools System and Working Paradigm for IT Production
 # Copyright (©) 1998-2023 Pierre Wieser (see AUTHORS)
@@ -87,7 +87,6 @@ my $defaults = {
 	colored => 'no',
 	dummy => 'no',
 	verbose => 'no',
-	sourcePath => '',
 	listAlbums => 'no',
 	listGenres => 'no',
 	checkAlbum => 'no',
@@ -684,7 +683,7 @@ sub checkYear {
 # list the albums in the specified tree
 # audio tree are set as ROOT/type/letter/artist/albums[/disc]/file
 
-sub listAlbums {
+sub doListAlbums {
 	my $counters = {
 		albums => {
 			total => 0,
@@ -715,70 +714,72 @@ sub listAlbums {
 		}
 	};
 	my $albums = {};
-	msgOut( "displaying music albums in '$opt_sourcePath'..." );
-	my $result = TTP::Media::scan_tree( $opt_sourcePath, {
-		sub => sub {
-			# expect to have only supported files
-			my ( $fname, $scan ) = @_;
-			#msgErr( $fname ) if $fname !~ /\.flac$/;
-			my $albumFromPath = TTP::Media::albumFromPath( $fname, { level => $opt_albumLevel }) || '';
-			my $artistFromPath = TTP::Media::artistFromPath( $fname, { level => $opt_artistLevel }) || '';
-			$counters->{audios}{total} += 1;
-			# unless the very rare case where we do not know how to compute the key
-			if( $albumFromPath || $artistFromPath ){
-				$scan->{albumFromPath} = $albumFromPath;
-				$scan->{artistFromPath} = $artistFromPath;
-				my $key = "$artistFromPath $albumFromPath";
-				$key =~ s/\s/-/g;
-				if( !$albums->{$key} ){
-					printAlbum( $scan );
-					$counters->{albums}{total} += 1;
-					$albums->{$key} //= {};
-					$albums->{$key}{albumFromPath} = $albumFromPath;
-					$albums->{$key}{artistFromPath} = $artistFromPath;
-					$albums->{$key}{valid} //= {};
-					$albums->{$key}{valid}{count} //= 0;
-					$albums->{$key}{valid}{notok} //= 0;
-					# check at the album level what can be done on the first track
-					$counters->{albums}{path} += ( checkAlbumPath( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkAlbumPath;
-					$counters->{albums}{specials} += ( checkAlbumSpecials( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkAlbumSpecials;
-				}
-				$albums->{$key}{valid}{count} += 1;
-				# and check only if a valid audio file
-				if( $scan->{ok} ){
-					$counters->{audios}{valid} += 1;
-					$albums->{$key}{valid}{ok} //= 0;
-					$albums->{$key}{valid}{ok} += 1;
-					# check for the whole album
-					checkSameAlbum( $albums->{$key}, $scan ) if $opt_checkSameAlbum;
-					checkSameArtist( $albums->{$key}, $scan ) if $opt_checkSameArtist;
-					checkSameCount( $albums->{$key}, $scan ) if $opt_checkSameCount;
-					checkGoodCount( $albums->{$key}, $scan ) if $opt_checkGoodCount;
-					checkSameYear( $albums->{$key}, $scan ) if $opt_checkSameYear;
-					# check at the track level
-					$counters->{audios}{album} += ( checkAlbum( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkAlbum;
-					$counters->{audios}{artist} += ( checkArtist( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkArtist;
-					$counters->{audios}{count} += ( checkCount( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkCount;
-					$counters->{audios}{cover} += ( checkCover( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkCover;
-					$counters->{audios}{genre} += ( checkGenre( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkGenre;
-					$counters->{audios}{number} += ( checkNumber( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkNumber;
-					$counters->{audios}{title} += ( checkTitle( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkTitle;
-					$counters->{audios}{filename} += ( checkTrackPath( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkTrackPath;
-					$counters->{audios}{specials} += ( checkTrackSpecials( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkTrackSpecials;
-					$counters->{audios}{year} += ( checkYear( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkYear;
+	msgOut( "displaying music albums in [".join( ",", @ARGV )."]..." );
+	foreach my $path ( @ARGV ){
+		my $result = TTP::Media::scan_tree( $path, {
+			sub => sub {
+				# expect to have only supported files
+				my ( $fname, $scan ) = @_;
+				#msgErr( $fname ) if $fname !~ /\.flac$/;
+				my $albumFromPath = TTP::Media::albumFromPath( $fname, { level => $opt_albumLevel }) || '';
+				my $artistFromPath = TTP::Media::artistFromPath( $fname, { level => $opt_artistLevel }) || '';
+				$counters->{audios}{total} += 1;
+				# unless the very rare case where we do not know how to compute the key
+				if( $albumFromPath || $artistFromPath ){
+					$scan->{albumFromPath} = $albumFromPath;
+					$scan->{artistFromPath} = $artistFromPath;
+					my $key = "$artistFromPath $albumFromPath";
+					$key =~ s/\s/-/g;
+					if( !$albums->{$key} ){
+						printAlbum( $scan );
+						$counters->{albums}{total} += 1;
+						$albums->{$key} //= {};
+						$albums->{$key}{albumFromPath} = $albumFromPath;
+						$albums->{$key}{artistFromPath} = $artistFromPath;
+						$albums->{$key}{valid} //= {};
+						$albums->{$key}{valid}{count} //= 0;
+						$albums->{$key}{valid}{notok} //= 0;
+						# check at the album level what can be done on the first track
+						$counters->{albums}{path} += ( checkAlbumPath( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkAlbumPath;
+						$counters->{albums}{specials} += ( checkAlbumSpecials( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkAlbumSpecials;
+					}
+					$albums->{$key}{valid}{count} += 1;
+					# and check only if a valid audio file
+					if( $scan->{ok} ){
+						$counters->{audios}{valid} += 1;
+						$albums->{$key}{valid}{ok} //= 0;
+						$albums->{$key}{valid}{ok} += 1;
+						# check for the whole album
+						checkSameAlbum( $albums->{$key}, $scan ) if $opt_checkSameAlbum;
+						checkSameArtist( $albums->{$key}, $scan ) if $opt_checkSameArtist;
+						checkSameCount( $albums->{$key}, $scan ) if $opt_checkSameCount;
+						checkGoodCount( $albums->{$key}, $scan ) if $opt_checkGoodCount;
+						checkSameYear( $albums->{$key}, $scan ) if $opt_checkSameYear;
+						# check at the track level
+						$counters->{audios}{album} += ( checkAlbum( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkAlbum;
+						$counters->{audios}{artist} += ( checkArtist( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkArtist;
+						$counters->{audios}{count} += ( checkCount( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkCount;
+						$counters->{audios}{cover} += ( checkCover( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkCover;
+						$counters->{audios}{genre} += ( checkGenre( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkGenre;
+						$counters->{audios}{number} += ( checkNumber( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkNumber;
+						$counters->{audios}{title} += ( checkTitle( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkTitle;
+						$counters->{audios}{filename} += ( checkTrackPath( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkTrackPath;
+						$counters->{audios}{specials} += ( checkTrackSpecials( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkTrackSpecials;
+						$counters->{audios}{year} += ( checkYear( $albums->{$key}, $scan ) ? 1 : 0 ) if $opt_checkYear;
+					} else {
+						msgErr( $fname );
+						msgErr( $scan->{errors}, { incErr => false });
+						$albums->{$key}{valid}{notok} += 1;
+						$albums->{$key}{valid}{files} //= [];
+						push( @{$albums->{$key}{scan}{files}}, $fname );
+					}
 				} else {
-					msgErr( $fname );
-					msgErr( $scan->{errors}, { incErr => false });
-					$albums->{$key}{valid}{notok} += 1;
-					$albums->{$key}{valid}{files} //= [];
-					push( @{$albums->{$key}{scan}{files}}, $fname );
+					msgErr( "neither artist nor album can be computed from '$fname'" );
 				}
-			} else {
-				msgErr( "neither artist nor album can be computed from '$fname'" );
 			}
-		}
-	});
-	#print Dumper( $result );
+		});
+		#print Dumper( $result );
+	}
 
 	# have a summary
 	summaryUpdateCounters( $counters, $albums );
@@ -792,7 +793,7 @@ sub listAlbums {
 # audio tree are set as ROOT/type/letter/artist/albums[/disc]/file
 # have an follow-up dot mark every 100 items
 
-sub listGenres {
+sub doListGenres {
 	my $counters = {
 		total => 0,
 		valid => 0,
@@ -802,39 +803,41 @@ sub listGenres {
 	};
 	my $genres = {};
 	my $prev_cents = 0;
-	msgOut( "scanning .", { withEol => false });
-	my $result = TTP::Media::scan_tree( $opt_sourcePath, {
-		sub => sub {
-			# expect to have only supported files
-			my ( $fname, $scan ) = @_;
-			$counters->{total} += 1;
-			if( $opt_step > 0 ){
-				my $cent = int( $counters->{total} / $opt_step );
-				if( $cent > $prev_cents ){
-					print STDOUT ".";
-					$prev_cents = $cent;
+	foreach my $path ( @ARGV ){
+		msgOut( "scanning .", { withEol => false });
+		my $result = TTP::Media::scan_tree( $path, {
+			sub => sub {
+				# expect to have only supported files
+				my ( $fname, $scan ) = @_;
+				$counters->{total} += 1;
+				if( $opt_step > 0 ){
+					my $cent = int( $counters->{total} / $opt_step );
+					if( $cent > $prev_cents ){
+						print STDOUT ".";
+						$prev_cents = $cent;
+					}
 				}
-			}
-			if( $scan->{ok} ){
-				$counters->{valid} += 1;
-				my $albumFromPath = TTP::Media::albumFromPath( $fname, { level => $opt_albumLevel });
-				my $artistFromPath = TTP::Media::artistFromPath( $fname, { level => $opt_artistLevel });
+				if( $scan->{ok} ){
+					$counters->{valid} += 1;
+					my $albumFromPath = TTP::Media::albumFromPath( $fname, { level => $opt_albumLevel });
+					my $artistFromPath = TTP::Media::artistFromPath( $fname, { level => $opt_artistLevel });
 
-				my $genre = TTP::Media::genreFromScan( $scan, { dumpIfEmpty => false });
-				if( $genre ){
-					$genres->{$genre} //= {};
-					$genres->{$genre}{$artistFromPath} //= {};
-					$genres->{$genre}{$artistFromPath}{$albumFromPath} //= [];
-					push( @{$genres->{$genre}{$artistFromPath}{$albumFromPath}}, $fname );
+					my $genre = TTP::Media::genreFromScan( $scan, { dumpIfEmpty => false });
+					if( $genre ){
+						$genres->{$genre} //= {};
+						$genres->{$genre}{$artistFromPath} //= {};
+						$genres->{$genre}{$artistFromPath}{$albumFromPath} //= [];
+						push( @{$genres->{$genre}{$artistFromPath}{$albumFromPath}}, $fname );
+					} else {
+						$counters->{genre}{undef} += 1;
+					}
 				} else {
-					$counters->{genre}{undef} += 1;
+					msgErr( "scan failed on $fname" );
 				}
-			} else {
-				msgErr( "scan failed on $fname" );
 			}
-		}
-	});
-	print STDOUT EOL;
+		});
+		print STDOUT EOL;
+	}
 	# display the genres
 	foreach my $genre ( sort keys %{$genres} ){
 		print STDOUT $genre.EOL;
@@ -846,7 +849,7 @@ sub listGenres {
 	}
 	# display a summary
 	msgOut( "Summary list:" );
-	msgOut( "  $counters->{total} found track(s), among them:" );
+	msgOut( "  $counters->{total} found audio track(s), among them:" );
 	msgOut( "  - ".( $counters->{total} - $counters->{valid} )." were not valid" );
 	msgOut( "  - $counters->{genre}{undef} didn't have a genre" );
 	msgOut( "done" );
@@ -1055,7 +1058,6 @@ if( !GetOptions(
 	"colored!"				=> sub { $ep->runner()->colored( @_ ); },
 	"dummy!"				=> sub { $ep->runner()->dummy( @_ ); },
 	"verbose!"				=> sub { $ep->runner()->verbose( @_ ); },
-	"source-path=s"			=> \$opt_sourcePath,
 	"list-albums!"			=> \$opt_listAlbums,
 	"list-genres!"			=> \$opt_listGenres,
 	"check-album!"			=> \$opt_checkAlbum,
@@ -1127,7 +1129,6 @@ if( $ep->runner()->help()){
 msgVerbose( "got colored='".( $ep->runner()->colored() ? 'true':'false' )."'" );
 msgVerbose( "got dummy='".( $ep->runner()->dummy() ? 'true':'false' )."'" );
 msgVerbose( "got verbose='".( $ep->runner()->verbose() ? 'true':'false' )."'" );
-msgVerbose( "got source-path='$opt_sourcePath'" );
 msgVerbose( "got list-albums='".( $opt_listAlbums ? 'true':'false' )."'" );
 msgVerbose( "got list-genres='".( $opt_listGenres ? 'true':'false' )."'" );
 msgVerbose( "got check-album='".( $opt_checkAlbum ? 'true':'false' )."'" );
@@ -1157,9 +1158,11 @@ msgVerbose( "got summary-list='".( $opt_summaryList ? 'true':'false' )."'" );
 msgVerbose( "got summary-counters='".( $opt_summaryCounters ? 'true':'false' )."'" );
 msgVerbose( "got summary-unchecked='".( $opt_summaryUnchecked ? 'true':'false' )."'" );
 
-# must have --source-path option
-msgErr( "'--source-path' option is mandatory, but is not specified" ) if !$opt_sourcePath;
-msgErr( "'--source-path=$opt_sourcePath': directory not known or not available" ) if $opt_sourcePath && ! -d $opt_sourcePath;
+if( scalar( @ARGV )){
+	msgVerbose( "got sources=[".join( ',', @ARGV )."]" );
+} else {
+	msgErr( "at least one file or directory is expected as (a) positional argument(s)" );
+}
 
 # albumLevel and artistLevel must be greater than zero integers
 $opt_albumLevel = int( $opt_albumLevel );
@@ -1200,8 +1203,8 @@ if( !$opt_listGenres ){
 }
 
 if( !TTP::errs()){
-	listAlbums() if $opt_listAlbums;
-	listGenres() if $opt_listGenres;
+	doListAlbums() if $opt_listAlbums;
+	doListGenres() if $opt_listGenres;
 }
 
 TTP::exit();

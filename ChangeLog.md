@@ -11,6 +11,7 @@
     - Fix RunnerVerb.pm module to expose compilation errors correctly instead of reporting stale '\$!' messages
     - video.pl check: new command, new verb to check and repair videos consistency
     - audio.pl list is renamed audio.pl check to be consistent with video.pl
+    - audio.pl check: replace --source-path argument by positional ones
 
 ### 4.32.2
 
