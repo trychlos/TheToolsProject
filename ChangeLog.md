@@ -9,7 +9,7 @@
     - Integrate maintainer/release.sh to automatize TheToolsProject release process
     - ovh.pl list now also lists invoices, thus bumping minor candidate version number
     - Fix RunnerVerb.pm module to expose compilation errors correctly instead of reporting stale '\$!' messages
-    - medial.pl check: new command, new verb to check and repair videos consistency
+    - video.pl check: new command, new verb to check and repair videos consistency
 
 ### 4.32.2
 

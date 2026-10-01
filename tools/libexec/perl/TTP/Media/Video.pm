@@ -1228,7 +1228,7 @@ sub repair {
 		my $orig_fname = "$checkResult->{fname}.orig";
 		if( $opts->{keepOrig} ){
 			if( rename( $backup_fname, $orig_fname )){
-				msgLog( __PACKAGE__."::repair() original copy kept as '$orig_fname'"));
+				msgLog( __PACKAGE__."::repair() original copy kept as '$orig_fname'" );
 			} else {
 				setError( $result, setReason( 'BACKUP_RENAME_ERROR', [ $backup_fname, $orig_fname, $! ]));
 			}
