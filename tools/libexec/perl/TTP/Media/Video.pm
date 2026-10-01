@@ -1324,7 +1324,7 @@ sub repairTimeline {
 				'!',
 				$parser,
 				'!',
-				'mux'
+				'mux.'
 			));
 
 			$video_idx += 1;
@@ -1346,7 +1346,7 @@ sub repairTimeline {
 				'!',
 				'aacparse',
 				'!',
-				'mux'
+				'mux.'
 			));
 
 			$audio_idx += 1;
@@ -1366,7 +1366,7 @@ sub repairTimeline {
 				'!',
 				'queue',
 				'!',
-				'mux'
+				'mux.'
 			);
 
 			$subtitle_idx += 1;
