@@ -58,6 +58,7 @@
 # pwi 2025- 2- 7 get the drop-in directories as argument(s), providing nonetheless a default value
 # pwi 2025- 4- 3 starting with v4, VERBOSE environment variable is replaced with TTP_DEBUG
 # pwi 2026- 5- 2 replace 'export VAR=value' single lines by distincts 'VAR=value' plus 'export VAR'
+# pwi 2026-10-24 have valuable error messages when unable to bootstrap
 
 f_append_by_name()
 {
@@ -184,9 +185,16 @@ f_setup()
 
 [ "${TTP_DEBUG}" = "1" ] && set -x
 
-[ "$(systemctl is-system-running)" = "running" ] || return 0
+_state="$(systemctl is-system-running)"
+if [ "$_state" != "running" -a "$_state" != "degraded" ]; then
+	echo "system state is in $_state state, exiting" 1>&2
+	return 0
+fi
 
-[ "$(groups | grep -w ttp)" = "" ] && return 0
+if [ "$(groups | grep -w ttp)" = "" ]; then
+	echo "user is not member of 'ttp' group, exiting" 1>&2
+	return 0
+fi
 
 
 # Set the umask

@@ -12,6 +12,7 @@
     - video.pl check: new command, new verb to check and repair videos consistency
     - audio.pl list is renamed audio.pl check to be consistent with video.pl
     - audio.pl check: replace --source-path argument by positional ones
+    - Have valuable error messages when unable to bootstrap
 
 ### 4.32.2
 

@@ -42,7 +42,8 @@
 |  179 | 2026- 2- 9 | ttp.pl writejson is deprecated as of v4.32 - remove it later ? |
 |  181 | 2026- 9-14 | workload.summary: limit the length of the displayed commands so that the output may stay in a page and doesn't lead to line breaks |
 |  182 | 2026- 9-29 | have a guard against non-existant modules so that we display a clean error message rather than aborting |
-|  183 |  |  |
+|  183 | 2026-10- 8 | meteor.pl publish package: update date in maintainer/readme.md if exists  |
+|  184 |  |  |
 
 ---
 ## Done
