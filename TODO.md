@@ -73,4 +73,4 @@
 
 ---
 P. Wieser
-- Last updated on 2026, September 9th
+- Last updated on 2026, November 21st

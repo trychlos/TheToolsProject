@@ -2,9 +2,9 @@
 
 ## ChangeLog
 
-### 4.33.0-rc.0
+### 4.33.0
 
-    Release date: 
+    Release date: 2026-11-21
 
     - Integrate maintainer/release.sh to automatize TheToolsProject release process
     - ovh.pl list now also lists invoices, thus bumping minor candidate version number
@@ -109,4 +109,4 @@
 
 ---
 P. Wieser
-- Last updated on 2026, September 9th
+- Last updated on 2026, November 21st
